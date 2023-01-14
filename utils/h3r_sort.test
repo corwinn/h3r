@@ -1,0 +1,422 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+// Highlighter: C++
+
+#include "h3r_test.h"
+
+//LATER ask the user to free some RAM: Console_Alloc_Error_Handler
+#include "h3r_os_error.h"
+H3R_ERR_DEFINE_UNHANDLED
+H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
+H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
+
+#include "h3r_sort.h"
+#include "h3r_array.h"
+
+#define H3R_QSORTT
+
+#ifdef H3R_QSORT
+#include <stdlib.h>
+#endif
+
+H3R_NAMESPACE
+
+struct Node final
+{
+    Node * Next, * Prev;
+    int Index;
+};
+//TODO get SortableArray out of here
+template <typename T> struct SortableArray final : public ISortable<Node>
+{
+    Array<T> & _a;
+    SortableArray(Array<T> & a) : _a{a}
+    {
+        for (size_t i = 0; i < a.Length (); i++) {
+            Node * n;
+            OS::Alloc (n);
+            n->Index = i;
+            n->Next = n->Prev = nullptr;
+            insert (nullptr, n);
+        }
+    }
+    ~SortableArray()
+    {
+        while (_tail->Prev) _tail = _tail->Prev, OS::Free (_tail->Next);
+        OS::Free (_dll);
+    }
+    bool _asc {true};
+    Node * _dll {nullptr}, * _tail {nullptr};
+
+    Node * first() override { return _dll; }
+    Node * next(Node * a) override { return a->Next; }
+    bool cmp(Node * a, Node * b) override
+    {
+        return _asc ? _a[a->Index] >= _a[b->Index]:
+                      _a[a->Index] <= _a[b->Index];
+    }
+    void insert(Node * a, Node * b) override
+    {
+        if (b == _tail) _tail = b->Prev;
+        if (b == _dll) _dll = b->Next;
+        if (b->Prev) b->Prev->Next = b->Next;
+        if (b->Next) b->Next->Prev = b->Prev;
+
+        if (a) {
+            b->Prev = a->Prev, a->Prev = b;
+            if (b->Prev) b->Prev->Next = b;
+            b->Next = a;
+            if (a == _dll) _dll = b;
+        } else { // insert at tail
+            if (_tail)
+                b->Prev = _tail, b->Next = nullptr, _tail->Next = b, _tail = b;
+            else b->Prev = b->Prev = nullptr, _tail = _dll = b;
+        }
+    }
+    void reset()
+    {
+        int i = 0;
+        for (var q = first (); nullptr != q; q = next (q))
+            q->Index = i++;
+    }
+}; // SortableArray<T>
+
+H3R_TEST_UNIT(h3r_array)
+
+H3R_TEST_(one)
+    Array<int> arr {1};
+    arr[0] = 1;
+    SortableArray<int> arr_view {arr};
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    size_t count {0};
+    for (var a = arr_view.first (); nullptr != a; a = arr_view.next (a))
+        count++;
+    H3R_TEST_ARE_EQUAL(count, arr.Length ())
+    H3R_TEST_ARE_EQUAL(arr[arr_view.first ()->Index], arr[0])
+H3R_TEST_END
+
+template <typename T> static void ChkSorted(Array<T> & arr,
+    SortableArray<T> & view, bool s = true)
+{
+    size_t count {0};
+    for (var a = view.first (); nullptr != a; a = view.next (a))
+        count++;
+    H3R_TEST_ARE_EQUAL(count, arr.Length ())
+if (! s) {
+    if (view._asc) OS::Log_stdout ("   asc: {%d", arr[view.first ()->Index]);
+    else           OS::Log_stdout ("   des: {%d", arr[view.first ()->Index]);
+}
+    for (var a = view.first (); nullptr != a; a = view.next (a)) {
+        var b = view.next (a);
+        if (nullptr == b) break;
+        if (view._asc)
+             { H3R_TEST_IS_TRUE(arr[a->Index] <= arr[b->Index]) }
+        else { H3R_TEST_IS_TRUE(arr[a->Index] >= arr[b->Index]) }
+if (! s)
+        OS::Log_stdout (", %d", arr[b->Index]);
+
+    }
+if (! s)
+    OS::Log_stdout ("}" EOL);
+}
+
+#define QSORT_ASC(ARR) \
+    qsort ((int *)ARR, ARR.Length (), 4, \
+        [](const void * a, const void * b) -> int \
+        { \
+            return *(int *)a - *(int *)b; \
+        })
+#define QSORT_DES(ARR) \
+    qsort ((int *)ARR, ARR.Length (), 4, \
+        [](const void * a, const void * b) -> int \
+        { \
+            return *(int *)b - *(int *)a; \
+        })
+
+H3R_TEST_(two)
+    Array<int> arr {2};
+    arr[0] = 1; arr[1] = 2;
+    SortableArray<int> arr_view {arr};
+
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+H3R_TEST_END
+
+H3R_TEST_(three)
+    Array<int> arr {3};
+    const int PMAX = (int)arr.Length () + 1;
+    arr[0] = 1; arr[1] = 2; arr[2] = 3;
+    SortableArray<int> arr_view {arr};
+
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+
+    int i = 0;
+    for (int a = 1; a < PMAX; a++)
+        for (int b = 1; b < PMAX; b++)
+            for (int c = 1; c < PMAX; c++)
+                arr[i++] = a, arr[i++] = b, arr[i++] = c,
+                i = 0,
+                // OS::Log_stdout ("  sort {%d, %d, %d}" EOL,
+                //    arr[i], arr[i+1], arr[i+2]),
+                arr_view._asc = true, arr_view.reset (),
+                sort (arr_view), ChkSorted (arr, arr_view),
+                arr_view._asc = false, arr_view.reset (),
+                sort (arr_view), ChkSorted (arr, arr_view);
+H3R_TEST_END
+
+H3R_TEST_(four)
+    Array<int> arr {4};
+    const int PMAX = (int)arr.Length () + 1;
+    arr[0] = 1; arr[1] = 2; arr[2] = 3, arr[3] = 4;
+    SortableArray<int> arr_view {arr};
+
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+
+    int i = 0;
+    for (int a = 1; a < PMAX; a++)
+        for (int b = 1; b < PMAX; b++)
+            for (int c = 1; c < PMAX; c++)
+                for (int d = 1; d < PMAX; d++)
+                    arr[i++] = a, arr[i++] = b, arr[i++] = c, arr[i++] = d,
+                    i = 0,
+                    // OS::Log_stdout ("  sort {%d, %d, %d, %d}" EOL,
+                    //    arr[i], arr[i+1], arr[i+2], arr[i+3]),
+                    arr_view._asc = true, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view),
+                    arr_view._asc = false, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view);
+H3R_TEST_END
+
+H3R_TEST_(five)
+    Array<int> arr {5};
+    SortableArray<int> arr_view {arr};
+    const int PMAX = (int)arr.Length () + 1;
+    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+
+    int i = 0;
+    for (int a = 1; a < PMAX; a++)
+        for (int b = 1; b < PMAX; b++)
+            for (int c = 1; c < PMAX; c++)
+                for (int d = 1; d < PMAX; d++)
+                for (int e = 1; e < PMAX; e++)
+                    arr[i++] = a, arr[i++] = b, arr[i++] = c, arr[i++] = d,
+                    arr[i++] = e,
+                    i = 0,
+                    arr_view._asc = true, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view),
+                    arr_view._asc = false, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view);
+H3R_TEST_END
+
+H3R_TEST_(six)
+    Array<int> arr {6};
+    SortableArray<int> arr_view {arr};
+    const int PMAX = (int)arr.Length () + 1;
+    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+
+    int i = 0;
+    // arr[i++] = 1, arr[i++] = 1, arr[i++] = 2, arr[i++] = 2,
+    //    arr[i++] = 1, arr[i++] = 1;
+    // arr_view._asc = true,
+    //    sort (arr_view), ChkSorted (arr, arr_view, false);
+    for (int a = 1; a < PMAX; a++)
+        for (int b = 1; b < PMAX; b++)
+            for (int c = 1; c < PMAX; c++)
+                for (int d = 1; d < PMAX; d++)
+                for (int e = 1; e < PMAX; e++)
+                for (int f = 1; f < PMAX; f++)
+                    arr[i++] = a, arr[i++] = b, arr[i++] = c, arr[i++] = d,
+                    arr[i++] = e, arr[i++] = f,
+                    i = 0,
+                    // OS::Log_stdout ("  sort {%d, %d, %d, %d, %d, %d}" EOL,
+                    //    arr[i], arr[i+1], arr[i+2], arr[i+3], arr[i+4],
+                    //    arr[i+5]),
+                    arr_view._asc = true, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view),
+                    arr_view._asc = false, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view);
+H3R_TEST_END
+
+H3R_TEST_(seven)
+    Array<int> arr {7};
+    SortableArray<int> arr_view {arr};
+    const int PMAX = (int)arr.Length () + 1;
+    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+
+    int i = 0;
+    for (int a = 1; a < PMAX; a++)
+        for (int b = 1; b < PMAX; b++)
+            for (int c = 1; c < PMAX; c++)
+                for (int d = 1; d < PMAX; d++)
+                for (int e = 1; e < PMAX; e++)
+                for (int f = 1; f < PMAX; f++)
+                for (int g = 1; g < PMAX; g++)
+                    arr[i++] = a, arr[i++] = b, arr[i++] = c, arr[i++] = d,
+                    arr[i++] = e, arr[i++] = f, arr[i++] = g,
+                    i = 0,
+                    arr_view._asc = true, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view),
+                    arr_view._asc = false, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view);
+H3R_TEST_END
+
+H3R_TEST_(eight)
+    Array<int> arr {8};
+    SortableArray<int> arr_view {arr};
+    const int PMAX = (int)arr.Length () + 1;
+    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+
+    int i = 0;
+    for (int a = 1; a < PMAX; a++)
+        for (int b = 1; b < PMAX; b++)
+            for (int c = 1; c < PMAX; c++)
+                for (int d = 1; d < PMAX; d++)
+                for (int e = 1; e < PMAX; e++)
+                for (int f = 1; f < PMAX; f++)
+                for (int g = 1; g < PMAX; g++)
+                for (int h = 1; h < PMAX; h++)
+                    arr[i++] = a, arr[i++] = b, arr[i++] = c, arr[i++] = d,
+                    arr[i++] = e, arr[i++] = f, arr[i++] = g, arr[i++] = h,
+                    i = 0,
+#ifdef H3R_QSORT
+    arr_view._asc = true, arr_view.reset (),
+    QSORT_ASC(arr), ChkSorted (arr, arr_view),
+    arr[i++] = a, arr[i++] = b, arr[i++] = c, arr[i++] = d,
+    arr[i++] = e, arr[i++] = f, arr[i++] = g, arr[i++] = h,
+    i = 0,
+    arr_view._asc = false, arr_view.reset (),
+    QSORT_DES(arr), ChkSorted (arr, arr_view);
+#else
+                    arr_view._asc = true, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view),
+                    arr_view._asc = false, arr_view.reset (),
+                    sort (arr_view), ChkSorted (arr, arr_view);
+#endif
+H3R_TEST_END
+
+H3R_TEST_(nine)
+    Array<int> arr {9};
+    SortableArray<int> arr_view {arr};
+    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+H3R_TEST_END
+
+H3R_TEST_(amillion)
+    Array<int> arr {1<<20};
+    SortableArray<int> arr_view {arr};
+    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+
+#ifdef H3R_QSORT
+    QSORT_ASC(arr);
+    ChkSorted (arr, arr_view);
+    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+    arr_view._asc = false, arr_view.reset ();
+    QSORT_DES(arr);
+    ChkSorted (arr, arr_view);
+#else
+    sort (arr_view);
+    H3R_TEST_IS_NOT_NULL(arr_view.first ())
+    ChkSorted (arr, arr_view);
+
+    arr_view._asc = false, arr_view.reset ();
+    sort (arr_view);
+    ChkSorted (arr, arr_view);
+#endif
+H3R_TEST_END
+
+NAMESPACE_H3R
+
+int main()
+{
+    H3R_TEST_RUN
+    return 0;
+}

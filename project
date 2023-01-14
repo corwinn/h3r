@@ -1,0 +1,247 @@
+Dedication:
+
+  I'm dedicating this to the people who saved my life from the insidious disease
+  called COVID-19. Your bravery and skill are immense. You are heroes.
+
+
+Project:
+
+There will be multi-threading. And UML. You have been warned.
+
+ * Dynamic memory access : h3r_os.h  -> OS::Alloc (), OS::Free ()
+ * Log access            : h3r_log.h -> Log::Info ()
+ * String                : h3r_string.h
+ * Thread                : h3r_thread.h
+ * CriticalSection       : h3r_criticalsection.h
+ * Stream                : h3r_stream.h -> File, Buffered, Memory, Inflate, ...
+
+done: 1st the project needs error handling:
+ - out of memory policy: default - exit()
+                         //LATER - ask the user to resolve it or exit()
+ - file IO policy      : same as above
+ - log policy          : default - exit()
+                         //LATER - silence
+
+done: and now it needs a makefile
+
+done: and now it needs a string, for the log service
+ done: and now it needs a dynamic array
+  done: and now it needs testing works
+ done: and now it needs a memory manager
+
+done: 2nd the project needs a log service: threaded dual FIFO should be ok
+ done: and now it needs os::thread
+  done: and now it needs a synchronization object
+   done: and now it needs thread-safety
+ <>  and now it needs to be done in c# - honestly  <>
+    done: and now it needs a big picture, to clarify what blocks depend on what
+          blocks, and to observe the most obvious too-stupid-decisions
+
+done: 3rd the project needs a file stream, and a file log
+ done: and now it needs fread/fwrite wrappers
+ done: and now it needs a main class to order singletons about
+
+and now, index the game resources and create the main game screen
+ done: and now it needs InflateStream
+ done: and now it needs a .def parser
+  and now it became clear what the main render loop will do:
+   foreach (visible tile) bitmap.render (tile.nextframe);
+   bitmap2screen (bitmap);
+  and now it became clear what the game requires: 800 x 600 x 16
+  done: and now it needs a .msk parser
+ done: and now it needs a .pcx parser
+ done: and now I need .bmp export - the defs are exported as a bitmap atlas
+  and now it became clear that there is a per-player-color UI
+  and now it became clear that some .def are not animations but collections
+ ring the buffers: start the main menu music and button sound fx
+  and now it needs audio options, like: sound quality
+  and now it became clear that I'll have to guess the number of channels used
+   (perhaps I shall dynamically increase them on an "as needed" basis; then:
+    0: music; 1: UI fx; 2+: game fx; or 0, 1: music (fade in/out), 2:UI, 3+:
+    game fx?)
+ and now it needs a VFS - abstract away persistent game data
+  done: and now it needs a file enumerator
+  done: and now it needs sort()
+  done: and now it needs async file IO: AsyncAdapter<T> adapt Stream to T
+  and now it needs an async directory enumerator
+ And now it feels like I'm weaving a very intricate pattern - its diagram
+ time - part of complexity management; do you know what happens if I don't
+ manage complexity? - "infinite project" happens :)
+
+and now it needs a .fnt parser and text renderer; while the .fnt parser isn't
+strictly required, it can help bring the remake closer to the origin
+
+- simplicity ends here -
+
+Make the game - its a pretty simple game :), with a ton of details.
+It will take years to closely match the original, because there is an unknown
+number of hidden (hard-coded) details. It would be so much short and simple
+should they've just published the original source code.
+A few things:
+ * UI - there are a few forms and dialogs - nothing to re-discover because most
+        of them are pre-rendered pictures that just need hit rectangles
+ * rendering - z-order, shadow and opacity maps, sprite atlases - nothing new
+               here; alpha blending is nowhere to be found yet
+ * game: a 3D table of quad patches: n*n*l, where n=18,36,72,144 and l=1,2
+    - quad: layered: terrain, river, road, objects, visibility (per kingdom);
+      also, the game does some kind of patch blending:
+        - when a water tile is surrounded by grass ones it gets partially or
+          completely covered with grass
+        - when a river or a road changes direction it auto-gets a corner piece
+    - object:
+        - terrain restriction: dirt objects, grass objects etc.
+        - stationary or moving (move_radius)
+        - modifies patch(es) visit-ability and interactivity (by moving objects)
+        - overrides patch(es) interactivity - a hero visiting a mine will
+          override the mine interaction
+        - ownership - which group owns this object
+        - Visit(object visitor) - different objects have different effects on
+          visiting objects
+        - creature, artifact, spell set
+        - skills (primary, secondary, specialty)
+        - bonuses (negative, positive, spells, resistances, immunities)
+        - spell points, experience, formation (no idea how to group these)
+        - kingdom
+            - resources, towns, allies, objects set, quest log
+The above should be enough to start imagining the relations web.
+Also, there are the math issues: damage, heal, resurrect, movement points.
+Also, there is the AI:
+ - adventure map - each object will "decide" its next "goal" based on hot-spot
+   object weights and how does that nears it towards wining the game; these
+   will be modified by the kingdom major role-play - warriors will "prefer" to
+   fight; explorers - to revel the map further prior choosing; builders to get
+   the free resources first; the "decision" will be multiplied by some "not so
+   optimal rate" for some "realism"; the difficulty level will define the look
+   ahead window for example
+ - battle - less predictable - "do not always chase the archers" for example;
+   again using weights for optimal attack then randomly choosing between it and
+   the last n not so optimal ones; last n depending on map difficulty setting
+   for example
+In any case, I'll try to make the AI script-based, in order to allow for expert
+tacticians to modify the AI.
+Also, there is the "scenarios" part where you should play a series of maps with
+special UI and game-play rules prior each one.
+Also, there is the network play part. The map is small and can be sent around
+pretty easy for the current bandwidths, so there is no problem there. It just
+has priority of N, with N-1 being the movies. The IPX protocol and the modem
+part are completely unknown to me, so perhaps I can organize the network
+connection part as plugins.
+
+Whats the new?
+
+  - alternative tactics mode - units can move and act in the same turn
+  - AI vs AI mode, replay - grab the popcorn and observe
+  - AI scripting - let the masters create the game
+  - play with the keyboard only, if you like
+
+- simplicity end ends here -
+
+I'm starting simple:
+ 1. Render the terrain (smallest map - all kinds of terrain);
+    walk around with a single hero (limitless movement points)
+ 2. Render the rivers;
+ 3. Render the roads;
+ 4. Render the static objects; do A*(weight terrain and roads)
+ 5. Render the other objects; walk around let all of them just display "Hi"
+    on interaction; set their benefit to 0
+ 6. Limit the movement points; enable Pathfinding, Logistics and Navigation;
+    compare all terrains walk cost with the original game
+ 7. Put on the shroud; enable the visibility radius; enable Scouting
+ 8. Enable objects that keep "visited" list
+
+[ old info ->
+- build:
+ - depends on: SDL, ffmpeg (video), zlib
+ - simple Makefile
+ - no big fat TLs
+ - c++14
+
+- code:
+ - standard c++ only
+ - OS services go into namespace os: File, Mem, Log, Bug, Thread, etc.
+ - no "using namespace os;"
+ - the game namespace is h3r
+ - types start with capital letter
+ - class/struct fields start with _
+ - calls use one interval: foo ();
+ - acess specifiers could be per method:
+    public: Foo
+    public: Bar
+    private: int _c
+ - working prototype first, ..., optimize last
+ - use TODO and TODONT - can't write it all from the start
+ - sed - related code is "//KEYWORD" ; example: "//D" for debug code
+
+<> big picture
+ - the game does a lot of things simultaneously <=> multi-threading is
+   mandatory => raises complexity by orders of magnitude:
+    - main thread - handles graphics
+    - monitor thread - monitors all other threads for timeouts
+    - the file IO thread handles file io requests
+    - the sound thread(s) handle music and sound fx
+    - log thread - dual FIFO
+   os::Thread and os::CriticalSection (Mutex and Semaphore aren't necessary)
+   encapsulate all of the above; threading is "encapsulated" by the "optimizer"
+   between my ears.
+ - game resources are wrapped in big files, some of them are compressed using
+   zip, some gzip; so, a Stream class using Decorator pattern is mandatory;
+ - the AI script will initially be an ASCII text table - what to do in ambiguous
+   situations, example: enemy castle and resource are available for aqcuiring -
+   warrior: castle, resource; builder: resource, castle; explorer: castle,
+   resource, etc.
+Aha, that's a lot of work.
+
+<1> unpack the game .lod data: 9509 files:
+    .DEF, .def - refers to pcx; seem to be coupled with msk; animation file?
+    .FNT, .fnt - bitmap font
+    .H3C, .h3c - campaign
+    .PAL, .pal - palette
+    .PCX, .pcx - picture - 8-bit indexed 24 bit palette, or 24 bit RGB (VCMI)
+    .TXT, .txt - text - game tables, messages, names, etc.
+    .msk - ? - each one is 14 bytes long
+    .ifr - ? - 1 file - H3Shad.ifr
+    .xmi - ? - 1 file - Default.xmi
+
+The text files require parsers - 2 at least - one for some things that start
+with lowercase letters and are using {, }, ", ", CR and LF as separators, and
+one for the tables using \t, floating point and percentage literals. Some of
+the text files belong to the campaigns.
+The def files contain sprite (pcx) collections.
+One parser is required for the h3m, h3c and gam files.
+
+These files do not define everything unfortunately - for example Orrin is a
+knight with archery and all that, but that info is nowhere to be found - e.g.
+its hard coded - which automatically freezes this project, as acquiring this
+info requires a lot of pointing'n'clicking (over 150 hero templates for
+starters), and I'm certainly not in the mood. This will introdice errors; also,
+it makes the original game design questionable. Also, its unclear what part of
+these text files are being used by the game, and what part is internally hard
+coded.
+<- old info ]
+
+"the wind" casts "Unfreeze" on this project. "Dovie'andi se tovya sagain."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                        << Some games are not over. >>
+
+ "The bridge is not stable, and the end changes place."
+
+ "What can change the nature of a man?"
+
+ "Lara: I don't want to close my eyes."
+
+ "Those are titles, words you cling to as the darkness falls around you."
+
+                      The pages are now and forever ! :)

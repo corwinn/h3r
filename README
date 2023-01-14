@@ -1,0 +1,24 @@
+This is a remake of the game engine of the well-known computer game
+"Heroes of Might and Magic III" and its official expansions.
+
+I'm not affiliated in any way with the authors/owners/etc. of the original
+game, so re-making the AI for example will be purely observation-based and
+experience-based.
+
+This remake is being made for fun and education. This remake does not, and will
+not provide any of the original game assets, so you need to buy the original
+game prior being able to play it by using this remake.
+
+The primary source of the original game data formats is:
+http://sf.net/projects/vcmi
+
+Credits.
+========
+
+Thanks to:
+
+ * A masterpiece: "Heroes of Might and Magic III"
+ * Inspiration and file format descriptions: http://sf.net/projects/vcmi
+ * OS windowing system and sound bridges: "SDL2-2.0.5"
+ * "ffmpeg" - for their magic all over the years! (.bik and .smk support)
+ * The .h3m map makers - you rock!

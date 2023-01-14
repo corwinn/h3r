@@ -1,0 +1,9 @@
+<> the VFS are plug-ins e.g. you can import resources from wherever you like
+   pros:
+    * decouple them completely if you like
+    * use custom graphics/sound/etc. "mods" w/o any relation to my code
+    * use more efficient storage for the game data (you have no right to
+      distribute the original game data in any form of course)
+   cons:
+    * additional work: design the plugin interface; c/c++ ABI fun; this will
+      raise complexity

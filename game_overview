@@ -1,0 +1,89 @@
+The pretty pictures have no purpose yet.
+
+The game is a multi-level board with pieces to move around. It contains a sub-
+game built-in: 1:1 battle - a single level unscrollable map with pieces to move
+around. Any piece that has just been moved can win or loose the game. The 2
+boards have different movement rules. The main game board is a square-tile (8
+tiles to move to, except the edge ones) grid, while the battle game board is a
+hexagon-tile (6 tiles to move to, except the edge ones) grid. Each tile has a
+number of properties: movement cost, obstacle, pretty picture, ...
+Obstacle is a tile that a moving object can not move to.
+Main board mechanic:
+  the player moves moveable objects and/or interacts with different UI
+  screens, then lets the game do the same for the AI players; repeat
+Battle board mechanic:
+  2 players only;
+  all pieces move in order computed by the game, based on their
+  properties; the battle mini-game ends when either player has won
+Objects (game pieces) are entities put over the tiles of the game board. Each
+game object has different properties. Passive objects do not react with the
+moving ones. Active stationary objects can modify visiting object properties, or
+can get their properties modified by visitors.
+Each game is called a map - the original game allows for 1 map to be played at
+a time. Each map has 1 or 2 levels game table, and 1 or 2 win and 1 loss condition
+related to active object(s) properties. The purpose of the game is to reach a
+map state such that it satisfies either a win or loss condition.
+There is exactly one active object that is not visible on the game table - each
+player. This object has properties like wealth, that are shared amongst all the
+active map objects that the player controls.
+Given my experience playing the game, creating maps, and studying its data file
+formats, it looks like it has been created by people who play with RDBMS. So I'm
+avoiding the "relational" and the "database" parts while creating the game data
+structures.
+
+Given the above text, here comes the outline:
+
+struct Object;
+struct Tile // this is what the game tables are made of
+{
+    bool Obstacle;
+    float MovementCost;
+    Stack<Object> visitors;    // max 2 visitors at the original game;
+    Object * ActiveObject;     // the stack here allows for more
+    bool Arrive(Object & v)
+    {
+        if (Obstacle)
+        {
+            // TODO can become an option: resources are not obstacles
+            if (ActiveObject) (ActiveObject->Visit(v)); // can't step on the tile
+            return false;
+        }
+        assert(v.CanArrive ());
+        _10: if (ActiveObject)
+        {
+            ActiveObject->Visit (v);
+            if (v.Erased) return; // the visitor is gone
+            else if (ActiveObject->Erased) // active obj gone
+            {
+                ActiveObject = v;
+                if (visitors.count > 0) // get the next active object if any
+                {
+                    ActiveObject = visitors.pop ();
+                    goto _10;
+                }
+            }
+            else visitors.push (ActiveObject), ActiveObject = &v;
+        } else ActiveObject = &v; // no prior active obj
+        return true;
+    }
+    void Leave()
+    {
+        assert(ActiveObject)
+        assert(ActiveObject->CanLeave ());
+        ActiveObject = visitors.count > 0 ? visitors.pop () : 0;
+    }
+}
+
+struct Object // this is what you put on the Tile(s)
+{
+    Tile * _t;
+    void Put(Tile &);
+    void MoveTo(Tile & v) { if (v.Arrive (*this)) if (_t) _t.Leave (); }
+    void Visit(Object &);
+    bool Static;
+    bool Active;
+    bool Erased; // the object was erased from the map
+    bool CanArrive() { return not Static && Active && not Erased; }
+    bool CanLeave() { return not Static && Active && not Erased; }
+    Map<Object> past_visitors; // who visited me
+}

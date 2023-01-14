@@ -1,0 +1,20 @@
+I postponed this remake for too many years.
+License: https://opensource.org/licenses/BSD-3-Clause
+Language: c++11
+Compiler: "clang" -Wall -Wextra -Wshadow
+VCS     : "git"
+Testing : test.cpp
+Graphics: "Open GL", bridge: "SDL2"
+Movies  : "ffmpeg"
+"Mp3"   : "SDL2_mixer"
+Remake  : "Heroes of Might and Magic III: The Shadow of Death"
+AI      : scripted
+Reason  : short, simple, fast, robust, extendable AI
+File formats info : "http://sf.net/projects/vcmi"
+
+Tasks:
+ 1. Design the game engine
+ 2. Create the program(s) that will write the game
+ 3. Show the startup screen
+ 4. grep -ri optimize
+ 5. Learn to program

@@ -1,0 +1,23 @@
+q:How to run this thing?
+a:Buy "Heroes of Might and Magic III", install it, and run it via this thing.
+
+q:Why the BSD license?
+a:Because I want everyone to make games like this one.
+
+q:What about sound?
+a:SDL2_mixer. "Direct Sound", OSS4, and ALSA might come later.
+
+q:Mods?
+a:Game first. I can't advance what I don't have.
+
+q:The universe?
+a:No idea. We are being owned by this planet - haven't seen the universe, yet.
+
+q:Why not C?
+a:Because this program needs a flaw.
+
+q:Why won't a power won't let you ignore it?
+a:42
+
+q:Estimated proof of concept, a.k.a 1st unplayable release?
+a:Q3 2023 - should the plan work, but it won't; smiling - aren't you? :)

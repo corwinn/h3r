@@ -1,0 +1,35 @@
+Initially everything will be hard-coded.
+There will be a base class called Window. Window can be: opened, closed, shown,
+hidden. Each window will contain Controls. A Window has BackroundMusic.
+A Control can be: Button (Checkbox), Editbox, Label, Bitmap, etc.
+Since there is no info on size, position, etc. of the original game, each window
+will be compared to a screenshot of the original one until there is over 90%
+match.
+The game shall be fully play-able with the keyboard, so there will be extensive
+selection of keybindings: everything that can be done with a mouse should be
+doable by a keyboard key.
+All Controls are interactive (receive interactive events: keyboard, mouse).
+Common UI rules apply: selection of the current control (the one currently
+receiving the interactive events) via the "Tab" key; Pg/Up/Dn for scrolling,
+etc. Thus each control shall implement a Highlit render state (xor rectangle of
+dotted line of width 1 for example; or a brief blink animation).
+The UI has sound fx and animations as the game, so the UI is one with the game
+itself: the map is a Window and everything on it is a Control; e.g. these are
+not generic framework windows and controls; e.g. you shouldn't view them as
+such.
+The graphics and sound engine is SDL2.
+
+Example:
+class MainWindow final : public Window
+{
+    BackgroundMusic _bm {"mainmenu.mp3"};
+    Bitmap _background {0, 0, "GamSelBk.pcx"};
+    Bitmap _title {0, 0, "foo.def"};
+    Button _btn_new_game {405, 102, "MMENUNG.def"};
+    ...
+    public: MainWindow()
+    {
+        _btn_new_game.Click = NewGame; // single cast delegate
+        // Click and NewGame are Command for example
+    }
+};

@@ -1,0 +1,243 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+// Highlighter: C++
+
+#include "h3r_test.h"
+
+//LATER ask the user to free some RAM: Console_Alloc_Error_Handler
+#include "h3r_os_error.h"
+H3R_ERR_DEFINE_UNHANDLED
+H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
+H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
+
+#include "h3r_string.h"
+
+H3R_NAMESPACE
+
+H3R_TEST_UNIT(h3r_string)
+
+H3R_TEST_(initial_state)
+    String s;
+    H3R_TEST_ARE_EQUAL(0, s.Length ())
+H3R_TEST_END
+
+H3R_TEST_(init_cstr)
+    String s {""};
+    H3R_TEST_ARE_EQUAL(0, s.Length ())
+    String f {"1"};
+    H3R_TEST_ARE_EQUAL(1, f.Length ())
+    H3R_TEST_ARE_EQUAL('1', f.AsByteArray ()[0])
+H3R_TEST_END
+
+H3R_TEST_(init_copycon)
+    String s {"1"};
+    String f = s;
+    H3R_TEST_ARE_EQUAL(1, f.Length ())
+    H3R_TEST_ARE_EQUAL('1', f.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL(1, s.Length ())
+    H3R_TEST_ARE_EQUAL('1', s.AsByteArray ()[0])
+H3R_TEST_END
+
+H3R_TEST_(init_movecon)
+    String q {"4"};
+    auto p = [&]() -> String && { return (String&&)(q); };
+    String t = p ();
+    H3R_TEST_ARE_EQUAL(1, t.Length ())
+    H3R_TEST_ARE_EQUAL('4', t.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL(0, q.Length ())
+    String r = (String &&)(t);
+    H3R_TEST_ARE_EQUAL(1, r.Length ())
+    H3R_TEST_ARE_EQUAL('4', r.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL(0, t.Length ())
+H3R_TEST_END
+
+H3R_TEST_(init_copyarr)
+    Array<byte> arr {2};
+    arr[0] = 'a';
+    arr[1] = 'b';
+    String f {arr};
+    H3R_TEST_ARE_EQUAL(2, f.Length ())
+    H3R_TEST_ARE_EQUAL('a', f.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL('b', f.AsByteArray ()[1])
+    H3R_TEST_ARE_EQUAL(2, arr.Length ())
+    H3R_TEST_ARE_EQUAL('a', arr[0])
+    H3R_TEST_ARE_EQUAL('b', arr[1])
+H3R_TEST_END
+
+H3R_TEST_(init_movearr)
+    Array<byte> arr {2};
+    arr[0] = 'a';
+    arr[1] = 'b';
+    String f {(Array<byte> &&)arr};
+    H3R_TEST_ARE_EQUAL(2, f.Length ())
+    H3R_TEST_ARE_EQUAL('a', f.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL('b', f.AsByteArray ()[1])
+    H3R_TEST_ARE_EQUAL(0, arr.Length ())
+H3R_TEST_END
+
+H3R_TEST_(copy_assign)
+    String q {"q"};
+    String p {"p"};
+    p = q;
+    H3R_TEST_ARE_EQUAL(1, q.Length ())
+    H3R_TEST_ARE_EQUAL('q', q.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL(1, p.Length ())
+    H3R_TEST_ARE_EQUAL('q', p.AsByteArray ()[0])
+H3R_TEST_END
+
+H3R_TEST_(move_assign)
+    String q {"q"};
+    String p {"p"};
+    p = (String &&)q;
+    H3R_TEST_ARE_EQUAL(0, q.Length ())
+    H3R_TEST_ARE_EQUAL(1, p.Length ())
+    H3R_TEST_ARE_EQUAL('q', p.AsByteArray ()[0])
+H3R_TEST_END
+
+H3R_TEST_(as_byte_array)
+    String a {};
+    var a_arr = a.AsByteArray ();
+    H3R_TEST_ARE_EQUAL(0, a_arr.Length ())
+    String b {"b"};
+    var b_arr = b.AsByteArray ();
+    H3R_TEST_ARE_EQUAL(1, b_arr.Length ())
+    H3R_TEST_ARE_EQUAL('b', b_arr[0])
+H3R_TEST_END
+
+H3R_TEST_(length)
+    String zero {};
+    H3R_TEST_ARE_EQUAL(0, zero.Length ())
+    String empty {""};
+    H3R_TEST_ARE_EQUAL(0, empty.Length ())
+    String one {"2"};
+    H3R_TEST_ARE_EQUAL(1, one.Length ())
+    String ten {"0123456789"};
+    H3R_TEST_ARE_EQUAL(10, ten.Length ())
+    H3R_TEST_ARE_EQUAL(ten.AsByteArray ().Length (), ten.Length ())
+H3R_TEST_END
+
+H3R_TEST_(format)
+    String s = String::Format ("");
+    H3R_TEST_ARE_EQUAL(0, s.Length ())
+
+    String a = String::Format ("1");
+    H3R_TEST_ARE_EQUAL(1, a.Length ()) // "1\0"
+    H3R_TEST_ARE_EQUAL('1', a.AsByteArray ()[0])
+    String b = String::Format ("%d", 1);
+    H3R_TEST_ARE_EQUAL(1, b.Length ()) // "1\0"
+    H3R_TEST_ARE_EQUAL('1', b.AsByteArray ()[0])
+
+    String c = String::Format ("%c%d", '1', 2);
+    H3R_TEST_ARE_EQUAL(2, c.Length ()) // "12\0"
+    H3R_TEST_ARE_EQUAL('1', c.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL('2', c.AsByteArray ()[1])
+
+    String d = String::Format ("%d%d%d%d%d", 0, 1, 2, 3, 4);
+    H3R_TEST_ARE_EQUAL(5, d.Length ()) // "12\0"
+    H3R_TEST_ARE_EQUAL('0', d.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL('1', d.AsByteArray ()[1])
+    H3R_TEST_ARE_EQUAL('2', d.AsByteArray ()[2])
+    H3R_TEST_ARE_EQUAL('3', d.AsByteArray ()[3])
+    H3R_TEST_ARE_EQUAL('4', d.AsByteArray ()[4])
+H3R_TEST_END
+
+H3R_TEST_(operator_pluseuqal)
+    String a {};
+    a += "";
+    H3R_TEST_ARE_EQUAL(0, a.Length ())
+    a += "a";
+    H3R_TEST_ARE_EQUAL(1, a.Length ())
+    H3R_TEST_ARE_EQUAL('a', a.AsByteArray ()[0])
+    a += "b";
+    H3R_TEST_ARE_EQUAL(2, a.Length ())
+    H3R_TEST_ARE_EQUAL('a', a.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL('b', a.AsByteArray ()[1])
+    String b {"c"};
+    a += b;
+    H3R_TEST_ARE_EQUAL(3, a.Length ())
+    H3R_TEST_ARE_EQUAL('a', a.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL('b', a.AsByteArray ()[1])
+    H3R_TEST_ARE_EQUAL('c', a.AsByteArray ()[2])
+H3R_TEST_END
+
+H3R_TEST_(operator_equals)
+    String a {"foo"};
+    String b {"foo"};
+    H3R_TEST_IS_TRUE(a == b)
+    String c {"bar"};
+    H3R_TEST_IS_FALSE(a == c)
+    H3R_TEST_IS_FALSE(b == c)
+    H3R_TEST_IS_TRUE(c == c)
+    String d {"fooo"};
+    H3R_TEST_IS_FALSE(a == d)
+H3R_TEST_END
+
+H3R_TEST_(operator_plus)
+    String a {"foo"};
+    String b {"foo"};
+    String c = a + b;
+    String d {"foofoo"};
+    H3R_TEST_IS_TRUE(c == d)
+    String e = a + "foo";
+    H3R_TEST_IS_TRUE(e == d)
+    String f = "foo" + a;
+    H3R_TEST_IS_TRUE(f == d)
+    d += "foofoo";
+    String g = a + b + c;
+    H3R_TEST_IS_TRUE(g == d)
+H3R_TEST_END
+
+H3R_TEST_(zero_terminated_string)
+    String a {"foo"};
+    Array<char> b = a.AsZStr (); // adds 8 zero bytes
+    H3R_TEST_ARE_EQUAL(3, a.Length ())
+    H3R_TEST_ARE_EQUAL('f', a.AsByteArray ()[0])
+    H3R_TEST_ARE_EQUAL('o', a.AsByteArray ()[1])
+    H3R_TEST_ARE_EQUAL('o', a.AsByteArray ()[2])
+    H3R_TEST_ARE_EQUAL(3+8, b.Length ())
+    H3R_TEST_ARE_EQUAL('f', b.Data ()[0])
+    H3R_TEST_ARE_EQUAL('o', b.Data ()[1])
+    H3R_TEST_ARE_EQUAL('o', b.Data ()[2])
+    for (int i = 3; i < 3+8; i++)
+        H3R_TEST_ARE_EQUAL('\0', b.Data ()[i])
+H3R_TEST_END
+
+NAMESPACE_H3R
+
+int main()
+{
+    H3R_TEST_RUN
+    return 0;
+}

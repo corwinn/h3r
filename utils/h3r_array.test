@@ -1,0 +1,240 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+// Highlighter: C++
+
+#include "h3r_test.h"
+
+//LATER ask the user to free some RAM: Console_Alloc_Error_Handler
+#include "h3r_os_error.h"
+H3R_ERR_DEFINE_UNHANDLED
+H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
+H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
+
+#include "h3r_array.h"
+
+H3R_NAMESPACE
+
+H3R_TEST_UNIT(h3r_array)
+
+H3R_TEST_(initial_state)
+    H3R_NS::Array<int> arr;
+    H3R_TEST_ARE_EQUAL(0, arr.Length ())
+    H3R_TEST_IS_NULL(arr.Data ())
+    H3R_TEST_IS_NULL((int *)arr)
+H3R_TEST_END
+
+H3R_TEST_(resize)
+    H3R_NS::Array<int> arr;
+    arr.Resize (1); // 0 -> 1
+    H3R_TEST_ARE_EQUAL(1, arr.Length ())
+    H3R_TEST_IS_FALSE(arr.Empty ())
+    arr[0] = 4;
+    arr.Resize (2); // 1 -> 2
+    H3R_TEST_ARE_EQUAL(2, arr.Length ())
+    H3R_TEST_IS_FALSE(arr.Empty ())
+    H3R_TEST_ARE_EQUAL(4, arr[0])
+    arr[1] = 5;
+    arr.Resize (1); // 2 -> 1
+    H3R_TEST_ARE_EQUAL(1, arr.Length ())
+    H3R_TEST_IS_FALSE(arr.Empty ())
+    H3R_TEST_ARE_EQUAL(4, arr[0])
+    arr.Resize (0); // 0 out
+    H3R_TEST_IS_TRUE(arr.Empty ())
+
+    arr.Resize (3); // correct memmove?
+    arr[1] = 5;
+    arr.Resize (2);
+    H3R_TEST_ARE_EQUAL(5, arr[1])
+H3R_TEST_END
+
+H3R_TEST_(initial_state_asbuf)
+    const int BUF_SIZE {2};
+    H3R_NS::Array<int> arr {BUF_SIZE};
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, arr.Length ())
+    H3R_TEST_IS_NOT_NULL(arr.Data ())
+    H3R_TEST_IS_NOT_NULL((int *)arr)
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(0, arr[i])
+    for (int i = 0; i < BUF_SIZE; i++) arr[i] = 1;
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(1, arr[i])
+H3R_TEST_END
+
+H3R_TEST_(subscript)
+    H3R_NS::Array<int> arr;
+    var empty_access = [&]() { arr[8]; };
+    H3R_TEST_EXCEPTION(ArgumentException, empty_access);
+    H3R_NS::Array<int> arr1 {1};
+    var overflow_access = [&]() { arr1[1]; };
+    H3R_TEST_EXCEPTION(ArgumentException, overflow_access);
+    H3R_TEST_ARE_EQUAL (arr1[0], 0)
+    arr1[0] = 5;
+    H3R_TEST_ARE_EQUAL (arr1[0], 5)
+H3R_TEST_END
+
+H3R_TEST_(empty)
+    const int BUF_SIZE {4};
+    H3R_NS::Array<int> arr {BUF_SIZE};
+    H3R_TEST_IS_FALSE(arr.Empty ())
+    H3R_TEST_IS_NOT_NULL(arr.Data ())
+    H3R_TEST_IS_NOT_NULL((int *)arr)
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, arr.Length ())
+    H3R_NS::Array<int> empty_arr;
+    H3R_TEST_IS_TRUE(empty_arr.Empty ())
+    H3R_TEST_IS_NULL(empty_arr.Data ())
+    H3R_TEST_IS_NULL((int *)empty_arr)
+    H3R_TEST_ARE_EQUAL(0, empty_arr.Length ())
+H3R_TEST_END
+
+H3R_TEST_(copyto)
+    const int BUF_SIZE {3};
+    H3R_NS::Array<int> src {BUF_SIZE};
+    for (int i = 0; i < BUF_SIZE; i++) src[i] = i;
+    H3R_NS::Array<int> dst;
+    src.CopyTo (dst); // full to empty
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, src.Length ())
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, dst.Length ())
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(i, src[i])
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(i, dst[i])
+    // full to full
+    for (int i = 0; i < BUF_SIZE; i++) src[i] = BUF_SIZE - i;
+    src.CopyTo (dst);
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, src.Length ())
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, dst.Length ())
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(BUF_SIZE - i, src[i])
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(BUF_SIZE - i, dst[i])
+    // copy to self
+    for (int i = 0; i < BUF_SIZE; i++) dst[i] = i;
+    dst.CopyTo (dst);
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, dst.Length ())
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(i, dst[i])
+    H3R_NS::Array<int> e; // empty to full
+    e.CopyTo (dst);
+    H3R_TEST_IS_TRUE(dst.Empty ())
+    H3R_TEST_IS_TRUE(e.Empty ())
+    e.CopyTo (dst); // empty to empty
+    H3R_TEST_IS_TRUE(dst.Empty ())
+    H3R_TEST_IS_TRUE(e.Empty ())
+H3R_TEST_END
+
+H3R_TEST_(moveto)
+    const int BUF_SIZE {11};
+    H3R_NS::Array<int> src {BUF_SIZE};
+    H3R_NS::Array<int> dst;
+    dst.MoveTo (dst); // empty, to self
+    H3R_TEST_IS_TRUE(dst.Empty ())
+    src.MoveTo (src); // full, to self
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, src.Length ())
+    for (int i = 0; i < BUF_SIZE; i++) src[i] = i;
+    src.MoveTo (dst); // full to empty
+    H3R_TEST_IS_TRUE(src.Empty ())
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, dst.Length ())
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(i, dst[i])
+    dst.MoveTo (src); // move back
+    H3R_TEST_IS_TRUE(dst.Empty ())
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, src.Length ())
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(i, src[i])
+    src.CopyTo (dst); // full to full - a.k.a. replace
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, dst.Length ())
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, src.Length ())
+    for (int i = 0; i < BUF_SIZE; i++) src[i] = BUF_SIZE - i;
+    src.MoveTo (dst);
+    H3R_TEST_IS_TRUE(src.Empty ())
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(BUF_SIZE - i, dst[i])
+    src.MoveTo (dst); // empty to full - effectively: delete
+    H3R_TEST_IS_TRUE(dst.Empty ())
+    H3R_TEST_IS_TRUE(src.Empty ())
+H3R_TEST_END
+
+H3R_TEST_(append)
+    const int BUF_SIZE {7};
+    char buf[BUF_SIZE] = "abcdef";
+    H3R_NS::Array<unsigned char> arr;
+    arr.Append (buf, BUF_SIZE); // empty
+    for (int i = 0; i < BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i])
+    arr.Append (buf, BUF_SIZE); // full
+    for (int i = 0; i < BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i])
+    for (int i = BUF_SIZE; i < 2 * BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i - BUF_SIZE])
+
+    var wrong_size = [&]() { arr.Append (buf, 0); };
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_size)
+    for (int i = 0; i < BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i])
+    for (int i = BUF_SIZE; i < 2 * BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i - BUF_SIZE])
+
+    var null_ptr = [&]() { arr.Append<char> (nullptr, BUF_SIZE); };
+    H3R_TEST_EXCEPTION(ArgumentException, null_ptr)
+    for (int i = 0; i < BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i])
+    for (int i = BUF_SIZE; i < 2 * BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i - BUF_SIZE])
+
+    int int_buf[BUF_SIZE] {};
+    var wrong_type = [&]() { arr.Append (int_buf, BUF_SIZE); };
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_type)
+    for (int i = 0; i < BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i])
+    for (int i = BUF_SIZE; i < 2 * BUF_SIZE; i++)
+        H3R_TEST_ARE_EQUAL(arr[i], buf[i - BUF_SIZE])
+H3R_TEST_END
+
+H3R_TEST_(append_bug1)
+    H3R_NS::Array<char *> arr;
+    char a = 'b';
+    char * b = &a;
+    arr.Append(&b, 1);
+    H3R_TEST_ARE_EQUAL(arr.Length (), 1)
+    H3R_TEST_ARE_EQUAL(arr[0], b)
+H3R_TEST_END
+
+H3R_TEST_(append_bug2_pointers_and_arithemtics)
+    H3R_NS::Array<char *> arr;
+    char a = 'a', b = '\b', * pa = &a, * pb = &b;
+    arr.Append(&pa, 1);
+    arr.Append(&pb, 1);
+    H3R_TEST_ARE_EQUAL(arr.Length (), 2)
+    H3R_TEST_ARE_EQUAL(arr[0], pa)
+    H3R_TEST_ARE_EQUAL(arr[1], pb)
+H3R_TEST_END
+
+NAMESPACE_H3R
+
+int main()
+{
+    H3R_TEST_RUN
+    return 0;
+}

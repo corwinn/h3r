@@ -1,0 +1,25 @@
+Coding Convention
+
+ - all code except main() lies in H3R_NS namespace defined at "h3r.h"
+ - all code files are prefixed with "h3r_", except "h3r.h" and "main.cpp"
+ - include directives for "h3r_"-prefixed headers won't include paths
+ - class name (lower case) matches the name after the "h3r_" prefix
+ - all test code files have test target name and ".test" extension
+ - one class per ".h"/".cpp" combo/, except inner classes and tests
+ - class name and its methods start with capital letter
+ - class private fields start with "_"
+ - no abstract methods; no STL; no "Boost C++"
+ - preferred mish-mash at the OS bridge: POSIX
+ - everything is thread-unsafe, unless specified otherwise
+ - "//TODO " - means something needs to be done at the current release
+ - "//TODONT " - means something shouldn't be done
+ - "//LATER " - means something needs to be done at the next release
+ - "//c " - means compiler command
+ - "//v " - means valgrind command
+ - __pointless_verbosity:: code is as such on purpose - no shortcuts
+ - new code shouldn't introduce test suite failure(s)
+ - new code shall be proven by a test unit, unless its a test unit
+ - new code shall be documented: 1st and foremost - whatsit for
+ - new code shall be short, simple, and independent as much as possible
+ - threads shall be polling threads - no sleeping on sync objects
+ - avoid static init - use the Game singleton instead

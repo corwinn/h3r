@@ -1,0 +1,80 @@
+snd
+ 4 count
+   40 filename (filename \0 file_extension[3])
+    4 ofs since 0
+    4 file size [bytes]
+
+vid
+ 4 count
+   40 filename (filename . [3])
+    4 ofs since 0
+
+lod
+ 4 sign - LOD\0
+ 4 unknown
+ 4 count
+80 unknown
+  [count]
+   16 filename ([1;8] . [3] \0)
+    4 ofs since 0
+    4 len - uncompressed
+    4 unknown - type perhaps 1 - h3c, 2 - txt, 17 - UI pcx ?, 16 - pcx
+    4 len - compressed (zip) or 0 when not compressed
+
+pcx // bitmap - 8-bit RGB palette, or 24 bit RGB
+ 4         s       // bitmap size [bytes]
+ 4         w       // width [pixels]
+ 4         h       // height [pixels]
+ [s/(w*h)] bitmap  (1 == s/(w*h))
+ [  w*h*3] bitmap  (3 == s/(w*h))
+ [  256*3] RGB palette (1 == s/(w*h))
+
+def // contains sprite collection(s) with the same 8-bit RGB palette
+ 4 t // type
+ 4 w // bounding box width [pixels]
+ 4 h // bounding box height [pixels]
+ 4 c // collections count
+ [256*3] p // RGB palette
+  [c]
+   4 unknown
+   4 n // num items in the current collection
+   8 unknown
+    [n]
+     13 name // you have to copy this into a 14 - '\0'-terminated buffer
+    [n]
+      4 offset // 0-based
+   sprites_data // referred by the above offsets
+    4 size // sprite size w/o this "header"
+    4 type // encoding type used for the bitmap: [0;3]
+    4 aw   // equivalent to the w above
+    4 ah   // equivalent to the h above
+    4 sw   // sprite bitmap width [pixels]
+    4 sh   // sprite bitmap height [pixels]
+    4 l    // sprite bitmap left offset [pixels] inside (aw, ah)
+    4 t    // sprite bitmap top offset [pixels] inside (aw, ah)
+     sprite_bitmap
+      [4*sh] off_tbl (1==type) // per bitmap row offset based on this table one
+       rows          (1==type)
+        1 b // if b is 255 - copy next "l+1" bytes
+        1 l // otherwise repeat "b" "l+1" times
+      2 unk_len           (2==type)
+      [unk_len-2] unknown (2==type)
+      [(w>>5)*sh] off_tbl (3==type) // only i*(w>>5) points to row start
+        rows              (3==type || 2==type)
+        1 b // l = (b & 31) + 1 ; when (224 & b) == 224 copy next "len" bytes
+            // otherwise "b>>5" repeats "len" times
+      [sw*sh] bitmap (0==type) // no encoding - just the bitmap
+   sprites_data2 (stream_offset < stream_size) // unreferred sprites
+
+msk // contains 2 gameplay masks
+ 1 width
+ 2 height
+ 6 block_mask // (8 x 6 bits)
+ 6 visit_mask //
+ // at least it should contain the above masks, but AVCcasx0.msk for example
+ // has all of its mask bits set to 1, yet put a castle at the editor, and
+ // you'll see quite a different mask set: AVCneut0 displays them (red - block,
+ // yellow - visit). AVCneut0.msk has all of its block_mask bits set, and all
+ // visit_mask cleared; its size is 5x5 unlike the other town defs. The editor
+ // is using a 5x5 to define where you can place a castle for example (its
+ // 1st column - the shadow - can be over a water terrain)
