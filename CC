@@ -16,6 +16,7 @@ Coding Convention
  - "//LATER " - means something needs to be done at the next release
  - "//c " - means compiler command
  - "//v " - means valgrind command
+ - "//C++np" - how the code would like should C++ supported named parameters
  - __pointless_verbosity:: code is as such on purpose - no shortcuts
  - new code shouldn't introduce test suite failure(s)
  - new code shall be proven by a test unit, unless its a test unit

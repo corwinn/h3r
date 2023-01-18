@@ -92,7 +92,7 @@ class TaskThread final
             _p = p;
             _dirty = true;
             return *p;
-            //OS::Log_stdout ("p:%p, dirty:%d" EOL, this, (_dirty ? 1 : 0));
+            // OS::Log_stdout ("p:%p, dirty:%d" EOL, this, (_dirty ? 1 : 0));
         }
         // Bridge part
         inline void Do() { _p->Do (); }
@@ -132,7 +132,7 @@ class TaskThread final
 
     private: inline IAsyncTask & Do(IAsyncTask * it) { return _tproc.Do (it); }
 
-    public: class TaskProperty { // IAsyncTask foo { set {} }
+    public: class TaskProperty final { // IAsyncTask foo { set {} }
         private: TaskThread & _a;
         private: TaskProperty(TaskThread & a) : _a {a} {}
         friend class TaskThread;

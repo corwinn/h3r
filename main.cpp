@@ -169,6 +169,7 @@ int main(int argc, char ** argv)
         "File: \"%s\" opened in read-only mode. Async Size: %d" EOL,
         t.Name ().AsZStr ().Data (), test_adapter.size));
 
+    //C++np H3R_NS::OS::EnumFiles<lambda_fwd: H3R_NS::Game>
     H3R_NS::OS::EnumFiles<H3R_NS::Game> (game, ".",
         [](H3R_NS::Game &, const char * name, bool dir) -> bool
         {

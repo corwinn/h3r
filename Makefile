@@ -51,6 +51,7 @@ _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync \
 CXXFLAGS = $(_I) -std=c++11 $(_O) $(_F) $(_W)
 SRC = $(wildcard ./*/*.cpp)
 SRC += $(wildcard os/$(PLATFORM)/*.cpp)
+SRC := $(filter-out ./prior_publish/%,$(SRC))
 OBJ = $(patsubst %.cpp,%.o,$(SRC))
 
 $(APP): main.a main.o h3r_game.o
