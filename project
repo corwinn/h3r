@@ -64,9 +64,9 @@ and now, index the game resources and create the main game screen
   done: and now it needs sort()
   done: and now it needs async file IO: AsyncAdapter<T> adapt Stream to T
   and now it needs an async directory enumerator
- And now it feels like I'm weaving a very intricate pattern - its diagram
- time - part of complexity management; do you know what happens if I don't
- manage complexity? - "infinite project" happens :)
+ done: And now it feels like I'm weaving a very intricate pattern - its diagram
+       time - part of complexity management; do you know what happens if I don't
+       manage complexity? - "infinite project" happens :)
 
 and now it needs a .fnt parser and text renderer; while the .fnt parser isn't
 strictly required, it can help bring the remake closer to the origin
