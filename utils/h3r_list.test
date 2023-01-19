@@ -1,0 +1,151 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+// Highlighter: C++
+
+#include "h3r_test.h"
+
+#include "h3r_os_error.h"
+H3R_ERR_DEFINE_UNHANDLED
+H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
+H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
+
+#include "h3r_list.h"
+
+H3R_NAMESPACE
+
+H3R_TEST_UNIT(h3r_list)
+
+H3R_TEST_(initial_state)
+    H3R_NS::List<int> l;
+    H3R_TEST_IS_TRUE(l.Empty ())
+    H3R_TEST_IS_TRUE(0 == l.Count ())
+H3R_TEST_END
+
+H3R_TEST_(add)
+    H3R_NS::List<int> l;
+    l.Add (4);
+    H3R_TEST_IS_FALSE(l.Empty ())
+    H3R_TEST_ARE_EQUAL(1, l.Count ())
+    l.Add (7);
+    H3R_TEST_IS_FALSE(l.Empty ())
+    H3R_TEST_ARE_EQUAL(2, l.Count ())
+H3R_TEST_END
+
+struct foo { int a; foo(int v) : a{v} {} };
+
+H3R_TEST_(add_ref)
+    H3R_NS::List<foo> l;
+    foo e1 {4};
+    const foo &e1r = e1;
+    l.Add (e1r); // it gets copied inside, just passed as a ref here
+    H3R_TEST_IS_FALSE(l.Empty ())
+    H3R_TEST_ARE_EQUAL(1, l.Count ())
+    H3R_TEST_ARE_EQUAL(4, l[0].a)
+    l[0].a = 5;
+    l.Add (e1r);
+    H3R_TEST_IS_FALSE(l.Empty ())
+    H3R_TEST_ARE_EQUAL(2, l.Count ())
+    H3R_TEST_ARE_EQUAL(5, l[0].a)
+    H3R_TEST_ARE_EQUAL(4, l[1].a)
+H3R_TEST_END
+
+H3R_TEST_(count)
+    H3R_NS::List<size_t> l;
+    H3R_TEST_ARE_EQUAL(0, l.Count ())
+    for (size_t i = 0; i < 100; i++) {
+        l.Add (i);
+        H3R_TEST_ARE_EQUAL(i+1, l.Count ())
+    }
+H3R_TEST_END
+
+H3R_TEST_(empty)
+    H3R_NS::List<int> l;
+    H3R_TEST_IS_TRUE(l.Empty ())
+    l.Add (101);
+    H3R_TEST_IS_FALSE(l.Empty ())
+    l.Clear ();
+    H3R_TEST_IS_TRUE(l.Empty ())
+H3R_TEST_END
+
+H3R_TEST_(clear)
+    H3R_NS::List<int> l;
+    l.Add (101);
+    H3R_TEST_IS_FALSE(l.Empty ())
+    l.Clear ();
+    H3R_TEST_IS_TRUE(l.Empty ())
+H3R_TEST_END
+
+H3R_TEST_(contains)
+    H3R_NS::List<int> l;
+    l.Add (101); l.Add (102); l.Add (101);
+    H3R_TEST_IS_FALSE(l.Empty ())
+    H3R_TEST_IS_TRUE(l.Contains (101))
+    H3R_TEST_IS_TRUE(l.Contains (102))
+    H3R_TEST_IS_FALSE(l.Contains (100))
+    H3R_TEST_IS_FALSE(l.Contains (103))
+H3R_TEST_END
+
+H3R_TEST_(remove)
+    H3R_NS::List<int> l;
+    l.Add (101); l.Add (102); l.Add (101);
+    H3R_TEST_IS_FALSE(l.Empty ())
+    H3R_TEST_IS_TRUE(l.Remove (101))
+    H3R_TEST_IS_TRUE(l.Contains (102))
+    H3R_TEST_IS_FALSE(l.Contains (101))
+    H3R_TEST_ARE_EQUAL(1, l.Count ()) // all occurrences removed
+    H3R_TEST_IS_FALSE(l.Remove (101))
+    H3R_TEST_IS_TRUE(l.Contains (102))  // nothing changed
+    H3R_TEST_IS_FALSE(l.Contains (101)) //
+    H3R_TEST_ARE_EQUAL(1, l.Count ())   //
+    H3R_TEST_IS_TRUE(l.Remove (102))
+    H3R_TEST_IS_FALSE(l.Contains (102))
+    H3R_TEST_ARE_EQUAL(0, l.Count ())
+H3R_TEST_END
+
+H3R_TEST_(range_based_for)
+    const size_t S{3};
+    const int buf[S]{0, 1, 2};
+    H3R_NS::List<int> l {buf, S};
+    int i{0};
+    for (const var & t : l) H3R_TEST_ARE_EQUAL(buf[i++], t);
+H3R_TEST_END
+
+NAMESPACE_H3R
+
+int main()
+{
+    H3R_TEST_RUN
+    return 0;
+}

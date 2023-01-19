@@ -36,19 +36,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_LIST_H_
 
 #include "h3r.h"
+#include "h3r_array.h"
 
 H3R_NAMESPACE
 
-// List of T. You can add(), remove(), count(), enumerate.
-// It doesn't own T.
+#define public public:
+#define private private:
+
+// List of T. You can Add(), Remove(), Count(), Clear(), "for (a:n)", ...
+// It won't warn you for duplicates. Again: T * - you're the manager; T
+// should get ~T()-ed.
 template <typename T> class List
 {
-    // private: T * _l; // list
-    // private: int _c; // items count
+    private Array<T> _l; // list
 
-    public: bool Contains(T &) { return false; }
-    public: T & Add(T & itm) { return itm; }
-};
+    public List(size_t capacity = 0) : _l{capacity} {}
+    public List(const T * a, size_t n) : _l{} { _l.Append (a, n); }
+    public template <typename R> bool Contains(R itm)
+    {
+        for (const var & i : _l) if (i == itm) return true;
+        return false;
+    }
+    public template <typename R> R Add(R itm)
+    {
+        return _l.Append (&itm, 1), itm;
+    }
+    // Remove all occurrences. Slow. Use rarely. You want fast: use an LL.
+    // Returns whether something was removed (found) or not.
+    public template <typename R> bool Remove(R itm)
+    {
+        Array<T> n {_l.Length ()};
+        size_t idx {0};
+        for (const var & i : _l) if (i != itm) n[idx++] = i;
+        if (_l.Length () == idx) return false;
+        return n.Resize (idx), n.MoveTo (_l), true;
+    }
+    public T & operator[](size_t i) { return _l[i]; }
+    public bool Empty() const { return _l.Empty (); }
+    public size_t Count() const { return _l.Length (); }
+    public void Clear() { _l.Resize (0); }
+    public const T * begin() const { return _l.begin (); }
+    public const T * end  () const { return _l.end (); }
+};// List
+
+#undef private
+#undef public
 
 NAMESPACE_H3R
 
