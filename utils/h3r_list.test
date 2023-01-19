@@ -142,6 +142,14 @@ H3R_TEST_(range_based_for)
     for (const var & t : l) H3R_TEST_ARE_EQUAL(buf[i++], t);
 H3R_TEST_END
 
+H3R_TEST_(wrong_operator_right_effect)
+    const size_t S{3};
+    const int buf[S]{0, 1, 2};
+    var l = H3R_NS::List<int> {} << buf[0] << buf[1] << buf[2];
+    int i{0};
+    for (const var & t : l) H3R_TEST_ARE_EQUAL(buf[i++], t);
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()

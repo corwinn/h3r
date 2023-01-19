@@ -46,7 +46,8 @@ H3R_NAMESPACE
 // List of T. You can Add(), Remove(), Count(), Clear(), "for (a:n)", ...
 // It won't warn you for duplicates. Again: T * - you're the manager; T
 // should get ~T()-ed.
-template <typename T> class List
+// Why not final: because I might need to extend it for specific T.
+template <typename T> class List //LATER Insert() - should the need arise
 {
     private Array<T> _l; // list
 
@@ -77,6 +78,12 @@ template <typename T> class List
     public void Clear() { _l.Resize (0); }
     public const T * begin() const { return _l.begin (); }
     public const T * end  () const { return _l.end (); }
+
+    // Another init. path; lets see...
+    public template <typename R> List<T> & operator<<(R r)
+    {
+        return Add(r), *this;
+    }
 };// List
 
 #undef private
