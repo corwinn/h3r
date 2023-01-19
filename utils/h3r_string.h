@@ -79,6 +79,7 @@ class String final
     public: String operator+(const String &);
     public: String operator+(const char *);
     public: bool operator==(const String &);
+    public: bool operator!=(const String & b) { return ! (*this == b); }
 
     public: inline Array<char> AsZStr() const
     {
@@ -87,6 +88,8 @@ class String final
         // 8 zero bytes - should be enough for any encoding
         return zstr.Resize (zstr.Length () + 8), zstr;
     }
+
+    public: String ToLower();
 };
 
 String operator+(const char *, const String &);

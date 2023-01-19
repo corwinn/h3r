@@ -204,6 +204,18 @@ H3R_TEST_(operator_equals)
     H3R_TEST_IS_FALSE(a == d)
 H3R_TEST_END
 
+H3R_TEST_(operator_notequals)
+    String a {"foo"};
+    String b {"foo"};
+    H3R_TEST_IS_FALSE(a != b)
+    String c {"bar"};
+    H3R_TEST_IS_TRUE(a != c)
+    H3R_TEST_IS_TRUE(b != c)
+    H3R_TEST_IS_FALSE(c != c)
+    String d {"fooo"};
+    H3R_TEST_IS_TRUE(a != d)
+H3R_TEST_END
+
 H3R_TEST_(operator_plus)
     String a {"foo"};
     String b {"foo"};
@@ -232,6 +244,20 @@ H3R_TEST_(zero_terminated_string)
     H3R_TEST_ARE_EQUAL('o', b.Data ()[2])
     for (int i = 3; i < 3+8; i++)
         H3R_TEST_ARE_EQUAL('\0', b.Data ()[i])
+H3R_TEST_END
+
+H3R_TEST_(to_lower)
+    String a {"foo"};
+    String b = a.ToLower ();
+    H3R_TEST_ARE_EQUAL(a, b)
+    String c {"Foo"};
+    String d = c.ToLower ();
+    H3R_TEST_ARE_EQUAL(a, d)
+    H3R_TEST_ARE_NOT_EQUAL(a, c);
+    String e {"foO"};
+    String f = e.ToLower ();
+    H3R_TEST_ARE_EQUAL(a, f);
+    H3R_TEST_ARE_NOT_EQUAL(a, e);
 H3R_TEST_END
 
 NAMESPACE_H3R

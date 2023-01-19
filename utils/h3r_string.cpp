@@ -128,4 +128,15 @@ String operator+(const char * l, const String & r)
     return String (l) + r;
 }
 
+#include <ctype.h>
+
+String String::ToLower()//TODO uncode (iconv)
+{
+    Array<byte> result {};
+    int tmp {};
+    for (auto c : AsByteArray ())
+        result.Append (reinterpret_cast<byte *>(&(tmp = tolower (c))), 1);
+    return String {result};
+}
+
 NAMESPACE_H3R
