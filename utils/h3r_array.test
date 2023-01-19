@@ -90,6 +90,18 @@ H3R_TEST_(initial_state_asbuf)
     for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(1, arr[i])
 H3R_TEST_END
 
+H3R_TEST_(initial_state_from_array)
+    int foo[] = {1, 2, 3, 4, 5, 6, 7};
+    const int BUF_SIZE {sizeof(foo)/sizeof(int)};
+    H3R_NS::Array<int> arr {foo, BUF_SIZE};
+    H3R_TEST_ARE_EQUAL(BUF_SIZE, arr.Length ())
+    H3R_TEST_IS_NOT_NULL(arr.Data ())
+    H3R_TEST_IS_NOT_NULL((int *)arr)
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(i+1, arr[i])
+    for (int i = 0; i < BUF_SIZE; i++) arr[i] = 1;
+    for (int i = 0; i < BUF_SIZE; i++) H3R_TEST_ARE_EQUAL(1, arr[i])
+H3R_TEST_END
+
 H3R_TEST_(subscript)
     H3R_NS::Array<int> arr;
     var empty_access = [&]() { arr[8]; };

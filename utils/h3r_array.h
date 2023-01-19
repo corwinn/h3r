@@ -53,6 +53,7 @@ template <typename T,
     public: inline const size_t & Length() const { return _len; }
 
     public: Array() {}
+    public: Array(const T * a, size_t n) { Append (a, n); }
     public: Array(Array<T> && a) { a.MoveTo (*this); }
     public: Array<T> & operator=(Array<T> && a)
     {
