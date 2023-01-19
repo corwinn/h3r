@@ -42,12 +42,12 @@ H3R_NAMESPACE
 
 // LIFO. Primary use: avoid recursive calls. Primary reason: dir enum.
 // You free T *; T should get ~T() called
-template <typename T> class Stack
+template <typename T> class Stack final
 {
     private: Array<T> _b;
     private: int _sp {-1};
     public: Stack(size_t capacity = 0) : _b{0 == capacity ? 8 : capacity} {}
-    public: void Push(T t)
+    public: template <typename R> void Push(R t)
     {
         if (++_sp >= static_cast<int>(_b.Length ()))
             _b.Resize (_b.Length () + (_b.Length () >> 2));

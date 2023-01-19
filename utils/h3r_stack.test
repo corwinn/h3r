@@ -90,6 +90,12 @@ H3R_TEST_(stack)
     H3R_TEST_IS_FALSE(s0.Empty ())
     for (int i = 99; i >= 0; i--) H3R_TEST_ARE_EQUAL(i, s0.Pop ());
     H3R_TEST_IS_TRUE(s0.Empty ())
+    int a = 10;
+    const int &q = a;
+    s0.Push (q);
+    H3R_TEST_IS_FALSE(s0.Empty ())
+    int b = s0.Pop ();
+    H3R_TEST_ARE_EQUAL(a, b);
 H3R_TEST_END
 
 NAMESPACE_H3R
