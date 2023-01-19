@@ -129,6 +129,7 @@ class foo
     }
     void h2(H3R_NS::AsyncAdapter<foo>::Result){}
     public: foo(H3R_NS::Stream & s, H3R_NS::TaskThread & a)
+//np {thread: a, observer: this, on_complete: &foo::h1, on_canceled: &foo::h2}
         : _adapter {a, this, &foo::h1, &foo::h2}
     {
         _adapter.Stream = s;
@@ -169,7 +170,7 @@ int main(int argc, char ** argv)
         "File: \"%s\" opened in read-only mode. Async Size: %d" EOL,
         t.Name ().AsZStr ().Data (), test_adapter.size));
 
-    //C++np H3R_NS::OS::EnumFiles<lambda_fwd: H3R_NS::Game>
+//np <lambda_fwd: H3R_NS::Game>
     H3R_NS::OS::EnumFiles<H3R_NS::Game> (game, ".",
         [](H3R_NS::Game &, const char * name, bool dir) -> bool
         {

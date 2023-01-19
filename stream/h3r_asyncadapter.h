@@ -94,14 +94,14 @@ template <typename T> class AsyncAdapter final
     using EventHandler = void (T::*)(const Result);
 
     private: TaskThread & _async;
-    public: AsyncAdapter(TaskThread & thread, T * eh_obj,
+    public: AsyncAdapter(TaskThread & thread, T * observer,
         EventHandler on_complete, EventHandler on_canceled)
-        : _async {thread}, _eh_obj {eh_obj}, _eh_complete {on_complete},
+        : _async {thread}, _eh_obj {observer}, _eh_complete {on_complete},
         _eh_canceled {on_canceled}, Stream {*this}, _task {*this}
     {
-        H3R_ENSURE(nullptr != _eh_obj, "eh_obj can't be null")
-        H3R_ENSURE(nullptr != _eh_complete, "_eh_complete can't be null")
-        H3R_ENSURE(nullptr != _eh_canceled, "_eh_canceled can't be null")
+        H3R_ENSURE(nullptr != observer, "observer can't be null")
+        H3R_ENSURE(nullptr != on_complete, "on_complete can't be null")
+        H3R_ENSURE(nullptr != on_canceled, "on_canceled can't be null")
     }
     private: OS::CriticalSection _s_in_use_lock {};
     private: bool _s_in_use {};
