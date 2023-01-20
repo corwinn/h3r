@@ -150,6 +150,12 @@ H3R_TEST_(wrong_operator_right_effect)
     for (const var & t : l) H3R_TEST_ARE_EQUAL(buf[i++], t);
 H3R_TEST_END
 
+H3R_TEST_(reference_mess)
+    var l = H3R_NS::List<foo> {} << foo {0} << foo {1} << foo {2};
+    int i {0};
+    for (const var & t : l) H3R_TEST_ARE_EQUAL(i++, t.a);
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()

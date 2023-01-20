@@ -53,18 +53,26 @@ template <typename T> class List //LATER Insert() - should the need arise
 
     public List(size_t capacity = 0) : _l{capacity} {}
     public List(const T * a, size_t n) : _l{} { _l.Append (a, n); }
-    public template <typename R> bool Contains(R itm)
+    /* Because you could compare to something that is implicitly cast-able to T
+     * thus calling pointless initialization. Don't do:
+     * public template <typename R> bool Contains(R itm)
+    {
+        for (const var & i : _l) if (i == itm) return true;
+        return false;
+    }*/
+    public bool Contains(const T & itm) const
     {
         for (const var & i : _l) if (i == itm) return true;
         return false;
     }
-    public template <typename R> R Add(R itm)
+    public T & Add(const T & itm)
     {
-        return _l.Append (&itm, 1), itm;
+        _l.Resize (_l.Length () + 1);
+        return _l[_l.Length () - 1] = itm;
     }
     // Remove all occurrences. Slow. Use rarely. You want fast: use an LL.
     // Returns whether something was removed (found) or not.
-    public template <typename R> bool Remove(R itm)
+    public bool Remove(const T & itm)
     {
         Array<T> n {_l.Length ()};
         size_t idx {0};
@@ -80,9 +88,9 @@ template <typename T> class List //LATER Insert() - should the need arise
     public const T * end  () const { return _l.end (); }
 
     // Another init. path; lets see...
-    public template <typename R> List<T> & operator<<(R r)
+    public List<T> & operator<<(const T & r)
     {
-        return Add(r), *this;
+        return Add (r), *this;
     }
 };// List
 
