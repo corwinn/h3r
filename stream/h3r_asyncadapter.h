@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-// You unwind the faucet, and you wait for the hot water.
+// Async: You unwind the faucet, and you wait for the hot water.
 
 #ifndef _H3R_ASYNCADAPTER_H_
 #define _H3R_ASYNCADAPTER_H_
