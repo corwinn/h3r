@@ -113,7 +113,7 @@ String String::operator+(const char * s)
     return String ().append (*this).append (s, OS::Strlen (s));
 }
 
-bool String::operator==(const String & s)
+bool String::operator==(const String & s) const
 {
     if (this == &s) return true;
     var & a = _b;
@@ -130,13 +130,13 @@ String operator+(const char * l, const String & r)
 
 #include <ctype.h>
 
-String String::ToLower()//TODO uncode (iconv)
+String String::ToLower() const //TODO uncode (iconv)
 {
-    Array<byte> result {};
-    int tmp {};
+    Array<byte> result {AsByteArray ().Length ()};
+    int i {};
     for (auto c : AsByteArray ())
-        result.Append (reinterpret_cast<byte *>(&(tmp = tolower (c))), 1);
-    return String {result};
+        result[i++] = static_cast<byte>(tolower (c));
+    return String {static_cast<Array<byte> &&>(result)};
 }
 
 NAMESPACE_H3R
