@@ -42,18 +42,20 @@ H3R_NAMESPACE
 // A stream that does nothing, including not decorating anything.
 class NoStream final : public Stream
 {
-    public: NoStream() : Stream {} {}
-    public: NoStream(Stream * s) : Stream {s} {}
-    public: ~NoStream() override {}
-    public: inline operator bool() override { return false; }
-    public: inline Stream & Seek(off_t) override { return *this; }
-    public: inline off_t Tell() override { return 0; }
-    public: inline off_t Size() override { return 0; }
-    public: inline Stream & Read(void *, size_t) override { return *this; }
-    public: inline Stream & Write(const void *, size_t) override
+#define public public:
+    public NoStream() : Stream {} {}
+    public NoStream(Stream * s) : Stream {s} {}
+    public ~NoStream() override {}
+    public inline operator bool() override { return false; }
+    public inline Stream & Seek(off_t) override { return *this; }
+    public inline off_t Tell() override { return 0; }
+    public inline off_t Size() override { return 0; }
+    public inline Stream & Read(void *, size_t) override { return *this; }
+    public inline Stream & Write(const void *, size_t) override
     {
         return *this;
     }
+#undef public
 };
 
 NAMESPACE_H3R

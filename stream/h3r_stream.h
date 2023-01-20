@@ -39,52 +39,60 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+#define public public:
+#define private private:
+#define protected protected:
+
 class Stream
 {
     // The book states the decorator shall differ the component, but it fails
     // to give reason; so lets find out:
-    private: Stream * _f{};
+    private Stream * _f{};
 
-    public: Stream(Stream * s) : _f{nullptr == s ? NoStream () : s} {}
-    protected: Stream() {} // no decorator constructor
-    public: virtual ~Stream() {}
-    protected: static Stream * NoStream(); // no "if (_f)"
-    protected: inline const Stream * BaseStream() const { return _f; }
+    public Stream(Stream * s) : _f{nullptr == s ? NoStream () : s} {}
+    protected Stream() {} // no decorator constructor
+    public virtual ~Stream() {}
+    protected static Stream * NoStream(); // no "if (_f)"
+    protected inline const Stream * BaseStream() const { return _f; }
 
     // true when the stream is ok
-    public: virtual inline operator bool() { return _f->operator bool(); }
+    public virtual inline operator bool() { return _f->operator bool(); }
 
     // Tell()-based: Seek (x - Tell ())
-    public: virtual inline Stream & Seek(off_t pos)
+    public virtual inline Stream & Seek(off_t pos)
     {
         return _f->Seek (pos), *this;
     }
-    public: inline Stream & Begin() { return this->Seek (-Tell ()); }
-    public: inline Stream & End() { return this->Seek (Size () -Tell ()); }
+    public inline Stream & Begin() { return this->Seek (-Tell ()); }
+    public inline Stream & End() { return this->Seek (Size () -Tell ()); }
 
-    public: virtual inline off_t Tell() { return _f->Tell (); }
-    public: virtual inline off_t Size() { return _f->Size (); }
-    public: virtual inline Stream & Read(void * b, size_t bytes = 1)
+    public virtual inline off_t Tell() { return _f->Tell (); }
+    public virtual inline off_t Size() { return _f->Size (); }
+    public virtual inline Stream & Read(void * b, size_t bytes = 1)
     {
         return _f->Read (b, bytes), *this;
     }
-    public: virtual inline Stream & Write(const void * b, size_t bytes = 1)
+    public virtual inline Stream & Write(const void * b, size_t bytes = 1)
     {
         return _f->Write (b, bytes), *this;
     }
 
     // Avoid manual size computation. "virtual template <typename T>":
-    public: template <typename T> static Stream & Read(
+    public template <typename T> static Stream & Read(
         Stream & s, T * d, size_t num = 1)
     {
         return s.Read (d, num * sizeof(T));//TODO overflow math
     }
-    public: template <typename T> static Stream & Write(
+    public template <typename T> static Stream & Write(
         Stream & s, const T * d, size_t num = 1)
     {
         return s.Write (d, num * sizeof(T));//TODO overflow math
     }
 };
+
+#undef public
+#undef private
+#undef protected
 
 NAMESPACE_H3R
 
