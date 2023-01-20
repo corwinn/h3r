@@ -63,9 +63,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #if _WIN32_
-# define PATH_SEPARATOR '\\'
+# define H3R_PATH_SEPARATOR '\\'
 #else
-# define PATH_SEPARATOR '/'
+# define H3R_PATH_SEPARATOR '/'
 #endif
 
 // way easier to spot in code
@@ -213,7 +213,7 @@ template <typename T> bool EnumFiles(T & c, const char * dn,
     H3R_ENSURE(nullptr != dn, "path name can't be null")
     var stat_dlen = strlen (dn);
     H3R_ENSURE(stat_dlen > 0, "path name length can't be <= 0")
-    if (PATH_SEPARATOR == dn[stat_dlen-1]) stat_dlen--;
+    if (H3R_PATH_SEPARATOR == dn[stat_dlen-1]) stat_dlen--;
 
     DIR * ds = opendir (dn);
     if (nullptr == ds)
@@ -240,12 +240,12 @@ template <typename T> bool EnumFiles(T & c, const char * dn,
                      && '.' == de->d_name[1]) continue;
         struct stat finfo;
 
-        // dn + PATH_SEPARATOR + d_name
+        // dn + H3R_PATH_SEPARATOR + d_name
         int stat_clen = stat_dlen + 1 + len + 1; // +1 -> PS, +1; -> '\0'
         if (stat_clen > stat_name_max_size)
             Malloc (stat_name, stat_name_max_size = stat_clen);
         Memmove (stat_name, dn, stat_dlen);
-        stat_name[stat_dlen] = PATH_SEPARATOR;
+        stat_name[stat_dlen] = H3R_PATH_SEPARATOR;
         Memmove (stat_name + stat_dlen + 1, de->d_name, len); // +1 -> PS
         stat_name[stat_clen-1] = '\0'; // +1 computed above
 
@@ -255,7 +255,7 @@ template <typename T> bool EnumFiles(T & c, const char * dn,
         bool dir = S_ISDIR(finfo.st_mode);
         if (! dir && ! S_ISREG(finfo.st_mode)) {
             Log_stdout ("Warning: readdir(): skipped ! file && ! directory:"
-                " \"%s%c%s\"" EOL, dn, PATH_SEPARATOR, de->d_name);
+                " \"%s%c%s\"" EOL, dn, H3R_PATH_SEPARATOR, de->d_name);
             continue;
         }
         if (! on_file (c, de->d_name, dir)) break;
