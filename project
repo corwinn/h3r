@@ -63,7 +63,7 @@ and now, index the game resources and create the main game screen
   done: and now it needs a file enumerator
   done: and now it needs sort()
   done: and now it needs async file IO: AsyncAdapter<T> adapt Stream to T
-  and now it needs an async directory enumerator
+  done: and now it needs an async directory enumerator
  done: And now it feels like I'm weaving a very intricate pattern - its diagram
        time - part of complexity management; do you know what happens if I don't
        manage complexity? - "infinite project" happens :)

@@ -116,6 +116,9 @@ main menu music  : MP3/MAINMENU.MP3
 button click     : Data_Heroes3_snd/BUTTON.wav
 */
 
+#include "h3r_gamearchives.h"
+#include "h3r_asyncfsenum.h"
+
 #include "h3r_asyncadapter.h"
 #include "h3r_taskthread.h"
 class foo
@@ -139,6 +142,31 @@ class foo
     public: void Size() { _adapter.Size (); }
 };
 
+class FileEnumTest final
+{
+    private: H3R_NS::GameArchives GA {};
+    private: H3R_NS::AsyncFsEnum<FileEnumTest> _subject;
+    private: int _files {}, _dirs {};
+    private: bool HandleItem(
+        const H3R_NS::AsyncFsEnum<FileEnumTest>::EnumItem & itm)
+    {
+        if (! itm.IsDirectory)
+        {
+            _files++;
+            if (GA.BaseArchives ().Contains (
+                H3R_NS::String {itm.FileName.ToLower ()}))
+            H3R_NS::OS::Log_stdout ("Found Game Archive: \"%s\"" EOL,
+                itm.Name.AsZStr ().Data ());
+        } else _dirs++;
+        return true;
+    }
+    public: FileEnumTest(H3R_NS::String path)
+        : GA {}, _subject{path, this, &FileEnumTest::HandleItem} {}
+    public: bool Complete() const { return _subject.Complete (); }
+    public: int Files() const { return _files; }
+    public: int Directories() const { return _dirs; }
+};
+
 int main(int argc, char ** argv)
 {
     H3R_ENSURE(argc > 0, "Can't handle your OS - argc can't be < 1")
@@ -146,8 +174,8 @@ int main(int argc, char ** argv)
     char * p = argv[0]; // the future base dir or work dir
     int len = H3R_NS::OS::Strlen (argv[0]);
     for (int i = len-1; i >= 0; i--)
-        if (p[i] == '/' || p[i] == '\\') {
-            if (i < len-1) p[i+1] = '\0';
+        if ('/' == p[i] || '\\' == p[i] ) {
+            p[i] = '\0';
             break;
         }
     H3R_NS::OS::Log_stdout ("WorkDir: %s" EOL, p);
@@ -155,7 +183,8 @@ int main(int argc, char ** argv)
     H3R_NS::Game game;
     H3R_NS::Log::Info ("hello nurse" EOL);
 
-    H3R_NS::OS::FileStream t {p + H3R_NS::String {"main"},
+    H3R_NS::OS::FileStream t {
+        H3R_NS::String {p} + H3R_PATH_SEPARATOR + H3R_NS::String {"main"},
         H3R_NS::OS::FileStream::Mode::ReadOnly};
     H3R_NS::Log::Info (H3R_NS::String::Format (
         "File: \"%s\" opened in read-only mode. Size: %d" EOL,
@@ -170,13 +199,11 @@ int main(int argc, char ** argv)
         "File: \"%s\" opened in read-only mode. Async Size: %d" EOL,
         t.Name ().AsZStr ().Data (), test_adapter.size));
 
-//np <lambda_fwd: H3R_NS::Game>
-    H3R_NS::OS::EnumFiles<H3R_NS::Game> (game, ".",
-        [](H3R_NS::Game &, const char * name, bool dir) -> bool
-        {
-            return H3R_NS::OS::Log_stdout (
-                "%c name: %s" EOL, (dir ? 'D' : ' '), name), true;
-        });
+    FileEnumTest test_file_enum {p};
+    while (! test_file_enum.Complete ())
+        H3R_NS::OS::Thread::Sleep (1);
+    H3R_NS::OS::Log_stdout ("Scaned: %d files, and %d folders" EOL,
+        test_file_enum.Files (), test_file_enum.Directories ());
 
     /*if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
         return H3R_NS::Log::Info (H3R_NS::String::Format (

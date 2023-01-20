@@ -48,7 +48,6 @@ H3R_NAMESPACE
 // Singleton. The 2nd instance will get you an exit() with an assertion failed.
 //
 // Access .mp3, .h3m, .h3c, .h3r (savegame), .wav, .pcx, .def, .txt, etc.
-// both at the FS and at the original game VFS using lower-case names only!
 // Currently this VFS is using the POSIX tolower() - and I have no idea how
 // it handles "Unicode", so unless I specifically find the time to enable
 // "unicode" support, consider ASCII to be the safe choice for your filenames.
@@ -60,29 +59,7 @@ class VFS final
 {
     // Due to case-sensitive FS-es, file enumeration shall be used to set the
     // required game directories and file paths.
-    private: static constexpr const char
-        * const GAME_DIR_DATA1 {"data"},
-        * const GAME_DIR_DATA2 {"heroes3"}, // implicit +PATH_SEPARATOR+DATA1
-        * const GAME_DIR_MUSIC {"mp3"},
-        * const GAME_DIR_CMAPS {"maps"},    // custom maps
-        * const GAME_DIR_SAVEG {"games"},   // saved games
-        * const GAME_DIR_RMAPS {"random_maps"},
-        * const GAME_DIR_MODS {"mods"}, //LATER
-        * const GAME_VFS_AB_SND {"h3ab_ahd.snd"},// complement to GAME_VFS_SND
-        * const GAME_VFS_AB_VID {"h3ab_ahd.vid"},// complement to GAME_VFS_VID,
-                                                 // "Credits.smk" differs
-        * const GAME_VFS_AB_BMP {"h3ab_bmp.lod"},// A mystery - there are: new,
-                                                 // identical, and different
-                                                 // files to GAME_VFS_BMP
-        * const GAME_VFS_AB_SPR {"h3ab_spr.lod"},// A mystery - as the bitmaps.
-        * const GAME_VFS_SND    {"heroes3.snd"},
-        * const GAME_VFS_VID    {"video.vid"},
-        * const GAME_VFS_BMP    {"h3bitmap.lod"},
-        * const GAME_VFS_SPR    {"h3sprite.lod"},
-        * const GAME_VFS_CD_SND {"heroes3.snd"}, // complement to GAME_VFS_SND
-        * const GAME_VFS_CD_VID {"heroes3.vid"}; // complement to GAME_VFS_VID
-    // "new" are ok; "identical" shall be ignored;
-    // the different ones: AB overrides when there is no SoD installed;
+    // The different ones: AB overrides when there is no SoD installed;
     // SoD overrides otherwise, but - there are text files that has to be
     // merged it seems? - see "vfs_info"
     //TODO check with AB installed only

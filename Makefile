@@ -45,7 +45,7 @@ _O  = -O0 -g -DH3R_DEBUG -DH3R_MM -fno-exceptions -fno-threadsafe-statics \
 _F  = -fsanitize=address,undefined,integer -fvisibility=hidden
 #TODO release build _F = -fvisibility=hidden -fno-rtti
 _L = -Wl,--as-needed -lpthread -lz -lSDL2 -lSDL2_mixer
-_I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync \
+_I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
  `pkg-config --cflags sdl2`
 
 CXXFLAGS = $(_I) -std=c++11 $(_O) $(_F) $(_W)
