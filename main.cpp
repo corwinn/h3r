@@ -161,7 +161,9 @@ class FileEnumTest final
         return true;
     }
     public: FileEnumTest(H3R_NS::String path)
-        : GA {}, _subject{path, this, &FileEnumTest::HandleItem} {}
+        : GA {}, _subject{
+//np base_path: path, observer: this, handle_on_item: &FileEnumTest::HandleItem
+            path, this, &FileEnumTest::HandleItem} {}
     public: bool Complete() const { return _subject.Complete (); }
     public: int Files() const { return _files; }
     public: int Directories() const { return _dirs; }
