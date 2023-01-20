@@ -32,17 +32,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#include "h3r_vfs.h"
+#ifndef _H3R_NOSTREAM_H_
+#define _H3R_NOSTREAM_H_
+
+#include "h3r_stream.h"
 
 H3R_NAMESPACE
 
-VFS::VFS(const String &) {}
-
-VFS::~VFS() {}
-
-Stream VFS::Get(const String &)
+// A stream that does nothing, including not decorating anything.
+class NoStream final : public Stream
 {
-    return static_cast<Stream &&>(Stream {nullptr});
-}
+    public: NoStream() : Stream {} {}
+    public: NoStream(Stream * s) : Stream {s} {}
+    public: ~NoStream() override {}
+    public: inline operator bool() override { return false; }
+    public: inline Stream & Seek(off_t) override { return *this; }
+    public: inline off_t Tell() override { return 0; }
+    public: inline off_t Size() override { return 0; }
+    public: inline Stream & Read(void *, size_t) override { return *this; }
+    public: inline Stream & Write(const void *, size_t) override
+    {
+        return *this;
+    }
+};
 
 NAMESPACE_H3R
+
+#endif

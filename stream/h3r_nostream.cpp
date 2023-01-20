@@ -32,17 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#include "h3r_vfs.h"
+#include "h3r_nostream.h"
 
 H3R_NAMESPACE
 
-VFS::VFS(const String &) {}
-
-VFS::~VFS() {}
-
-Stream VFS::Get(const String &)
-{
-    return static_cast<Stream &&>(Stream {nullptr});
-}
+Stream * Stream::NoStream() { static class NoStream s; return &s; }
 
 NAMESPACE_H3R

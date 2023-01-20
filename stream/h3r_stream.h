@@ -41,10 +41,14 @@ H3R_NAMESPACE
 
 class Stream
 {
-    private: Stream * _f {};
+    // The book states the decorator shall differ the component, but it fails
+    // to give reason; so lets find out:
+    private: Stream * _f{};
 
-    public: Stream(Stream * s) : _f {s} {};
+    public: Stream(Stream * s) : _f{nullptr == s ? NoStream () : s} {}
+    protected: Stream() {} // no decorator constructor
     public: virtual ~Stream() {}
+    protected: static Stream * NoStream(); // no "if (_f)"
     protected: inline const Stream * BaseStream() const { return _f; }
 
     // true when the stream is ok

@@ -45,32 +45,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-// Singleton. The 2nd instance will get you an exit() with an assertion failed.
-//
-// Access .mp3, .h3m, .h3c, .h3r (savegame), .wav, .pcx, .def, .txt, etc.
-// Currently this VFS is using the POSIX tolower() - and I have no idea how
-// it handles "Unicode", so unless I specifically find the time to enable
-// "unicode" support, consider ASCII to be the safe choice for your filenames.
-//
-// For in-game resources:
-// 1st the original VFS will be searched, and next the FS. The FS files can
-// override the VFS ones, but the names shall be distinct per FS.
-class VFS final
+//TODO unicode support,
+// Consider ASCII to be the safe choice for your filenames.
+class VFS
 {
-    // Due to case-sensitive FS-es, file enumeration shall be used to set the
-    // required game directories and file paths.
-    // The different ones: AB overrides when there is no SoD installed;
-    // SoD overrides otherwise, but - there are text files that has to be
-    // merged it seems? - see "vfs_info"
-    //TODO check with AB installed only
-
     public: enum class FileType {nvm,
         bik, def, fnt, h3c, h3m, h3r, mp3, msk, pal, pcx, smk, txt, wav};
 
-    // Best to get that from main()
-    //LATER - per OS - get_process_path
-    public: VFS(String process_dir);
-    public: ~VFS();
+    public: VFS(const String & path);
+    public: virtual ~VFS();
 
     // You request by name - you get a stream. You request the same name
     // again - you get another stream. What you do with the returned stream
@@ -83,9 +66,7 @@ class VFS final
     // use-case 1: on_game_start (cache all needed resources into RAM).
     // use-case 2: on_map_load (cache all needed resources into RAM).
     // use-case 3: on_map_load (invalidate, and do use-case #2)
-    // The role of this object is to abstract away data access - caching is
-    // not part of its duties.
-    public: Stream Get(String name);
+    public: virtual Stream Get(const String & name);
 };
 
 NAMESPACE_H3R
