@@ -40,26 +40,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+#define public public:
+#define private private:
+
 // LIFO. Primary use: avoid recursive calls. Primary reason: dir enum.
 // You free T *; T should get ~T() called
 template <typename T> class Stack final
 {
-    private: Array<T> _b;
-    private: int _sp {-1};
-    public: Stack(size_t capacity = 0) : _b{0 == capacity ? 8 : capacity} {}
-    public: template <typename R> void Push(R t)
+    private Array<T> _b;
+    private int _sp {-1};
+    public Stack(size_t capacity = 0) : _b{0 == capacity ? 8 : capacity} {}
+    public void Push(const T & t)
     {
         if (++_sp >= static_cast<int>(_b.Length ()))
             _b.Resize (_b.Length () + (_b.Length () >> 2));
         _b[_sp] = t;
     }
-    public: T Pop()
+    public T Pop()
     {
         H3R_ARG_EXC_IF(Empty (), "Stack underrun")
-        return _b[_sp--];
+        return static_cast<T &&>(_b[_sp--]);
     }
-    public: bool Empty() const { return -1 == _sp; }
+    public bool Empty() const { return -1 == _sp; }
+    public size_t Size() const { return _b.Length (); }
 };
+
+#undef public
+#undef private
 
 NAMESPACE_H3R
 

@@ -98,6 +98,25 @@ H3R_TEST_(stack)
     H3R_TEST_ARE_EQUAL(a, b);
 H3R_TEST_END
 
+H3R_TEST_(size)
+    H3R_NS::Stack<int> s0;
+    H3R_TEST_IS_TRUE(s0.Empty ())
+    int e = 8; // default
+    H3R_TEST_ARE_EQUAL(static_cast<size_t>(e), s0.Size ())
+    for (int i = 0; i < 100; i++) {
+        s0.Push (i);
+        if (i == e) printf ("%d+%d=", e, e>>2), e+=e>>2;
+    }
+    printf ("%d" EOL, e);
+    H3R_TEST_IS_FALSE(s0.Empty ())
+    // 8+2=10+2=12+3=15+3=18+4=22+5=27+6=33+8=41+10=51+12=63+15=78+19=97+24=
+    H3R_TEST_ARE_EQUAL(121, e)
+    H3R_TEST_ARE_EQUAL(static_cast<size_t>(e), s0.Size ())
+    for (int i = 99; i >= 0; i--) H3R_TEST_ARE_EQUAL(i, s0.Pop ());
+    H3R_TEST_IS_TRUE(s0.Empty ())
+    H3R_TEST_ARE_EQUAL(static_cast<size_t>(e), s0.Size ())
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()
