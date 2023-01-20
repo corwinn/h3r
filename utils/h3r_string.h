@@ -48,7 +48,8 @@ H3R_NAMESPACE
 //     public: String Replace(
 //                 const Array<byte> & what, byte with, ReplaceFlags f) const;
 // ... etc. - on as needed basis.
-//TODONT optimize (don't use "String" when you need speed).
+//TODONT optimize <=> don't use "String" when you need speed
+//LATER pool; 1Mb initial; Array has A, F params
 class String final
 {
     private: Array<byte> _b {};
@@ -76,9 +77,18 @@ class String final
 
     public: String & operator+=(const String &);
     public: String & operator+=(const char *);
+    public: inline String & operator+=(const char c)//TODO test me
+    {
+        _b.Append (&c, 1); return *this;
+    }
     public: String operator+(const String &);
     public: String operator+(const char *);
-    public: bool operator==(const String &);
+
+    public: inline String operator+(const char c)//TODO test me
+    {
+        return String {*this} += c;
+    }
+    public: bool operator==(const String &) const;
     public: bool operator!=(const String & b) { return ! (*this == b); }
 
     public: inline Array<char> AsZStr() const
@@ -89,7 +99,7 @@ class String final
         return zstr.Resize (zstr.Length () + 8), zstr;
     }
 
-    public: String ToLower();
+    public: String ToLower() const;
 };
 
 String operator+(const char *, const String &);
