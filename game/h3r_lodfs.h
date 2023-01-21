@@ -46,15 +46,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-class LodFS final: public VFS
+// On 2nd thought this shouldn't be final, should one decide to use own,
+// extended format (better compression for one, and or hashed names, etc.).
+class LodFS : public VFS
 {
-    private: OS::FileStream _s;
-    private: bool _usable {false};
+    protected: OS::FileStream _s;
+    protected: bool _usable {false};
     // 1 stream for now
-    private: RefReadStream _rrs;
-    private: ZipInflateStream _zis;
+    protected: RefReadStream _rrs;
+    protected: ZipInflateStream _zis;
 #pragma pack(push, 1)
-    private: struct Entry final
+    protected: struct Entry final
     {
         unsigned char Name[16];
         int Ofs;   // SEEK_SET
@@ -63,14 +65,14 @@ class LodFS final: public VFS
         int SizeC; // Compressed size [bytes]
     };
 #pragma pack(pop)
-    private: Array<Entry> _entries {};
-    private: Stream & GetStream(const LodFS::Entry &);
+    protected: Array<Entry> _entries {};
+    protected: virtual Stream & GetStream(const LodFS::Entry &);
     public: LodFS(const String & path);
     public: ~LodFS() override;
     public: virtual Stream & Get(const String & name) override;
     public: virtual inline operator bool() const override { return _usable; }
 
-    public: void Walk(bool (*)(Stream &, const VFS::Entry &)) override;
+    public: virtual void Walk(bool (*)(Stream &, const VFS::Entry &)) override;
 };
 
 NAMESPACE_H3R
