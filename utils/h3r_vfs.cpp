@@ -48,4 +48,6 @@ Stream & VFS::Get(const String &)
 
 VFS::operator bool() const { return false; }
 
+void VFS::Walk(bool (*)(Stream &, const Entry &)) {}
+
 NAMESPACE_H3R

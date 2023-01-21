@@ -44,16 +44,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_stream.h"
 
 H3R_NAMESPACE
+#define public public:
 
 //TODO unicode support,
 // Consider ASCII to be the safe choice for your filenames.
 class VFS
 {
-    public: enum class FileType {nvm,
+    public enum class FileType {nvm,
         bik, def, fnt, h3c, h3m, h3r, mp3, msk, pal, pcx, smk, txt, wav};
 
-    public: VFS(const String & path);
-    public: virtual ~VFS();
+    public VFS(const String & path);
+    public virtual ~VFS();
 
     // You request by name - you get a stream reference. You request the same
     // name again - you could get another stream, or the same stream but in a
@@ -67,14 +68,24 @@ class VFS
     // use-case 1: on_game_start (cache all needed resources into RAM).
     // use-case 2: on_map_load (cache all needed resources into RAM).
     // use-case 3: on_map_load (invalidate, and do use-case #2)
-    public: virtual Stream & Get(const String & name);
+    public virtual Stream & Get(const String & name);
 
     // When the VFS is ok for use; indicates errors during constructor calls.
-    public: virtual operator bool() const;
+    public virtual operator bool() const;
 
-    //TODO public: virtual void Walk(bool (*on_entry)(Entry &));
+    // There is no need for VFSWalker for this project.
+    // Should be enough: Name, Size, and Date/Time later probably
+    public class Entry
+    {
+        public String Name;
+        public off_t Size;
+    };
+
+    // observer: return false to interrupt the walk
+    public virtual void Walk(bool (*)(Stream &, const Entry &));
 };
 
+#undef public
 NAMESPACE_H3R
 
 #endif

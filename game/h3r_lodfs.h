@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-class LodFS: public VFS
+class LodFS final: public VFS
 {
     private: OS::FileStream _s;
     private: bool _usable {false};
@@ -70,7 +70,7 @@ class LodFS: public VFS
     public: virtual Stream & Get(const String & name) override;
     public: virtual inline operator bool() const override { return _usable; }
 
-    public: void Walk(bool (*on_entry)(Stream &, const char * name));
+    public: void Walk(bool (*)(Stream &, const VFS::Entry &)) override;
 };
 
 NAMESPACE_H3R

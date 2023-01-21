@@ -110,10 +110,14 @@ Stream & LodFS::Get(const String & res)//TODO come back after unifying the entry
     return VFS::Get (res);
 }
 
-void LodFS::Walk(bool (*on_entry)(Stream &, const char * name))
+void LodFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
-    for (var & e : _entries)
-        if (! on_entry (GetStream (e), (const char *)e.Name)) break;
+    static VFS::Entry vfs_e {};
+    for (var & e : _entries) {
+        vfs_e.Name = reinterpret_cast<const char *>(e.Name);
+        vfs_e.Size = e.SizeU;
+        if (! on_entry (GetStream (e), vfs_e)) break;
+    }
 }
 
 NAMESPACE_H3R

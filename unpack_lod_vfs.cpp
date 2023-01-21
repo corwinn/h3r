@@ -73,16 +73,16 @@ int main(int c, char ** v)
     H3R_NS::Game game;
 
     H3R_NS::LodFS {v[1]}
-        .Walk([](H3R_NS::Stream & stream, const char * name) -> bool
+        .Walk([](H3R_NS::Stream & stream, const H3R_NS::VFS::Entry & e) -> bool
         {
             H3R_NS::Array<unsigned char> stream_data {};
             //TODO Buffer
-            stream_data.Resize (stream.Size ());
+            stream_data.Resize (e.Size);
             unsigned char * stream_data_buf = stream_data;
             H3R_NS::OS::FileStream stream_to_file {
-                name, H3R_NS::OS::FileStream::Mode::WriteOnly};
-            stream.Read (stream_data_buf, stream.Size ());
-            stream_to_file.Write (stream_data_buf, stream.Size ());
+                e.Name, H3R_NS::OS::FileStream::Mode::WriteOnly};
+            stream.Read (stream_data_buf, e.Size);
+            stream_to_file.Write (stream_data_buf, e.Size);
             return true;
         });
 
