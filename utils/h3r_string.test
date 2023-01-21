@@ -260,6 +260,18 @@ H3R_TEST_(to_lower)
     H3R_TEST_ARE_NOT_EQUAL(a, e);
 H3R_TEST_END
 
+H3R_TEST_(operator_plus_char)
+    String a {"foo"};
+    a = a + 'f';
+    H3R_TEST_IS_TRUE(a.EqualsZStr("foof"))
+H3R_TEST_END
+
+H3R_TEST_(operator_plus_equals_char)
+    String a {"foo"};
+    a += 'f';
+    H3R_TEST_IS_TRUE(a.EqualsZStr("foof"))
+H3R_TEST_END
+
 H3R_TEST_(equalssztr)
     String a {"foo"};
     H3R_TEST_IS_TRUE(a.EqualsZStr("foo"))

@@ -77,14 +77,14 @@ class String final
 
     public: String & operator+=(const String &);
     public: String & operator+=(const char *);
-    public: inline String & operator+=(const char c)//TODO test me
+    public: inline String & operator+=(const char c)
     {
         _b.Append (&c, 1); return *this;
     }
     public: String operator+(const String &);
     public: String operator+(const char *);
 
-    public: inline String operator+(const char c)//TODO test me
+    public: inline String operator+(const char c)
     {
         return String {*this} += c;
     }
