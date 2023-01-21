@@ -247,5 +247,26 @@ bool FileExists(const char * path)
     H3R_ENSURE(false, "Unercoverable error during stat()")
 }
 
+off_t FileSize(const char * path)
+{
+    struct stat t {};
+    for (int i = 0; i < REASONABLE_RETRIES; i++) {
+        const var error = stat (path, &t);
+        if (0 == error) return t.st_size;
+        const var e = H3R_OS_GLOBAL_ERR_CODE;
+        switch (e) {
+            case ENOENT: Log_stderr ("stat - file not found: " EOL); break;
+            case EACCES : Log_stderr ("stat - access denied: ") ; break;
+            case EIO : Log_stderr ("stat - IO error: ") ; break;
+            case ELOOP: Log_stderr ("stat - symlink loop: ") ; break;
+            case ENAMETOOLONG: Log_stderr ("stat - name too long: ") ; break;
+            default: Log_stderr ("stat - unhandled err: %d, ", e);
+        };
+        Log_stderr ("\"%s\"" EOL, path);
+        if (! RetryOpen (e)) break;
+    }
+    H3R_ENSURE(false, "Unercoverable error during stat()")
+}
+
 } // namespace OS
 NAMESPACE_H3R

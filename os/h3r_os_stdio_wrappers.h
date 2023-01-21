@@ -124,6 +124,10 @@ void Fclose(FILE *stream);
 
 // Not wrapper, but helper
 bool FileExists(const char * path);
+//LATER full stat() wrapper; requires creating struct Stat {foo;bar;etc};
+//      take into consideration: Exists doesn't require user intervention
+//      while other stats might
+off_t FileSize(const char * path);
 
 } // namespace OS
 NAMESPACE_H3R
