@@ -260,6 +260,12 @@ H3R_TEST_(to_lower)
     H3R_TEST_ARE_NOT_EQUAL(a, e);
 H3R_TEST_END
 
+H3R_TEST_(equalssztr)
+    String a {"foo"};
+    H3R_TEST_IS_TRUE(a.EqualsZStr("foo"))
+    H3R_TEST_IS_FALSE(a.EqualsZStr("foO"))
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()

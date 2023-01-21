@@ -90,6 +90,12 @@ class String final
     }
     public: bool operator==(const String &) const;
     public: bool operator!=(const String & b) { return ! (*this == b); }
+    public: bool inline EqualsZStr(const char * b) const
+    {
+        var b_len = OS::Strlen (b);
+        if (b_len != _b.Length ()) return false;
+        return ! OS::Strncmp (b, (const char *)_b.Data (), b_len);
+    }
 
     public: inline Array<char> AsZStr() const
     {
