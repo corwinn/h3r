@@ -32,47 +32,47 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_VFS_H_
-#define _H3R_VFS_H_
+#ifndef _H3R_ZIPINFLATESTREAM_H_
+#define _H3R_ZIPINFLATESTREAM_H_
 
-// virtual file system - abstract away the game files
-
-#define VERY_IMPORTANT_AND_VERY_USELESS_MESSAGE "Resource system initialized()"
-
-#include "h3r.h"
-#include "h3r_string.h"
 #include "h3r_stream.h"
+#include <zlib.h>
 
 H3R_NAMESPACE
 
-//TODO unicode support,
-// Consider ASCII to be the safe choice for your filenames.
-class VFS
+// A stream for reading zip-encoded data. You get not-supported exceptions for:
+// Write(), Seek().
+// It allocates _IN_BUF bytes buffer (4k) so be wary.
+class ZipInflateStream : public Stream
 {
-    public: enum class FileType {nvm,
-        bik, def, fnt, h3c, h3m, h3r, mp3, msk, pal, pcx, smk, txt, wav};
+    H3R_CANT_COPY(ZipInflateStream)
+    H3R_CANT_MOVE(ZipInflateStream)
 
-    public: VFS(const String & path);
-    public: virtual ~VFS();
+#define public public:
+#define private private:
+    private z_stream _zs {};
+    private int _zr {~Z_OK}, _size, _usize;
+    private const off_t _pos_sentinel; // for ResetTo()
+    private static uInt constexpr _IN_BUF {1<<12}; // zlib: uInt
+    private byte _buf[_IN_BUF] {};
+    public ZipInflateStream(Stream * s, int size, int usize)
+        : Stream {s}, _size{size}, _usize{usize}, _pos_sentinel{s->Tell ()}
+    {
+        inflateInit (&_zs);
+    }
+    public ~ZipInflateStream() override { inflateEnd (&_zs); }
+    public inline operator bool() override { return Z_OK == _zr; }
+    public Stream & Seek(off_t) override;
+    // You can use this for progress: 1.0 * Tell() / Size() * 100
+    public off_t Tell() override; // compressed
+    public off_t Size() override; // uncompressed
+    public Stream & Read(void *, size_t) override;
+    public Stream & Write(const void *, size_t) override;
 
-    // You request by name - you get a stream reference. You request the same
-    // name again - you could get another stream, or the same stream but in a
-    // reset state (pos=0, length could be different).
-    // For an archive file (.lod, .snd, .vid) - you get a RefReadStream;
-    // releasing it, is not your business. Just be careful to not access it
-    // after the VFS has been released.
-    // You shall have access to a limited number of distinct streams, decided by
-    // each VFS; for example the FS one shall limit the number in accordance
-    // with the OS file handle limitations, etc.
-    // use-case 1: on_game_start (cache all needed resources into RAM).
-    // use-case 2: on_map_load (cache all needed resources into RAM).
-    // use-case 3: on_map_load (invalidate, and do use-case #2)
-    public: virtual Stream & Get(const String & name);
-
-    // When the VFS is ok for use; indicates errors during constructor calls.
-    public: virtual operator bool() const;
-
-    //TODO public: virtual void Walk(bool (*on_entry)(Entry &));
+    // same meaning as constructor parameters
+    public Stream & ResetTo(int size, int usize);
+#undef public
+#undef private
 };
 
 NAMESPACE_H3R

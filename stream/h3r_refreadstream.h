@@ -32,47 +32,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_VFS_H_
-#define _H3R_VFS_H_
+#ifndef _H3R_REFREADSTREAM_H_
+#define _H3R_REFREADSTREAM_H_
 
-// virtual file system - abstract away the game files
-
-#define VERY_IMPORTANT_AND_VERY_USELESS_MESSAGE "Resource system initialized()"
-
-#include "h3r.h"
-#include "h3r_string.h"
 #include "h3r_stream.h"
 
 H3R_NAMESPACE
 
-//TODO unicode support,
-// Consider ASCII to be the safe choice for your filenames.
-class VFS
+// A stream used for reading a sector of the decorated stream.
+// All of its state is local; the base stream state isn't published.
+// You get assertion failed on Write().
+// Thread-unsafe!
+//LATER Should the need arise for multiple threads to read simultaneously,
+//      a ThreadSafeReadStream shall be created:
+//      RefReadStream {ThreadSafeReadStream {base_one}, ...}
+// Why: because you might want to not cache everything in RAM.
+//LATER If you want everything cached, use MemoryStream instead of this one.
+class RefReadStream final : public Stream
 {
-    public: enum class FileType {nvm,
-        bik, def, fnt, h3c, h3m, h3r, mp3, msk, pal, pcx, smk, txt, wav};
+    H3R_CANT_COPY(RefReadStream)
+    H3R_CANT_MOVE(RefReadStream)
 
-    public: VFS(const String & path);
-    public: virtual ~VFS();
+#define public public:
+#define private private:
+    private bool _ok {false};
+    private off_t _start, _size, _pos {};
+    public RefReadStream(Stream * s, off_t start, off_t size);
+    public ~RefReadStream() override {}
+    public inline operator bool() override { return _ok; }
+    public Stream & Seek(off_t) override;
+    public inline off_t Tell() override { return _pos; }
+    public inline off_t Size() override { return _size; }
+    public Stream & Read(void *, size_t) override;
+    public Stream & Write(const void *, size_t) override;
 
-    // You request by name - you get a stream reference. You request the same
-    // name again - you could get another stream, or the same stream but in a
-    // reset state (pos=0, length could be different).
-    // For an archive file (.lod, .snd, .vid) - you get a RefReadStream;
-    // releasing it, is not your business. Just be careful to not access it
-    // after the VFS has been released.
-    // You shall have access to a limited number of distinct streams, decided by
-    // each VFS; for example the FS one shall limit the number in accordance
-    // with the OS file handle limitations, etc.
-    // use-case 1: on_game_start (cache all needed resources into RAM).
-    // use-case 2: on_map_load (cache all needed resources into RAM).
-    // use-case 3: on_map_load (invalidate, and do use-case #2)
-    public: virtual Stream & Get(const String & name);
-
-    // When the VFS is ok for use; indicates errors during constructor calls.
-    public: virtual operator bool() const;
-
-    //TODO public: virtual void Walk(bool (*on_entry)(Entry &));
+    // same meaning as constructor parameters; can't modify the _f thought
+    public Stream & ResetTo(off_t start, off_t size);
+    private void Reset();
+#undef public
+#undef private
 };
 
 NAMESPACE_H3R

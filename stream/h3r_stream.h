@@ -66,6 +66,7 @@ class Stream
     public inline Stream & Begin() { return this->Seek (-Tell ()); }
     public inline Stream & End() { return this->Seek (Size () -Tell ()); }
 
+    //TODO any reason I left these no-const?!
     public virtual inline off_t Tell() { return _f->Tell (); }
     public virtual inline off_t Size() { return _f->Size (); }
     public virtual inline Stream & Read(void * b, size_t bytes = 1)
@@ -88,6 +89,9 @@ class Stream
     {
         return s.Write (d, num * sizeof(T));//TODO overflow math
     }
+
+    //TODO Stream.Write (Stream &)
+    //TODO Stream.Read (Stream &)
 };
 
 #undef public

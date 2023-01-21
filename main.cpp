@@ -40,38 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <SDL.h>
 #include <SDL2/SDL_mixer.h>
 
-// TODO: string, os::path
-/*char const * const gDataRoot = "~/.wine/drive_c/games/h3";
-char const * const gData1 = "Data";
-char const * const gData2 = "Heroes3/Data";
-char const * const gMusic = "MP3";
-char const * const gMaps = "Maps";
-char const * const gSave = "games";
-
-Heroes3.snd
-Heroes3.vid
-
-H3ab_ahd.snd
-H3ab_bmp.lod
-H3bitmap.lod
-Heroes3.snd
-VIDEO.VID
-H3ab_ahd.vid
-H3ab_spr.lod
-H3sprite.lod
-
- H3BITMAP.LOD
- H3SPRITE.LOD
-H3psprit.lod
- Heroes3.snd
- Video.vid
- h3ab_ahd.snd
- h3ab_ahd.vid
- h3ab_bmp.lod
- h3ab_spr.lod
-h3abp_bm.lod
-h3abp_sp.lod*/
-
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED
 H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
@@ -118,6 +86,9 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 
 #include "h3r_gamearchives.h"
 #include "h3r_asyncfsenum.h"
+
+#include "h3r_lodfs.h"
+#include "h3r_array.h"
 
 #include "h3r_asyncadapter.h"
 #include "h3r_taskthread.h"
@@ -206,6 +177,18 @@ int main(int argc, char ** argv)
         H3R_NS::OS::Thread::Sleep (1);
     H3R_NS::OS::Log_stdout ("Scaned: %d files, and %d folders" EOL,
         test_file_enum.Files (), test_file_enum.Directories ());
+
+    H3R_NS::LodFS lod_fs1 {"test.lod"};
+    var & stream1 = lod_fs1.Get ("Rmg.txt");
+    H3R_NS::OS::Log_stdout ("stream1.size: %zu" EOL, stream1.Size ());
+    H3R_NS::Array<unsigned char> stream1_data {};
+    stream1_data.Resize (stream1.Size ());
+    unsigned char * stream1_data_buf = stream1_data;
+    stream1.Read (stream1_data_buf, stream1.Size ());
+    H3R_NS::OS::FileStream stream1_to_file {
+        "Rmg.txt",
+        H3R_NS::OS::FileStream::Mode::WriteOnly};
+    stream1_to_file.Write (stream1_data_buf, stream1.Size ());
 
     /*if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
         return H3R_NS::Log::Info (H3R_NS::String::Format (

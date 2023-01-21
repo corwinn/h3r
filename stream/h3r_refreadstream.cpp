@@ -32,20 +32,54 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#include "h3r_vfs.h"
+#include "h3r_refreadstream.h"
 
 H3R_NAMESPACE
 
-VFS::VFS(const String &) {}
-
-VFS::~VFS() {}
-
-Stream & VFS::Get(const String &)
+RefReadStream::RefReadStream(Stream * s, off_t start, off_t size)
+    : Stream {s}, _start{start}, _size{size}
 {
-    static Stream s {nullptr};
-    return s;
+    Reset ();
 }
 
-VFS::operator bool() const { return false; }
+Stream & RefReadStream::Seek(off_t ofs)
+{
+    H3R_ENSURE(_pos + ofs <= _size, "Bug: RefReadStream: seek overflow")
+    _pos += ofs;
+    return *this;
+}
+
+Stream & RefReadStream::Read(void * buf, size_t bytes)
+{
+    var p = _start + _pos;
+    if (Stream::Tell () != p) Stream::Seek (p - Stream::Tell ());
+    H3R_ENSURE(Stream::Tell () == p, "Bug: RefReadStream: can't sync to base")
+    H3R_ENSURE(_pos + static_cast<off_t>(bytes) <= _size,
+        "Bug: RefReadStream: read overflow")
+    return _pos += bytes, Stream::Read (buf, bytes), *this;
+}
+
+Stream & RefReadStream::Write(const void *, size_t)
+{
+    H3R_ENSURE(false, "RefReadStream: Write is not supported.")
+}
+
+Stream & RefReadStream::ResetTo(off_t start, off_t size)
+{
+    _start = {start};
+    _size = {size};
+    Reset ();
+    return *this;
+}
+
+void RefReadStream::Reset()
+{
+    _ok = false;
+    _pos = 0;
+    Stream::Seek (_start - Stream::Tell ());
+    H3R_ENSURE(
+        Stream::Tell () == _start, "Bug: RefReadStream: can't sync to base")
+    _ok = true;//TODO should this be used for all ops?
+}
 
 NAMESPACE_H3R

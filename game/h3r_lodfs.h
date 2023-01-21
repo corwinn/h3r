@@ -32,47 +32,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_VFS_H_
-#define _H3R_VFS_H_
-
-// virtual file system - abstract away the game files
-
-#define VERY_IMPORTANT_AND_VERY_USELESS_MESSAGE "Resource system initialized()"
+#ifndef _H3R_LODFS_H_
+#define _H3R_LODFS_H_
 
 #include "h3r.h"
+#include "h3r_vfs.h"
 #include "h3r_string.h"
 #include "h3r_stream.h"
+#include "h3r_filestream.h"
+#include "h3r_array.h"
+#include "h3r_refreadstream.h"
+#include "h3r_zipinflatestream.h"
 
 H3R_NAMESPACE
 
-//TODO unicode support,
-// Consider ASCII to be the safe choice for your filenames.
-class VFS
+class LodFS: public VFS
 {
-    public: enum class FileType {nvm,
-        bik, def, fnt, h3c, h3m, h3r, mp3, msk, pal, pcx, smk, txt, wav};
+    private: OS::FileStream _s;
+    private: bool _usable {false};
+    // 1 stream for now
+    private: RefReadStream _rrs;
+    private: ZipInflateStream _zis;
+#pragma pack(push, 1)
+    private: struct Entry final
+    {
+        unsigned char Name[16];
+        int Ofs;   // SEEK_SET
+        int SizeU; // Uncompressed size [bytes]
+        int Type;
+        int SizeC; // Compressed size [bytes]
+    };
+#pragma pack(pop)
+    private: Array<Entry> _entries {};
+    private: Stream & GetStream(const LodFS::Entry &);
+    public: LodFS(const String & path);
+    public: ~LodFS() override;
+    public: virtual Stream & Get(const String & name) override;
+    public: virtual inline operator bool() const override { return _usable; }
 
-    public: VFS(const String & path);
-    public: virtual ~VFS();
-
-    // You request by name - you get a stream reference. You request the same
-    // name again - you could get another stream, or the same stream but in a
-    // reset state (pos=0, length could be different).
-    // For an archive file (.lod, .snd, .vid) - you get a RefReadStream;
-    // releasing it, is not your business. Just be careful to not access it
-    // after the VFS has been released.
-    // You shall have access to a limited number of distinct streams, decided by
-    // each VFS; for example the FS one shall limit the number in accordance
-    // with the OS file handle limitations, etc.
-    // use-case 1: on_game_start (cache all needed resources into RAM).
-    // use-case 2: on_map_load (cache all needed resources into RAM).
-    // use-case 3: on_map_load (invalidate, and do use-case #2)
-    public: virtual Stream & Get(const String & name);
-
-    // When the VFS is ok for use; indicates errors during constructor calls.
-    public: virtual operator bool() const;
-
-    //TODO public: virtual void Walk(bool (*on_entry)(Entry &));
+    public: void Walk(bool (*on_entry)(Stream &, const char * name));
 };
 
 NAMESPACE_H3R
