@@ -1,0 +1,18 @@
+
+  Its too early for this. Perhaps one day, if this becomes a project.
+
+
+ Much, much, much, much later
+..............................
+
+  In general: when you apply the coding convention (the "CC" file) to your code,
+and all the tests continue working flawlessly, you're good to go.
+
+  How you publish your code/patch is up to you: due credit shall be given one
+way or another. The primary goal of this re-make is to create a game that can be
+patched when needed. I will gladly delete it the moment the big AAA publish the
+original source.
+
+
+  At some point, corrupted/ambiguous maps and game data will become useful: on
+the robustness pass; so crafting/finding those would help too.
