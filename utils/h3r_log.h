@@ -120,11 +120,13 @@ class Log final
     public: void Silent(bool);
 
     private: void info(String message);
+    private: void err(String message);
 
     //DONE class Game - static storage duration: inside it: order MM, Log, etc.
     private: static Log * _one;
     private: static Log_Stdout _fall_back;
     public: static void Info(String message);
+    public: static void Err(String message);
 }; // class Log final
 
 #define H3R_LOG_STATIC_INIT H3R_NS::Log_Stdout H3R_NS::Log::_fall_back; \

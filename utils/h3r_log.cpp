@@ -95,10 +95,20 @@ void Log::Subscribe(ILog * log_listener)
 void Log::Silent(bool v) { _thread_proc.silent = v; }
 
 void Log::info(String message) { log ("Info: " + message); }
+void Log::err(String message) { log ("Error: " + message); }
 
 /*static*/ void Log::Info(String message)
 {
     if (Log::_one) Log::_one->info ((String &&)message);
+    else {
+        String msg {"Warning: Log service is off. Message: " + message};
+        Log::_fall_back.Log (msg);
+    }
+}
+
+/*static*/ void Log::Err(String message)
+{
+    if (Log::_one) Log::_one->err ((String &&)message);
     else {
         String msg {"Warning: Log service is off. Message: " + message};
         Log::_fall_back.Log (msg);
