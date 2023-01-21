@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 namespace OS {
 
-off_t FileStream::tell()
+off_t FileStream::tell() const
 {
     var r = Ftell (_f);
     H3R_ENSURE(H3R_FILE_OP_NOT_SUPPORTED != r, "tell() is not supported")
@@ -83,7 +83,7 @@ FileStream::FileStream(String name, Mode mode)
 
 FileStream::~FileStream() { if (_f) Fclose (_f), _f = 0; }
 
-off_t FileStream::Size()
+off_t FileStream::Size() const
 {
     return Mode::ReadOnly == _mode ? _size_on_open : online_size ();
 }

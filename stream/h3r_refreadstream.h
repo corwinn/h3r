@@ -61,8 +61,8 @@ class RefReadStream final : public Stream
     public ~RefReadStream() override {}
     public inline operator bool() override { return _ok; }
     public Stream & Seek(off_t) override;
-    public inline off_t Tell() override { return _pos; }
-    public inline off_t Size() override { return _size; }
+    public inline off_t Tell() const override { return _pos; }
+    public inline off_t Size() const override { return _size; }
     public Stream & Read(void *, size_t) override;
     public Stream & Write(const void *, size_t) override;
 

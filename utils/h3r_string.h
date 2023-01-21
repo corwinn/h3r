@@ -97,6 +97,7 @@ class String final
         return ! OS::Strncmp (b, (const char *)_b.Data (), b_len);
     }
 
+    //TODO this thing is causing too much copying around
     public: inline Array<char> AsZStr() const
     {
         Array<char> zstr;

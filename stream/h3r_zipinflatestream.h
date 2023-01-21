@@ -64,8 +64,8 @@ class ZipInflateStream : public Stream
     public inline operator bool() override { return Z_OK == _zr; }
     public Stream & Seek(off_t) override;
     // You can use this for progress: 1.0 * Tell() / Size() * 100
-    public off_t Tell() override; // compressed
-    public off_t Size() override; // uncompressed
+    public off_t Tell() const override; // compressed
+    public off_t Size() const override; // uncompressed
     public Stream & Read(void *, size_t) override;
     public Stream & Write(const void *, size_t) override;
 

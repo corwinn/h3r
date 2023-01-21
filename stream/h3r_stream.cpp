@@ -32,51 +32,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-// lod file format unpacker; it unpacks to the current directory!
-// H3R_MM rule: when the engine is built -DH3R_MM, so does this
-//c clang++ -std=c++11 -I. -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_lod_vfs.cpp -o unpack_lod_vfs main.a h3r_game.o -lz
+#include "h3r_stream.h"
 
-#include "h3r_os_error.h"
-H3R_ERR_DEFINE_UNHANDLED
-H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
-H3R_ERR_DEFINE_HANDLER(Log,H3R_ERR_HANDLER_UNHANDLED)
-
-#include "h3r_filestream.h"
-#include "h3r_game.h"
-#include "h3r_lodfs.h"
-
-// allow file replacement
 H3R_NAMESPACE
-namespace OS { class FileErrReplace final : public Error
+
+void Stream::Write(Stream & src, off_t length)
 {
-    public: bool Handled(Error * e = nullptr) override
-    {
-        FileError * fe = static_cast<FileError *>(e);
-        if (FileError::Op::Replace == fe->Op)
-            return fe->Replace = true;
-        return false;
+    H3R_ARG_EXC_IF(! src, "the source stream is not ok")
+    static unsigned char buf[Stream::STREAM_WRITE_BUF_SIZE] {};
+    if (0 == length) length = src.Size () - src.Tell ();
+    H3R_ARG_EXC_IF(length < 0, "length can't be < 0")
+    while (length) {
+        var const block = length < Stream::STREAM_WRITE_BUF_SIZE
+            ? length
+            : Stream::STREAM_WRITE_BUF_SIZE;
+        src.Read (buf, block);
+        Write (buf, block);
+        length -= block;
     }
-}; }
-NAMESPACE_H3R
-static H3R_NS::OS::FileErrReplace my_file_err;
-H3R_ERR_DEFINE_HANDLER(File, my_file_err)
-
-int main(int c, char ** v)
-{//TODO async IO, with the main thread displaying progress; and wise quotes
-    if (2 != c)
-        return printf ("usage: unpack_lod lodfile\n");
-
-    // init the log service
-    H3R_NS::Game game;
-
-    H3R_NS::LodFS {v[1]}
-        .Walk([](H3R_NS::Stream & stream, const H3R_NS::VFS::Entry & e) -> bool
-        {
-            H3R_NS::OS::FileStream {
-                e.Name, H3R_NS::OS::FileStream::Mode::WriteOnly}
-                .H3R_NS::Stream::Write (stream);
-            return true;
-        });
-
-    return 0;
 }
+
+NAMESPACE_H3R

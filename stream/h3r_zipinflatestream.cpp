@@ -41,9 +41,9 @@ Stream & ZipInflateStream::Seek(off_t)
     H3R_NOT_SUPPORTED_EXC("Seek is not supported.")
 }
 
-off_t ZipInflateStream::Tell() { return Stream::Tell () - _zs.avail_in; }
+off_t ZipInflateStream::Tell() const { return Stream::Tell () - _zs.avail_in; }
 
-off_t ZipInflateStream::Size() { return _usize; }
+off_t ZipInflateStream::Size() const { return _usize; }
 
 Stream & ZipInflateStream::Read(void * buf, size_t bytes)
 {

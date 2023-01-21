@@ -42,18 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 namespace OS {
 
-namespace __pointless_verbosity
-{
-    struct try_finally_at_stream_size final
-    {
-        Stream & _actor;
-        off_t _state;
-        try_finally_at_stream_size(Stream & s)
-            : _actor {s}, _state {_actor.Tell ()} {}
-        ~try_finally_at_stream_size() { _actor.Seek (_state-_actor.Tell ()); }
-    };
-}
-
 // Caution: Mode::WriteOnly streams should be verified right after construction
 // because the user might choose to not overwrite the file in question. You can
 // always use FileStream::Exists of course and ask the user prior construction,
@@ -65,12 +53,11 @@ class FileStream final: public Stream
     private: FILE * _f {};
     private: off_t _size_on_open {};
     private: String _name;
-    private: inline off_t online_size()
+    private: inline off_t online_size() const
     {
-        __pointless_verbosity::try_finally_at_stream_size ____ {*this};
-        return Fseek (_f, 0, SEEK_END), Ftell (_f);
+        return FileSize (_name.AsZStr ().Data ());
     }
-    private: off_t tell();
+    private: off_t tell() const;
     private: Stream & seek(off_t offset);
 
     public: enum class Mode
@@ -91,8 +78,8 @@ class FileStream final: public Stream
     public: inline operator bool() override { return nullptr != _f; }
 
     public: inline Stream & Seek(off_t pos) override { return seek (pos); }
-    public: inline off_t Tell() override { return tell (); }
-    public: off_t Size() override;
+    public: inline off_t Tell() const override { return tell (); }
+    public: off_t Size() const override;
     public: Stream & Read(void * b, size_t bytes = 1) override;
     public: Stream & Write(const void * b, size_t bytes = 1) override;
 

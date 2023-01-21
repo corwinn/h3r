@@ -66,9 +66,8 @@ class Stream
     public inline Stream & Begin() { return this->Seek (-Tell ()); }
     public inline Stream & End() { return this->Seek (Size () -Tell ()); }
 
-    //TODO any reason I left these no-const?!
-    public virtual inline off_t Tell() { return _f->Tell (); }
-    public virtual inline off_t Size() { return _f->Size (); }
+    public virtual inline off_t Tell() const { return _f->Tell (); }
+    public virtual inline off_t Size() const { return _f->Size (); }
     public virtual inline Stream & Read(void * b, size_t bytes = 1)
     {
         return _f->Read (b, bytes), *this;
@@ -90,8 +89,15 @@ class Stream
         return s.Write (d, num * sizeof(T));//TODO overflow math
     }
 
-    //TODO Stream.Write (Stream &)
-    //TODO Stream.Read (Stream &)
+    public static int constexpr STREAM_WRITE_BUF_SIZE {1<<12};
+    // Buffered Write; buffer size: STREAM_WRITE_BUF_SIZE.
+    // If "length" is 0, the entire stream shall be written.
+    // You get ArgumentException for bad "src" or "length".
+    // Writing starts at whatever position src is - its Seek() won't be called.
+    public void Write(Stream & src, off_t length = 0);
+
+    //LATER Stream.Read (Stream &)
+    //LATER bool Readable(); bool Writeable(); bool Seekable(); bool Sizeless();
 };
 
 #undef public
