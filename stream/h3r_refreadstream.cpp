@@ -61,7 +61,7 @@ Stream & RefReadStream::Read(void * buf, size_t bytes)
 
 Stream & RefReadStream::Write(const void *, size_t)
 {
-    H3R_ENSURE(false, "RefReadStream: Write is not supported.")
+    H3R_NOT_SUPPORTED_EXC("Write is not supported.")
 }
 
 Stream & RefReadStream::ResetTo(off_t start, off_t size)

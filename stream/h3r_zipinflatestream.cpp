@@ -38,7 +38,7 @@ H3R_NAMESPACE
 
 Stream & ZipInflateStream::Seek(off_t)
 {
-    H3R_ENSURE(false, "ZipInflateStream: Seek is not supported.")
+    H3R_NOT_SUPPORTED_EXC("Seek is not supported.")
 }
 
 off_t ZipInflateStream::Tell() { return Stream::Tell () - _zs.avail_in; }
@@ -83,7 +83,7 @@ Stream & ZipInflateStream::Read(void * buf, size_t bytes)
 
 Stream & ZipInflateStream::Write(const void *, size_t)
 {
-    H3R_ENSURE(false, "ZipInflateStream: Write is not supported.")
+    H3R_NOT_SUPPORTED_EXC("Write is not supported.")
 }
 
 // Reset to state

@@ -40,8 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-// A stream for reading zip-encoded data. You get not-supported exceptions for:
-// Write(), Seek().
+// A stream for reading zip-encoded data. You get NotSupportedException on
+// Write() and Seek().
 // It allocates _IN_BUF bytes buffer (4k) so be wary.
 class ZipInflateStream : public Stream
 {

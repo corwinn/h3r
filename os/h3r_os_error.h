@@ -62,6 +62,11 @@ class ArgumentException : public Exception
 {
     public: using Exception::Exception;
 };
+// Show that some operation isn't supported.
+class NotSupportedException : public Exception
+{
+    public: using Exception::Exception;
+};
 
 // H3R_TEST
 #else
@@ -70,7 +75,7 @@ class ArgumentException : public Exception
 
 #define H3R_THROW_IF(C,E,M) { if ((C)) H3R_THROW(E,M) }
 #define H3R_ARG_EXC_IF(C,M) H3R_THROW_IF(C,ArgumentException,M)
-
+#define H3R_NOT_SUPPORTED_EXC(M) H3R_THROW(NotSupportedException,M)
 
 namespace OS {
 

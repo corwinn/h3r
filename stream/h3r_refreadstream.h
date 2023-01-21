@@ -41,7 +41,7 @@ H3R_NAMESPACE
 
 // A stream used for reading a sector of the decorated stream.
 // All of its state is local; the base stream state isn't published.
-// You get assertion failed on Write().
+// You get NotSupportedException on Write().
 // Thread-unsafe!
 //LATER Should the need arise for multiple threads to read simultaneously,
 //      a ThreadSafeReadStream shall be created:
