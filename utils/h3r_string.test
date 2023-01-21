@@ -272,7 +272,7 @@ H3R_TEST_(operator_plus_equals_char)
     H3R_TEST_IS_TRUE(a.EqualsZStr("foof"))
 H3R_TEST_END
 
-H3R_TEST_(equalssztr)
+H3R_TEST_(equalszstr)
     String a {"foo"};
     H3R_TEST_IS_TRUE(a.EqualsZStr("foo"))
     H3R_TEST_IS_FALSE(a.EqualsZStr("foO"))
