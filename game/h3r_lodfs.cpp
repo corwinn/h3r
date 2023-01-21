@@ -79,7 +79,8 @@ LodFS::LodFS(const String & fname)
             "%s: entry: %004d: %c (%00000008d/%00000008d) \"%s\"" EOL,
             FN, i++, (e.SizeU > e.SizeC && e.SizeC > 0 ? 'C' : 'U'),
                 e.SizeC, e.SizeU, e.Name);*/
-
+    //LATER if (! sorted) sort (); contract with the binary search below;
+    //      or hash (you should have a DLL already)
     _usable = true;
 }// LodFS::LodFS()
 
@@ -92,19 +93,20 @@ Stream & LodFS::GetStream(const LodFS::Entry & e)
     bool compressed = e.SizeU >= e.SizeC && e.SizeC > 0;
     /*OS::Log_stdout ("LodFS::GetStream: compressed: %s" EOL,
         (compressed ? "true" : "false"));*/
+//np start: e.Ofs, size: (compressed ? e.SizeC : e.SizeU)
     _rrs.ResetTo (e.Ofs, (compressed ? e.SizeC : e.SizeU));
     return compressed
-//np start: e.Ofs, size: compressed ? e.SizeC : e.SizeU
+//np size: e.SizeC, usize: e.SizeU
         ? _zis.ResetTo (e.SizeC, e.SizeU)
-//np pos: 0, size: e.SizeC, usize: e.SizeU
+//np start: e.Ofs, size: e.SizeU
         : _rrs.ResetTo (e.Ofs, e.SizeU);
 }
 
-Stream & LodFS::Get(const String & res)//TODO come back after unifying the entry
+Stream & LodFS::Get(const String & res)
 {
-    //TODO binary search; sort the entry list (I think they're sorted already)
-    //     What?! - you expected a hash? - there will be one sooner or later,
-    //     no worries.
+    //LATER binary search; sort the entry list (I think they're sorted already);
+    //      What?! - you expected a hash? - there will be one sooner or later,
+    //      no worries.
     for (const var & e : _entries)
         if (res.EqualsZStr ((const char *)e.Name)) return GetStream (e);
     return VFS::Get (res);
