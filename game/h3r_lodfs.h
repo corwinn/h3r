@@ -65,7 +65,7 @@ class LodFS : public VFS
         int SizeC; // Compressed size [bytes]
     };
 #pragma pack(pop)
-    protected: Array<Entry> _entries {};
+    protected: Array<LodFS::Entry> _entries {};
     protected: virtual Stream & GetStream(const LodFS::Entry &);
     public: LodFS(const String & path);
     public: ~LodFS() override;
