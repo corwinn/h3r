@@ -64,6 +64,24 @@ class TaskState
     public: inline virtual bool PercentageProgress() const { return true; }
     // Brief description, like: "Loading ..."
     public: inline const String & Message() const { return _s; }
+
+    // The producer invokes SetChanged();
+    // The consumer: Changed()
+    // The producer shouldn't waste too much time with this.
+    protected: bool _changed {};
+    public: inline virtual void SetChanged(bool value) { _changed = value; }
+    public: inline virtual bool Changed()
+    {
+        var result = _changed;
+        if (_changed) _changed = false;
+        return result;
+    }
+    public: inline static bool Changed(const TaskState & a, const TaskState & b)
+    {
+        return (a.Message () != b.Message ())
+            || (a.Progress () != b.Progress ());
+    }
+
     // For nested tasks, like: enumerating and reading:
     // sub_task_state->Progress() is read progress.
     //LATER loop detection; depth limit (3 sounds reasonable); simple:
