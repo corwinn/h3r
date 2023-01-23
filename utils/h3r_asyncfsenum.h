@@ -93,7 +93,6 @@ template <typename T> class AsyncFsEnum final
 #define public public:
     {
         private AsyncFsEnum<T> & _subject;
-        private bool _complete {false};
         private Stack<String> _directories {};
         private String _current_root {};
         private size_t _stack_load {};
@@ -123,11 +122,9 @@ template <typename T> class AsyncFsEnum final
                     return task._subject.ThrNotify ();
                 });
             H3R_NS::OS::Log_stdout ("stack_load: %zu" EOL, _stack_load);
-            _complete = true;
         }
-        public bool Complete() const { return _complete; }
     } _task;
-    public bool Complete() const { return _task.Complete (); }
+    public bool Complete() const { return _thread.Done (); }
 };// AsyncFsEnum
 
 #undef private
