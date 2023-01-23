@@ -278,6 +278,31 @@ H3R_TEST_(equalszstr)
     H3R_TEST_IS_FALSE(a.EqualsZStr("foO"))
 H3R_TEST_END
 
+H3R_TEST_(endswith)
+    String a {"foo"};
+    H3R_TEST_IS_TRUE(a.EndsWith("foo"))
+    H3R_TEST_IS_TRUE(a.EndsWith("oo"))
+    H3R_TEST_IS_TRUE(a.EndsWith("o"))
+    H3R_TEST_IS_FALSE(a.EndsWith("O"))
+    H3R_TEST_IS_FALSE(a.EndsWith("fooo"))
+    H3R_TEST_IS_FALSE(a.EndsWith("Foo"))
+    String b {"Bar"};
+    H3R_TEST_IS_TRUE(b.EndsWith("Bar"))
+    H3R_TEST_IS_FALSE(b.EndsWith("Foo"))
+    H3R_TEST_IS_TRUE(b.EndsWith("ar"))
+    H3R_TEST_IS_TRUE(b.EndsWith("r"))
+    String c = b.ToLower ();
+    H3R_TEST_IS_TRUE(c.EndsWith("bar"))
+    H3R_TEST_IS_FALSE(c.EndsWith("Bar"))
+H3R_TEST_END
+
+H3R_TEST_(empty_zero_terminated_string)
+    String a {""};
+    Array<char> b = a.AsZStr (); // adds 8 zero bytes
+    H3R_TEST_ARE_EQUAL(0, a.Length ())
+    H3R_TEST_ARE_EQUAL('\0', b[0])
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()

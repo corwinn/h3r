@@ -89,7 +89,7 @@ class String final
         return String {*this} += c;
     }
     public: bool operator==(const String &) const;
-    public: bool operator!=(const String & b) { return ! (*this == b); }
+    public: bool operator!=(const String & b) const { return ! (*this == b); }
     public: bool inline EqualsZStr(const char * b) const
     {
         var b_len = OS::Strlen (b);
@@ -101,12 +101,21 @@ class String final
     public: inline Array<char> AsZStr() const
     {
         Array<char> zstr;
-        zstr.Append (_b.Data (), _b.Length ());
+        if (_b.Length () > 0) zstr.Append (_b.Data (), _b.Length ());
         // 8 zero bytes - should be enough for any encoding
         return zstr.Resize (zstr.Length () + 8), zstr;
     }
 
     public: String ToLower() const;
+
+    public: inline bool EndsWith(const char * s)
+    {
+        var a = _b.Length ();
+        var b = OS::Strlen (s);
+        if (b > a) return false;
+        return ! OS::Strncmp (
+            reinterpret_cast<const char *>((_b.Data () + a) - b), s, b);
+    }
 };
 
 String operator+(const char *, const String &);
