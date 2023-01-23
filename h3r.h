@@ -55,6 +55,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //LATER inttypes.h
 static_assert(sizeof(int) >= 4, "This program expects 32-bit int at least");
 
+// #include <new>
+#define H3R_CREATE_OBJECT(P,T) H3R_NS::OS::Alloc (P); new (P) T
+#define H3R_DESTROY_OBJECT(P,T) \
+    if (nullptr != P) { P->~T (); H3R_NS::OS::Free (P); }
+
 H3R_NAMESPACE
 
 using byte = unsigned char;
