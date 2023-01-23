@@ -40,14 +40,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 
 H3R_NAMESPACE
+#define public public:
+#define private private:
 
+// class ShowProgress : public Event
+// {
+//     void Do(class Control * c) override
+//     {
+//         if (Handled ()) ShowPorgress (c); else Event::Do (c);
+//     }
+//     bool Handled() override { return _dialog_window != nullptr; }
+// }
+// To be a Chain of Responsibility or not to be? Was that a question?
+// Confusing a little bit. Its event for the one invoking it a.k.a. the Subject;
+// its event handler for the one receiving it a.k.a the Observer.
+// Control is not the "C" at the "MVC" - its just a basic "sender" type a.k.a
+// the one who sent the event. For non-UI events that shall be null obviously.
+// I hope this won't become a showstopper at some point, since I'm combining
+// one too many responsibilities in this single class.
 class Event
 {
-    public: virtual void Do(class Control *) {}
-    // To be a Chain of Responsibility or not to be? Was that a question?
-    public: virtual bool Handled() { return false; }
+    // Do you know how hard is to turn this into a multi-cast delegate?
+    // Not at all.
+    //LATER
+    // public: void Attach(Event *); // aka foo.Changed += bar
+    // public: void Detach(Event *); // aka foo.Changed -= bar
+    private Event * _next;
+    public Event(Event * next_eh = nullptr) : _next{next_eh} {}
+    public virtual void Do(class Control * c) { if (_next) _next->Do (c); }
+    // Implement this when your object has "doubts" about handling something
+    public virtual bool Handled() { return true; }
+    // Why is this "virtual" eludes me still. Perhaps on the next re-read.
+    public virtual void SetNext(Event * next_eh) { _next = next_eh; }
 };
 
+// The book responsible for code like the above one:
+// "Design Patterns: Elements of Reusable Object-Oriented Software"
+
+#undef public
+#undef private
 NAMESPACE_H3R
 
 #endif
