@@ -40,6 +40,8 @@ H3R_LOG_STATIC_INIT
 
 H3R_NAMESPACE
 
+TaskThread Game::IOThread {};
+
 Game::Game()
     : _3rd {"main.log"}
 {

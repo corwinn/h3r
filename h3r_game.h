@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_log.h"
 #include "h3r_log_stdout.h"
 #include "h3r_log_file.h"
+#include "h3r_taskthread.h"
 
 H3R_NAMESPACE
 
@@ -77,6 +78,35 @@ class Game final
     // { while (! AsyncTaskComplete ()) ProcessThings (); }
     // I think you can safely "repeat" the above 1 line of code, but enforcing
     // named wait functions could be better maintenance-ability wise.
+
+    // The IO thread. You want IO done: Game::IOThread.Task = your IAsyncTask.
+    // Now what happens if a task is already in progress? Your thread shall be
+    // blocked on a sync. object waiting for said task to complete.
+    //
+    // Let me re-summarise the threading model of this application; 4 shall ride
+    // forward:
+    //  * main  - handles rendering & interactive events; issues "sound", "IO"
+    //            and "log" requests;
+    //  * log   - handles "log" requests; does its own IO in its own thread
+    //            through its own IO adapters, if any
+    //  * sound - handles "sound" requests; does its own IO in its own thread
+    //  * IO    - handles IO requests from the "main" thread only
+    // The "main" one shall render progress or display messages (the rare
+    // "please wait" coming to mind :) ), etc. while waiting for an IO task to
+    // complete, and not wait for another one prior the 1st one completes
+    // because (see TaskThread). One task at a time!
+    // There are a few independent threads:
+    //  * AsyncFsEnum - handles FS file enumeration in its own thread
+    //  * AsyncAdapter - use any Stream object in a separate thread;
+    //                   shall be used for NetworkStream for example
+    //TODO sequence diagram
+    // There is no point to further complicate this complex program with task
+    // queues, thread pools, and all the bonus deadlocks and hundreds of hours
+    // on the whiteboard, coming with all that.
+    //
+    // This is not and it will never be a server, or handle-it-all framework,
+    // or R&D on parallelism, or whatever; because: short and simple.
+    public: static TaskThread IOThread;
 };
 
 NAMESPACE_H3R
