@@ -81,6 +81,8 @@ Thread::~Thread()
     nanosleep (&foo, nullptr);
 }
 
+/*static*/ void Thread::SleepForAWhile() { Thread::Sleep (1); }
+
 void Thread::Join()
 {
     var r = pthread_join (_thr, nullptr);

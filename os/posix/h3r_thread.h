@@ -53,6 +53,7 @@ class Thread final
     private: pthread_t _thr {};
     // public: static Thread & Create(Proc &);
     public: static void Sleep(int); // [milliseconds] : [1;1000]
+    public: static void SleepForAWhile(); // 1 [millisecond]
     public: Thread(Proc &);
     public: ~Thread();
     // Wait for the thread to stop.
