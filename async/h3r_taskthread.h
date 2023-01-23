@@ -80,8 +80,8 @@ class TaskThread final
                     ____ {_p._d_lock};
                 return _v = v;
             }
-            public: operator bool() { return _v; }
-            public: bool operator !() { return !_v; }
+            public: operator bool() const { return _v; }
+            public: bool operator !() const { return !_v; }
         } _dirty;
         // setup part
         inline IAsyncTask & Do(IAsyncTask * p)
@@ -143,8 +143,8 @@ class TaskThread final
         }
     } Task;
 
-    public: inline bool Done() { return ! _tproc._dirty; }
-};
+    public: inline bool Done() const { return ! _tproc._dirty; }
+};// TaskThread
 
 NAMESPACE_H3R
 
