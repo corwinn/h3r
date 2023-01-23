@@ -44,19 +44,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_refreadstream.h"
 #include "h3r_zipinflatestream.h"
 
+// placement new
+#include <new>
+
 H3R_NAMESPACE
 
 // On 2nd thought this shouldn't be final, should one decide to use own,
 // extended format (better compression for one, and or hashed names, etc.).
 class LodFS : public VFS
 {
-    protected: OS::FileStream _s;
-    protected: bool _usable {false};
+#define public public:
+#define protected protected:
+
+    protected OS::FileStream * _s {};
+    protected bool _usable {false};
     // 1 stream for now
-    protected: RefReadStream _rrs;
-    protected: ZipInflateStream _zis;
+    protected RefReadStream * _rrs {};
+    protected ZipInflateStream * _zis {};
 #pragma pack(push, 1)
-    protected: struct Entry final
+    protected struct Entry final
     {
         unsigned char Name[16];
         int Ofs;   // SEEK_SET
@@ -65,16 +71,29 @@ class LodFS : public VFS
         int SizeC; // Compressed size [bytes]
     };
 #pragma pack(pop)
-    protected: Array<LodFS::Entry> _entries {};
-    protected: virtual Stream & GetStream(const LodFS::Entry &);
-    public: LodFS(const String & path);
-    public: ~LodFS() override;
-    public: virtual Stream & Get(const String & name) override;
-    public: virtual inline operator bool() const override { return _usable; }
+    protected Array<LodFS::Entry> _entries {};
+    protected virtual Stream & GetStream(const LodFS::Entry &);
+    public LodFS(const String & path);
+    public ~LodFS() override;
+    public virtual Stream * Get(const String & name) override;
+    public virtual inline operator bool() const override { return _usable; }
 
-    public: virtual void Walk(bool (*)(Stream &, const VFS::Entry &)) override;
-};
+    public virtual void Walk(bool (*)(Stream &, const VFS::Entry &)) override;
 
+    public LodFS() : VFS {} {}
+    public inline virtual VFS * TryLoad(const String & path) override
+    {
+        if (! path.ToLower ().EndsWith (".lod")) return nullptr;
+        LodFS * result {};
+        H3R_CREATE_OBJECT(result, LodFS) {path};
+        if (*result) return result;
+        H3R_DESTROY_OBJECT(result, LodFS)
+        return nullptr;
+    }
+};// LodFS
+
+#undef public
+#undef protected
 NAMESPACE_H3R
 
 #endif

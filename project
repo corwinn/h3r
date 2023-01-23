@@ -59,7 +59,7 @@ and now, index the game resources and create the main game screen
    (perhaps I shall dynamically increase them on an "as needed" basis; then:
     0: music; 1: UI fx; 2+: game fx; or 0, 1: music (fade in/out), 2:UI, 3+:
     game fx?)
- and now it needs a VFS - abstract away persistent game data
+ done: and now it needs a VFS - abstract away persistent game data
   done: and now it needs a file enumerator
   done: and now it needs sort()
   done: and now it needs async file IO: AsyncAdapter<T> adapt Stream to T

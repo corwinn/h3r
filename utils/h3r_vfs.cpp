@@ -40,11 +40,7 @@ VFS::VFS(const String &) {}
 
 VFS::~VFS() {}
 
-Stream & VFS::Get(const String &)
-{
-    static Stream s {nullptr};
-    return s;
-}
+Stream * VFS::Get(const String &) { return nullptr; }
 
 VFS::operator bool() const { return false; }
 

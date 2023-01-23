@@ -178,18 +178,6 @@ int main(int argc, char ** argv)
     H3R_NS::OS::Log_stdout ("Scaned: %d files, and %d folders" EOL,
         test_file_enum.Files (), test_file_enum.Directories ());
 
-    H3R_NS::LodFS lod_fs1 {"test.lod"};
-    var & stream1 = lod_fs1.Get ("Rmg.txt");
-    H3R_NS::OS::Log_stdout ("stream1.size: %zu" EOL, stream1.Size ());
-    H3R_NS::Array<unsigned char> stream1_data {};
-    stream1_data.Resize (stream1.Size ());
-    unsigned char * stream1_data_buf = stream1_data;
-    stream1.Read (stream1_data_buf, stream1.Size ());
-    H3R_NS::OS::FileStream stream1_to_file {
-        "Rmg.txt",
-        H3R_NS::OS::FileStream::Mode::WriteOnly};
-    stream1_to_file.Write (stream1_data_buf, stream1.Size ());
-
     /*if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
         return H3R_NS::Log::Info (H3R_NS::String::Format (
             "SDL_Init error: %s" EOL, SDL_GetError ())), 9;

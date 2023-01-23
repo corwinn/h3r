@@ -32,62 +32,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_SNDFS_H_
-#define _H3R_SNDFS_H_
-
-#include "h3r.h"
-#include "h3r_vfs.h"
-#include "h3r_string.h"
-#include "h3r_stream.h"
-#include "h3r_filestream.h"
-#include "h3r_array.h"
-#include "h3r_refreadstream.h"
-
-#include <new>
+#include "h3r_resmanager.h"
+#include "h3r_game.h"
 
 H3R_NAMESPACE
 
-class SndFS final : public VFS
+OS::CriticalSection ResManager::_task_info_gate {};
+
+ResManager::~ResManager()//TODO shouldn't I be an IAsyncTask?
 {
-#define public public:
-#define private private:
+    for (var * obj : _vfs_objects) H3R_DESTROY_OBJECT(obj, VFS)
+    for (var * obj : _vfs_registry) H3R_DESTROY_OBJECT(obj, VFS)
+}
 
-    private OS::FileStream * _s {};
-    private bool _usable {false};
-    // 1 stream for now
-    private RefReadStream * _rrs {};
-#pragma pack(push, 1)
-    private struct Entry final
-    {
-        unsigned char Name[40];
-        int Ofs; // SEEK_SET
-        int Size;
-    };
-#pragma pack(pop)
-    private Array<SndFS::Entry> _entries {};
-    private Stream & GetStream(const SndFS::Entry &);
-    public SndFS(const String & path);
-    public ~SndFS() override;
-    public Stream * Get(const String & name) override;
-    public inline operator bool() const override { return _usable; }
+const ResManager::RMTaskInfo & ResManager::GetResource(const String & name)
+{
+    Game::IOThread.Task = _get_task.SetName (name);
+    return _get_task.State;
+}
 
-    public void Walk(bool (*)(Stream &, const VFS::Entry &)) override;
+const ResManager::RMTaskInfo & ResManager::Enumerate(
+    bool (*on_entry)(Stream &, const VFS::Entry &))
+{
+    Game::IOThread.Task = _walk_task.SetCallback (on_entry);
+    return _walk_task.State;
+}
 
-    public SndFS() : VFS {} {}
-    public inline virtual VFS * TryLoad(const String & path) override
-    {
-        if (! path.ToLower ().EndsWith (".snd")) return nullptr;
-        SndFS * result {};
-        H3R_CREATE_OBJECT(result, SndFS) {path};
-        if (*result) return result;
-        H3R_DESTROY_OBJECT(result, SndFS)
-        return nullptr;
-    }
+const ResManager::RMTaskInfo & ResManager::Load(const String & path)
+{
+    Game::IOThread.Task = _load_task.SetPath (path);
+    return _load_task.State;
+}
 
-#undef public
-#undef private
-};// SndFS
+bool ResManager::TaskComplete() { return Game::IOThread.Done (); }
 
 NAMESPACE_H3R
-
-#endif

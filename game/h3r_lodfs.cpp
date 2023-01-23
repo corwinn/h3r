@@ -43,24 +43,27 @@ static int const H3R_LOD_UNK1 {4}; // unknown 4 bytes
 static int const H3R_LOD_UNK2 {80};// unknown 80 bytes
 
 LodFS::LodFS(const String & fname)
-    : VFS {fname}, _s {fname, H3R_NS::OS::FileStream::Mode::ReadOnly},
-        _rrs {&_s, 0, 0}, _zis {&_rrs, 0, 0}
+    : VFS {fname}
 {
+    H3R_CREATE_OBJECT(_s, OS::FileStream)
+        {fname, H3R_NS::OS::FileStream::Mode::ReadOnly};
+    if (! *_s) return;
+
     union { int isign; unsigned char sign[4]; };
     int cnt {0};
     var FN_cleanup {fname.AsZStr ()};
     var FN {FN_cleanup.Data ()};
 
-    Stream::Read (_s, &isign);
+    Stream::Read (*_s, &isign);
     if (H3R_LOD_SIGN != isign) {
         Log::Err (String::Format ("%s: Unknown signature: %00000008Xd" EOL,
             FN, isign));
     }
     OS::Log_stdout ("%s: sign: %s" EOL, FN, sign);
 
-    _s.Seek (H3R_LOD_UNK1); //TODO what are those? - c8 @ H3bitmap.lod
+    _s->Seek (H3R_LOD_UNK1); //TODO what are those? - c8 @ H3bitmap.lod
 
-    Stream::Read (_s, &cnt);
+    Stream::Read (*_s, &cnt);
     if (cnt <= 0 || cnt > H3R_LOD_MAX_ENTRIES) {
         Log::Err (
             String::Format ("%s: Suspicious entry count: %d" EOL, FN, cnt));
@@ -68,11 +71,11 @@ LodFS::LodFS(const String & fname)
     }
     OS::Log_stdout ("%s: entries: %d" EOL, FN, cnt);
 
-    _s.Seek (H3R_LOD_UNK2); //TODO what are those? H3bitmap.lod
+    _s->Seek (H3R_LOD_UNK2); //TODO what are those? H3bitmap.lod
 
     _entries.Resize (cnt);
     var data = static_cast<LodFS::Entry *>(_entries);
-    Stream::Read (_s, data, cnt);
+    Stream::Read (*_s, data, cnt);
     //TODO validate entries
     /*int i {0};
     for (const var & e : _entries)
@@ -82,10 +85,18 @@ LodFS::LodFS(const String & fname)
                 e.SizeC, e.SizeU, e.Name);*/
     //LATER if (! sorted) sort (); contract with the binary search below;
     //      or hash (you should have a DLL already)
+
+    H3R_CREATE_OBJECT(_rrs, RefReadStream) {_s, 0, 0};
+    H3R_CREATE_OBJECT(_zis, ZipInflateStream) {_rrs, 0, 0};
     _usable = true;
 }// LodFS::LodFS()
 
-LodFS::~LodFS() {}
+LodFS::~LodFS()
+{
+    H3R_DESTROY_OBJECT(_zis, ZipInflateStream)
+    H3R_DESTROY_OBJECT(_rrs, RefReadStream)
+    H3R_DESTROY_OBJECT(_s, FileStream)
+}
 
 Stream & LodFS::GetStream(const LodFS::Entry & e)
 {
@@ -95,31 +106,43 @@ Stream & LodFS::GetStream(const LodFS::Entry & e)
     /*OS::Log_stdout ("LodFS::GetStream: compressed: %s" EOL,
         (compressed ? "true" : "false"));*/
 //np start: e.Ofs, size: (compressed ? e.SizeC : e.SizeU)
-    _rrs.ResetTo (e.Ofs, (compressed ? e.SizeC : e.SizeU));
+    _rrs->ResetTo (e.Ofs, (compressed ? e.SizeC : e.SizeU));
     return compressed
 //np size: e.SizeC, usize: e.SizeU
-        ? _zis.ResetTo (e.SizeC, e.SizeU)
+        ? _zis->ResetTo (e.SizeC, e.SizeU)
 //np start: e.Ofs, size: e.SizeU
-        : _rrs.ResetTo (e.Ofs, e.SizeU);
+        : _rrs->ResetTo (e.Ofs, e.SizeU);
 }
 
-Stream & LodFS::Get(const String & res)
+Stream * LodFS::Get(const String & res)
 {
     //LATER binary search; sort the entry list (I think they're sorted already);
     //      What?! - you expected a hash? - there will be one sooner or later,
     //      no worries.
     for (const var & e : _entries)
-        if (res.EqualsZStr ((const char *)e.Name)) return GetStream (e);
+        if (res.EqualsZStr ((const char *)e.Name)) return &(GetStream (e));
     return VFS::Get (res);
 }
 
 void LodFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
     static VFS::Entry vfs_e {};
+    var prev_info = VFS::VFSInfo {0, vfs_e.Name};
+    var all = _entries.Length ();
+    var i = all-all;
     for (const var & e : _entries) {
         vfs_e.Name = reinterpret_cast<const char *>(e.Name);
         vfs_e.Size = e.SizeU;
         if (! on_entry (GetStream (e), vfs_e)) break;
+
+        //TODO there is definitely a field for improvements
+        var new_info = VFS::VFSInfo {
+            static_cast<int>(0.5+(1.0*i++/all*100)), vfs_e.Name};
+        if (TaskState::Changed (prev_info, new_info)) {
+            new_info.SetChanged (true);
+            prev_info = new_info;
+            OnProgress.Do (&new_info);
+        }
     }
 }
 

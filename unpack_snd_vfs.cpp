@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // snd file format unpacker; it unpacks to the current directory!
 // H3R_MM rule: when the engine is built -DH3R_MM, so does this
-//c clang++ -std=c++11 -I. -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_snd_vfs.cpp -o unpack_snd_vfs main.a h3r_game.o -lz
+//c clang++ -std=c++11 -I. -Iasync -Iui -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_snd_vfs.cpp -o unpack_snd_vfs main.a h3r_game.o -lz
 
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED

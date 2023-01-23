@@ -42,16 +42,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_string.h"
 #include "h3r_stream.h"
+#include "h3r_taskstate.h"
 
 H3R_NAMESPACE
 #define public public:
+#define private private:
 
-//TODO unicode support,
+//TODO unicode support
 // Consider ASCII to be the safe choice for your filenames.
 class VFS
 {
+    H3R_CANT_COPY(VFS)
+    H3R_CANT_MOVE(VFS)
+
     public enum class FileType {nvm,
         bik, def, fnt, h3c, h3m, h3r, mp3, msk, pal, pcx, smk, txt, wav};
+
+    // Reflection-only constructor - for TryLoad()
+    public VFS() {}
 
     public VFS(const String & path);
     public virtual ~VFS();
@@ -68,12 +76,17 @@ class VFS
     // use-case 1: on_game_start (cache all needed resources into RAM).
     // use-case 2: on_map_load (cache all needed resources into RAM).
     // use-case 3: on_map_load (invalidate, and do use-case #2)
-    public virtual Stream & Get(const String & name);
+    //
+    // Use AsyncAdapter with the stream.
+    //TODO AsyncAdapter & Get()? or Game::AsyncStreamAdapter?
+    public virtual Stream * Get(const String & name);
 
     // When the VFS is ok for use; indicates errors during constructor calls.
     public virtual operator bool() const;
 
-    // There is no need for VFSWalker for this project.
+    // There is no need for VFSWalker (3rd party actor (called Strategy):
+    // a polymorphic class that you extend with concrete walkers as needed; this
+    // becomes the Context in that use-case) for this project.
     // Should be enough: Name, Size, and Date/Time later probably
     public class Entry
     {
@@ -81,11 +94,48 @@ class VFS
         public off_t Size;
     };
 
-    // observer: return false to interrupt the walk
-    public virtual void Walk(bool (*)(Stream &, const Entry &));
-};
+    // Observer: return false to interrupt the walk
+    public virtual void Walk(bool (*)(Stream &, const VFS::Entry &));
+
+    //TODO Design me
+
+    // Create new instance
+    public virtual VFS * TryLoad(const String &) { return nullptr; }
 
 #undef public
+    public: class VFSInfo final : public TaskState
+#define public public:
+    {
+        private bool _pp {};
+        public void SetPercentageProgress(bool value) { _pp = value; }
+        public VFSInfo() : TaskState {0, ""} {}
+        public using TaskState::TaskState;
+        public inline bool PercentageProgress() const { return _pp; }
+    };
+
+#undef public
+    public: class VFSEvent
+#define public public:
+    {
+        private VFSEvent * _next;
+        public virtual void Do(VFSInfo * a) { if (_next) _next->Do (a); }
+        public VFSEvent(VFSEvent * next_eh = nullptr) : _next{next_eh} {}
+        public virtual void SetNext(VFSEvent * next_eh) { _next = next_eh; }
+    };
+
+    // Use-case-1; OnProgress.SetNext(your_event_handler *)
+    //PERHAPS If the above fails (is not enough; you want to show five progress
+    //        bars simultaneously for example); Use-case-2:
+    //        public VFSEvent * OnProgress; // Whatever you set that pointer to,
+    //                                      // shall be OnProgress->Do (nullptr)
+    // Remember! All IO is done in a thread != main, so this event won't be your
+    // favorite thread.
+    //TODO think of something to clearly mark such functions.
+    public VFSEvent OnProgress;
+};// VFS
+
+#undef public
+#undef private
 NAMESPACE_H3R
 
 #endif

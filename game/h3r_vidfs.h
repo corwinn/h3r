@@ -43,6 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_array.h"
 #include "h3r_refreadstream.h"
 
+#include <new>
+
 H3R_NAMESPACE
 
 class VidFS final : public VFS
@@ -50,10 +52,10 @@ class VidFS final : public VFS
 #define public public:
 #define private private:
 
-    private OS::FileStream _s;
+    private OS::FileStream * _s {};
     private bool _usable {false};
     // 1 stream for now
-    private RefReadStream _rrs;
+    private RefReadStream * _rrs {};
     private off_t _last_offset {};
 #pragma pack(push, 1)
     private struct Entry final
@@ -67,15 +69,25 @@ class VidFS final : public VFS
     private int GetSize(size_t);
     public VidFS(const String & path);
     public ~VidFS() override;
-    public Stream & Get(const String & name) override;
+    public Stream * Get(const String & name) override;
     public inline operator bool() const override { return _usable; }
 
     public void Walk(bool (*)(Stream &, const VFS::Entry &)) override;
 
+    public VidFS() : VFS {} {}
+    public inline virtual VFS * TryLoad(const String & path) override
+    {
+        if (! path.ToLower ().EndsWith (".vid")) return nullptr;
+        VidFS * result {};
+        H3R_CREATE_OBJECT(result, VidFS) {path};
+        if (*result) return result;
+        H3R_DESTROY_OBJECT(result, VidFS)
+        return nullptr;
+    }
+};// VidFS
+
 #undef public
 #undef private
-};
-
 NAMESPACE_H3R
 
 #endif

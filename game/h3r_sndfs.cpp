@@ -40,14 +40,17 @@ H3R_NAMESPACE
 static int const H3R_SND_MAX_ENTRIES {1<<12};
 
 SndFS::SndFS(const String & fname)
-    : VFS {fname}, _s {fname, H3R_NS::OS::FileStream::Mode::ReadOnly},
-        _rrs {&_s, 0, 0}
+    : VFS {fname}
 {
+    H3R_CREATE_OBJECT(_s, OS::FileStream)
+        {fname, H3R_NS::OS::FileStream::Mode::ReadOnly};
+    if (! *_s) return;
+
     int cnt {0};
     var FN_cleanup {fname.AsZStr ()};
     var FN {FN_cleanup.Data ()};
 
-    Stream::Read (_s, &cnt);
+    Stream::Read (*_s, &cnt);
     if (cnt <= 0 || cnt > H3R_SND_MAX_ENTRIES) {
         Log::Err (
             String::Format ("%s: Suspicious entry count: %d" EOL, FN, cnt));
@@ -57,15 +60,15 @@ SndFS::SndFS(const String & fname)
 
     _entries.Resize (cnt);
     var data = static_cast<SndFS::Entry *>(_entries);
-    Stream::Read (_s, data, cnt);
+    Stream::Read (*_s, data, cnt);
     // Validate
-    var file_size = _s.Size ();
+    var file_size = _s->Size ();
     for (size_t i = 0; i < _entries.Length (); i++) {
         var & e = _entries[i];
-        if (e.Ofs < _s.Tell () || e.Ofs >= file_size) {
+        if (e.Ofs < _s->Tell () || e.Ofs >= file_size) {
             Log::Err (String::Format ("%s: Wrong Entry[%0004d].Ofs: "
                 "%zu, out of [%00000008d;%00000008d)" EOL,
-                FN, i, e.Ofs, _s.Tell (), file_size));
+                FN, i, e.Ofs, _s->Tell (), file_size));
             return;
         }
         int b = i < _entries.Length ()-1 ? _entries[i+1].Ofs : file_size;
@@ -89,22 +92,28 @@ SndFS::SndFS(const String & fname)
         OS::Log_stdout (
             "%s: entry: %004d: %00000008d:%00000008d \"%s\"" EOL,
             FN, j++, e.Ofs, e.Size, e.Name);*/
+
+    H3R_CREATE_OBJECT(_rrs, RefReadStream) {_s, 0, 0};
     _usable = true;
 }// SndFS::SndFS()
 
-SndFS::~SndFS() {}
+SndFS::~SndFS()
+{
+    H3R_DESTROY_OBJECT(_rrs, RefReadStream)
+    H3R_DESTROY_OBJECT(_s, FileStream)
+}
 
 Stream & SndFS::GetStream(const SndFS::Entry & e)
 {
 //np start: e.Ofs, size: e.Size
-    return _rrs.ResetTo (e.Ofs, e.Size);
+    return _rrs->ResetTo (e.Ofs, e.Size);
 }
 
-Stream & SndFS::Get(const String & res)
+Stream * SndFS::Get(const String & res)
 {
     for (const var & e : _entries)
         if (res.EqualsZStr (reinterpret_cast<const char *>(e.Name)))
-            return GetStream (e);
+            return &(GetStream (e));
     return VFS::Get (res);
 }
 

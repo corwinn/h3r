@@ -40,14 +40,18 @@ H3R_NAMESPACE
 static int const H3R_VID_MAX_ENTRIES {1<<10};
 
 VidFS::VidFS(const String & fname)
-    : VFS {fname}, _s {fname, H3R_NS::OS::FileStream::Mode::ReadOnly},
-        _rrs {&_s, 0, 0}, _last_offset{_s.Size ()}
+    : VFS {fname}
 {
+    H3R_CREATE_OBJECT(_s, OS::FileStream)
+        {fname, H3R_NS::OS::FileStream::Mode::ReadOnly};
+    if (! *_s) return;
+    _last_offset = {_s->Size ()};
+
     int cnt {0};
     var FN_cleanup {fname.AsZStr ()};
     var FN {FN_cleanup.Data ()};
 
-    Stream::Read (_s, &cnt);
+    Stream::Read (*_s, &cnt);
     if (cnt <= 0 || cnt > H3R_VID_MAX_ENTRIES) {
         Log::Err (
             String::Format ("%s: Suspicious entry count: %d" EOL, FN, cnt));
@@ -57,7 +61,7 @@ VidFS::VidFS(const String & fname)
 
     _entries.Resize (cnt);
     var data = static_cast<VidFS::Entry *>(_entries);
-    Stream::Read (_s, data, cnt);
+    Stream::Read (*_s, data, cnt);
     // Validate
     for (size_t i = 0; i < _entries.Length (); i++) {
         int a = _entries[i].Ofs;
@@ -75,22 +79,28 @@ VidFS::VidFS(const String & fname)
         OS::Log_stdout (
             "%s: entry: %004d: %00000008d \"%s\"" EOL,
             FN, j++, e.Ofs, e.Name);*/
+
+    H3R_CREATE_OBJECT(_rrs, RefReadStream) {_s, 0, 0};
     _usable = true;
 }// VidFS::VidFS()
 
-VidFS::~VidFS() {}
+VidFS::~VidFS()
+{
+    H3R_DESTROY_OBJECT(_rrs, RefReadStream)
+    H3R_DESTROY_OBJECT(_s, FileStream)
+}
 
 Stream & VidFS::GetStream(const VidFS::Entry & e, int size)
 {
 //np start: e.Ofs, size: size
-    return _rrs.ResetTo (e.Ofs, size);
+    return _rrs->ResetTo (e.Ofs, size);
 }
 
-Stream & VidFS::Get(const String & res)
+Stream * VidFS::Get(const String & res)
 {
     for (size_t i = 0; i < _entries.Length (); i++)
         if (res.EqualsZStr ((const char *)_entries[i].Name))
-            return GetStream (_entries[i], GetSize (i));
+            return &(GetStream (_entries[i], GetSize (i)));
     return VFS::Get (res);
 }
 
