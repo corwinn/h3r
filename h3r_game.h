@@ -76,7 +76,7 @@ class Game final
     // device on its own while communicating with the main thread with simple
     // messages like start/stop/etc.; it can log w/o the main thread because
     // the log service is threaded.
-    public: static void ProcessThings(); // implement me at the bridge
+    public: static void ProcessThings();
     // Another design if ProcessThings() code becomes too repetitious.
     // Example:
     //  _vfs {argv[1]};
