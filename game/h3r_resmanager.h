@@ -32,8 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_VIDFS_H_
-#define _H3R_VIDFS_H_
+#ifndef _H3R_RESMANAGER_H_
+#define _H3R_RESMANAGER_H_
 
 #include "h3r.h"
 #include "h3r_vfs.h"

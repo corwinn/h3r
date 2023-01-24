@@ -43,6 +43,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_log_stdout.h"
 #include "h3r_log_file.h"
 #include "h3r_taskthread.h"
+#include "h3r_resmanager.h"
+#include "h3r_gamearchives.h"
+#include "h3r_asyncfsenum.h"
+#include "h3r_iwindow.h"
 
 H3R_NAMESPACE
 
@@ -58,7 +62,10 @@ class Game final
     private: Log_File   _3rd; //
     private: Log        _4th; // Log::Info ()
 
-    public: Game();
+    public: static IWindow * MainWindow;
+
+    public: Game(const char * process_path);
+    public: ~Game();
     public: void SilentLog(bool);
     // Main Thread.
     // This is the thing to call periodically while waiting for some async
@@ -69,7 +76,7 @@ class Game final
     // device on its own while communicating with the main thread with simple
     // messages like start/stop/etc.; it can log w/o the main thread because
     // the log service is threaded.
-    public: static void ProcessThings();
+    public: static void ProcessThings(); // implement me at the bridge
     // Another design if ProcessThings() code becomes too repetitious.
     // Example:
     //  _vfs {argv[1]};
@@ -107,7 +114,49 @@ class Game final
     // This is not and it will never be a server, or handle-it-all framework,
     // or R&D on parallelism, or whatever; because: short and simple.
     public: static TaskThread IOThread;
-};
+
+    public: static ResManager * RM;
+
+    private: class ResManagerInit final
+    {
+        private: H3R_NS::GameArchives GA {};
+        private: H3R_NS::ResManager & RM;
+        private: H3R_NS::AsyncFsEnum<ResManagerInit> _subject;
+        private: int _files {}, _dirs {};
+        private: bool HandleItem(
+            const H3R_NS::AsyncFsEnum<ResManagerInit>::EnumItem & itm)
+        {
+            if (! itm.IsDirectory) {
+                _files++;
+                H3R_NS::String name_lc = itm.FileName.ToLower ();
+                if (GA.Has (name_lc)) {
+                    H3R_NS::OS::Log_stdout ("Resource Manager: "
+                        "Registering Game Archive: \"%s\"" EOL,
+                        (const char *)itm.Name);
+
+                    //TODO there is no need for this thread (! main) to wait
+                    //     another one (! main);
+                    // Async load the Game Archive
+                    var task_info = RM.Load (itm.Name);
+                    while (! RM.TaskComplete ()) {
+                        //LATER (messages from the IOThread)
+                        // H3R_NS::Log::Info (H3R_NS::String::Format ("%s" EOL,
+                        //    task_info.GetInfo ().Message ().AsZStr ()));
+                        H3R_NS::OS::Thread::SleepForAWhile ();
+                    }
+                }
+            } else _dirs++;
+            return true;
+        }
+        public: ResManagerInit(H3R_NS::String path, H3R_NS::ResManager& rm)
+            : GA {}, RM{rm}, _subject{
+//np base_path: path, observer: this, handle_on_item: &ResManagerInit::HandleItem
+                path, this, &ResManagerInit::HandleItem} {}
+        public: bool Complete() const { return _subject.Complete (); }
+        public: int Files() const { return _files; }
+        public: int Directories() const { return _dirs; }
+    }; // ResManagerInit
+};// Game
 
 NAMESPACE_H3R
 

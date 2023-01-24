@@ -81,15 +81,6 @@ main menu music  : MP3/MAINMENU.MP3
 button click     : Data_Heroes3_snd/BUTTON.wav
 */
 
-#include "h3r_gamearchives.h"
-#include "h3r_asyncfsenum.h"
-
-#include "h3r_lodfs.h"
-#include "h3r_array.h"
-
-#include "h3r_asyncadapter.h"
-#include "h3r_taskthread.h"
-
 #include "h3r_window.h"
 #include "h3r_oswindow.h"
 
@@ -99,54 +90,6 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 #include <SDL2/SDL_mixer.h>
 #include "h3r_sdlwindow.h"
 #endif
-
-class foo
-{
-    H3R_NS::AsyncAdapter<foo> _adapter;
-    void h1(H3R_NS::AsyncAdapter<foo>::Result r)
-    {
-        if (H3R_NS::AsyncAdapter<foo>::StreamOp::Size == r.Op)
-            size = r.Size;
-        complete = true;
-    }
-    void h2(H3R_NS::AsyncAdapter<foo>::Result){}
-    public: foo(H3R_NS::Stream & s, H3R_NS::TaskThread & a)
-//np {thread: a, observer: this, on_complete: &foo::h1, on_canceled: &foo::h2}
-        : _adapter {a, this, &foo::h1, &foo::h2}
-    {
-        _adapter.Stream = s;
-    }
-    public: off_t size {};
-    public: bool complete {};
-    public: void Size() { _adapter.Size (); }
-};
-
-class FileEnumTest final
-{
-    private: H3R_NS::GameArchives GA {};
-    private: H3R_NS::AsyncFsEnum<FileEnumTest> _subject;
-    private: int _files {}, _dirs {};
-    private: bool HandleItem(
-        const H3R_NS::AsyncFsEnum<FileEnumTest>::EnumItem & itm)
-    {
-        if (! itm.IsDirectory)
-        {
-            _files++;
-            H3R_NS::String name_lc = itm.FileName.ToLower ();
-            if (GA.Has (name_lc))
-                H3R_NS::OS::Log_stdout ("Found Game Archive: \"%s\"" EOL,
-                    (const char *)itm.Name);
-        } else _dirs++;
-        return true;
-    }
-    public: FileEnumTest(H3R_NS::String path)
-        : GA {}, _subject{
-//np base_path: path, observer: this, handle_on_item: &FileEnumTest::HandleItem
-            path, this, &FileEnumTest::HandleItem} {}
-    public: bool Complete() const { return _subject.Complete (); }
-    public: int Files() const { return _files; }
-    public: int Directories() const { return _dirs; }
-};
 
 #include <new>
 
@@ -163,38 +106,14 @@ int main(int argc, char ** argv)
         }
     H3R_NS::OS::Log_stdout ("WorkDir: %s" EOL, p);
 
-    H3R_NS::Game game;
-    H3R_NS::Log::Info ("hello nurse" EOL);
-
-    H3R_NS::OS::FileStream t {
-        H3R_NS::String {p} + H3R_PATH_SEPARATOR + H3R_NS::String {"main"},
-        H3R_NS::OS::FileStream::Mode::ReadOnly};
-    H3R_NS::Log::Info (H3R_NS::String::Format (
-        "File: \"%s\" opened in read-only mode. Size: %d" EOL,
-        (const char *)t.Name (), t.Size ()));
-
-    H3R_NS::TaskThread file_io_thread {};
-    foo test_adapter {t, file_io_thread};
-    test_adapter.Size ();
-    while (! test_adapter.complete)
-        H3R_NS::OS::Thread::Sleep (1);
-    H3R_NS::Log::Info (H3R_NS::String::Format (
-        "File: \"%s\" opened in read-only mode. Async Size: %d" EOL,
-        (const char *)t.Name (), test_adapter.size));
-
-    FileEnumTest test_file_enum {p};
-    while (! test_file_enum.Complete ())
-        H3R_NS::OS::Thread::Sleep (1);
-    H3R_NS::OS::Log_stdout ("Scaned: %d files, and %d folders" EOL,
-        test_file_enum.Files (), test_file_enum.Directories ());
+    H3R_NS::Game game {p};
 
 #ifdef SDL2_GL
-    H3R_NS::SDLWindow * sdl_gl;
-    H3R_CREATE_OBJECT(sdl_gl, H3R_NS::SDLWindow) {};
     if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
         return H3R_NS::Log::Info (H3R_NS::String::Format (
             "SDL_Init error: %s" EOL, SDL_GetError ())), 101;
 
+    //TODO audio init; requres OSFS
     int audio_result = 0;
     int audio_flags = MIX_INIT_MP3;
     if (audio_flags != (audio_result = Mix_Init (audio_flags)))
@@ -205,13 +124,20 @@ int main(int argc, char ** argv)
             "Mix_OpenAudio error: %s" EOL, Mix_GetError ())), 9;
     Mix_Music * music = Mix_LoadMUS ("MP3/MAINMENU.MP3");
     Mix_PlayMusic (music, -1);
+
+    H3R_NS::SDLWindow * sdl_gl;
+    H3R_CREATE_OBJECT(sdl_gl, H3R_NS::SDLWindow) {};
 #endif
-    H3R_NS::Window main_window
+    H3R_NS::Window * main_window;
+    H3R_CREATE_OBJECT(main_window, H3R_NS::Window)
 #ifdef SDL2_GL
     {sdl_gl}
 #endif
     ;
-    main_window.Show ();
+
+    H3R_NS::Game::MainWindow = main_window;
+    main_window->Show ();
+
 #ifdef SDL2_GL
     Mix_FreeMusic (music); // sounds nice :)
     SDL_Quit ();

@@ -42,7 +42,9 @@ H3R_NAMESPACE
 // Bridge: bonus: Model
 struct IWindow
 {
-    virtual void Open () { }
+    virtual void Open() { }
+    virtual void ProcessMessages() {}
+    virtual ~IWindow() {}
 };
 
 NAMESPACE_H3R

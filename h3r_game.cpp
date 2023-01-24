@@ -37,21 +37,60 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_LOG_STATIC_INIT
 
 #include "h3r_string.h"
+#include "h3r_lodfs.h"
+#include "h3r_sndfs.h"
+#include "h3r_vidfs.h"
 
 H3R_NAMESPACE
 
 TaskThread Game::IOThread {};
 
-Game::Game()
+ResManager * Game::RM {};
+
+IWindow * Game::MainWindow {};
+
+Game::Game(const char * process_path)
     : _3rd {"main.log"}
 {
     _4th.Subscribe (&_2nd);
     _4th.Subscribe (&_3rd);
+
+    H3R_CREATE_OBJECT(Game::RM, ResManager) {};
+
+    LodFS * lod_handler {};
+    H3R_CREATE_OBJECT(lod_handler, LodFS) {};
+    Game::RM->Register (lod_handler);
+
+    SndFS * snd_handler {};
+    H3R_CREATE_OBJECT(snd_handler, SndFS) {};
+    Game::RM->Register (snd_handler);
+
+    VidFS * vid_handler {};
+    H3R_CREATE_OBJECT(vid_handler, VidFS) {};
+    Game::RM->Register (vid_handler);
+
+    ResManagerInit res_manager_init {process_path, *Game::RM};
+    while (! res_manager_init.Complete ())
+        ProcessThings ();
+        // OS::Thread::Sleep (1);
+    OS::Log_stdout ("Scaned: %d files, and %d folders" EOL,
+        res_manager_init.Files (), res_manager_init.Directories ());
+}
+
+Game::~Game()
+{
+    H3R_DESTROY_OBJECT(Game::RM, ResManager)
+    H3R_DESTROY_OBJECT(MainWindow, IWindow)
 }
 
 void Game::SilentLog(bool v)
 {
     _4th.Silent (v);
+}
+
+void Game::ProcessThings()
+{
+    if (Game::MainWindow) Game::MainWindow->ProcessMessages ();
 }
 
 NAMESPACE_H3R

@@ -96,6 +96,8 @@ class SDLWindow : public OSWindow
         }
     }// Open
 
+    public: void ProcessMessages() override { SDL_PumpEvents (); }
+
     public: SDLWindow()
     {
     }

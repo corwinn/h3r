@@ -65,6 +65,7 @@ class GameArchives final
     }
     public GameArchives()
         : _ba {List<Entry> {}
+            << Entry {String {"test.lod"    }.ToLower ()}
             << Entry {String {"H3ab_ahd.snd"}.ToLower ()}
             << Entry {String {"H3ab_bmp.lod"}.ToLower ()}
             << Entry {String {"H3ab_ahd.vid"}.ToLower ()}

@@ -45,10 +45,24 @@ H3R_NAMESPACE
 class Window : public IWindow
 {
     private: OSWindow * _win;
-    protected: virtual void Open () override { _win->Open (); }
+    private: bool _pm {true};
+
+    protected: inline virtual void Open() override { _win->Open (); }
+    public: inline void ProcessMessages() override
+    {
+        if (! _pm) return;
+        _win->ProcessMessages ();
+    }
     public: Window(OSWindow * actual_window) : _win{actual_window} {}
-    public: void Show() { Open (); }
-    public: ~Window() { H3R_DESTROY_OBJECT(_win, OSWindow) }
+
+    // Shall return when the window is closed.
+    public: void Show() { Open (); _pm = false; }
+
+    public: virtual ~Window() override
+    {
+        _pm = false;
+        H3R_DESTROY_OBJECT(_win, OSWindow)
+    }
 };
 
 NAMESPACE_H3R
