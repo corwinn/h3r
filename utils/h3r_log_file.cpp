@@ -42,8 +42,7 @@ Log_File::Log_File(String name)
 // Log Service thread
 void Log_File::Log(String & message)
 {
-    var & buf = message.AsByteArray ();
-    _s.Write (buf, buf.Length ());
+    _s.Write (message.AsByteArray (), message.Length ());
 }
 
 NAMESPACE_H3R

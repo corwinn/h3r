@@ -51,31 +51,30 @@ Stream & FileStream::seek(off_t offset)
     return *this;
 }
 
-FileStream::FileStream(String name, Mode mode)
+FileStream::FileStream(const String & name, Mode mode)
     : Stream{nullptr}, _name {name}, _mode {mode}
 {
     switch (mode) {
         case Mode::ReadOnly : { // should exist
-            _f = Fopen (_name.AsZStr ().Data (), "rb");
+            _f = Fopen (_name, "rb");
             _size_on_open = online_size();
         } break;
         case Mode::Append : // created if ! exists
-            _f = Fopen ( _name.AsZStr ().Data (), "ab");
+            _f = Fopen ( _name, "ab");
             break;
         case Mode::ReadWrite : // should exist
-            _f = Fopen ( _name.AsZStr ().Data (), "rb+");
+            _f = Fopen ( _name, "rb+");
             break;
         case Mode::WriteOnly : {
-            var zname = _name.AsZStr ();
-            if (! FileExists (zname.Data ())) {
-                _f = Fopen (zname.Data (), "wb");
+            if (! FileExists (_name)) {
+                _f = Fopen (_name, "wb");
                 break;
             }
             FileError t {FileError::Op::Replace, FileError::Code::Loop};
-            Log_stdout ("Asking for file replace" EOL);
+            // Log_stdout ("Asking for file replace" EOL);
             bool handled = Error::File.Handled (&t);
             H3R_ENSURE(handled, "Handling file replacement is mandatory.")
-            if (t.Replace) t.Replace = false, _f = Fopen (zname.Data (), "wb");
+            if (t.Replace) t.Replace = false, _f = Fopen (_name, "wb");
         } break;
         default: H3R_ENSURE(false, "Unknown file mode")
     };
@@ -108,8 +107,7 @@ Stream & FileStream::Write(const void * b, size_t bytes)
 
 /*static*/ bool FileStream::Exists(String & name)
 {
-    var path = name.AsZStr ();
-    return OS::FileExists (path.Data ());
+    return OS::FileExists (name);
 }
 
 } // namespace OS

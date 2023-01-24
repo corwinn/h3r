@@ -39,8 +39,7 @@ H3R_NAMESPACE
 
 void Log_Stdout::Log(String & message)
 {
-    var & buf = message.AsByteArray ();
-    OS::Fwrite (buf, 1, buf.Length (), stdout);
+    OS::Fwrite (message.AsByteArray (), 1, message.Length (), stdout);
 }
 
 NAMESPACE_H3R

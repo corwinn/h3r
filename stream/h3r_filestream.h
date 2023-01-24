@@ -55,7 +55,7 @@ class FileStream final: public Stream
     private: String _name;
     private: inline off_t online_size() const
     {
-        return FileSize (_name.AsZStr ().Data ());
+        return FileSize (_name);
     }
     private: off_t tell() const;
     private: Stream & seek(off_t offset);
@@ -72,7 +72,7 @@ class FileStream final: public Stream
     // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fopen.html
     private: enum class Op {None, Read, Write} _last_op {Op::None};
 
-    public: FileStream(String name, Mode mode);
+    public: FileStream(const String & name, Mode mode);
     public: ~FileStream() override;
 
     public: inline operator bool() override { return nullptr != _f; }

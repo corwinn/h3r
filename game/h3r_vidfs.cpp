@@ -48,16 +48,14 @@ VidFS::VidFS(const String & fname)
     _last_offset = {_s->Size ()};
 
     int cnt {0};
-    var FN_cleanup {fname.AsZStr ()};
-    var FN {FN_cleanup.Data ()};
 
     Stream::Read (*_s, &cnt);
     if (cnt <= 0 || cnt > H3R_VID_MAX_ENTRIES) {
-        Log::Err (
-            String::Format ("%s: Suspicious entry count: %d" EOL, FN, cnt));
+        Log::Err (String::Format (
+            "%s: Suspicious entry count: %d" EOL, fname.AsZStr (), cnt));
         return;
     }
-    OS::Log_stdout ("%s: entries: %d" EOL, FN, cnt);
+    OS::Log_stdout ("%s: entries: %d" EOL, fname.AsZStr (), cnt);
 
     _entries.Resize (cnt);
     var data = static_cast<VidFS::Entry *>(_entries);
@@ -69,7 +67,7 @@ VidFS::VidFS(const String & fname)
         if (b <= a) {
             Log::Err (String::Format ("%s: Wrong Entry[%003d].Ofs: "
                 "Entry%003d.Ofs: %zu >= Entry%003d.Ofs: %zu" EOL,
-                FN, i, i, a, i+1, b));
+                fname.AsZStr (), i, i, a, i+1, b));
             return;
         }
         _entries[i].Name[39] = '\0';
@@ -78,7 +76,7 @@ VidFS::VidFS(const String & fname)
     for (const var & e : _entries)
         OS::Log_stdout (
             "%s: entry: %004d: %00000008d \"%s\"" EOL,
-            FN, j++, e.Ofs, e.Name);*/
+            fname.AsZStr (), j++, e.Ofs, e.Name);*/
 
     H3R_CREATE_OBJECT(_rrs, RefReadStream) {_s, 0, 0};
     _usable = true;
@@ -99,7 +97,7 @@ Stream & VidFS::GetStream(const VidFS::Entry & e, int size)
 Stream * VidFS::Get(const String & res)
 {
     for (size_t i = 0; i < _entries.Length (); i++)
-        if (res.EqualsZStr ((const char *)_entries[i].Name))
+        if (res == reinterpret_cast<const char *>(_entries[i].Name))
             return &(GetStream (_entries[i], GetSize (i)));
     return VFS::Get (res);
 }
@@ -111,7 +109,7 @@ int VidFS::GetSize(size_t idx)
     H3R_ENSURE(size > 0, "Validate again")
     return size;
 }
-
+//TODO Notify - see LodFS::Walk
 void VidFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
     static VFS::Entry vfs_e {};

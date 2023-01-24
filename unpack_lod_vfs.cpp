@@ -34,7 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // lod file format unpacker; it unpacks to the current directory!
 // H3R_MM rule: when the engine is built -DH3R_MM, so does this
-//c clang++ -std=c++11 -I. -Iasync -Iui -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_lod_vfs.cpp -o unpack_lod_vfs main.a h3r_game.o -lz
+//c clang++ -std=c++11 -I. -Iasync -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_lod_vfs.cpp -o unpack_lod_vfs main.a h3r_game.o -lz
+
+#include <time.h>
 
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED
@@ -64,18 +66,21 @@ NAMESPACE_H3R
 static H3R_NS::OS::FileErrReplace my_file_err;
 H3R_ERR_DEFINE_HANDLER(File, my_file_err)
 
-static int const QN {4};
-static int qring {0}, qtimeout {0};
-static int const QNEXT {2000}; // [ms]
+static int const QN {10};
 static const char * const Q[QN] =
 {
+    "\"Countless words count less than the silent balance between yin and yang\"",
     "\"Nature does not hurry, yet everything is accomplished.\"",
     "\"He strains to hear a whisper who refuses to hear a shout.\"",
     "\"Dance with her, and she will forgive much; dance well, and she will forgive anything.\"",
-    "\"Surprising what you can dig out of books if you read long enough, isn't it?\""
+    "\"Surprising what you can dig out of books if you read long enough, isn't it?\"",
+    "\"Destiny has two ways of crushing us - by refusing our wishes and by fulfilling them.\"",
+    "\"Cahn's Axiom: When all else fails, read the instructions.\"",
+    "\"People get what they get. It has nothing to do with what they deserve.\"",
+    "Unwise one: The sky is the limit? I hate limits."
 };
 
-// Display entry names as they're being enumerated
+// Display entry names as they're being enumerated.
 H3R_NAMESPACE
 class VFSProgressHandler final : public VFS::VFSEvent
 {
@@ -86,17 +91,17 @@ class VFSProgressHandler final : public VFS::VFSEvent
         if (info->Changed ()) {//TODO resolve .AsZStr ()
             __pointless_verbosity::CriticalSection_Acquire_finally_release
                 ____ {_msg_lock};
-            _msg = H3R_NS::String::Format (
+            _msg = const_cast<String &&>(H3R_NS::String::Format (
                 "IOThread: Progress: %003d %% %s         \r",
-                info->Progress (), info->Message ().AsZStr ().Data ());
+                info->Progress (), info->Message ().AsZStr ()));
         }
     }
     private: String _msg;
-    public: String Message()
+    public: String && Message()
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release
             ____ {_msg_lock};
-        return _msg;
+        return const_cast<String &&>(_msg);
     }
 };
 NAMESPACE_H3R
@@ -109,7 +114,7 @@ int main(int c, char ** v)
     // init the log service
     H3R_NS::Game game;
 
-    H3R_NS::OS::Log_stdout ("%s " EOL, Q[qring]);
+    H3R_NS::OS::Log_stdout ("%s " EOL, Q[time (nullptr) % QN]);
 
     H3R_NS::ResManager RM;
 
@@ -122,8 +127,8 @@ int main(int c, char ** v)
 
     var task_info = RM.Load (v[1]);
     while (! RM.TaskComplete ()) {
-        var msg = H3R_NS::String {task_info.GetInfo ().Message ()} + EOL;
-        H3R_NS::Log::Info (msg);
+        H3R_NS::Log::Info (H3R_NS::String::Format (
+            "%s" EOL, task_info.GetInfo ().Message ().AsZStr ()));
         H3R_NS::OS::Thread::SleepForAWhile ();
     }
 
@@ -132,6 +137,10 @@ int main(int c, char ** v)
     var task_info_enum = RM.Enumerate (
         [](H3R_NS::Stream & stream, const H3R_NS::VFS::Entry & e)
         {
+            //TODO takes 3*entry_num allocs:
+            // 1 e.Name gets copied into the FileStream object
+            // 2 ?
+            // 3 ?
             H3R_NS::OS::FileStream {
                 e.Name, H3R_NS::OS::FileStream::Mode::WriteOnly}
                 .H3R_NS::Stream::Write (stream);
@@ -141,24 +150,26 @@ int main(int c, char ** v)
 
     while (! RM.TaskComplete ()) {
         var info = task_info_enum.GetInfo ();
-        if (info.Changed ()) {
-            var msg = H3R_NS::String {info.Message ()} + "\r";
-            H3R_NS::Log::Info (msg);
-        }
+        if (info.Changed ())
+            H3R_NS::Log::Info (
+                H3R_NS::String::Format ("%s\r", info.Message ().AsZStr ()));
         // TODO VFS[n/m] complete
         // H3R_NS::OS::Log_stdout ("%003d %% complete\r", info.Progress ());
-        H3R_NS::Log::Info (_on_lod_entry.Message ());
+        H3R_NS::Log::Info (H3R_NS::String::Format (
+            "%s\r", _on_lod_entry.Message ().AsZStr ()));
         H3R_NS::OS::Thread::SleepForAWhile ();
 
-        qtimeout += 2; if (qtimeout > QNEXT) {
-            qring = (qring + 1) % QN; qtimeout = 0;
-            H3R_NS::OS::Log_stdout ("%s " EOL, Q[qring]);
-        }
+        static time_t t0 = time (nullptr);
+        time_t hms = time (nullptr) / 60;
+        if (hms-t0 > 2)
+            t0 = hms,
+            H3R_NS::OS::Log_stdout ("%s " EOL, Q[hms % QN]);
     }
     // Yes you can miss a status message from the thread because they aren't
     // queued; e.g. the UI shall take care of "completed"
     H3R_NS::OS::Log_stdout (EOL "100 %% complete" EOL);
 
+    // No threads: short and simple.
     /*H3R_NS::LodFS {v[1]}
         .Walk([](H3R_NS::Stream & stream, const H3R_NS::VFS::Entry & e) -> bool
         {

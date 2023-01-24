@@ -87,7 +87,7 @@ H3R_TEST_(init_copyarr)
     Array<byte> arr {2};
     arr[0] = 'a';
     arr[1] = 'b';
-    String f {arr};
+    String f {arr, arr.Length ()};
     H3R_TEST_ARE_EQUAL(2, f.Length ())
     H3R_TEST_ARE_EQUAL('a', f.AsByteArray ()[0])
     H3R_TEST_ARE_EQUAL('b', f.AsByteArray ()[1])
@@ -96,7 +96,12 @@ H3R_TEST_(init_copyarr)
     H3R_TEST_ARE_EQUAL('b', arr[1])
 H3R_TEST_END
 
-H3R_TEST_(init_movearr)
+// No more init via array &&, since it holds 0-terminated array now, and
+// allowing tow many random arrays could lead to very-hard to track bugs:
+//   was your array 0-terminated too?
+// Also the move op becomes inefficient, because I'll have to append the not
+// count-able 0 bytes after each move.
+/*H3R_TEST_(init_movearr)
     Array<byte> arr {2};
     arr[0] = 'a';
     arr[1] = 'b';
@@ -105,7 +110,7 @@ H3R_TEST_(init_movearr)
     H3R_TEST_ARE_EQUAL('a', f.AsByteArray ()[0])
     H3R_TEST_ARE_EQUAL('b', f.AsByteArray ()[1])
     H3R_TEST_ARE_EQUAL(0, arr.Length ())
-H3R_TEST_END
+H3R_TEST_END*/
 
 H3R_TEST_(copy_assign)
     String q {"q"};
@@ -128,11 +133,13 @@ H3R_TEST_END
 
 H3R_TEST_(as_byte_array)
     String a {};
-    var a_arr = a.AsByteArray ();
-    H3R_TEST_ARE_EQUAL(0, a_arr.Length ())
+    var a_arr = a.AsByteArray (); // is not 0-terminated on empty string
+    H3R_TEST_ARE_EQUAL(0, a.Length ())
+    H3R_TEST_ARE_EQUAL(nullptr, a_arr)
     String b {"b"};
-    var b_arr = b.AsByteArray ();
-    H3R_TEST_ARE_EQUAL(1, b_arr.Length ())
+     var b_arr = b.AsByteArray ();
+    H3R_TEST_ARE_EQUAL(1, b.Length ())
+    H3R_TEST_ARE_EQUAL(1, OS::Strlen (reinterpret_cast<const char *>(b_arr)))
     H3R_TEST_ARE_EQUAL('b', b_arr[0])
 H3R_TEST_END
 
@@ -145,7 +152,9 @@ H3R_TEST_(length)
     H3R_TEST_ARE_EQUAL(1, one.Length ())
     String ten {"0123456789"};
     H3R_TEST_ARE_EQUAL(10, ten.Length ())
-    H3R_TEST_ARE_EQUAL(ten.AsByteArray ().Length (), ten.Length ())
+    H3R_TEST_ARE_EQUAL(
+        OS::Strlen (reinterpret_cast<const char *>(ten.AsByteArray ())),
+        ten.Length ())
 H3R_TEST_END
 
 H3R_TEST_(format)
@@ -233,17 +242,19 @@ H3R_TEST_END
 
 H3R_TEST_(zero_terminated_string)
     String a {"foo"};
-    Array<char> b = a.AsZStr (); // adds 8 zero bytes
+    const char * b = a; // there are _NZ 0 bytes at the end
+    var arr = a.AsByteArray ();
     H3R_TEST_ARE_EQUAL(3, a.Length ())
     H3R_TEST_ARE_EQUAL('f', a.AsByteArray ()[0])
     H3R_TEST_ARE_EQUAL('o', a.AsByteArray ()[1])
     H3R_TEST_ARE_EQUAL('o', a.AsByteArray ()[2])
-    H3R_TEST_ARE_EQUAL(3+8, b.Length ())
-    H3R_TEST_ARE_EQUAL('f', b.Data ()[0])
-    H3R_TEST_ARE_EQUAL('o', b.Data ()[1])
-    H3R_TEST_ARE_EQUAL('o', b.Data ()[2])
-    for (int i = 3; i < 3+8; i++)
-        H3R_TEST_ARE_EQUAL('\0', b.Data ()[i])
+    H3R_TEST_ARE_EQUAL(3, OS::Strlen (reinterpret_cast<const char *>(arr)))
+    H3R_TEST_ARE_EQUAL(3, OS::Strlen (b))
+    H3R_TEST_ARE_EQUAL('f', b[0])
+    H3R_TEST_ARE_EQUAL('o', b[1])
+    H3R_TEST_ARE_EQUAL('o', b[2])
+    for (int i = 3; i < 3+4; i++) // _NZ is 4
+        H3R_TEST_ARE_EQUAL('\0', b[i])
 H3R_TEST_END
 
 H3R_TEST_(to_lower)
@@ -263,19 +274,19 @@ H3R_TEST_END
 H3R_TEST_(operator_plus_char)
     String a {"foo"};
     a = a + 'f';
-    H3R_TEST_IS_TRUE(a.EqualsZStr("foof"))
+    H3R_TEST_IS_TRUE(a ==  "foof")
 H3R_TEST_END
 
 H3R_TEST_(operator_plus_equals_char)
     String a {"foo"};
     a += 'f';
-    H3R_TEST_IS_TRUE(a.EqualsZStr("foof"))
+    H3R_TEST_IS_TRUE(a == "foof")
 H3R_TEST_END
 
 H3R_TEST_(equalszstr)
     String a {"foo"};
-    H3R_TEST_IS_TRUE(a.EqualsZStr("foo"))
-    H3R_TEST_IS_FALSE(a.EqualsZStr("foO"))
+    H3R_TEST_IS_TRUE(a == "foo")
+    H3R_TEST_IS_FALSE(a == "foO")
 H3R_TEST_END
 
 H3R_TEST_(endswith)
@@ -298,7 +309,7 @@ H3R_TEST_END
 
 H3R_TEST_(empty_zero_terminated_string)
     String a {""};
-    Array<char> b = a.AsZStr (); // adds 8 zero bytes
+    const char * b = a; // adds _NZ zero bytes
     H3R_TEST_ARE_EQUAL(0, a.Length ())
     H3R_TEST_ARE_EQUAL('\0', b[0])
 H3R_TEST_END

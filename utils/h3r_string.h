@@ -40,6 +40,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+#define public public:
+#define private private:
+
+// Lesson(s) learned:
+//
+//   * The use-cases proved that it shall manage 0-es at its end. The "const
+//     char *" is required at too many places, so it shall not cause copy.
+
 // Text string. Wraps "Array<byte>", and adds a few utilities to make your code
 // short and simple.
 // "Array<byte>" has nothing to do with your text encoding.
@@ -49,76 +57,100 @@ H3R_NAMESPACE
 //                 const Array<byte> & what, byte with, ReplaceFlags f) const;
 // ... etc. - on as needed basis.
 //TODONT optimize <=> don't use "String" when you need speed
-//LATER pool; 1Mb initial; Array has A, F params
 class String final
 {
-    private: Array<byte> _b {};
-    private: template <typename T> String & append(const T * buf, size_t num);
-    private: String & append(const String &);
+    private static constexpr size_t _NZ {4}; // number of zeroes
+    private Array<byte> _b {};
 
-    public: String() {}
-    public: String(const char *); // Zero-terminated C-style string - often
-    public: String(const byte *); // used for log messages
-    public: String(const Array<byte> &);
-    public: String(Array<byte> &&);
-    public: String(const String &);
-    public: String & operator=(const String &);
-    public: String(String &&);
-    public: String & operator=(String &&);
+    private template <typename T> String & append(const T * buf, size_t num);
+
+    public String() {}
+    public String(const char *); // Zero-terminated
+
+    // Warning! All 0 at the end shall be ignored!
+    public explicit String(const byte *, size_t);
+
+    private String(Array<byte> &&);
+    public String(const String &);
+    public String & operator=(const String &);
+    public String(String &&);
+    public String & operator=(String &&);
 
     //TODO solve: assertion will fail when "hidden" MAX_BUF_SIZE is reached
-    public: static String Format(const char *, ...);
+    public static String Format(const char *, ...);
 
-    // Direct access. "const" means: "its advised to not modify me".
-    // This is the recommended way to "print" the string:
-    //   FileStream.Write (foo.AsByteArray (), foo.Length ())
-    public: inline const Array<byte> & AsByteArray() const { return _b; }
-    public: size_t Length() const; // forward to "AsByteArray ().Length ()"
-
-    public: String & operator+=(const String &);
-    public: String & operator+=(const char *);
-    public: inline String & operator+=(const char c)
+    public inline size_t Length() const
     {
-        _b.Append (&c, 1); return *this;
+        H3R_ENSURE(0 == _b.Length () || _b.Length () >= _NZ,
+            "Unknown state")
+        return _b.Length () < _NZ ? 0 : _b.Length () - _NZ;
     }
-    public: String operator+(const String &);
-    public: String operator+(const char *);
 
-    public: inline String operator+(const char c)
+    public String & operator+=(const String &);
+    public String & operator+=(const char *);
+    public inline String & operator+=(const char c) { return append (&c, 1); }
+    public String operator+(const String &);
+    public String operator+(const char *);
+
+    // This gets selected for "const char * = (String + size_t)"
+    //LATER see the standard; understand the logic if any
+    // The safety measure remains in place.
+    public template <typename NoYouDont> String operator+(NoYouDont) = delete;
+    public template <> String operator+(const char c)
     {
         return String {*this} += c;
     }
-    public: bool operator==(const String &) const;
-    public: bool operator!=(const String & b) const { return ! (*this == b); }
-    public: bool inline EqualsZStr(const char * b) const
+    // See EndsWith() for a trigger.
+    // public template <> String operator+(size_t) = delete;
+
+    public bool operator==(const String &) const;
+    public bool inline operator!=(const String & b) const
+    {
+        return ! operator== (b);
+    }
+    public bool inline operator==(const char * b) const
     {
         var b_len = OS::Strlen (b);
-        if (b_len != _b.Length ()) return false;
-        return ! OS::Strncmp (b, (const char *)_b.Data (), b_len);
+        if (b_len != Length ()) return false;
+        return ! OS::Strncmp (b, *this, b_len);
     }
-
-    //TODO this thing is causing too much copying around
-    public: inline Array<char> AsZStr() const
+    public inline operator const char *() const
     {
-        Array<char> zstr;
-        if (_b.Length () > 0) zstr.Append (_b.Data (), _b.Length ());
-        // 8 zero bytes - should be enough for any encoding
-        return zstr.Resize (zstr.Length () + 8), zstr;
+        static char empty[_NZ] {};
+        if (Length () <= 0) return empty;
+        return reinterpret_cast<const char *>(_b.Data ());
     }
+    // Convenience method for variadic functions.
+    public inline const char * AsZStr() const { return *this; }
+    // Direct access.
+    // The recommended way to "print" the string:
+    //   FileStream.Write (foo.AsByteArray (), foo.Length ())
+    public inline const byte * AsByteArray() const { return _b.Data (); }
 
-    public: String ToLower() const;
+    // Using POSIX tolower().
+    public String ToLower() const;
 
-    public: inline bool EndsWith(const char * s)
+    public inline bool EndsWith(const char * s)
     {
-        var a = _b.Length ();
+        var a = Length ();
         var b = OS::Strlen (s);
         if (b > a) return false;
-        return ! OS::Strncmp (
-            reinterpret_cast<const char *>((_b.Data () + a) - b), s, b);
+        //DONE why is this compiling ?! (the test segfaults)
+        //     return ! OS::Strncmp (((*this + a) - b), s, b);
+        //     Ok it calls "String operator+(const char c)"; because ?!
+        return ! OS::Strncmp (((this->operator const char * () + a) - b), s, b);
     }
-};
+};// String
+
+inline bool operator==(const char * c, const String & s)
+{
+    return s.operator== (c);
+}
 
 String operator+(const char *, const String &);
+
+#undef private
+#undef public
 
 NAMESPACE_H3R
 

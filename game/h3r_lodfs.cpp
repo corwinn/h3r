@@ -51,25 +51,24 @@ LodFS::LodFS(const String & fname)
 
     union { int isign; unsigned char sign[4]; };
     int cnt {0};
-    var FN_cleanup {fname.AsZStr ()};
-    var FN {FN_cleanup.Data ()};
 
     Stream::Read (*_s, &isign);
     if (H3R_LOD_SIGN != isign) {
         Log::Err (String::Format ("%s: Unknown signature: %00000008Xd" EOL,
-            FN, isign));
+            fname.AsZStr (), isign));
     }
-    OS::Log_stdout ("%s: sign: %s" EOL, FN, sign);
+    OS::Log_stdout ("%s: sign: %s" EOL, fname.AsZStr (), sign);
 
     _s->Seek (H3R_LOD_UNK1); //TODO what are those? - c8 @ H3bitmap.lod
 
     Stream::Read (*_s, &cnt);
     if (cnt <= 0 || cnt > H3R_LOD_MAX_ENTRIES) {
         Log::Err (
-            String::Format ("%s: Suspicious entry count: %d" EOL, FN, cnt));
+            String::Format (
+                "%s: Suspicious entry count: %d" EOL, fname.AsZStr (), cnt));
         return;
     }
-    OS::Log_stdout ("%s: entries: %d" EOL, FN, cnt);
+    OS::Log_stdout ("%s: entries: %d" EOL, fname.AsZStr (), cnt);
 
     _s->Seek (H3R_LOD_UNK2); //TODO what are those? H3bitmap.lod
 
@@ -81,7 +80,7 @@ LodFS::LodFS(const String & fname)
     for (const var & e : _entries)
         OS::Log_stdout (
             "%s: entry: %004d: %c (%00000008d/%00000008d) \"%s\"" EOL,
-            FN, i++, (e.SizeU > e.SizeC && e.SizeC > 0 ? 'C' : 'U'),
+            fname.AsZStr (), i++, (e.SizeU > e.SizeC && e.SizeC > 0 ? 'C' : 'U'),
                 e.SizeC, e.SizeU, e.Name);*/
     //LATER if (! sorted) sort (); contract with the binary search below;
     //      or hash (you should have a DLL already)
@@ -120,14 +119,15 @@ Stream * LodFS::Get(const String & res)
     //      What?! - you expected a hash? - there will be one sooner or later,
     //      no worries.
     for (const var & e : _entries)
-        if (res.EqualsZStr ((const char *)e.Name)) return &(GetStream (e));
+        if (res == reinterpret_cast<const char *>(e.Name))
+            return &(GetStream (e));
     return VFS::Get (res);
 }
 
 void LodFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
     static VFS::Entry vfs_e {};
-    var prev_info = VFS::VFSInfo {0, vfs_e.Name};
+    var prev_info = VFS::VFSInfo {0, ""};
     var all = _entries.Length ();
     var i = all-all;
     for (const var & e : _entries) {
@@ -135,13 +135,13 @@ void LodFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
         vfs_e.Size = e.SizeU;
         if (! on_entry (GetStream (e), vfs_e)) break;
 
-        //TODO there is definitely a field for improvements
+        //TODO there is definitely a field for improvements, still
         var new_info = VFS::VFSInfo {
-            static_cast<int>(0.5+(1.0*i++/all*100)), vfs_e.Name};
+            static_cast<int>(0.5+(1.0*i++/all*100)), (String &&)vfs_e.Name};
         if (TaskState::Changed (prev_info, new_info)) {
             new_info.SetChanged (true);
-            prev_info = new_info;
             OnProgress.Do (&new_info);
+            prev_info = (VFS::VFSInfo &&)new_info;
         }
     }
 }

@@ -105,13 +105,13 @@ template <typename T> class AsyncFsEnum final
             _directories.Push (_subject._root); _stack_load++;
             while (! _directories.Empty ())
                 H3R_NS::OS::EnumFiles<EnumTask> (*this,
-                    (_current_root = _directories.Pop ()).AsZStr ().Data (),
+                    _current_root = static_cast<String &&>(_directories.Pop ()),
                     [](EnumTask & task, const char * name, bool dir) -> bool
                     {
-                        //TODO there is too much unwanted access here
-                        task.State.FileName = String {name};
-                        task.State.Name = task._current_root
-                            + H3R_PATH_SEPARATOR + String {name};
+                        task.State.FileName = name;
+                        task.State.Name = static_cast<String &&>(
+                            String::Format ("%s%c%s", task._current_root
+                                .AsZStr (), H3R_PATH_SEPARATOR, name));
                         task.State.IsDirectory = dir;
                         task.State.Progress++;
                         if (task.State.IsDirectory)

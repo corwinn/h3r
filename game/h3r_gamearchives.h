@@ -53,27 +53,27 @@ class GameArchives final
         private bool _found {};
         public List<String> Locations;
         public String Name;
-        //NOTE do not forget the next time: conversion as well, so
-        //     make these explicit, to avoid the WTNiceMointainView moments
-        //TODO print "C++ Caveats" sheet and put it on the NiceMointainView wall
-        // public Entry(const String & name) : Name {name.ToLower ()} {}
-        public Entry(String && name) : Name{name} {}
+        public explicit Entry(String && name) : Name{name} {}
         public void Found() { _found = true; }
         public bool operator==(const Entry & s) const { return s.Name == Name; }
     };
-    public List<Entry> _ba;
-    public inline const List<Entry> & BaseArchives() const { return _ba; }
+    private List<Entry> _ba;
+    public bool Has(const String & name)
+    {
+        for (var & e : _ba) if (e.Name == name) return true;
+        return false;
+    }
     public GameArchives()
         : _ba {List<Entry> {}
-            << String {"H3ab_ahd.snd"}.ToLower ()
-            << String {"H3ab_bmp.lod"}.ToLower ()
-            << String {"H3ab_ahd.vid"}.ToLower ()
-            << String {"H3ab_spr.lod"}.ToLower ()
-            << String {"Heroes3.snd" }.ToLower () // 2 of them
-            << String {"Heroes3.vid" }.ToLower ()
-            << String {"H3bitmap.lod"}.ToLower ()
-            << String {"VIDEO.VID"   }.ToLower ()
-            << String {"H3sprite.lod"}.ToLower ()}
+            << Entry {String {"H3ab_ahd.snd"}.ToLower ()}
+            << Entry {String {"H3ab_bmp.lod"}.ToLower ()}
+            << Entry {String {"H3ab_ahd.vid"}.ToLower ()}
+            << Entry {String {"H3ab_spr.lod"}.ToLower ()}
+            << Entry {String {"Heroes3.snd" }.ToLower ()} // 2 of them
+            << Entry {String {"Heroes3.vid" }.ToLower ()}
+            << Entry {String {"H3bitmap.lod"}.ToLower ()}
+            << Entry {String {"VIDEO.VID"   }.ToLower ()}
+            << Entry {String {"H3sprite.lod"}.ToLower ()}}
     {
     }
 

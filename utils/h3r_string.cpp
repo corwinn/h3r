@@ -39,27 +39,35 @@ H3R_NAMESPACE
 using OS::Log_stdout;
 template <typename T> String & String::append(const T * buf, size_t num)
 {
-    if (num > 0) _b.Append (buf, num);
+    if (num <= 0) return *this;
+    size_t new_size = num + Length () + _NZ;
+    _b.Resize (new_size);
+    byte * ptr = _b;
+    OS::Memmove (ptr + new_size - _NZ - num, buf, num * sizeof(T));
     return *this;
 }
 
-String & String::append(const String & s)
-{
-    var & buf = s.AsByteArray ();
-    return this->append (buf.Data (), buf.Length ());
-}
-
 String::String(const char * cstr) { append (cstr, OS::Strlen (cstr)); }
-String::String(const byte * cstr) { append (cstr, OS::Strlen ((char *)cstr)); }
+String::String(const byte * cstr, size_t len) { append (cstr, len); }
 
-String::String(const Array<byte> & b) { append (b.Data (), b.Length ()); }
 String::String(Array<byte> && b) { b.MoveTo (_b); }
 
-String::String(const String & s) { /*Log_stdout ("Copy" EOL);*/ append (s); }
+String::String(const String & s) { append (s.AsZStr (), s.Length ()); }
 String & String::operator=(const String & s) { return _b = s._b, *this; }
 
-String::String(String && s) { /*Log_stdout ("Move" EOL);*/ s._b.MoveTo (_b); }
-String & String::operator=(String && s) { return s._b.MoveTo (_b), *this; }
+String::String(String && s)
+{
+    /* Log_stdout ("Move" EOL); */
+    s._b.MoveTo (_b);
+    // "s" can't be left in an invalid state; move shall do alloc();
+    //s._b.Resize (String::_NZ);
+}
+String & String::operator=(String && s)
+{
+    s._b.MoveTo (_b);
+    //s._b.Resize (String::_NZ);
+    return *this;
+}
 
 String String::Format(const char * fmt, ...)
 {
@@ -78,7 +86,8 @@ String String::Format(const char * fmt, ...)
         H3R_ENSURE(iloop = iloop << 1, "What is it that you're formatting?")
         va_start (ap, fmt);
         // as it happens, it doesn't print when len == r
-        r = vsnprintf ((char *)(byte *)buf, len, fmt, ap);
+        r = vsnprintf (
+            reinterpret_cast<char *>(buf.operator byte * ()), len, fmt, ap);
         va_end (ap);
         H3R_ENSURE(r >= 0, "vsnprintf() error")
         // dLog_stdout ("String::Format: r: %d" EOL, r);
@@ -88,14 +97,13 @@ String String::Format(const char * fmt, ...)
         if (done) break; else buf.Resize (len); // grow
     }
     while (1);
-    return String (buf);
+    return String (
+        buf, OS::Strlen (reinterpret_cast<const char *>(buf.Data ())));
 }
-
-size_t String::Length() const { return _b.Length (); }
 
 String & String::operator+=(const String & s)
 {
-    return this->append (s);
+    return this->append (s.AsZStr (), s.Length ());
 }
 
 String & String::operator+=(const char * s)
@@ -105,22 +113,19 @@ String & String::operator+=(const char * s)
 
 String String::operator+(const String & s)
 {
-    return String ().append (*this). append (s);
+    return (String (*this) += s);
 }
 
 String String::operator+(const char * s)
 {
-    return String ().append (*this).append (s, OS::Strlen (s));
+    return (String (*this) += s);
 }
 
 bool String::operator==(const String & s) const
 {
     if (this == &s) return true;
-    var & a = _b;
-    var & b = s._b;
-    if (b.Length () != a.Length ()) return false;
-    return ! OS::Strncmp ((const char *)a.Data (),
-                          (const char *)b.Data (), a.Length ());
+    if (this->Length () != s.Length ()) return false;
+    return ! OS::Strncmp (*this, s, this->Length ());
 }
 
 String operator+(const char * l, const String & r)
@@ -128,14 +133,11 @@ String operator+(const char * l, const String & r)
     return String (l) + r;
 }
 
-#include <ctype.h>
-
 String String::ToLower() const //TODO uncode (iconv)
 {
-    Array<byte> result {AsByteArray ().Length ()};
-    int i {};
-    for (auto c : AsByteArray ())
-        result[i++] = static_cast<byte>(tolower (c));
+    Array<byte> result = _b;
+    for (size_t i = 0; i < Length (); i++)
+        result[i] = static_cast<byte>(OS::ToLower (result[i]));
     return String {static_cast<Array<byte> &&>(result)};
 }
 

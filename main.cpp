@@ -124,10 +124,10 @@ class FileEnumTest final
         if (! itm.IsDirectory)
         {
             _files++;
-            if (GA.BaseArchives ().Contains (
-                H3R_NS::String {itm.FileName.ToLower ()}))
-            H3R_NS::OS::Log_stdout ("Found Game Archive: \"%s\"" EOL,
-                itm.Name.AsZStr ().Data ());
+            H3R_NS::String name_lc = itm.FileName.ToLower ();
+            if (GA.Has (name_lc))
+                H3R_NS::OS::Log_stdout ("Found Game Archive: \"%s\"" EOL,
+                    (const char *)itm.Name);
         } else _dirs++;
         return true;
     }
@@ -161,7 +161,7 @@ int main(int argc, char ** argv)
         H3R_NS::OS::FileStream::Mode::ReadOnly};
     H3R_NS::Log::Info (H3R_NS::String::Format (
         "File: \"%s\" opened in read-only mode. Size: %d" EOL,
-        t.Name ().AsZStr ().Data (), t.Size ()));
+        (const char *)t.Name (), t.Size ()));
 
     H3R_NS::TaskThread file_io_thread {};
     foo test_adapter {t, file_io_thread};
@@ -170,7 +170,7 @@ int main(int argc, char ** argv)
         H3R_NS::OS::Thread::Sleep (1);
     H3R_NS::Log::Info (H3R_NS::String::Format (
         "File: \"%s\" opened in read-only mode. Async Size: %d" EOL,
-        t.Name ().AsZStr ().Data (), test_adapter.size));
+        (const char *)t.Name (), test_adapter.size));
 
     FileEnumTest test_file_enum {p};
     while (! test_file_enum.Complete ())

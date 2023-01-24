@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // Couple an array with its length. Testing: throws ArgumentException.
+//LATER pool(A,F); 1Mb initial
 template <typename T,
           void (*A)(T * &, size_t) = OS::Alloc,    // This is not OOP.
           void (*F)(T * &) = OS::Free> class Array //
@@ -115,6 +116,27 @@ template <typename T,
                    this->free_and_nil ();
         OS::Memmove (n1, data, num * sizeof(T));
         _data = n, _len = l;
+    }
+
+    //TODO test me
+    // The above one caught a lot of errors, so the tradition continues.
+    // "index" is sizeo(Q)-based.
+    public: template <typename Q> void Insert(
+        size_t index, const Q * data, size_t num)
+    {
+        H3R_ARG_EXC_IF(sizeof(Q) != sizeof(T), "sizeof(Q) != sizeof(T)")
+        H3R_ARG_EXC_IF(num < 1, "num < 1")
+        H3R_ARG_EXC_IF(nullptr == data, "nullptr == data")
+        H3R_ARG_EXC_IF(index > _len, "can't insert at non-existent place")
+
+        if (nullptr == _data || index == _len)
+            Append (data, num);
+        else {
+            size_t m1_num = _len - index;//4
+            Resize (_len + num);//5
+            OS::Memmove (_data + index + num, _data + index, sizeof(Q)*m1_num);
+            OS::Memmove (_data + index, data, sizeof(Q)*num);
+        }
     }
 
     public: bool Empty() const { return 0 == _len && nullptr == _data; }

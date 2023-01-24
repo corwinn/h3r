@@ -47,16 +47,14 @@ SndFS::SndFS(const String & fname)
     if (! *_s) return;
 
     int cnt {0};
-    var FN_cleanup {fname.AsZStr ()};
-    var FN {FN_cleanup.Data ()};
 
     Stream::Read (*_s, &cnt);
     if (cnt <= 0 || cnt > H3R_SND_MAX_ENTRIES) {
-        Log::Err (
-            String::Format ("%s: Suspicious entry count: %d" EOL, FN, cnt));
+        Log::Err (String::Format (
+            "%s: Suspicious entry count: %d" EOL, fname.AsZStr (), cnt));
         return;
     }
-    OS::Log_stdout ("%s: entries: %d" EOL, FN, cnt);
+    OS::Log_stdout ("%s: entries: %d" EOL, fname.AsZStr (), cnt);
 
     _entries.Resize (cnt);
     var data = static_cast<SndFS::Entry *>(_entries);
@@ -68,13 +66,13 @@ SndFS::SndFS(const String & fname)
         if (e.Ofs < _s->Tell () || e.Ofs >= file_size) {
             Log::Err (String::Format ("%s: Wrong Entry[%0004d].Ofs: "
                 "%zu, out of [%00000008d;%00000008d)" EOL,
-                FN, i, e.Ofs, _s->Tell (), file_size));
+                fname.AsZStr (), i, e.Ofs, _s->Tell (), file_size));
             return;
         }
         int b = i < _entries.Length ()-1 ? _entries[i+1].Ofs : file_size;
         if ((b - e.Ofs) != e.Size) {
-            Log::Err (String::Format ("%s: Wrong Entry[%0004d].Size: "
-                "Actual: %zu, Expected: %zu" EOL, FN, i, e.Size, b));
+            Log::Err (String::Format ("%s: Wrong Entry[%0004d].Size: Actual: "
+                "%zu, Expected: %zu" EOL, fname.AsZStr (), i, e.Size, b));
             return;
         }
         e.Name[39] = '\0';
@@ -91,7 +89,7 @@ SndFS::SndFS(const String & fname)
     for (const var & e : _entries)
         OS::Log_stdout (
             "%s: entry: %004d: %00000008d:%00000008d \"%s\"" EOL,
-            FN, j++, e.Ofs, e.Size, e.Name);*/
+            fname.AsZStr (), j++, e.Ofs, e.Size, e.Name);*/
 
     H3R_CREATE_OBJECT(_rrs, RefReadStream) {_s, 0, 0};
     _usable = true;
@@ -112,11 +110,11 @@ Stream & SndFS::GetStream(const SndFS::Entry & e)
 Stream * SndFS::Get(const String & res)
 {
     for (const var & e : _entries)
-        if (res.EqualsZStr (reinterpret_cast<const char *>(e.Name)))
+        if (res == reinterpret_cast<const char *>(e.Name))
             return &(GetStream (e));
     return VFS::Get (res);
 }
-
+//TODO Notify - see LodFS::Walk
 void SndFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
     static VFS::Entry vfs_e {};
