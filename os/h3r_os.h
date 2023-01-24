@@ -45,6 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <ctype.h>
 
 #include "h3r.h"
 #include "h3r_os_error.h"
@@ -145,6 +146,8 @@ auto Memmove = [](void *dest, const void *src, size_t n)
 {
     memmove (dest, src, n);
 };
+
+auto ToLower = [](int c) { return tolower (c); };
 
 // These are the actual malloc/free bridge - way faster than ManagedMemory.
 template <typename T> void Malloc(T *& p, size_t n = 1)
