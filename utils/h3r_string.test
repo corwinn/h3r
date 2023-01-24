@@ -97,7 +97,7 @@ H3R_TEST_(init_copyarr)
 H3R_TEST_END
 
 // No more init via array &&, since it holds 0-terminated array now, and
-// allowing tow many random arrays could lead to very-hard to track bugs:
+// allowing too many random arrays could lead to very-hard to track bugs:
 //   was your array 0-terminated too?
 // Also the move op becomes inefficient, because I'll have to append the not
 // count-able 0 bytes after each move.
