@@ -44,6 +44,7 @@ H3R_NAMESPACE
 class OSWindow : public IWindow
 {
     public: virtual void Open () override {}
+    public: virtual ~OSWindow() {}
 };
 
 NAMESPACE_H3R

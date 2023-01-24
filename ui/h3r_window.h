@@ -48,6 +48,7 @@ class Window : public IWindow
     protected: virtual void Open () override { _win->Open (); }
     public: Window(OSWindow * actual_window) : _win{actual_window} {}
     public: void Show() { Open (); }
+    public: ~Window() { H3R_DESTROY_OBJECT(_win, OSWindow) }
 };
 
 NAMESPACE_H3R

@@ -36,17 +36,75 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_SDLWINDOW_H_
 
 #include "h3r.h"
+#include "h3r_log.h"
 #include "h3r_oswindow.h"
+#include <SDL.h>
+#include <SDL2/SDL_mixer.h>
 
 H3R_NAMESPACE
 
 // SDL is a multi-OS bridge itself, so there is no need for OS-specific classes
 // yet.
-// Its this deep in directory tree on purpose.
+// Its this deep in the directory tree on purpose.
 //LATER plug-in; an SDL window shouldn't concern itself with h3r at all.
 class SDLWindow : public OSWindow
 {
-    protected: virtual void Open () override {}
+    SDL_Event e;
+    SDL_Window * _window {};
+    SDL_Surface * _screenSurface {};
+    SDL_Surface * _gHelloWorld {};
+    bool q {false};
+
+    protected: inline virtual void Open () override
+    {
+        _window = SDL_CreateWindow ("h3r",
+            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
+            SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+        if (! _window) {
+             H3R_NS::Log::Info (H3R_NS::String::Format (
+                "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
+             return;
+        }
+        _screenSurface = SDL_GetWindowSurface (_window);
+        _gHelloWorld = SDL_LoadBMP (
+            "../h3r_unpacked/h3/Data_H3bitmap_lod/GamSelBk.bmp");
+        if (! _gHelloWorld) {
+            H3R_NS::Log::Info (H3R_NS::String::Format (
+                "SDL_LoadBMP error: %s" EOL, SDL_GetError ()));
+            return;
+        }
+
+        while (! q) {
+            while (SDL_PollEvent (&e) != 0) {
+                if (! q) q = SDL_QUIT == e.type;
+                if (SDL_WINDOWEVENT == e.type) {
+                    H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
+                    if (SDL_WINDOWEVENT_RESIZED == e.window.event)
+                        if (e.window.data1 > 0 && e.window.data2 > 0)
+                            _screenSurface = SDL_GetWindowSurface (_window);
+                }
+                if (SDL_KEYUP == e.type &&
+                    SDL_SCANCODE_Q == e.key.keysym.scancode)
+                    q = true;
+            }
+            // SDL_FillRect (screenSurface, nullptr,
+            //    SDL_MapRGB (screenSurface->format, 0xaa, 0xaa, 0xaa));
+            // screenSurface = SDL_GetWindowSurface (window);
+            SDL_BlitSurface (_gHelloWorld, nullptr, _screenSurface, nullptr);
+            SDL_UpdateWindowSurface (_window);
+            SDL_Delay (16);
+        }
+    }// Open
+
+    public: SDLWindow()
+    {
+    }
+
+    public: ~SDLWindow() override
+    {
+        if (_gHelloWorld) SDL_FreeSurface (_gHelloWorld);
+        if (_window) SDL_DestroyWindow (_window);
+    }
 };
 
 NAMESPACE_H3R

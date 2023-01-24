@@ -37,9 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#include <SDL.h>
-#include <SDL2/SDL_mixer.h>
-
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED
 H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
@@ -98,6 +95,8 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 
 //LATER How hard is to replace this with a plug-in?
 #ifdef SDL2_GL
+#include <SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "h3r_sdlwindow.h"
 #endif
 
@@ -192,17 +191,9 @@ int main(int argc, char ** argv)
 #ifdef SDL2_GL
     H3R_NS::SDLWindow * sdl_gl;
     H3R_CREATE_OBJECT(sdl_gl, H3R_NS::SDLWindow) {};
-#endif
-    H3R_NS::Window main_window
-#ifdef SDL2_GL
-    {sdl_gl}
-#endif
-    ;
-    main_window.Show ();
-
-    /*if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+    if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
         return H3R_NS::Log::Info (H3R_NS::String::Format (
-            "SDL_Init error: %s" EOL, SDL_GetError ())), 9;
+            "SDL_Init error: %s" EOL, SDL_GetError ())), 101;
 
     int audio_result = 0;
     int audio_flags = MIX_INIT_MP3;
@@ -212,50 +203,18 @@ int main(int argc, char ** argv)
     if (-1 == Mix_OpenAudio (44100, AUDIO_S16SYS, 2, 1024))
         return H3R_NS::Log::Info (H3R_NS::String::Format (
             "Mix_OpenAudio error: %s" EOL, Mix_GetError ())), 9;
-    Mix_Music * music = Mix_LoadMUS (
-        "/mnt/workspace/rain/drive64_c/games/h3/MP3/MAINMENU.MP3");
+    Mix_Music * music = Mix_LoadMUS ("MP3/MAINMENU.MP3");
     Mix_PlayMusic (music, -1);
-
-    bool q {false};
-    SDL_Event e;
-    SDL_Window * window = nullptr;
-    SDL_Surface * screenSurface = nullptr;
-    SDL_Surface * gHelloWorld = nullptr;
-
-    window = SDL_CreateWindow ("h3r",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
-    if (! window)
-        return H3R_NS::Log::Info (H3R_NS::String::Format (
-            "SDL_CreateWindow error: %s" EOL, SDL_GetError ())), 9;
-    screenSurface = SDL_GetWindowSurface (window);
-    gHelloWorld = SDL_LoadBMP (
-        "../h3r_unpacked/h3/Data_H3bitmap_lod/GamSelBk.bmp");
-    if (! gHelloWorld)
-        return H3R_NS::Log::Info (H3R_NS::String::Format (
-            "SDL_LoadBMP error: %s" EOL, SDL_GetError ())), 9;
-
-    while( !q ) {
-        while (SDL_PollEvent (&e) != 0) {
-            if (! q) q = SDL_QUIT == e.type;
-            if (SDL_WINDOWEVENT == e.type) {
-                H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
-                if (SDL_WINDOWEVENT_RESIZED == e.window.event)
-                    if (e.window.data1 > 0 && e.window.data2 > 0)
-                        screenSurface = SDL_GetWindowSurface (window);
-            }
-        }
-        //SDL_FillRect (screenSurface, nullptr,
-        //    SDL_MapRGB (screenSurface->format, 0xaa, 0xaa, 0xaa));
-        //screenSurface = SDL_GetWindowSurface (window);
-        SDL_BlitSurface (gHelloWorld, nullptr, screenSurface, nullptr);
-        SDL_UpdateWindowSurface (window);
-        SDL_Delay (16);
-    }
-
+#endif
+    H3R_NS::Window main_window
+#ifdef SDL2_GL
+    {sdl_gl}
+#endif
+    ;
+    main_window.Show ();
+#ifdef SDL2_GL
     Mix_FreeMusic (music); // sounds nice :)
-    SDL_FreeSurface (gHelloWorld);
-    SDL_DestroyWindow (window);
-    SDL_Quit ();*/
+    SDL_Quit ();
+#endif
     return 0;
 }
