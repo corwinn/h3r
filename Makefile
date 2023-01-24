@@ -36,6 +36,7 @@ MAKEFLAGS += rR
 
 APP = main
 PLATFORM ?= posix
+WIN_SYSTEM ?= gl/sdl -DSDL2_GL
 CC ?= clang
 CXX ?= clang++
 H3R_TEST ?=
@@ -46,7 +47,7 @@ _F  = -fsanitize=address,undefined,integer,leak -fvisibility=hidden
 #TODO release build _F = -fvisibility=hidden -fno-rtti
 _L = -Wl,--as-needed -lpthread -lz -lSDL2 -lSDL2_mixer
 _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
- `pkg-config --cflags sdl2`
+ -Ios/ui -Ios/ui/$(WIN_SYSTEM) `pkg-config --cflags sdl2`
 
 CXXFLAGS = $(_I) -std=c++11 $(_O) $(_F) $(_W)
 SRC = $(wildcard ./*/*.cpp)

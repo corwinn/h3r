@@ -92,6 +92,15 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 
 #include "h3r_asyncadapter.h"
 #include "h3r_taskthread.h"
+
+#include "h3r_window.h"
+#include "h3r_oswindow.h"
+
+//LATER How hard is to replace this with a plug-in?
+#ifdef SDL2_GL
+#include "h3r_sdlwindow.h"
+#endif
+
 class foo
 {
     H3R_NS::AsyncAdapter<foo> _adapter;
@@ -140,6 +149,8 @@ class FileEnumTest final
     public: int Directories() const { return _dirs; }
 };
 
+#include <new>
+
 int main(int argc, char ** argv)
 {
     H3R_ENSURE(argc > 0, "Can't handle your OS - argc can't be < 1")
@@ -177,6 +188,17 @@ int main(int argc, char ** argv)
         H3R_NS::OS::Thread::Sleep (1);
     H3R_NS::OS::Log_stdout ("Scaned: %d files, and %d folders" EOL,
         test_file_enum.Files (), test_file_enum.Directories ());
+
+#ifdef SDL2_GL
+    H3R_NS::SDLWindow * sdl_gl;
+    H3R_CREATE_OBJECT(sdl_gl, H3R_NS::SDLWindow) {};
+#endif
+    H3R_NS::Window main_window
+#ifdef SDL2_GL
+    {sdl_gl}
+#endif
+    ;
+    main_window.Show ();
 
     /*if (SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
         return H3R_NS::Log::Info (H3R_NS::String::Format (
