@@ -56,7 +56,8 @@ H3R_NAMESPACE
 //      * ResManager is everything that needs Async IO.
 //      * Advantage(s) of IOThread being at Game, besides init?
 //      * Remember the plug-in aspect.
-class ResManager : public VFS
+//LATER Register(ResManager)? pros and cons; right now doing so is a bad idea
+class ResManager : protected VFS
 {
     H3R_CANT_COPY(ResManager)
     H3R_CANT_MOVE(ResManager)
@@ -65,6 +66,10 @@ class ResManager : public VFS
 #define private private:
 #define protected protected:
 
+    // Hide the VFS constructor because the ResManager doesn't deal with paths;
+    // it deals with VFS.
+    //LATER make it private if no use-case presents itself; e.g. no plug-in
+    //      requires it
     protected ResManager(const String & path)
         : VFS {path}, _load_task {*this}, _walk_task {*this},
             _get_task {*this}, _on_progress_delegate {&OnProgress} {}
@@ -210,7 +215,7 @@ class ResManager : public VFS
     public virtual const RMTaskInfo & Enumerate(
         bool (*)(Stream &, const VFS::Entry &));
 
-    // This is a collection of VFS, not a VFS handler
+    // This is a collection of VFS, not a VFS handler.
     private inline VFS * TryLoad(const String &) override { return nullptr; }
 
     private List<VFS *> _vfs_registry {};
@@ -226,6 +231,7 @@ class ResManager : public VFS
 #define public public:
     {
         public using VFSEvent::VFSEvent;
+        // Looks like an Observer; "e" shall notify "this".
         public void SubscribeTo(VFSEvent * e) { e->SetNext (this); }
         public void Do(VFS::VFSInfo * info) override { VFSEvent::Do (info); }
     } _on_progress_delegate;

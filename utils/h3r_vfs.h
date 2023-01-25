@@ -110,7 +110,7 @@ class VFS
         public void SetPercentageProgress(bool value) { _pp = value; }
         public VFSInfo() : TaskState {0, ""} {}
         public using TaskState::TaskState;
-        public inline bool PercentageProgress() const { return _pp; }
+        public inline bool PercentageProgress() const override { return _pp; }
     };
 
 #undef public

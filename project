@@ -109,7 +109,7 @@ Also, there is the AI:
  - adventure map - each object will "decide" its next "goal" based on hot-spot
    object weights and how does that nears it towards wining the game; these
    will be modified by the kingdom major role-play - warriors will "prefer" to
-   fight; explorers - to revel the map further prior choosing; builders to get
+   fight; explorers - to reveal the map further prior choosing; builders to get
    the free resources first; the "decision" will be multiplied by some "not so
    optimal rate" for some "realism"; the difficulty level will define the look
    ahead window for example
