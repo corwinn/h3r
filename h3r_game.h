@@ -117,6 +117,8 @@ class Game final
 
     public: static ResManager * RM;
 
+    public: static Stream * GetResource(const String & name);
+
     private: class ResManagerInit final
     {
         private: H3R_NS::GameArchives GA {};
@@ -137,7 +139,7 @@ class Game final
                     //TODO there is no need for this thread (! main) to wait
                     //     another one (! main);
                     // Async load the Game Archive
-                    var task_info = RM.Load (itm.Name);
+                    RM.Load (itm.Name);
                     while (! RM.TaskComplete ()) {
                         //LATER (messages from the IOThread)
                         // H3R_NS::Log::Info (H3R_NS::String::Format ("%s" EOL,

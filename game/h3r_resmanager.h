@@ -186,7 +186,7 @@ class ResManager : protected VFS
                     static_cast<int>(round (1.0*i++/all*100)),
                     "Looking for: " + State.Name});
                 // Its assignment, not comparison.
-                if ((State.Resource = vfs->Get (State.Name))) return;
+                if (nullptr != (State.Resource = vfs->Get (State.Name))) return;
             }
         }
         public Stream * GetStream()

@@ -40,6 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_oswindow.h"
 #include <SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include "h3r_game.h"
+#include "h3r_resdecoder.h"
 
 H3R_NAMESPACE
 
@@ -53,6 +55,7 @@ class SDLWindow : public OSWindow
     SDL_Window * _window {};
     SDL_Surface * _screenSurface {};
     SDL_Surface * _gHelloWorld {};
+    private: Pcx _main_window_background;
     bool q {false};
 
     protected: inline virtual void Open () override
@@ -66,11 +69,20 @@ class SDLWindow : public OSWindow
              return;
         }
         _screenSurface = SDL_GetWindowSurface (_window);
-        _gHelloWorld = SDL_LoadBMP (
-            "../h3r_unpacked/h3/Data_H3bitmap_lod/GamSelBk.bmp");
+
+        var byte_arr_ptr = _main_window_background.RGB ();
+        H3R_NS::Log::Info (H3R_NS::String::Format (
+                "SDL_CreateRGBSurfaceFrom (w: %d, h: %d)" EOL,
+                _main_window_background.Width (),
+                _main_window_background.Height ()));
+        _gHelloWorld = SDL_CreateRGBSurfaceFrom (
+            byte_arr_ptr->operator byte * (),
+            _main_window_background.Width (),
+            _main_window_background.Height (),
+            24, 3 * _main_window_background.Width (), 255, 255, 255, 0);
         if (! _gHelloWorld) {
             H3R_NS::Log::Info (H3R_NS::String::Format (
-                "SDL_LoadBMP error: %s" EOL, SDL_GetError ()));
+                "SDL_CreateRGBSurfaceFrom error: %s" EOL, SDL_GetError ()));
             return;
         }
 
@@ -99,6 +111,7 @@ class SDLWindow : public OSWindow
     public: void ProcessMessages() override { SDL_PumpEvents (); }
 
     public: SDLWindow()
+        : _main_window_background{Game::GetResource ("GamSelBk.pcx")}
     {
     }
 

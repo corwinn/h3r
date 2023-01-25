@@ -88,9 +88,20 @@ void Game::SilentLog(bool v)
     _4th.Silent (v);
 }
 
-void Game::ProcessThings()
+/*static*/ void Game::ProcessThings()
 {
     if (Game::MainWindow) Game::MainWindow->ProcessMessages ();
+}
+
+/*static*/ Stream * Game::GetResource(const String & name)
+{
+    // Danger! Returns a Copy?!
+    //LATER RTFM
+    //var task_info = Game::RM->GetResource (name);
+    const var & task_info = Game::RM->GetResource (name);
+    while (! Game::RM->TaskComplete ())
+        Game::ProcessThings ();
+    return task_info.Resource;
 }
 
 NAMESPACE_H3R
