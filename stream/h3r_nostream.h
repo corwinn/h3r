@@ -55,6 +55,7 @@ class NoStream final : public Stream
     {
         return *this;
     }
+    public inline Stream & Reset() override { return *this; }
 #undef public
 };
 

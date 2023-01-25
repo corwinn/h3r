@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **** END LICENCE BLOCK ****/
 
 // A means to abstract away game-specific bitmap from render-specific one.
-// E.g. istead of pcx_2_sdl(), etc.: pcx_2_RGBA_buf().
+// E.g. instead of pcx_2_sdl(), etc.: pcx_2_RGBA_buf().
 
 #ifndef _H3R_RESDECODER_H_
 #define _H3R_RESDECODER_H_

@@ -78,7 +78,7 @@ class Stream
     }
 
     // Reuse the stream object. Reset it to its just-constructed state.
-    public inline virtual Stream & Reset() { return *this; }
+    public inline virtual Stream & Reset() { return _f->Reset (); }
 
     // Avoid manual size computation. "virtual template <typename T>":
     public template <typename T> static Stream & Read(
