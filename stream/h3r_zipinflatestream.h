@@ -71,6 +71,10 @@ class ZipInflateStream : public Stream
 
     // same meaning as constructor parameters
     public Stream & ResetTo(int size, int usize);
+    public inline virtual Stream & Reset() override
+    {
+        return ResetTo (_size, _usize);
+    }
 #undef public
 #undef private
 };

@@ -77,6 +77,9 @@ class Stream
         return _f->Write (b, bytes), *this;
     }
 
+    // Reuse the stream object. Reset it to its just-constructed state.
+    public inline virtual Stream & Reset() { return *this; }
+
     // Avoid manual size computation. "virtual template <typename T>":
     public template <typename T> static Stream & Read(
         Stream & s, T * d, size_t num = 1)

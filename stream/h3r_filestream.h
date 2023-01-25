@@ -82,6 +82,7 @@ class FileStream final: public Stream
     public: off_t Size() const override;
     public: Stream & Read(void * b, size_t bytes = 1) override;
     public: Stream & Write(const void * b, size_t bytes = 1) override;
+    public: Stream & Reset() override;
 
     public: inline const String & Name() const { return _name; }
 

@@ -72,7 +72,7 @@ Stream & RefReadStream::ResetTo(off_t start, off_t size)
     return *this;
 }
 
-void RefReadStream::Reset()
+Stream & RefReadStream::Reset()
 {
     _ok = false;
     _pos = 0;
@@ -80,6 +80,7 @@ void RefReadStream::Reset()
     H3R_ENSURE(
         Stream::Tell () == _start, "Bug: RefReadStream: can't sync to base")
     _ok = true;//TODO should this be used for all ops?
+    return *this;
 }
 
 NAMESPACE_H3R

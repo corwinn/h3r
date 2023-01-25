@@ -105,6 +105,16 @@ Stream & FileStream::Write(const void * b, size_t bytes)
     return Fwrite (b, 1, bytes, _f), *this;
 }
 
+Stream & FileStream::Reset()
+{
+    if (Mode::ReadOnly == _mode || Mode::ReadWrite == _mode) {
+        seek (-tell ());
+        return *this;
+    }
+    H3R_ENSURE(false, "ImplementMe: FileStream::Reset() mode != Read")
+    return *this;
+}
+
 /*static*/ bool FileStream::Exists(String & name)
 {
     return OS::FileExists (name);

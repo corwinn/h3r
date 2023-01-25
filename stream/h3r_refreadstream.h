@@ -68,7 +68,7 @@ class RefReadStream final : public Stream
 
     // same meaning as constructor parameters; can't modify the _f thought
     public Stream & ResetTo(off_t start, off_t size);
-    private void Reset();
+    public Stream & Reset() override;
 #undef public
 #undef private
 };
