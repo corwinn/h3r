@@ -59,49 +59,15 @@ class SDLWindow : public OSWindow
     private int _w {800}, _h{600};
     private bool _q {false};
     private bool _visible {false};
-
-    protected inline virtual void Hide() override {}
-
-    protected inline virtual void Show() override
-    {
-        // 2.0 should be enough for a proof of concept
-        //TODO request this from the abstraction
-        SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-        SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
-
-        _window = SDL_CreateWindow ("h3r",
-            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
-        if (! _window) {
-             H3R_NS::Log::Err (H3R_NS::String::Format (
-                "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
-             return;
-        }
-
-        _gc = SDL_GL_CreateContext (_window);
-        if (! _gc) {
-             H3R_NS::Log::Err (H3R_NS::String::Format (
-                "SDL_GL_CreateContext error: %s" EOL, SDL_GetError ()));
-             return;
-        }
-
-        OnShow ();
-
-        Resized ();
-        Render ();//TODO SDL_WINDOWEVENT_EXPOSED gets lost sometimes?
-    }// Show
-
+    protected virtual void Show() override;
+    protected inline virtual void Hide() override { _visible = false; }
     protected inline virtual void Close() override { _q = true; }
-
     private void Render();
     private void Resized();
     private void HandleWindowEvent();
     private void HandleKeyboardEvent(EventArgs &);
-
     public void ProcessMessages() override;
-
     public SDLWindow(int, char **);
-
     public ~SDLWindow();
 };
 

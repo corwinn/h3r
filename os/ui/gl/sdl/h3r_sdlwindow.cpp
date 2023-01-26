@@ -35,6 +35,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_sdlwindow.h"
 #include <SDL2/SDL_mixer.h>
 
+namespace __pointless_verbosity
+{
+    struct _bool_finally_invert final
+    {
+        bool & _b;
+        _bool_finally_invert(bool & b) : _b{b} {}
+        ~_bool_finally_invert() { _b = ! _b; }
+    };
+}
+
+#define THE_WAY_IS_SHUT \
+    static bool _you_shall_not_pass; \
+    H3R_ENSURE(! _you_shall_not_pass, "fix: your event-driven mess") \
+    _you_shall_not_pass = true; \
+    __pointless_verbosity::_bool_finally_invert ____ {_you_shall_not_pass};
+
 struct SDL_Release final
 {
     Mix_Music * _music;
@@ -85,14 +101,55 @@ SDLWindow::SDLWindow(int, char **)
 
 SDLWindow::~SDLWindow() {}
 
+void SDLWindow::Show()
+{
+    THE_WAY_IS_SHUT
+
+    _visible = true;
+    if (_window) return;
+
+    // 2.0 should be enough for a proof of concept
+    //TODO request this from the abstraction
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    _window = SDL_CreateWindow ("h3r",
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    if (! _window) {
+         H3R_NS::Log::Err (H3R_NS::String::Format (
+            "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
+         return;
+    }
+
+    _gc = SDL_GL_CreateContext (_window);
+    if (! _gc) {
+         H3R_NS::Log::Err (H3R_NS::String::Format (
+            "SDL_GL_CreateContext error: %s" EOL, SDL_GetError ()));
+         return;
+    }
+
+    OnShow ();
+
+    Resized ();
+    Render ();//TODO SDL_WINDOWEVENT_EXPOSED gets lost sometimes?
+}// Show
+
 void SDLWindow::Render()
 {
-    if (! _gc) return;
+    THE_WAY_IS_SHUT
+
+    if (! _gc || ! _visible) return;
     OnRender ();
     SDL_GL_SwapWindow (_window);
 }
 
-void SDLWindow::Resized() { OnResize (_w, _h); }
+void SDLWindow::Resized()
+{
+    THE_WAY_IS_SHUT
+
+    OnResize (_w, _h);
+}
 
 void SDLWindow::ProcessMessages()
 {
@@ -116,6 +173,8 @@ void SDLWindow::ProcessMessages()
 
 void SDLWindow::HandleWindowEvent()
 {
+    THE_WAY_IS_SHUT
+
     H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
     switch (_e.window.event) {
         case SDL_WINDOWEVENT_RESIZED: {
@@ -128,6 +187,8 @@ void SDLWindow::HandleWindowEvent()
 
 void SDLWindow::HandleKeyboardEvent(EventArgs & e)
 {
+    THE_WAY_IS_SHUT
+
     switch (_e.key.keysym.scancode) {
         case SDL_SCANCODE_Q: {
             e.Key = H3R_KEY_Q;
