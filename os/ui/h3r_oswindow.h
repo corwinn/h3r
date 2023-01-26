@@ -43,10 +43,51 @@ H3R_NAMESPACE
 // Bridge: Implementation
 class OSWindow : public IWindow
 {
-    public: virtual void Open () override {}
+    public: virtual void Show () override {}
+    public: virtual void Hide () override {}
+    public: virtual void Close () override {}
     public: virtual void ProcessMessages() override {}
+
+    public: OSWindow(int, char **) {}
     public: virtual ~OSWindow() {}
-};
+
+    // handle event forwarding
+    private: IWindow * _eh {};
+    public: virtual void SetEventHandler(IWindow * w) { _eh = w; }
+
+    protected: inline virtual void OnKeyDown(const EventArgs & e) override
+    {
+        if (_eh) _eh->OnKeyDown (e);
+    }
+    protected: inline virtual void OnKeyUp(const EventArgs & e) override
+    {
+        if (_eh) _eh->OnKeyUp (e);
+    }
+    protected: inline virtual void OnMouseMove(const EventArgs & e) override
+    {
+        if (_eh) _eh->OnMouseMove (e);
+    }
+    protected: inline virtual void OnMouseDown(const EventArgs & e) override
+    {
+        if (_eh) _eh->OnMouseDown (e);
+    }
+    protected: inline virtual void OnMouseUp(const EventArgs & e) override
+    {
+        if (_eh) _eh->OnMouseUp (e);
+    }
+    protected: inline virtual void OnShow() override
+    {
+        if (_eh) _eh->OnShow ();
+    }
+    protected: inline virtual void OnHide() override
+    {
+        if (_eh) _eh->OnHide ();
+    }
+    protected: inline virtual void OnClose(bool & cancel) override
+    {
+        if (_eh) _eh->OnClose (cancel);
+    }
+};// OSWindow
 
 NAMESPACE_H3R
 

@@ -115,7 +115,7 @@ class Game final
     // or R&D on parallelism, or whatever; because: short and simple.
     public: static TaskThread IOThread;
 
-    public: static ResManager * RM;
+    public: static ResManager * RM;//PERHAPS this doesn't need to be public
 
     public: static Stream * GetResource(const String & name);
 
@@ -158,6 +158,8 @@ class Game final
         public: int Files() const { return _files; }
         public: int Directories() const { return _dirs; }
     }; // ResManagerInit
+
+    public: int Run(int, char **);
 };// Game
 
 NAMESPACE_H3R

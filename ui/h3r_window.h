@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
+// Simplicity ends, with the definition of the Window class.
+
 #ifndef _H3R_WINDOW_H_
 #define _H3R_WINDOW_H_
 
@@ -41,29 +43,54 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-// Bridge: Abstaraction
+// Bridge: Abstraction.
+// It shall allow you to create a text console version of the game if you dare:
+// just implement OSWindow for it.
+// Use-case:
+//  * main window
+//  * dialog window
+//
+// It won't process messages while hidden.
+// It takes care of ~OSWindow().
 class Window : public IWindow
 {
-    private: OSWindow * _win;
-    private: bool _pm {true};
+#define public public:
+#define private private:
+#define protected protected:
+#define IW
 
-    protected: inline virtual void Open() override { _win->Open (); }
-    public: inline void ProcessMessages() override
-    {
-        if (! _pm) return;
-        _win->ProcessMessages ();
-    }
-    public: Window(OSWindow * actual_window) : _win{actual_window} {}
+    private OSWindow * _win;
+
+    // These simple booleans ... are anything but simple. They are 2 now.
+    private bool _visible {false};
+    private bool _closed {false};
+    public bool Closed() const { return _closed; }
+
+    IW public void ProcessMessages() override;
+
+    public Window(OSWindow * actual_window);
 
     // Shall return when the window is closed.
-    public: void Show() { Open (); _pm = false; }
+    IW public void Show() override;
+    IW public void Hide() override;
+    IW public void Close() override;
 
-    public: virtual ~Window() override
-    {
-        _pm = false;
-        H3R_DESTROY_OBJECT(_win, OSWindow)
-    }
+    public virtual ~Window() override;
+
+    IW protected virtual void OnKeyDown(const EventArgs &) override;
+    IW protected virtual void OnKeyUp(const EventArgs &) override;
+    IW protected virtual void OnMouseMove(const EventArgs &) override;
+    IW protected virtual void OnMouseDown(const EventArgs &) override;
+    IW protected virtual void OnMouseUp(const EventArgs &) override;
+    IW protected virtual void OnShow() override;
+    IW protected virtual void OnHide() override;
+    IW protected virtual void OnClose(bool &) override;
 };
+
+#undef public
+#undef private
+#undef protected
+#undef IW
 
 NAMESPACE_H3R
 

@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define H3R_ERR_HANDLER_UNHANDLED H3R_NS::OS::Error::Unhandled
 #define H3R_ERR_DEFINE_UNHANDLED H3R_NS::OS::Error H3R_ERR_HANDLER_UNHANDLED;
-#define H3R_ERR_DEFINE_HANDLER(H,R) \
+#define H3R_ERR_DEFINE_HANDLER(H, R) \
     H3R_NS::OS::Error & H3R_NS::OS::Error::H = R;
 
 #include "h3r.h"
@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 #ifdef H3R_TEST
-#define H3R_THROW(E,M) throw E {__FILE__, __LINE__, M};
+#define H3R_THROW(E, M) throw E {__FILE__, __LINE__, M};
 class Exception
 {
     private: const char * _file;
@@ -67,15 +67,23 @@ class NotSupportedException : public Exception
 {
     public: using Exception::Exception;
 };
+// Remind that some method isn't implemented.
+// Way better than the pure virtual ...
+class NotImplementedException : public Exception
+{
+    public: using Exception::Exception;
+};
 
 // H3R_TEST
 #else
-#define H3R_THROW(E,M) H3R_ENSURE(false, "Unhandled Exception " #E ": " M)
+#define H3R_THROW(E, M) H3R_ENSURE(false, "Unhandled Exception " #E ": " M)
 #endif
 
-#define H3R_THROW_IF(C,E,M) { if ((C)) H3R_THROW(E,M) }
-#define H3R_ARG_EXC_IF(C,M) H3R_THROW_IF(C,ArgumentException,M)
-#define H3R_NOT_SUPPORTED_EXC(M) H3R_THROW(NotSupportedException,M)
+#define H3R_THROW_IF(C, E, M) { if ((C)) H3R_THROW(E, M) }
+#define H3R_ARG_EXC_IF(C, M) H3R_THROW_IF(C,ArgumentException, M)
+#define H3R_NOT_SUPPORTED_EXC(M) H3R_THROW(NotSupportedException, M)
+#define H3R_NOT_IMPLEMENTED_EXC \
+    H3R_THROW(NotImplementedException, "Implement me.")
 
 namespace OS {
 

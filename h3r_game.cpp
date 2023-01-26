@@ -41,6 +41,11 @@ H3R_LOG_STATIC_INIT
 #include "h3r_sndfs.h"
 #include "h3r_vidfs.h"
 
+// No plug-in interface yet, so
+#include "h3r_sdlwindow.h"
+
+#include "h3r_mainwindow.h"
+
 H3R_NAMESPACE
 
 TaskThread Game::IOThread {};
@@ -80,7 +85,6 @@ Game::Game(const char * process_path)
 Game::~Game()
 {
     H3R_DESTROY_OBJECT(Game::RM, ResManager)
-    H3R_DESTROY_OBJECT(MainWindow, IWindow)
 }
 
 void Game::SilentLog(bool v)
@@ -102,6 +106,20 @@ void Game::SilentLog(bool v)
     while (! Game::RM->TaskComplete ())
         Game::ProcessThings ();
     return task_info.Resource;
+}
+
+#include <new>
+
+int Game::Run(int argc, char ** argv)
+{
+    // create the main window
+    // Again, no plug-in interface yet, so
+    var main_window =
+        IWindow::Create<H3R_NS::MainWindow, H3R_NS::SDLWindow>(argc, argv);
+
+    Game::MainWindow = main_window;
+    main_window->Show (); // make it visible
+    return ui_main (argc, argv);
 }
 
 NAMESPACE_H3R

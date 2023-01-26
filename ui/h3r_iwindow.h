@@ -36,16 +36,57 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_IWINDOW_H_
 
 #include "h3r.h"
+#include "h3r_os.h"
+#include "h3r_eventargs.h"
 
 H3R_NAMESPACE
 
-// Bridge: bonus: Model
+// Abstract window.
+// A contract between the windowing bridge abstraction and implementation:
+// Helps avoiding syntax errors and missing overrides.
+// Also, the "Game" communicates with the UI through this thing only.
 struct IWindow
 {
-    virtual void Open() { }
-    virtual void ProcessMessages() {}
+    // Show a hidden window.
+    virtual void Show() {H3R_NOT_IMPLEMENTED_EXC}
+
+    // Hide a shown window
+    virtual void Hide() {H3R_NOT_IMPLEMENTED_EXC}
+
+    // Once closed the window gets released.
+    virtual void Close() {H3R_NOT_IMPLEMENTED_EXC}
+
+    // The thing to periodically do while waiting for an async task to complete.
+    virtual void ProcessMessages() {H3R_NOT_IMPLEMENTED_EXC}
+
     virtual ~IWindow() {}
+
+    virtual void OnKeyDown(const EventArgs &) {H3R_NOT_IMPLEMENTED_EXC}
+    virtual void OnKeyUp(const EventArgs &) {H3R_NOT_IMPLEMENTED_EXC}
+    virtual void OnMouseMove(const EventArgs &) {H3R_NOT_IMPLEMENTED_EXC}
+    virtual void OnMouseDown(const EventArgs &) {H3R_NOT_IMPLEMENTED_EXC}
+    virtual void OnMouseUp(const EventArgs &) {H3R_NOT_IMPLEMENTED_EXC}
+    virtual void OnShow() {H3R_NOT_IMPLEMENTED_EXC}
+    virtual void OnHide() {H3R_NOT_IMPLEMENTED_EXC}
+    // "bool &" - allow the user to cancel the closing.
+    virtual void OnClose(bool &) {H3R_NOT_IMPLEMENTED_EXC}
+
+    // Don't forget to '#include < new >'.
+    // Convenience method.
+    // Implicit contract with a matching OSWindow::OSWindow.
+    template <typename Abstraction, typename Implementation> static Abstraction *
+    Create(int argc, char ** argv)
+    {
+        Implementation * a; // The "Window" takes care
+        H3R_CREATE_OBJECT(a, Implementation) {argc, argv};
+        Abstraction * b;
+        H3R_CREATE_OBJECT(b, Abstraction) {a};
+        a->SetEventHandler (b);
+        return b;
+    }
 };
+
+int ui_main(int argc, char ** argv);
 
 NAMESPACE_H3R
 

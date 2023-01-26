@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_log.h"
 #include "h3r_oswindow.h"
 #include <SDL.h>
-#include <SDL2/SDL_mixer.h>
+#include <SDL_opengl.h>
 #include "h3r_game.h"
 #include "h3r_resdecoder.h"
 
@@ -51,14 +51,22 @@ H3R_NAMESPACE
 //LATER plug-in; an SDL window shouldn't concern itself with h3r at all.
 class SDLWindow : public OSWindow
 {
-    SDL_Event e;
-    SDL_Window * _window {};
-    SDL_Surface * _screenSurface {};
-    SDL_Surface * _gHelloWorld {};
-    private: Pcx _main_window_background;
-    bool q {false};
+#define public public:
+#define private private:
+#define protected protected:
 
-    protected: inline virtual void Open () override
+    private SDL_Event _e;
+    private SDL_Window * _window {};
+    private SDL_GLContext _gContext {};
+    private SDL_Surface * _screenSurface {};
+    private SDL_Surface * _gHelloWorld {};
+    private Pcx _main_window_background;
+    private bool _q {false};
+    private bool _visible {false};
+
+    protected inline virtual void Hide() override {}
+
+    protected inline virtual void Show() override
     {
         _window = SDL_CreateWindow ("h3r",
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
@@ -68,6 +76,7 @@ class SDLWindow : public OSWindow
                 "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
              return;
         }
+
         _screenSurface = SDL_GetWindowSurface (_window);
 
         var byte_arr_ptr = _main_window_background.RGB ();
@@ -85,42 +94,23 @@ class SDLWindow : public OSWindow
                 "SDL_CreateRGBSurfaceFrom error: %s" EOL, SDL_GetError ()));
             return;
         }
+        Render ();//TODO SDL_WINDOWEVENT_EXPOSED gets lost sometimes?
+    }// Show
 
-        while (! q) {
-            while (SDL_PollEvent (&e) != 0) {
-                if (! q) q = SDL_QUIT == e.type;
-                if (SDL_WINDOWEVENT == e.type) {
-                    H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
-                    if (SDL_WINDOWEVENT_RESIZED == e.window.event)
-                        if (e.window.data1 > 0 && e.window.data2 > 0)
-                            _screenSurface = SDL_GetWindowSurface (_window);
-                }
-                if (SDL_KEYUP == e.type &&
-                    SDL_SCANCODE_Q == e.key.keysym.scancode)
-                    q = true;
-            }
-            // SDL_FillRect (screenSurface, nullptr,
-            //    SDL_MapRGB (screenSurface->format, 0xaa, 0xaa, 0xaa));
-            // screenSurface = SDL_GetWindowSurface (window);
-            SDL_BlitSurface (_gHelloWorld, nullptr, _screenSurface, nullptr);
-            SDL_UpdateWindowSurface (_window);
-            SDL_Delay (16);
-        }
-    }// Open
+    protected inline virtual void Close() override {}
 
-    public: void ProcessMessages() override { SDL_PumpEvents (); }
+    private void Render();
 
-    public: SDLWindow()
-        : _main_window_background{Game::GetResource ("GamSelBk.pcx")}
-    {
-    }
+    public void ProcessMessages() override;
 
-    public: ~SDLWindow() override
-    {
-        if (_gHelloWorld) SDL_FreeSurface (_gHelloWorld);
-        if (_window) SDL_DestroyWindow (_window);
-    }
+    public SDLWindow(int, char **);
+
+    public ~SDLWindow();
 };
+
+#undef public
+#undef private
+#undef protected
 
 NAMESPACE_H3R
 

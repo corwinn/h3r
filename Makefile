@@ -36,7 +36,7 @@ MAKEFLAGS += rR
 
 APP = main
 PLATFORM ?= posix
-WIN_SYSTEM ?= gl/sdl -DSDL2_GL
+WIN_SYSTEM ?= gl/sdl
 CC ?= clang
 CXX ?= clang++
 H3R_TEST ?=
@@ -52,6 +52,7 @@ _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
 CXXFLAGS = $(_I) -std=c++11 $(_O) $(_F) $(_W)
 SRC = $(wildcard ./*/*.cpp)
 SRC += $(wildcard os/$(PLATFORM)/*.cpp)
+SRC += $(wildcard os/ui/$(WIN_SYSTEM)/*.cpp)
 SRC := $(filter-out ./prior_publish/%,$(SRC))
 OBJ = $(patsubst %.cpp,%.o,$(SRC))
 

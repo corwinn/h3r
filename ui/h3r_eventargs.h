@@ -1,8 +1,3 @@
-//
-//               "The Golden Crane flies for Tarmon Gai'Don."
-//
-
-
 /**** BEGIN LICENSE BLOCK ****
 
 BSD 3-Clause License
@@ -37,28 +32,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#include "h3r_os_error.h"
-H3R_ERR_DEFINE_UNHANDLED
-H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
-H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
-H3R_ERR_DEFINE_HANDLER(Log,H3R_ERR_HANDLER_UNHANDLED)
+#ifndef _H3R_EVENTARGS_H_
+#define _H3R_EVENTARGS_H_
 
-#include "h3r_game.h"
+#include "h3r.h"
 
-int main(int argc, char ** argv)
+H3R_NAMESPACE
+
+// Event arguments for UI interaction.
+struct EventArgs
 {
-    //TODO Path::GetDirName
-    H3R_ENSURE(argc > 0, "Can't handle your OS - argc can't be < 1")
-    H3R_NS::OS::Log_stdout ("Process: %s" EOL, argv[0]);
-    char * p = argv[0]; // the future base dir or work dir
-    int len = H3R_NS::OS::Strlen (argv[0]);
-    for (int i = len-1; i >= 0; i--)
-        if ('/' == p[i] || '\\' == p[i] ) {
-            p[i] = '\0';
-            break;
-        }
-    H3R_NS::OS::Log_stdout ("WorkDir: %s" EOL, p);
+    int Key;
+    int KeyMod;
 
-    H3R_NS::Game game {p};
-    return game.Run (argc, argv);
-}
+    int Button;
+    int Delta;
+    int X;
+    int Y;
+};
+
+NAMESPACE_H3R
+
+#endif

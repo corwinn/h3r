@@ -94,8 +94,8 @@ template <typename T> class List //LATER Insert() - should the need arise
     }
 };// List
 
-#undef private
 #undef public
+#undef private
 
 NAMESPACE_H3R
 
