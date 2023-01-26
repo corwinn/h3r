@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // Abstract window.
-// A contract between the windowing bridge abstraction and implementation:
+// A contract between the windowing bridge: abstraction and implementation:
 // Helps avoiding syntax errors and missing overrides.
 // Also, the "Game" communicates with the UI through this thing only.
 struct IWindow
@@ -61,6 +61,7 @@ struct IWindow
 
     virtual ~IWindow() {}
 
+    // Events
     virtual void OnKeyDown(const EventArgs &) {H3R_NOT_IMPLEMENTED_EXC}
     virtual void OnKeyUp(const EventArgs &) {H3R_NOT_IMPLEMENTED_EXC}
     virtual void OnMouseMove(const EventArgs &) {H3R_NOT_IMPLEMENTED_EXC}

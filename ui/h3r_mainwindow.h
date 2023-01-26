@@ -32,8 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-// Simplicity ends, with the definition of the Window class.
-
 #ifndef _H3R_MAINWINDOW_H_
 #define _H3R_MAINWINDOW_H_
 
