@@ -50,10 +50,10 @@ struct IWindow
     // Show a hidden window.
     virtual void Show() {H3R_NOT_IMPLEMENTED_EXC}
 
-    // Hide a shown window
+    // Hide a shown window.
     virtual void Hide() {H3R_NOT_IMPLEMENTED_EXC}
 
-    // Once closed the window gets released.
+    // Once closed, the window gets released.
     virtual void Close() {H3R_NOT_IMPLEMENTED_EXC}
 
     // The thing to periodically do while waiting for an async task to complete.
@@ -84,8 +84,10 @@ struct IWindow
         a->SetEventHandler (b);
         return b;
     }
-};
+};// IWindow
 
+// Handles the UI portion of the program. Implemented by the chosen "window"
+// implementation.
 int ui_main(int argc, char ** argv);
 
 NAMESPACE_H3R
