@@ -55,6 +55,13 @@ class OSWindow : public IWindow
     private: IWindow * _eh {};
     public: virtual void SetEventHandler(IWindow * w) { _eh = w; }
 
+    // Why are these virtual? Because you might want to create a monitoring
+    // window where you get notified with these, and forward them afterwards;
+    // or a "passive" window that handles no events.
+    // If this proves to be a wrong design, a multicast delegate shall be used
+    // instead of these. Until then:
+    // Ensure these get called, should you choose to override them, or the
+    // observer shall not get notified.
     protected: inline virtual void OnKeyDown(const EventArgs & e) override
     {
         if (_eh) _eh->OnKeyDown (e);
