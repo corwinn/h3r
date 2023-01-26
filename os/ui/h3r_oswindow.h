@@ -43,16 +43,20 @@ H3R_NAMESPACE
 // Bridge: Implementation
 class OSWindow : public IWindow
 {
-    public: virtual void Show () override {}
-    public: virtual void Hide () override {}
-    public: virtual void Close () override {}
-    public: virtual void ProcessMessages() override {}
+#define public public:
+#define private private:
+#define protected protected:
 
-    public: OSWindow(int, char **) {}
-    public: virtual ~OSWindow() {}
+    public virtual void Show () override {}
+    public virtual void Hide () override {}
+    public virtual void Close () override {}
+    public virtual void ProcessMessages() override {}
+
+    public OSWindow(int, char **) {}
+    public virtual ~OSWindow() {}
 
     // handle event forwarding
-    public: struct NoWindow final : IWindow // avoid "if"
+    public struct NoWindow final : IWindow // avoid "if"
     {
         inline void OnKeyDown(const EventArgs &) override {}
         inline void OnKeyUp(const EventArgs &) override {}
@@ -65,8 +69,8 @@ class OSWindow : public IWindow
         inline void OnRender() override {}
         inline void OnResize(int, int) override {}
     };
-    private: IWindow * _eh {};
-    public: inline virtual void SetEventHandler(IWindow * w)
+    private IWindow * _eh {};
+    public inline virtual void SetEventHandler(IWindow * w)
     {
         static NoWindow n;
         _eh = nullptr == w ? &n : w;
@@ -79,47 +83,52 @@ class OSWindow : public IWindow
     // instead of these. Until then:
     // Ensure these get called, should you choose to override them, or the
     // observer shall not get notified.
-    protected: inline virtual void OnKeyDown(const EventArgs & e) override
+    //LATER codegen: base = h3r_iwindow.h; targets: h3r_window.h, h3r_oswindow.h
+    protected inline virtual void OnKeyDown(const EventArgs & e) override
     {
         _eh->OnKeyDown (e);
     }
-    protected: inline virtual void OnKeyUp(const EventArgs & e) override
+    protected inline virtual void OnKeyUp(const EventArgs & e) override
     {
         _eh->OnKeyUp (e);
     }
-    protected: inline virtual void OnMouseMove(const EventArgs & e) override
+    protected inline virtual void OnMouseMove(const EventArgs & e) override
     {
         _eh->OnMouseMove (e);
     }
-    protected: inline virtual void OnMouseDown(const EventArgs & e) override
+    protected inline virtual void OnMouseDown(const EventArgs & e) override
     {
         _eh->OnMouseDown (e);
     }
-    protected: inline virtual void OnMouseUp(const EventArgs & e) override
+    protected inline virtual void OnMouseUp(const EventArgs & e) override
     {
         _eh->OnMouseUp (e);
     }
-    protected: inline virtual void OnShow() override
+    protected inline virtual void OnShow() override
     {
         _eh->OnShow ();
     }
-    protected: inline virtual void OnHide() override
+    protected inline virtual void OnHide() override
     {
         _eh->OnHide ();
     }
-    protected: inline virtual void OnClose(bool & cancel) override
+    protected inline virtual void OnClose(bool & cancel) override
     {
         _eh->OnClose (cancel);
     }
-    protected: inline virtual void OnRender() override
+    protected inline virtual void OnRender() override
     {
         _eh->OnRender ();
     }
-    protected: inline virtual void OnResize(int w, int h) override
+    protected inline virtual void OnResize(int w, int h) override
     {
         _eh->OnResize (w, h);
     }
 };// OSWindow
+
+#undef public
+#undef private
+#undef protected
 
 NAMESPACE_H3R
 
