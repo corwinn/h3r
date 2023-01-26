@@ -37,17 +37,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r.h"
 #include "h3r_window.h"
+#include "GL/gl.h"
 
 H3R_NAMESPACE
 
-// Finally: the main form
+// MainWindowGL
 class MainWindow : public Window
 {
 #define public public:
 #define private private:
 #define protected protected:
 
+    // Open GL state
+    private GLuint _tex, _vbo;
+    private int _w {800}, _h{600};
+
     public MainWindow(OSWindow * actual_window) : Window{actual_window} {}
+    public ~MainWindow() override;
+
+    protected virtual void OnShow() override;
+    protected virtual void OnRender() override;
+    protected virtual void OnResize(int w, int h) override;
 };
 
 #undef public

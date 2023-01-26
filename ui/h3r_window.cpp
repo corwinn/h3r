@@ -134,5 +134,7 @@ void Window::OnShow() { _visible = true; }
 void Window::OnHide() { _visible = false; }
 // Close by default; the base window has no idea how to ask.
 void Window::OnClose(bool &) { _closed = true; }
+void Window::OnRender() {}
+void Window::OnResize(int, int) {}
 
 NAMESPACE_H3R

@@ -85,6 +85,8 @@ class Window : public IWindow
     IW protected virtual void OnShow() override;
     IW protected virtual void OnHide() override;
     IW protected virtual void OnClose(bool &) override;
+    IW protected virtual void OnRender() override;
+    IW protected virtual void OnResize(int, int) override;
 };
 
 #undef public

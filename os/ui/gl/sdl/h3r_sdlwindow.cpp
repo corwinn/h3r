@@ -83,40 +83,16 @@ SDLWindow::SDLWindow(int, char **)
     if (! global_sdl_init) Init_SDL ();
 }
 
-SDLWindow::~SDLWindow()
-{
-    glDeleteBuffers (1, &_vbo), glDeleteTextures (1, &_tex);
-}
+SDLWindow::~SDLWindow() {}
 
 void SDLWindow::Render()
 {
     if (! _gc) return;
-
-    glClear (GL_COLOR_BUFFER_BIT);
-    glLoadIdentity ();
-    glScalef (_w, _h, 1);
-
-    glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
-    glTexCoordPointer (
-        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
-    glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
-
-    SDL_Delay (16);//TODO timing
-
+    OnRender ();
     SDL_GL_SwapWindow (_window);
 }
 
-void SDLWindow::Resized()
-{
-    if (! _h || ! _w) return;
-    glViewport (0, 0, _w, _h);
-    glMatrixMode (GL_PROJECTION), glLoadIdentity ();
-    // Its a 2D game.
-    glOrtho (.0f, _w, _h, .0f, .0f, 1.f);
-    // www.opengl.org/archives/resources/faq/technical/transformations.htm
-    glTranslatef (.375f, .375f, -.2f);
-    glMatrixMode (GL_MODELVIEW), glLoadIdentity ();
-}
+void SDLWindow::Resized() { OnResize (_w, _h); }
 
 void SDLWindow::ProcessMessages()
 {

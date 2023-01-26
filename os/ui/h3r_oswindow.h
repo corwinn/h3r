@@ -52,8 +52,25 @@ class OSWindow : public IWindow
     public: virtual ~OSWindow() {}
 
     // handle event forwarding
+    public: struct NoWindow final : IWindow // avoid "if"
+    {
+        inline void OnKeyDown(const EventArgs &) override {}
+        inline void OnKeyUp(const EventArgs &) override {}
+        inline void OnMouseMove(const EventArgs &) override {}
+        inline void OnMouseDown(const EventArgs &) override {}
+        inline void OnMouseUp(const EventArgs &) override {}
+        inline void OnShow() override {}
+        inline void OnHide() override {}
+        inline void OnClose(bool &) override {}
+        inline void OnRender() override {}
+        inline void OnResize(int, int) override {}
+    };
     private: IWindow * _eh {};
-    public: virtual void SetEventHandler(IWindow * w) { _eh = w; }
+    public: inline virtual void SetEventHandler(IWindow * w)
+    {
+        static NoWindow n;
+        _eh = nullptr == w ? &n : w;
+    }
 
     // Why are these virtual? Because you might want to create a monitoring
     // window where you get notified with these, and forward them afterwards;
@@ -64,35 +81,43 @@ class OSWindow : public IWindow
     // observer shall not get notified.
     protected: inline virtual void OnKeyDown(const EventArgs & e) override
     {
-        if (_eh) _eh->OnKeyDown (e);
+        _eh->OnKeyDown (e);
     }
     protected: inline virtual void OnKeyUp(const EventArgs & e) override
     {
-        if (_eh) _eh->OnKeyUp (e);
+        _eh->OnKeyUp (e);
     }
     protected: inline virtual void OnMouseMove(const EventArgs & e) override
     {
-        if (_eh) _eh->OnMouseMove (e);
+        _eh->OnMouseMove (e);
     }
     protected: inline virtual void OnMouseDown(const EventArgs & e) override
     {
-        if (_eh) _eh->OnMouseDown (e);
+        _eh->OnMouseDown (e);
     }
     protected: inline virtual void OnMouseUp(const EventArgs & e) override
     {
-        if (_eh) _eh->OnMouseUp (e);
+        _eh->OnMouseUp (e);
     }
     protected: inline virtual void OnShow() override
     {
-        if (_eh) _eh->OnShow ();
+        _eh->OnShow ();
     }
     protected: inline virtual void OnHide() override
     {
-        if (_eh) _eh->OnHide ();
+        _eh->OnHide ();
     }
     protected: inline virtual void OnClose(bool & cancel) override
     {
-        if (_eh) _eh->OnClose (cancel);
+        _eh->OnClose (cancel);
+    }
+    protected: inline virtual void OnRender() override
+    {
+        _eh->OnRender ();
+    }
+    protected: inline virtual void OnResize(int w, int h) override
+    {
+        _eh->OnResize (w, h);
     }
 };// OSWindow
 

@@ -40,8 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_oswindow.h"
 #include <SDL.h>
 #include <SDL_opengl.h>
-#include "h3r_game.h"
-#include "h3r_resdecoder.h"
 
 H3R_NAMESPACE
 
@@ -62,14 +60,12 @@ class SDLWindow : public OSWindow
     private bool _q {false};
     private bool _visible {false};
 
-    // Open GL state
-    GLuint _tex, _vbo;
-
     protected inline virtual void Hide() override {}
 
     protected inline virtual void Show() override
     {
         // 2.0 should be enough for a proof of concept
+        //TODO request this from the abstraction
         SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
         SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
@@ -77,56 +73,19 @@ class SDLWindow : public OSWindow
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
             SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
         if (! _window) {
-             H3R_NS::Log::Info (H3R_NS::String::Format (
+             H3R_NS::Log::Err (H3R_NS::String::Format (
                 "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
              return;
         }
 
         _gc = SDL_GL_CreateContext (_window);
         if (! _gc) {
-             H3R_NS::Log::Info (H3R_NS::String::Format (
+             H3R_NS::Log::Err (H3R_NS::String::Format (
                 "SDL_GL_CreateContext error: %s" EOL, SDL_GetError ()));
              return;
         }
 
-        glDisable (GL_COLOR_MATERIAL);
-        glEnable (GL_TEXTURE_2D);
-        glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        glEnable (GL_CULL_FACE), glCullFace (GL_BACK);
-        glEnable (GL_VERTEX_ARRAY); glEnable (GL_TEXTURE_COORD_ARRAY);
-        glClearColor (.0f, .0f, .0f, 1.f);
-        glDisable (GL_DEPTH_TEST);
-        glDisable (GL_DITHER);
-        glDisable (GL_BLEND);
-        glDisable (GL_LIGHTING);
-        glDisable (GL_FOG);
-        glDisable (GL_MULTISAMPLE);
-        glShadeModel (GL_FLAT);
-
-        glGenTextures (1, &_tex);
-        Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
-        var byte_arr_ptr = main_window_background.RGB ();
-        if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
-            H3R_NS::Log::Info ("Failed to load GamSelBk.pcx");
-            return;
-        }
-        glBindTexture (GL_TEXTURE_2D, _tex);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-        glTexImage2D (GL_TEXTURE_2D, 0, /*GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,*/
-            GL_RGBA,
-            main_window_background.Width (),
-            main_window_background.Height (),
-            0, GL_RGB, GL_UNSIGNED_BYTE, byte_arr_ptr->operator byte * ());
-
-        GLfloat v[16] {0,0,0,0, 0,1,0,1, 1,0,1,0, 1,1,1,1};
-        glGenBuffers (1, &_vbo);
-        glBindBuffer (GL_ARRAY_BUFFER, _vbo),
-        glBufferData (GL_ARRAY_BUFFER, 16*sizeof(GLfloat), v, GL_STATIC_DRAW);
+        OnShow ();
 
         Resized ();
         Render ();//TODO SDL_WINDOWEVENT_EXPOSED gets lost sometimes?
