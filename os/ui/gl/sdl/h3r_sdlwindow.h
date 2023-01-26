@@ -91,10 +91,12 @@ class SDLWindow : public OSWindow
         Render ();//TODO SDL_WINDOWEVENT_EXPOSED gets lost sometimes?
     }// Show
 
-    protected inline virtual void Close() override {}
+    protected inline virtual void Close() override { _q = true; }
 
     private void Render();
     private void Resized();
+    private void HandleWindowEvent();
+    private void HandleKeyboardEvent(EventArgs &);
 
     public void ProcessMessages() override;
 

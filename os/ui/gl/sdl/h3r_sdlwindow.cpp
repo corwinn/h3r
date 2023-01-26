@@ -96,6 +96,7 @@ void SDLWindow::Resized() { OnResize (_w, _h); }
 
 void SDLWindow::ProcessMessages()
 {
+    static EventArgs e {};
     // SDL_PumpEvents ();
     if (_q) return;
     while (SDL_PollEvent (&_e) != 0) {
@@ -106,21 +107,35 @@ void SDLWindow::ProcessMessages()
         }
         if (_q) continue; //TODO should I?
 
-        if (SDL_WINDOWEVENT == _e.type) {
-            H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
-            if (SDL_WINDOWEVENT_RESIZED == _e.window.event) {
-                if (_e.window.data1 > 0 && _e.window.data2 > 0)
-                    _w = _e.window.data1, _h = _e.window.data2, Resized ();
-            }
-            else if (SDL_WINDOWEVENT_EXPOSED == _e.window.event)
-                Render ();
-        }
-        if (SDL_KEYUP == _e.type && SDL_SCANCODE_Q == _e.key.keysym.scancode) {
-            _q = true;
-            OnClose (_q);
-            if (_q) Close ();
+        switch (_e.type) {
+            case SDL_WINDOWEVENT: HandleWindowEvent (); break;
+            case SDL_KEYUP: HandleKeyboardEvent (e); break;
         }
     }
 }// ProcessMessages
+
+void SDLWindow::HandleWindowEvent()
+{
+    H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
+    switch (_e.window.event) {
+        case SDL_WINDOWEVENT_RESIZED: {
+            if (_e.window.data1 > 0 && _e.window.data2 > 0)
+                _w = _e.window.data1, _h = _e.window.data2, Resized ();
+        } break;
+        case SDL_WINDOWEVENT_EXPOSED: Render (); break;
+    }
+}
+
+void SDLWindow::HandleKeyboardEvent(EventArgs & e)
+{
+    switch (_e.key.keysym.scancode) {
+        case SDL_SCANCODE_Q: {
+            e.Key = H3R_KEY_Q;
+            OnKeyUp (e);
+            e.Key = H3R_NO_KEY;
+        } break;
+        default: break;
+    }
+}
 
 NAMESPACE_H3R

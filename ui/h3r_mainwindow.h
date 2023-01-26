@@ -55,6 +55,7 @@ class MainWindow : public Window
     public MainWindow(OSWindow * actual_window) : Window{actual_window} {}
     public ~MainWindow() override;
 
+    protected virtual void OnKeyUp(const EventArgs &) override;
     protected virtual void OnShow() override;
     protected virtual void OnRender() override;
     protected virtual void OnResize(int w, int h) override;

@@ -44,6 +44,12 @@ MainWindow::~MainWindow()
     glDeleteBuffers (1, &_vbo), glDeleteTextures (1, &_tex);
 }
 
+void MainWindow::OnKeyUp(const EventArgs & e)
+{
+    if (H3R_KEY_Q == e.Key)
+        Close ();
+}
+
 void MainWindow::OnShow()
 {
     glDisable (GL_COLOR_MATERIAL);

@@ -39,6 +39,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+#define H3R_NO_KEY 0
+#define H3R_KEY_Q 1
+
 // Event arguments for UI interaction.
 struct EventArgs
 {
