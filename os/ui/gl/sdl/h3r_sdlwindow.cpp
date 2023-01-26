@@ -78,26 +78,44 @@ static void Init_SDL()
 H3R_NAMESPACE
 
 SDLWindow::SDLWindow(int, char **)
-    : OSWindow (0, nullptr),
-    _main_window_background{Game::GetResource ("GamSelBk.pcx")}
+    : OSWindow (0, nullptr)
 {
     if (! global_sdl_init) Init_SDL ();
 }
 
 SDLWindow::~SDLWindow()
 {
-    if (_gHelloWorld) SDL_FreeSurface (_gHelloWorld);
-    if (_window) SDL_DestroyWindow (_window);
+    glDeleteBuffers (1, &_vbo), glDeleteTextures (1, &_tex);
 }
 
 void SDLWindow::Render()
 {
-    // SDL_FillRect (screenSurface, nullptr,
-    //    SDL_MapRGB (screenSurface->format, 0xaa, 0xaa, 0xaa));
-    // screenSurface = SDL_GetWindowSurface (window);
-    SDL_BlitSurface (_gHelloWorld, nullptr, _screenSurface, nullptr);
-    SDL_UpdateWindowSurface (_window);
+    if (! _gc) return;
+
+    glClear (GL_COLOR_BUFFER_BIT);
+    glLoadIdentity ();
+    glScalef (_w, _h, 1);
+
+    glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
+    glTexCoordPointer (
+        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
+    glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
     SDL_Delay (16);//TODO timing
+
+    SDL_GL_SwapWindow (_window);
+}
+
+void SDLWindow::Resized()
+{
+    if (! _h || ! _w) return;
+    glViewport (0, 0, _w, _h);
+    glMatrixMode (GL_PROJECTION), glLoadIdentity ();
+    // Its a 2D game.
+    glOrtho (.0f, _w, _h, .0f, .0f, 1.f);
+    // www.opengl.org/archives/resources/faq/technical/transformations.htm
+    glTranslatef (.375f, .375f, -.2f);
+    glMatrixMode (GL_MODELVIEW), glLoadIdentity ();
 }
 
 void SDLWindow::ProcessMessages()
@@ -114,10 +132,11 @@ void SDLWindow::ProcessMessages()
 
         if (SDL_WINDOWEVENT == _e.type) {
             H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
-            if (SDL_WINDOWEVENT_RESIZED == _e.window.event)
+            if (SDL_WINDOWEVENT_RESIZED == _e.window.event) {
                 if (_e.window.data1 > 0 && _e.window.data2 > 0)
-                    _screenSurface = SDL_GetWindowSurface (_window);
-            if (SDL_WINDOWEVENT_EXPOSED == _e.window.event)
+                    _w = _e.window.data1, _h = _e.window.data2, Resized ();
+            }
+            else if (SDL_WINDOWEVENT_EXPOSED == _e.window.event)
                 Render ();
         }
         if (SDL_KEYUP == _e.type && SDL_SCANCODE_Q == _e.key.keysym.scancode) {

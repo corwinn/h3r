@@ -57,49 +57,85 @@ class SDLWindow : public OSWindow
 
     private SDL_Event _e;
     private SDL_Window * _window {};
-    private SDL_GLContext _gContext {};
-    private SDL_Surface * _screenSurface {};
-    private SDL_Surface * _gHelloWorld {};
-    private Pcx _main_window_background;
+    private SDL_GLContext _gc {};
+    private int _w {800}, _h{600};
     private bool _q {false};
     private bool _visible {false};
+
+    // Open GL state
+    GLuint _tex, _vbo;
 
     protected inline virtual void Hide() override {}
 
     protected inline virtual void Show() override
     {
+        // 2.0 should be enough for a proof of concept
+        SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
         _window = SDL_CreateWindow ("h3r",
-            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
-            SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+            SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
         if (! _window) {
              H3R_NS::Log::Info (H3R_NS::String::Format (
                 "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
              return;
         }
 
-        _screenSurface = SDL_GetWindowSurface (_window);
+        _gc = SDL_GL_CreateContext (_window);
+        if (! _gc) {
+             H3R_NS::Log::Info (H3R_NS::String::Format (
+                "SDL_GL_CreateContext error: %s" EOL, SDL_GetError ()));
+             return;
+        }
 
-        var byte_arr_ptr = _main_window_background.RGB ();
-        H3R_NS::Log::Info (H3R_NS::String::Format (
-                "SDL_CreateRGBSurfaceFrom (w: %d, h: %d)" EOL,
-                _main_window_background.Width (),
-                _main_window_background.Height ()));
-        _gHelloWorld = SDL_CreateRGBSurfaceFrom (
-            byte_arr_ptr->operator byte * (),
-            _main_window_background.Width (),
-            _main_window_background.Height (),
-            24, 3 * _main_window_background.Width (), 255, 255, 255, 0);
-        if (! _gHelloWorld) {
-            H3R_NS::Log::Info (H3R_NS::String::Format (
-                "SDL_CreateRGBSurfaceFrom error: %s" EOL, SDL_GetError ()));
+        glDisable (GL_COLOR_MATERIAL);
+        glEnable (GL_TEXTURE_2D);
+        glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        glEnable (GL_CULL_FACE), glCullFace (GL_BACK);
+        glEnable (GL_VERTEX_ARRAY); glEnable (GL_TEXTURE_COORD_ARRAY);
+        glClearColor (.0f, .0f, .0f, 1.f);
+        glDisable (GL_DEPTH_TEST);
+        glDisable (GL_DITHER);
+        glDisable (GL_BLEND);
+        glDisable (GL_LIGHTING);
+        glDisable (GL_FOG);
+        glDisable (GL_MULTISAMPLE);
+        glShadeModel (GL_FLAT);
+
+        glGenTextures (1, &_tex);
+        Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
+        var byte_arr_ptr = main_window_background.RGB ();
+        if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
+            H3R_NS::Log::Info ("Failed to load GamSelBk.pcx");
             return;
         }
+        glBindTexture (GL_TEXTURE_2D, _tex);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexImage2D (GL_TEXTURE_2D, 0, /*GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,*/
+            GL_RGBA,
+            main_window_background.Width (),
+            main_window_background.Height (),
+            0, GL_RGB, GL_UNSIGNED_BYTE, byte_arr_ptr->operator byte * ());
+
+        GLfloat v[16] {0,0,0,0, 0,1,0,1, 1,0,1,0, 1,1,1,1};
+        glGenBuffers (1, &_vbo);
+        glBindBuffer (GL_ARRAY_BUFFER, _vbo),
+        glBufferData (GL_ARRAY_BUFFER, 16*sizeof(GLfloat), v, GL_STATIC_DRAW);
+
+        Resized ();
         Render ();//TODO SDL_WINDOWEVENT_EXPOSED gets lost sometimes?
     }// Show
 
     protected inline virtual void Close() override {}
 
     private void Render();
+    private void Resized();
 
     public void ProcessMessages() override;
 

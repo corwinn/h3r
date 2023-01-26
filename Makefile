@@ -42,10 +42,10 @@ CXX ?= clang++
 H3R_TEST ?=
 _W  = -Wall -Wextra -Wshadow
 _O  = -O0 -g -DH3R_DEBUG -DH3R_MM -fno-exceptions -fno-threadsafe-statics \
- $(H3R_TEST)
+ $(H3R_TEST) -DGL_GLEXT_PROTOTYPES
 _F  = -fsanitize=address,undefined,integer,leak -fvisibility=hidden
 #TODO release build _F = -fvisibility=hidden -fno-rtti
-_L = -Wl,--as-needed -lpthread -lz -lSDL2 -lSDL2_mixer
+_L = -Wl,--as-needed -lpthread -lz -lSDL2 -lSDL2_mixer -lGL
 _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
  -Ios/ui -Ios/ui/$(WIN_SYSTEM) `pkg-config --cflags sdl2`
 
