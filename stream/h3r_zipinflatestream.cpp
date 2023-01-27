@@ -37,10 +37,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // It can actually "seek" forwards.
+//TODO StreamCaps: CanSeekFwd, CanSeekBack, CanTell, etc.
 Stream & ZipInflateStream::Seek(off_t offset)
 {
     if (0 == offset) return * this;
     if (offset < 0) H3R_NOT_SUPPORTED_EXC("Backwards seek is not supported.")
+    //LATER Skip() perhaps this shall become Stream method?
     byte b;
     while (offset--) Read (&b, 1);
     return * this;
