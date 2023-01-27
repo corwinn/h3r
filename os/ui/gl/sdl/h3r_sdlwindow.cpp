@@ -46,7 +46,7 @@ namespace __pointless_verbosity
 }
 
 #define THE_WAY_IS_SHUT \
-    static bool _you_shall_not_pass; \
+    static bool _you_shall_not_pass {}; \
     H3R_ENSURE(! _you_shall_not_pass, "fix: your event-driven mess") \
     _you_shall_not_pass = true; \
     __pointless_verbosity::_bool_finally_invert ____ {_you_shall_not_pass};
