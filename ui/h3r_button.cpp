@@ -41,8 +41,7 @@ H3R_NAMESPACE
 Button::Button(const String &, Control * base)
     : Control {base}
 {
-    Resize (100, 20);
-    SetPos (500, 20);
+    //TODO h3r_defdecoder
 }
 
 void Button::OnMouseMove(const EventArgs & e)

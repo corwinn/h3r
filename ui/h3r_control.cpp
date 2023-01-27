@@ -45,7 +45,11 @@ void Control::Add(Control * c)
     _z.Add (c);
 }
 
-Control::Control(Control * base) { if (base) base->Add (this); }
+Control::Control(Control * base)
+{
+    if (base) base->Add (this);
+    Resize (H3R_CONTROL_DEFAULT_SIZE, H3R_CONTROL_DEFAULT_SIZE);
+}
 
 void Control::Resize(int w, int h)
 {

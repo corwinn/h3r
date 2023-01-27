@@ -49,6 +49,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_eventargs.h"
 #include "h3r_event.h"
 
+#define H3R_CONTROL_DEFAULT_SIZE 32
+
 H3R_NAMESPACE
 
 // Graphics control. "owns" all controls on it <-> manages their resources.
@@ -75,6 +77,7 @@ class Control
     public: void SetPos(int, int);
 
     protected: inline Box & ClientRectangle() { return _bb; }
+    //LATER Allowed for now.
     protected: void Resize(int, int);
     protected: virtual bool HitTest(Point & p);
 

@@ -47,6 +47,7 @@ MainWindow::MainWindow(OSWindow * actual_window)
 {
     Button * hellow_world_button;
     H3R_CREATE_OBJECT(hellow_world_button, Button) {"", nullptr};
+    hellow_world_button->SetPos (500, 20);
     Add (hellow_world_button);
 }
 
