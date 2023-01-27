@@ -56,10 +56,11 @@ void Control::Resize(int w, int h)
     _bb.Size.X = w;
     _bb.Size.Y = h;
 }
-void Control::SetPos(int x, int y)
+Control * Control::SetPos(int x, int y)
 {
     _bb.Pos.X = x;
     _bb.Pos.Y = y;
+    return this;
 }
 
 bool Control::HitTest(Point & p) { return _bb.Contains (p); }

@@ -74,7 +74,7 @@ class Control
 
     public: const Point & Pos() { return _bb.Pos; }
     public: const Point & Size() { return _bb.Size; }
-    public: void SetPos(int, int);
+    public: Control * SetPos(int, int);
 
     protected: inline Box & ClientRectangle() { return _bb; }
     //LATER Allowed for now.
