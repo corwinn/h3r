@@ -122,6 +122,7 @@ void Window::Close()
     _win->Close ();
     _closed = true;
 }
+// WndProc. Do not block it.
 void Window::ProcessMessages() { _win->ProcessMessages (); }
 
 // Observer
