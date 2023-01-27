@@ -54,15 +54,7 @@ The game has no reference to "mmenungh" - how does it know what to use on mouse
 over? No reference to "SOMainS" and "mmenungn" - SOMAIN.DEF and MMENUNG.def have
 "up" and "down" reversed - index-wise - how does it "know" whats what?
 it counts on the last char prior the . it seems:
-n - up
-s - down
-d - deactivated
-h - hover
-   "new game"    : Data_H3sprite_lod/MMENUNG.def
-   "load game"   : Data_H3sprite_lod/MMENULG.def ditto
-   "high score"  : Data_H3sprite_lod/MMENUHS.def ditto
-   "credits"     : Data_H3sprite_lod/MMENUCR.def ditto
-   "quit"        : Data_H3sprite_lod/MMENUQT.def ditto
+<> mainwindow <>
 main menu music  : MP3/MAINMENU.MP3
 button click     : Data_Heroes3_snd/BUTTON.wav
 */

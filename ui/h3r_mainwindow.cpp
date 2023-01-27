@@ -37,18 +37,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_resdecoder.h"
 #include "h3r_thread.h"
 #include "h3r_button.h"
+#include "h3r_list.h"
+#include "h3r_string.h"
 
 #include <new>
 
 H3R_NAMESPACE
 
+/*
+n - up
+s - down
+d - deactivated
+h - hover
+   "new game"    : Data_H3sprite_lod/MMENUNG.def
+   "load game"   : Data_H3sprite_lod/MMENULG.def ditto
+   "high score"  : Data_H3sprite_lod/MMENUHS.def ditto
+   "credits"     : Data_H3sprite_lod/MMENUCR.def ditto
+   "quit"        : Data_H3sprite_lod/MMENUQT.def ditto
+ */
+
 MainWindow::MainWindow(OSWindow * actual_window)
     : Window{actual_window}
 {
-    Button * hellow_world_button;
-    H3R_CREATE_OBJECT(hellow_world_button, Button) {"", nullptr};
-    hellow_world_button->SetPos (500, 20);
-    Add (hellow_world_button);
+    int y = 20, x = 480, spacing = 20;
+    List<String> mm {};
+    mm << "MMENUNG.def" << "MMENULG.def" << "MMENUHS.def" << "MMENUCR.def"
+        << "MMENUQT.def";
+    for (const var & b : mm) {
+        Button * btn;
+        H3R_CREATE_OBJECT(btn, Button) {b};
+        Add (btn->SetPos (x, y));
+        y += btn->Size ().Y + spacing;
+    }
 }
 
 MainWindow::~MainWindow()
