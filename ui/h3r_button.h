@@ -47,7 +47,7 @@ H3R_NAMESPACE
 // Its size is stored at the resource it is created from.
 class Button: public Control
 {
-    public: Button(const String &, Control *);
+    public: Button(const String &, Control * = nullptr);
     public: virtual ~Button() override {}
 
     public: virtual void OnRender(GC &) override;
