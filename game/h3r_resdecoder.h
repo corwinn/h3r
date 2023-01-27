@@ -59,6 +59,7 @@ class Decoder
     public: virtual int Height () { return 0; }
 };
 
+//LATER Issue: CAMPNOSC.PCX (238x143) looks skewed
 class Pcx final : public Decoder
 {
     private: Stream * _s;
@@ -104,7 +105,7 @@ class Pcx final : public Decoder
         }
         fmt = size / (_w * _h);
         if (1 != fmt && 3 != fmt) {
-            Log::Err (String::Format ("PCX: Unknwon format: %d" EOL, fmt));
+            Log::Err (String::Format ("PCX: Unknown format: %d" EOL, fmt));
             _w = _h = 0;
             return &buf;
         }
@@ -118,9 +119,12 @@ class Pcx final : public Decoder
         if (1 == fmt) {
             Array<byte> pal {3*256};
             byte * p = pal;
+            // ZipInflateStream can seek forwards only.
+            var bitmap_sentinel = s.Tell ();
             s.Seek (size);
             Stream::Read (s, p, pal.Length ());
-            s.Seek (-(size + pal.Length ()));
+            s.Reset ();
+            s.Seek (bitmap_sentinel);
             byte i;
             while (b != e) {
                 Stream::Read (s, &i, 1);
@@ -139,6 +143,11 @@ class Pcx final : public Decoder
         return &buf;
     }// Decode
 };// Pcx
+
+//TODO Issue: CAMPNOSC (238x143) - check if its the def parser or the bmp export
+class Def final
+{
+};// Def
 
 NAMESPACE_H3R
 
