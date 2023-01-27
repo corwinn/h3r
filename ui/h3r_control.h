@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_point.h"
 #include "h3r_box.h"
 #include "h3r_gc.h"
-#include "h3r_mkstate.h"
+#include "h3r_eventargs.h"
 #include "h3r_event.h"
 
 H3R_NAMESPACE
@@ -55,31 +55,45 @@ H3R_NAMESPACE
 // Coordinate system:
 //  right: +x; left: -x; top: -y; bottom: +y; 0,0 as top left screen corner;
 //  w,h [pixels]
-
+//
+// Absolute coordinates, because there is no auto-layout being done, and because
+// this isn't a generic UI framework. The local CS, should it becomes a
+// necessity, is -Pos();
 class Control
 {
-    private: List<Control *> _z;   // z-order; render: from 0 to count-1
-    private: List<Control *> _n;   // non-visible ones
-    private: void Add(Control *);
-    private: static Control * Active;     // receives input
-    private: Control() {}
-    private: static Control * Root();     // refers all controls
-    public: Control(Control *);
-
     private: Box _bb; // bounding box
-    protected: virtual bool HitTest(Point & p); // [input function]
 
-    private: bool _visible;
-    public: static void NotifyDraw(GC &); // Entry point for Draw
-    protected: void DoDraw(GC &);         // TreeWalk(OnDraw)
+    private: List<Control *> _z;   // z-order; render: from 0 to count-1
+    private: List<Control *> _n;   //LATER non-visible ones; if any
+    private: void Add(Control *);
 
-    // do not check _visible here; there is visible list and a non-visible one -
+    public: Control(Control * = nullptr);
+    public: virtual ~Control() {}
+
+    public: const Point & Pos() { return _bb.Pos; }
+    public: const Point & Size() { return _bb.Size; }
+    public: void SetPos(int, int);
+
+    protected: inline Box & ClientRectangle() { return _bb; }
+    protected: void Resize(int, int);
+    protected: virtual bool HitTest(Point & p);
+
+    // Do not check _visible here; there is visible list and a non-visible one -
     // controlled by event-driven logic; no need to check visibility each time
-    // draw is issued
-    protected: virtual void Draw(GC &) {}
-    protected: virtual void MouseEvent(MKState &) {}
-    protected: virtual void KeyboardEvent(MKState &) {}
-    protected: virtual void OnEvent(Event &); // when the above 2 are not enough
+    // render is issued.
+    // No UI editor so these remain empty.
+    //TODO figure out a way for the subject(window) to notify its observers
+    //     w/o publishing these methods for everyone to call
+    public: virtual void OnRender(GC &) {}
+    public: virtual void OnMouseMove(const EventArgs &) {}
+    public: virtual void OnMouseUp(const EventArgs &) {}
+    public: virtual void OnMouseDown(const EventArgs &) {}
+    public: virtual void OnKeyDown(const EventArgs &) {}
+    public: virtual void OnKeyUp(const EventArgs &) {}
+
+    //TODO hint system; MyHint: Event ... show_hint (myhint);
+    //     Control.RMB += (Event & ShowHint) => Root().OnEvent (ShowHint);
+    public: virtual void OnEvent(Event &);
 };
 
 NAMESPACE_H3R

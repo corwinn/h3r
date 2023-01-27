@@ -36,8 +36,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_game.h"
 #include "h3r_resdecoder.h"
 #include "h3r_thread.h"
+#include "h3r_button.h"
+
+#include <new>
 
 H3R_NAMESPACE
+
+MainWindow::MainWindow(OSWindow * actual_window)
+    : Window{actual_window}
+{
+    Button * hellow_world_button;
+    H3R_CREATE_OBJECT(hellow_world_button, Button) {"", nullptr};
+    Add (hellow_world_button);
+}
 
 MainWindow::~MainWindow()
 {
@@ -90,8 +101,6 @@ void MainWindow::OnShow()
     glGenBuffers (1, &_vbo);
     glBindBuffer (GL_ARRAY_BUFFER, _vbo),
     glBufferData (GL_ARRAY_BUFFER, 16*sizeof(GLfloat), v, GL_STATIC_DRAW);
-
-    OS::Thread::Sleep (16);//TODO timing
 }
 
 void MainWindow::OnRender()
@@ -104,6 +113,11 @@ void MainWindow::OnRender()
     glTexCoordPointer (
         2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
     glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+
+    // Render the controls, if any
+    Window::OnRender ();
+
+    OS::Thread::Sleep (16);//TODO timing
 }
 
 void MainWindow::OnResize(int w, int h)

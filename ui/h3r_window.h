@@ -40,6 +40,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_iwindow.h"
 #include "h3r_oswindow.h"
+#include "h3r_control.h"
+#include "h3r_list.h"
+#include "h3r_gc.h"
 
 H3R_NAMESPACE
 
@@ -66,7 +69,13 @@ class Window : public IWindow
     private bool _closed {false};
     public bool Closed() const { return _closed; }
 
+    private List<Control *> _controls {};
+    public void Add(Control * c);
+    private static GC _gc; // One GC should be enough.
+
     IW public void ProcessMessages() override;
+    IW public inline virtual bool Idle() override { return _win->Idle (); }
+    IW protected inline virtual void Render() override { _win->Render (); }
 
     public Window(OSWindow * actual_window);
 

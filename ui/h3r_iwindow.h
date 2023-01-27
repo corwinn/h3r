@@ -59,6 +59,12 @@ struct IWindow
     // The thing to periodically do while waiting for an async task to complete.
     virtual void ProcessMessages() {H3R_NOT_IMPLEMENTED_EXC}
 
+    // Return true to indicate there are no messages to process.
+    virtual bool Idle() {H3R_NOT_IMPLEMENTED_EXC}
+
+    // A.k.a. Update(); a.k.a. Refresh(); etc.
+    virtual void Render() {H3R_NOT_IMPLEMENTED_EXC}
+
     virtual ~IWindow() {}
 
     // Events

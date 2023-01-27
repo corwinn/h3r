@@ -66,12 +66,17 @@ class Event
     // public: void Attach(Event *); // aka foo.Changed += bar
     // public: void Detach(Event *); // aka foo.Changed -= bar
     private Event * _next;
-    public Event(Event * next_eh = nullptr) : _next{next_eh} {}
-    public virtual void Do(class Control * c) { if (_next) _next->Do (c); }
+    public Event(Event * next_eh = nullptr)
+        : _next{next_eh} {}
+    public inline virtual void Do(
+        class Control & sender, struct EventArgs & args)
+    {
+        if (_next) _next->Do (sender, args);
+    }
     // Implement this when your object has "doubts" about handling something
-    public virtual bool Handled() { return true; }
+    public inline virtual bool Handled() { return true; }
     // Why is this "virtual" eludes me still. Perhaps on the next re-read.
-    public virtual void SetNext(Event * next_eh) { _next = next_eh; }
+    public inline virtual void SetNext(Event * next_eh) { _next = next_eh; }
 };
 
 // The book responsible for code like the above one:

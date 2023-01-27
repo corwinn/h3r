@@ -41,9 +41,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // Base for all 2D rectangular areas. I like the short name.
-class Box
+class Box final
 {
-    public: virtual bool Contains(Point &) { return false; }
+    public: inline bool Contains(Point & p)
+    {
+        return p.X >= Pos.X && p.X < (Pos.X + Size.X)
+            && p.Y >= Pos.Y && p.Y < (Pos.Y + Size.Y);
+    }
+    public: Point Pos;
+    public: Point Size;
 };
 
 NAMESPACE_H3R

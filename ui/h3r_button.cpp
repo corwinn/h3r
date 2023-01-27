@@ -32,18 +32,41 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_MKSTATE_H_
-#define _H3R_MKSTATE_H_
-
-#include "h3r.h"
+#include "h3r_button.h"
+// #include "h3r_log.h"
+// #include "h3r_string.h"
 
 H3R_NAMESPACE
 
-// Mouse and Keyboard state.
-class MKState
+Button::Button(const String &, Control * base)
+    : Control {base}
 {
-};
+    Resize (100, 20);
+    SetPos (500, 20);
+}
+
+void Button::OnMouseMove(const EventArgs & e)
+{
+    static Point p;
+    p.X = e.X;
+    p.Y = e.Y;
+    _mouse_over = HitTest (p);
+    /*Log::Info (String::Format (
+        "Button::OnMouseMove (%d, %d), hover: %d, _bb (%d, %d, %d, %d)" EOL,
+        p.X, p.Y, _mouse_over,
+        ClientRectangle ().Pos.X, ClientRectangle ().Pos.Y,
+        ClientRectangle ().Size.X, ClientRectangle ().Size.Y));*/
+}
+
+void Button::OnRender(GC & gc)
+{
+    glLoadIdentity ();
+    glDisable (GL_TEXTURE_2D); // implict contract with MainWindow.Show()
+                               //LATER to the render engine
+    if (! _mouse_over) glColor3d (1.0, 1.0, 1.0);
+    else glColor3d (0.0, 1.0, 0.0);
+    gc.RenderBox (ClientRectangle ());
+    glEnable (GL_TEXTURE_2D);
+}
 
 NAMESPACE_H3R
-
-#endif

@@ -39,7 +39,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-class Point {
+//TODO no, thats not it :)
+class Point
+{
+    public: int X;
+    public: int Y;
 };
 
 NAMESPACE_H3R

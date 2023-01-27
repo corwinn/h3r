@@ -36,13 +36,35 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_GC_H_
 
 #include "h3r.h"
+#include "h3r_box.h"
+#include "GL/gl.h"
 
 H3R_NAMESPACE
 
-// Graphics Context
+// Graphics Context.
+// A collection of rendering functions. Simplifies all other rendering code.
+// This is where the glyph and sprite cache will be.
+// You can always replace these with shaders, or whatever.
+//
+// The game rendering includes:
+//   * Sprite (animated; with an FPS, group parameter)
+//   * Text (1 sprite per glyph, rendered as the font engine says so)
+//   * Line (the cursor for the text edit box (which is text rendering again))
+//   * Video
+// There is no color state here. Everything is pre-encoded at the game data.
 class GC
 {
     public: static GC * Current;
+
+    public: inline void RenderBox(const Box & b)
+    {
+        glBegin (GL_LINE_LOOP);
+            glVertex2d (b.Pos.X         , b.Pos.Y         );
+            glVertex2d (b.Pos.X         , b.Pos.Y+b.Size.Y);
+            glVertex2d (b.Pos.X+b.Size.X, b.Pos.Y+b.Size.Y);
+            glVertex2d (b.Pos.X+b.Size.X, b.Pos.Y         );
+        glEnd ();
+    }
 };
 
 NAMESPACE_H3R

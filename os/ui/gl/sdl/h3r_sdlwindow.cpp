@@ -167,9 +167,12 @@ void SDLWindow::ProcessMessages()
         switch (_e.type) {
             case SDL_WINDOWEVENT: HandleWindowEvent (); break;
             case SDL_KEYUP: HandleKeyboardEvent (e); break;
+            case SDL_MOUSEMOTION: HandleMouseMotionEvent (e); break;
         }
     }
 }// ProcessMessages
+
+bool SDLWindow::Idle() { return ! SDL_PollEvent (nullptr); }
 
 void SDLWindow::HandleWindowEvent()
 {
@@ -197,6 +200,19 @@ void SDLWindow::HandleKeyboardEvent(EventArgs & e)
         } break;
         default: break;
     }
+}
+
+void SDLWindow::HandleMouseMotionEvent(EventArgs & e)
+{
+    THE_WAY_IS_SHUT
+
+    //TODO _e.motion.which; the mouse instance id
+    //     Please don't play with more than one mouse simultaneously :)
+
+    e.X = _e.motion.x;
+    e.Y = _e.motion.y;
+    OnMouseMove (e);
+    e.X = e.Y = 0;
 }
 
 NAMESPACE_H3R

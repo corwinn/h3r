@@ -32,38 +32,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_MAINWINDOW_H_
-#define _H3R_MAINWINDOW_H_
+#ifndef _H3R_BUTTON_H_
+#define _H3R_BUTTON_H_
 
 #include "h3r.h"
-#include "h3r_window.h"
-#include "GL/gl.h"
+#include "h3r_string.h"
+#include "h3r_point.h"
+#include "h3r_gc.h"
+#include "h3r_control.h"
+#include "h3r_eventargs.h"
 
 H3R_NAMESPACE
 
-// MainWindowGL
-class MainWindow : public Window
+// Its size is stored at the resource it is created from.
+class Button: public Control
 {
-#define public public:
-#define private private:
-#define protected protected:
+    public: Button(const String &, Control *);
+    public: virtual ~Button() override {}
 
-    // Open GL state
-    private GLuint _tex, _vbo;
-    private int _w {800}, _h{600};
+    public: virtual void OnRender(GC &) override;
+    public: virtual void OnMouseMove(const EventArgs &) override;
 
-    public MainWindow(OSWindow *);
-    public ~MainWindow() override;
-
-    protected virtual void OnKeyUp(const EventArgs &) override;
-    protected virtual void OnShow() override;
-    protected virtual void OnRender() override;
-    protected virtual void OnResize(int w, int h) override;
+    private: bool _mouse_over {};
 };
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 

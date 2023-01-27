@@ -62,10 +62,12 @@ class SDLWindow : public OSWindow
     protected virtual void Show() override;
     protected inline virtual void Hide() override { _visible = false; }
     protected inline virtual void Close() override { _q = true; }
-    private void Render();
+    protected void Render() override;
+    protected bool Idle() override;
     private void Resized();
     private void HandleWindowEvent();
     private void HandleKeyboardEvent(EventArgs &);
+    private void HandleMouseMotionEvent(EventArgs &);
     public void ProcessMessages() override;
     public SDLWindow(int, char **);
     public ~SDLWindow();

@@ -36,34 +36,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-Control * Control::Active {};
-
-Control * Control::Root()
+void Control::Add(Control * c)
 {
-    static Control r;
-    return &r;
+    // Adding one and the same thing twice speaks for an error somewhere;
+    // Allowing it will slow things down. Ignoring it would leave wrong code.
+    H3R_ARG_EXC_IF(_z.Contains (c), "duplicate pointer: fix your code")
+    H3R_ARG_EXC_IF(nullptr == c, "c can't be null")
+    _z.Add (c);
 }
 
-void Control::Add(Control * c) //TODO else
+Control::Control(Control * base) { if (base) base->Add (this); }
+
+void Control::Resize(int w, int h)
 {
-    if (! _z.Contains (c))
-        _z.Add (c);
+    _bb.Size.X = w;
+    _bb.Size.Y = h;
+}
+void Control::SetPos(int x, int y)
+{
+    _bb.Pos.X = x;
+    _bb.Pos.Y = y;
 }
 
-Control::Control(Control * base)
-{
-    if (! base) base = Control::Root ();
-    base->Add (this);
-}
-
-bool Control::HitTest(Point & p)
-{
-    return _bb.Contains (p);
-}
+bool Control::HitTest(Point & p) { return _bb.Contains (p); }
 
 void Control::OnEvent(Event & e)
 {
-    e.Do (this);
+    EventArgs foo;
+    e.Do (*this, foo);
 }
 
 NAMESPACE_H3R

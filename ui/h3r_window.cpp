@@ -69,6 +69,7 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 
 #include "h3r_window.h"
 #include "h3r_list.h"
+#include "h3r_thread.h"
 
 H3R_NAMESPACE
 
@@ -88,9 +89,23 @@ int ui_main(int, char **)
             H3R_DESTROY_OBJECT(w, Window)
             if (global_win_list.Empty ()) break;
         }
-        else { w->ProcessMessages (); i++; }
+        else {
+            if (w->Idle ()) OS::Thread::SleepForAWhile ();
+            w->ProcessMessages ();
+            i++;
+        }
     }
     return 0;
+}
+
+GC Window::_gc {};
+
+// Code repeats, but I don't intend to re-create ICollection<T>.
+void Window::Add(Control * c)
+{
+    H3R_ARG_EXC_IF(_controls.Contains (c), "duplicate pointer: fix your code")
+    H3R_ARG_EXC_IF(nullptr == c, "c can't be null")
+    _controls.Add (c);
 }
 
 Window::Window(OSWindow * actual_window)
@@ -102,6 +117,8 @@ Window::Window(OSWindow * actual_window)
 Window::~Window()
 {
     H3R_DESTROY_OBJECT(_win, OSWindow)
+    for (Control * c : _controls)
+        H3R_DESTROY_OBJECT(c, Control)
     global_win_list.Remove (this);
 }
 
@@ -123,19 +140,44 @@ void Window::Close()
     _closed = true;
 }
 // WndProc. Do not block it.
-void Window::ProcessMessages() { _win->ProcessMessages (); }
+void Window::ProcessMessages()
+{
+    _win->ProcessMessages ();
+    Render ();//TODO UITimer
+}
 
 // Observer
-void Window::OnKeyDown(const EventArgs &) {}
-void Window::OnKeyUp(const EventArgs &) {}
-void Window::OnMouseMove(const EventArgs &) {}
-void Window::OnMouseDown(const EventArgs &) {}
-void Window::OnMouseUp(const EventArgs &) {}
-void Window::OnShow() { _visible = true; }
-void Window::OnHide() { _visible = false; }
+void Window::OnKeyDown(const EventArgs & e)
+{
+    for (Control * c : _controls) c->OnKeyDown (e);
+}
+void Window::OnKeyUp(const EventArgs & e)
+{
+    for (Control * c : _controls) c->OnKeyUp (e);
+}
+void Window::OnMouseMove(const EventArgs & e)
+{
+    for (Control * c : _controls) c->OnMouseMove (e);
+}
+void Window::OnMouseDown(const EventArgs & e)
+{
+    for (Control * c : _controls) c->OnMouseDown (e);
+}
+void Window::OnMouseUp(const EventArgs &e)
+{
+    for (Control * c : _controls) c->OnMouseUp (e);
+}
+void Window::OnShow() { _visible = true; }  //TODO forward these?
+void Window::OnHide() { _visible = false; } //
 // Close by default; the base window has no idea how to ask.
 void Window::OnClose(bool &) { _closed = true; }
-void Window::OnRender() {}
+void Window::OnRender()
+{
+    if (_visible) //LATER this shall cause the continues-from-where-it-stopped
+                  //      effect; is that ok?
+        for (Control * c : _controls) c->OnRender (_gc);
+}
+// No anchoring, or auto-sizing, so no point forwarding it.
 void Window::OnResize(int, int) {}
 
 NAMESPACE_H3R
