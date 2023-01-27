@@ -36,9 +36,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-Stream & ZipInflateStream::Seek(off_t)
+// It can actually "seek" forwards.
+Stream & ZipInflateStream::Seek(off_t offset)
 {
-    H3R_NOT_SUPPORTED_EXC("Seek is not supported.")
+    if (0 == offset) return * this;
+    if (offset < 0) H3R_NOT_SUPPORTED_EXC("Backwards seek is not supported.")
+    byte b;
+    while (offset--) Read (&b, 1);
+    return * this;
 }
 
 off_t ZipInflateStream::Tell() const { return Stream::Tell () - _zs.avail_in; }
