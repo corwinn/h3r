@@ -106,8 +106,8 @@ class TaskThread final
     };
     private: struct try_finally_null
     {// instead of try {} finally {}
-        TaskThread * _v;
-        try_finally_null(TaskThread * v) : _v {v} {}
+        TaskThread * & _v;
+        try_finally_null(TaskThread * & v) : _v {v} {}
         ~try_finally_null() { _v = nullptr; }
     };
     private: inline void Do() // part of Run() below
