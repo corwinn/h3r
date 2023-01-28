@@ -314,6 +314,44 @@ H3R_TEST_(empty_zero_terminated_string)
     H3R_TEST_ARE_EQUAL('\0', b[0])
 H3R_TEST_END
 
+H3R_TEST_(replace)
+    String a {"a.txt"};
+    String b = a.Replace (".txt", ".doc");
+    H3R_TEST_ARE_EQUAL(b, "a.doc")
+    String c = b.Replace ("a.doc", "b.d.d");
+    H3R_TEST_ARE_EQUAL(c, "b.d.d")
+    String d = c.Replace (".d", ".e");
+    H3R_TEST_ARE_EQUAL(d, "b.e.e")
+    String ee = d.Replace (".e.e", "nn.abc");
+    H3R_TEST_ARE_EQUAL(ee, "bnn.abc")
+    String f = ee.Replace ("n", "mn");
+    H3R_TEST_ARE_EQUAL(f, "bmnmn.abc")
+    String g = f.Replace ("mn", "n");
+    H3R_TEST_ARE_EQUAL(g, "bnn.abc")
+    String h {};
+    String i = h.Replace ("", "");
+    H3R_TEST_ARE_EQUAL(i, "")
+    i = h.Replace ("a", "");
+    H3R_TEST_ARE_EQUAL(i, "")
+    i = h.Replace ("", "a");
+    H3R_TEST_ARE_EQUAL(i, "")
+
+    var arg_exc_what = [&]() { h.Replace (nullptr, "a"); };
+    H3R_TEST_EXCEPTION(ArgumentException, arg_exc_what)
+    var arg_exc_with = [&]() { h.Replace ("a", nullptr); };
+    H3R_TEST_EXCEPTION(ArgumentException, arg_exc_with)
+
+    String j {"aaaaa"};
+    String k = j.Replace ("a", "b");
+    H3R_TEST_ARE_EQUAL("bbbbb", k)
+    H3R_TEST_ARE_EQUAL("aaaaa", j)
+    String l {"a.txt"};
+    String m = l.Replace (".txt", "f.txt");
+    H3R_TEST_ARE_EQUAL("af.txt", m);
+    String n = m.Replace ("af.t", "q.");
+    H3R_TEST_ARE_EQUAL("q.xt", n);
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()

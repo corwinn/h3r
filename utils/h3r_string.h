@@ -140,6 +140,8 @@ class String final
         //     Ok it calls "String operator+(const char c)"; because ?!
         return ! OS::Strncmp (((this->operator const char * () + a) - b), s, b);
     }
+
+    public String Replace(const char *, const char *);
 };// String
 
 inline bool operator==(const char * c, const String & s)

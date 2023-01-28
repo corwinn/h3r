@@ -141,4 +141,30 @@ String String::ToLower() const //TODO uncode (iconv)
     return String {static_cast<Array<byte> &&>(result)};
 }
 
+String String::Replace(const char * what, const char * with)
+{
+    H3R_ARG_EXC_IF(nullptr == what, "\"what\" can't be null")
+    H3R_ARG_EXC_IF(nullptr == with, "\"with\" can't be null")
+    size_t wlen = OS::Strlen (what);
+    if (wlen <= 0) return *this;
+    size_t slen = OS::Strlen (what);
+    if (slen <= 0) return *this;
+    if (_b.Empty ()) return *this;
+    byte * b = _b;
+    char * c = reinterpret_cast<char *>(b);
+    Array<byte> result {};
+    // a.txt ".d" ".e"
+    char * p = c;
+    for (char * i = c; i <= c + Length () - slen;)
+        if (! OS::Strncmp (i, what, slen)) {
+            if (i > p) result.Append (p, i-p);
+            result.Append (with, OS::Strlen (with));
+            p = (i = i + slen);
+        }
+        else i++;
+    if (p < c + Length ()) result.Append (p, (c + Length ()) - p);
+    if (! result.Empty ()) return String {result, result.Length ()};
+    else return *this;
+}
+
 NAMESPACE_H3R
