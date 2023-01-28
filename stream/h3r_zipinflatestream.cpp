@@ -54,7 +54,7 @@ off_t ZipInflateStream::Size() const { return _usize; }
 
 Stream & ZipInflateStream::Read(void * buf, size_t bytes)
 {
-    /*OS::Log_stdout ("ZipInflateStream::Read %zu bytes" EOL, bytes);*/
+    /*OS::Log_stdout ("%pZipInflateStream::Read %zu bytes" EOL, this, bytes);*/
     H3R_ARG_EXC_IF(bytes <= 0, "bytes can't be <= 0")
     H3R_ARG_EXC_IF(nullptr == buf, "buf can't be null")
     // zlib: uInt
@@ -78,8 +78,8 @@ Stream & ZipInflateStream::Read(void * buf, size_t bytes)
         var sentinel2 = _zs.avail_out;
         _zr = inflate (&_zs, Z_SYNC_FLUSH);
         /*OS::Log_stdout (
-            "ZipInflateStream::Read after inflate in:%zu, out:%zu" EOL,
-            _zs.avail_in, _zs.avail_out);*/
+            "ZipInflateStream::Read after inflate in:%zu, out:%zu; zr:%d" EOL,
+            _zs.avail_in, _zs.avail_out, _zr);*/
         if (Z_STREAM_END == _zr) _zr = Z_OK;
         H3R_ENSURE(Z_OK == _zr, "ZipInflateStream::Read error")
         H3R_ENSURE(sentinel1 != _zs.avail_in || sentinel2 != _zs.avail_out,
@@ -96,10 +96,12 @@ Stream & ZipInflateStream::Write(const void *, size_t)
 // Reset to state
 Stream & ZipInflateStream::ResetTo(int size, int usize)
 {
+    _zs.avail_in = _zs.avail_out = 0;     // caught me by surprise
+    _zs.next_in = _zs.next_out = nullptr; // caught me by surprise
     inflateReset (&_zs); _zr = Z_OK;
     _size = {size}, _usize = {usize};
-    /*OS::Log_stdout ("ZipInflateStream::ResetTo size:%zu, usize:%zu" EOL,
-        _size, _usize);*/
+    /*OS::Log_stdout ("%pZipInflateStream::ResetTo size:%zu, usize:%zu" EOL,
+        this, _size, _usize);*/
     Stream::Seek (_pos_sentinel - Stream::Tell ());
     return *this;
 }
