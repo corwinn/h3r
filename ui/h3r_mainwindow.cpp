@@ -59,16 +59,7 @@ h - hover
 MainWindow::MainWindow(OSWindow * actual_window)
     : Window{actual_window}
 {
-    int y = 20, x = 480, spacing = 20;
-    List<String> mm {};
-    mm << "MMENUNG.def" << "MMENULG.def" << "MMENUHS.def" << "MMENUCR.def"
-        << "MMENUQT.def";
-    for (const var & b : mm) {
-        Button * btn;
-        H3R_CREATE_OBJECT(btn, Button) {b};
-        Add (btn->SetPos (x, y));
-        y += btn->Size ().Y + spacing;
-    }
+
 }
 
 MainWindow::~MainWindow()
@@ -84,6 +75,16 @@ void MainWindow::OnKeyUp(const EventArgs & e)
 
 void MainWindow::OnShow()
 {
+    //TODO one VBO for all controls on all windows; just let each control know
+    //     its offsets (vertex2,uv2) and lengths (glGenLists)
+    //TODO then figure out little z-offsets (relative) for each control
+    //     (f(z-order) so the entire UI shall be rendered in one gl call
+    //     GL_DEPTH_TEST; and compare to the above; choose the less-code one
+    //
+    //TODO texture atlas(es) for the static sprites
+    //TODO texture atlas(es) for the animated sprites (encode frame number at
+    //     some pixel; PixelDB - NoSQL :) )
+    //
     glDisable (GL_COLOR_MATERIAL);
     glEnable (GL_TEXTURE_2D);
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -122,12 +123,33 @@ void MainWindow::OnShow()
     glGenBuffers (1, &_vbo);
     glBindBuffer (GL_ARRAY_BUFFER, _vbo),
     glBufferData (GL_ARRAY_BUFFER, 16*sizeof(GLfloat), v, GL_STATIC_DRAW);
-}
+
+    // -- Controls ---------------------------------------------------------
+
+    int y = 10 /*measured*/, x = 525 /*measured*/, spacing = 0;
+    List<String> mm {};
+    mm  << "MMENUNG.def" << "MMENULG.def" << "MMENUHS.def" << "MMENUCR.def"
+        << "MMENUQT.def";
+    // centered at x=525
+    int ww = 0;
+    for (const var & b : mm) {
+        Button * btn;
+        H3R_CREATE_OBJECT(btn, Button) {b};
+        ww = btn->Size ().X > ww ? btn->Size ().X : ww;
+        Add (btn->SetPos (x, y));
+        y += btn->Size ().Y + spacing;
+    }
+    for (Control * btn : Controls ())
+        btn->SetPos (
+            btn->Pos ().X + ((ww - btn->Size ().X) / 2), btn->Pos ().Y);
+}// MainWindow::OnShow
 
 void MainWindow::OnRender()
 {
     glClear (GL_COLOR_BUFFER_BIT);
     glLoadIdentity ();
+    glBindTexture (GL_TEXTURE_2D, _tex);
+    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     glScalef (_w, _h, 1);
 
     glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));

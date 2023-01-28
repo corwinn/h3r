@@ -71,6 +71,7 @@ class Window : public IWindow
 
     private List<Control *> _controls {};
     public void Add(Control * c);
+    protected inline List<Control *> & Controls() { return _controls; }
     private static GC _gc; // One GC should be enough.
 
     IW public void ProcessMessages() override;

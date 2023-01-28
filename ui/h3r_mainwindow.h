@@ -50,6 +50,7 @@ class MainWindow : public Window
 
     // Open GL state
     private GLuint _tex, _vbo;
+
     private int _w {800}, _h{600};
 
     public MainWindow(OSWindow *);
