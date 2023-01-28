@@ -144,11 +144,6 @@ class Pcx final : public Decoder
     }// Decode
 };// Pcx
 
-//TODO Issue: CAMPNOSC (238x143) - check if its the def parser or the bmp export
-class Def final
-{
-};// Def
-
 NAMESPACE_H3R
 
 #endif
