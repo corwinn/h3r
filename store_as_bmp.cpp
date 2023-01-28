@@ -35,37 +35,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Q'N'D code.
 
 #include <ctype.h>
+// w:173; h:111 bpp:24; bppl = 3; actual_w = 176; bytes_per_pixel = 3
 // b - bitmap, w - width, h - height, bpp - bits per pixel, p - RGB palette
 static void store_as_bmp(char * fn,
     const H3R_NS::byte * b, int w, int h, int bpp, const H3R_NS::byte * p)
 {
-    int bppl {(4 - (w % 4)) & 3}; // bonus pixels per line
-                                  // "BMP" format requirement
-    int actual_w {w + bppl}, bytes_per_pixel {bpp >> 3};
-
+    int bytes_per_pixel {bpp >> 3};
+    int bpl = w *  bytes_per_pixel;
+    int bbpl {(4 - (bpl % 4)) & 3}; // bonus bytes per line
+                                    // "BMP" format requirement
     H3R_NS::byte h8[] = {
-        0x42, 0x4d,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0x28, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        1, 0,
-        0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0x13, 0x0b, 0, 0,
-        0x13, 0x0b, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
+        0x42, 0x4d,      //  0
+        0, 0, 0, 0,      //  2
+        0, 0, 0, 0,      //  6
+        0, 0, 0, 0,      // 10
+        0x28, 0, 0, 0,   // 14
+        0, 0, 0, 0,      // 18
+        0, 0, 0, 0,      // 22
+        1, 0,            // 26
+        0, 0,            // 28
+        0, 0, 0, 0,      // 30
+        0, 0, 0, 0,      // 34
+        0x13, 0x0b, 0, 0,// 38
+        0x13, 0x0b, 0, 0,// 42
+        0, 0, 0, 0,      // 46
+        0, 0, 0, 0       // 50
     };
     const int FSIZE {2}, BMPOFS {10}, W {18}, H {22}, BPP {28}, BMPSIZE {34},
         COLORS {46}, HSIZE {sizeof(h8)};
     H3R_NS::OS::Memmove (h8 + W, &w, 4); // *(int *)(h8 + W) = w;
     H3R_NS::OS::Memmove (h8 + H, &h, 4); // *(int *)(h8 + H) = h;
-    *(h8 + BPP) = bpp;
-    int bmp_size = actual_w * h * bytes_per_pixel;
+    H3R_NS::OS::Memmove (h8 + BPP, &bpp, 2);
+    int bmp_size = (w * bytes_per_pixel + bbpl) * h;
     H3R_NS::OS::Memmove (h8 + BMPSIZE, &bmp_size, 4);
     // *(int *)(h8 + BMPSIZE) = w * h * (bpp >> 8);
     H3R_NS::Array<H3R_NS::byte> pal;
@@ -102,9 +103,9 @@ static void store_as_bmp(char * fn,
     s.Write (h8, HSIZE);
     if (pal.Length () > 0) s.Write (pal.Data (), pal.Length ());
     // no :) s.Write (b, bmp_size); nothing is simple with these people
-    H3R_NS::Array<H3R_NS::byte> zeroes {(size_t)(bppl * bytes_per_pixel)};
+    H3R_NS::Array<H3R_NS::byte> zeroes {(size_t)(bbpl)};
     for (int i = h-1; i >= 0; i--) {
         s.Write (b + i * w * bytes_per_pixel, w * bytes_per_pixel);
-        if (bppl > 0) s.Write (zeroes.Data (), zeroes.Length ());
+        if (bbpl > 0) s.Write (zeroes.Data (), zeroes.Length ());
     }
 }
