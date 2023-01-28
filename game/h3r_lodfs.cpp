@@ -102,8 +102,8 @@ Stream & LodFS::GetStream(const LodFS::Entry & e)
     // its compressed:
     // H3bitmap.lod: entry: 3862: U (00000074/00000074) "TERRNAME.txt"
     bool compressed = e.SizeU >= e.SizeC && e.SizeC > 0;
-    /*OS::Log_stdout ("LodFS::GetStream: compressed: %s" EOL,
-        (compressed ? "true" : "false"));*/
+    /*OS::Log_stdout ("LodFS::GetStream: compressed: %s; %s" EOL,
+        (compressed ? "true" : "false"), e.Name);*/
 //np start: e.Ofs, size: (compressed ? e.SizeC : e.SizeU)
     _rrs->ResetTo (e.Ofs, (compressed ? e.SizeC : e.SizeU));
     return compressed
