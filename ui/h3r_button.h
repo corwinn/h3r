@@ -47,12 +47,12 @@ H3R_NAMESPACE
 // Its size is stored at the resource it is created from.
 class Button: public Control
 {
-    private: GLuint _tex, _vbo;
+    private: GLuint _tex[2] {}, _vbo;
 
     public: Button(const String &, Control * = nullptr);
     public: virtual ~Button() override
     {
-        glDeleteBuffers (1, &_vbo), glDeleteTextures (1, &_tex);
+        glDeleteBuffers (1, &_vbo), glDeleteTextures (2, _tex);
     }
 
     public: virtual void OnRender(GC &) override;

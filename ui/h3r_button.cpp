@@ -74,15 +74,31 @@ Button::Button(const String & res_name, Control * base)
     glDisable (GL_MULTISAMPLE);
     glShadeModel (GL_FLAT);
 
-    glGenTextures (1, &_tex);
+    glGenTextures (2, _tex);
 
-    glBindTexture (GL_TEXTURE_2D, _tex);
+    glBindTexture (GL_TEXTURE_2D, _tex[0]);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexImage2D (GL_TEXTURE_2D, 0, /*GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,*/
+        GL_RGBA,
+        btn_def_n->Width (), // TODO power of 2 UI atlas
+        btn_def_n->Height (),
+        0, GL_RGBA, GL_UNSIGNED_BYTE, byte_arr_ptr->operator byte * ());
+
+    glBindTexture (GL_TEXTURE_2D, _tex[1]);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    n = res_name.ToLower ().Replace (".def", "h.pcx");
+    btn_def_n = btn_def.Query (n);
+    byte_arr_ptr = btn_def_n->RGBA ();
     glTexImage2D (GL_TEXTURE_2D, 0, /*GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,*/
         GL_RGBA,
         btn_def_n->Width (), // TODO power of 2 UI atlas
@@ -118,7 +134,8 @@ void Button::OnRender(GC &)
     glAlphaFunc (GL_GEQUAL, 1.0f);
     // glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-    glBindTexture (GL_TEXTURE_2D, _tex);
+    if (! _mouse_over) glBindTexture (GL_TEXTURE_2D, _tex[0]);
+    else glBindTexture (GL_TEXTURE_2D, _tex[1]);
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
 
     glTranslatef (Pos ().X, Pos ().Y, 0);
