@@ -44,10 +44,11 @@ I="-DH3R_DEBUG -UH3R_MM -I. -Ios -Iutils -Iui -Ios/${PLATFORM}"
 F="${1:?}"
 FO="test_${F%%.*}"
 FO="${FO//\//_}"
-
+# the test requires more and more deps; this should be fixed ASAP;
 if [ "$F" != "$FO" ]; then
   make clean && make H3R_TEST="-DH3R_TEST -fexceptions -UH3R_MM "
-  clang++ $STD $W $O $RTC $C $I main.a h3r_game.o -x c++ "$F" -o "$FO"
+  clang++ $STD $W $O $RTC $C $I main.a h3r_game.o -x c++ "$F" -o "$FO" \
+  -Wl,--as-needed -lz -lSDL2 -lSDL2_mixer -lGL
 else
   echo no no no - the compiler will replace your input w/o a warning
   exit 1
