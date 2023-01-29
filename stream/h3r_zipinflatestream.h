@@ -58,8 +58,8 @@ class ZipInflateStream : public Stream
     public ZipInflateStream(Stream * s, int size, int usize)
         : Stream {s}, _size{size}, _usize{usize}, _pos_sentinel{s->Tell ()}
     {
-        _zr = inflateInit (&_zs);//TODO proper error handling
-        if (Z_OK != _zr) printf ("inflateInit failed\r\n");
+        _zr = inflateInit (&_zs);
+        H3R_ENSURE(Z_OK == _zr, "inflateInit() error")
     }
     public ~ZipInflateStream() override { inflateEnd (&_zs); }
     public inline operator bool() override { return Z_OK == _zr; }

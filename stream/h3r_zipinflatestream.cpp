@@ -98,8 +98,8 @@ Stream & ZipInflateStream::ResetTo(int size, int usize)
 {
     _zs.avail_in = _zs.avail_out = 0;     // caught me by surprise
     _zs.next_in = _zs.next_out = nullptr; // caught me by surprise
-    if (Z_OK != inflateReset (&_zs)) //TODO proper error handling
-        printf ("inflateReset error\r\n");
+    _zr = inflateReset (&_zs);
+    H3R_ENSURE(Z_OK == _zr, "inflateReset() error")
     _zr = Z_OK;
     _size = {size}, _usize = {usize};
     /*OS::Log_stdout ("%pZipInflateStream::ResetTo size:%zu, usize:%zu" EOL,
