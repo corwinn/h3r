@@ -64,6 +64,7 @@ H3R_NAMESPACE
 class Control
 {
     private: Box _bb; // bounding box
+    private: bool _enabled {true}; // whether the user can interact with it
 
     private: List<Control *> _z;   // z-order; render: from 0 to count-1
     private: List<Control *> _n;   //LATER non-visible ones; if any
@@ -75,6 +76,10 @@ class Control
     public: const Point & Pos() { return _bb.Pos; }
     public: const Point & Size() { return _bb.Size; }
     public: Control * SetPos(int, int);
+
+    // properties
+    public: void SetEnabled(bool value) { _enabled = value; }
+    public: bool Enabled() { return _enabled; } // Has a specific sprite for it
 
     protected: inline Box & ClientRectangle() { return _bb; }
     //LATER Allowed for now.
