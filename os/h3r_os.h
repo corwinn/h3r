@@ -88,10 +88,6 @@ int const EXIT_STREAM_ERROR     = 5;
 
 auto Exit = [](int status) __attribute__((__noreturn__)) { exit (status); };
 
-// This is a special case error out - for a CriticalSection used at Log_stderr
-#define LOG_ERR_CS(M,R) fprintf (stderr, "err %d: " M EOL, R); \
-        H3R_NS::OS::Exit (H3R_NS::OS::EXIT_ASSERTION_FAILED);
-
 void Log_stderr(const char *, ...);
 #define H3R_LOG_STDERR(M,...) \
     H3R_NS::OS::Log_stderr ("Fixme: %s:%d: ", __FILE__, __LINE__), \

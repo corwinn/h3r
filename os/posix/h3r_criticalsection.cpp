@@ -36,19 +36,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r_criticalsection.h"
 
-#include "h3r_os.h"
-#include <pthread.h>
 #include <errno.h>
+#include "h3r_os.h"
+
+#define H3R_ENSURE_CS(C,M) \
+    { if (! (C)) { \
+        printf ("Fixme: %s:%d: %s" EOL, __FILE__, __LINE__, M); \
+        H3R_NS::OS::Exit (H3R_NS::OS::EXIT_ASSERTION_FAILED); \
+    } }
 
 H3R_NAMESPACE
 namespace OS {
 
-CriticalSection CriticalSection::Log_stderr {true};
-CriticalSection CriticalSection::Log_stdout;
-CriticalSection CriticalSection::MM;
-
-CriticalSection::CriticalSection(bool use_printf)
-    : _printf {use_printf}
+CriticalSection::CriticalSection()
 {
     pthread_mutexattr_t attr;
 #ifdef H3R_DEBUG
@@ -56,51 +56,30 @@ CriticalSection::CriticalSection(bool use_printf)
 #else
     auto r = pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_NORMAL);
 #endif
-    H3R_ENSURE(0 == r, "pthread_mutexattr_settype")
+    H3R_ENSURE_CS(0 == r, "pthread_mutexattr_settype")
     r = pthread_mutexattr_setpshared (&attr, PTHREAD_PROCESS_PRIVATE);
-    H3R_ENSURE(0 == r, "pthread_mutexattr_setpshared")
+    H3R_ENSURE_CS(0 == r, "pthread_mutexattr_setpshared")
     r = pthread_mutex_init (&_m, &attr);
-    H3R_ENSURE(0 == r, "pthread_mutex_init")
+    H3R_ENSURE_CS(0 == r, "pthread_mutex_init")
 }
 
 CriticalSection & CriticalSection::Acquire()
 {
     auto r = pthread_mutex_lock (&_m);
-    if (! _printf) {
-        H3R_ENSURE(0 == r, "pthread_mutex_lock")
-    }
-    else switch (r)
-    {
-        case 0: break;
-        default: LOG_ERR_CS("pthread_mutex_lock", r)
-    }
+    H3R_ENSURE_CS(0 == r, "pthread_mutex_lock")
     return *this;
 }
 
 void CriticalSection::Release()
 {
     auto r = pthread_mutex_unlock (&_m);
-    if (! _printf) {
-        H3R_ENSURE(0 == r, "pthread_mutex_unlock")
-    }
-    else switch (r)
-    {
-        case 0: break;
-        default: LOG_ERR_CS("pthread_mutex_unlock", r)
-    }
+    H3R_ENSURE_CS(0 == r, "pthread_mutex_unlock")
 }
 
 CriticalSection::~CriticalSection()
 {
     auto r = pthread_mutex_destroy (&_m);
-    if (! _printf) {
-        H3R_ENSURE(0 == r, "pthread_mutex_destroy")
-    }
-    else switch (r)
-    {
-        case 0: break;
-        default: LOG_ERR_CS("pthread_mutex_destroy", r)
-    }
+    H3R_ENSURE_CS(0 == r, "pthread_mutex_destroy")
 }
 
 } // namespace OS

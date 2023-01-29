@@ -49,7 +49,7 @@ namespace OS {
 // how do you handle sync object API error codes in a thread-safe manner? TIA
 
 // Represents a critical section as in "Critical Section Objects".
-// This class is written in the hopes that "fprintf" is thread-safe - e.g. I
+// This class is written in the hopes that "printf" is thread-safe - e.g. I
 // can not predict what exactly will happen when error reporting has to be
 // done - expect anything ("undefined behaviour").
 class CriticalSection final
@@ -60,29 +60,9 @@ class CriticalSection final
     // All these API functions return error codes. Bonus: C++ destructors are
     // denying their right to return said codes.
 
-    // The following references (named after functions/objects they're used at)
-    // are initialized by the main thread prior creating any other threads.
-    // Log_stderr requires additional special no re-entry care due to the fact
-    // that pthread_mutex_destroy may return an error code the programmer should
-    // be notified about, by Log_stderr().
-    public: static CriticalSection Log_stderr;
-    public: static CriticalSection Log_stdout;
-    public: static CriticalSection MM;
-
-    private: bool _printf {};
     private: pthread_mutex_t _m {};
 
-    // use_printf should be set to true for the Log_stderr critical section.
-    // Doing not so could result in stack overflow.
-    //  POSIX,
-    // this is the only time I had to design a constructor like this one.
-    // ~thank_you.
-    // This constructor shouldn't happen at Log_stderr() or you risk stack
-    // overflow on error state. Cool new OOP design: an implicit contract
-    // between a function and a class - func-class-capsulation - great.
-    // In case you've come here to learn: please do not learn this - come back
-    // after "java" or "c#" or "delphi" experience.
-    public: CriticalSection(bool use_printf = false);
+    public: CriticalSection();
 
     // EDEADLK - you already locked this; no it won't detect the "big fun"
     // deadlocks (when thread A waits for thread B and thread B waits for
