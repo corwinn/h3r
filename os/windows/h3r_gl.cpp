@@ -141,14 +141,14 @@ bool H3rGL_Init()
     // nice shortcut being responded to with ERROR_INVALID_PIXEL_FORMAT
     // auto hdc = GetDC (nullptr);
 
-    // create window, because, well just create it because wglGetProcAddress()
+    // create a window, because, well just create it because wglGetProcAddress()
     WNDCLASS wc {};
     wc.hInstance = GetModuleHandle (nullptr); // this shouldn't fail does it?
     wc.lpfnWndProc = DefWindowProc;
-    wc.lpszClassName = "NifGL";
+    wc.lpszClassName = "H3rGL";
     if (! RegisterClass (&wc))
         return printf ("RegisterClass failed\r\n"), false;
-    auto w = CreateWindow ("NifGL", "NifGL", 0,
+    auto w = CreateWindow ("H3rGL", "H3rGL", 0,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         nullptr, nullptr, GetModuleHandle (nullptr), nullptr);
     if (! w ) return printf ("CreateWindow failed\r\n"), false;
