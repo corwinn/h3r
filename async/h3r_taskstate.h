@@ -94,7 +94,7 @@ class TaskState
     public inline virtual void SetChanged(bool value) { _changed = value; }
     public inline virtual bool Changed()
     {
-        var result = _changed;
+        auto result = _changed;
         if (_changed) _changed = false;
         return result;
     }

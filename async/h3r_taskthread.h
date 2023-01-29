@@ -120,12 +120,11 @@ class TaskThread final
     }
     private: inline Proc * Run() // the thread
     {
-        int const FOR_AWHILE {1}; // [milliseconds]
         while (! _tproc.stop) {
-            //OS::Log_stdout ("p:%p, _tproc.dirty:%d" EOL,
+            // OS::Log_stdout ("p:%p, _tproc.dirty:%d" EOL,
             //    &_tproc, (_tproc._dirty ? 1 : 0));
             if (_tproc._dirty) Do (); // laundry
-            else OS::Thread::Sleep (FOR_AWHILE);
+            else OS::Thread::SleepForAWhile ();
         }
         return &_tproc;
     }

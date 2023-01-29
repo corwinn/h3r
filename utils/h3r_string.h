@@ -110,7 +110,7 @@ class String final
     }
     public bool inline operator==(const char * b) const
     {
-        var b_len = OS::Strlen (b);
+        auto b_len = OS::Strlen (b);
         if (b_len != Length ()) return false;
         return ! OS::Strncmp (b, *this, b_len);
     }
@@ -132,8 +132,8 @@ class String final
 
     public inline bool EndsWith(const char * s)
     {
-        var a = Length ();
-        var b = OS::Strlen (s);
+        auto a = Length ();
+        auto b = OS::Strlen (s);
         if (b > a) return false;
         //DONE why is this compiling ?! (the test segfaults)
         //     return ! OS::Strncmp (((*this + a) - b), s, b);

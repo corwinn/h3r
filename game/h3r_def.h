@@ -66,7 +66,7 @@ struct SubSpriteHeader final
 // Some sprites in the collection are sprite collection themselves. I'm
 // referring to them as sprite groups; but its just animated sprites I suppose.
 // Usage:
-//   var sprite_handler = def.Query ("foo.pcx");
+//   auto sprite_handler = def.Query ("foo.pcx");
 //   if (sprite_handler) bitmap = sprite_handler->RGBA ();
 //   if (sprite_handler) the_same_bitmap = sprite_handler->RGBA ();
 class Def final : public Decoder
@@ -85,12 +85,12 @@ class Def final : public Decoder
         Init ();
     }
     public: ~Def() override {}
-    public: inline Array<byte> * RGBA() override
+    public: inline Array<byte> * ToRGBA() override
     {
         if (! _rgba.Empty ()) return &_rgba;
         return Decode (_rgba, 4);
     }
-    public: inline Array<byte> * RGB() override
+    public: inline Array<byte> * ToRGB() override
     {
         if (! _rgb.Empty ()) return &_rgb;
         return Decode (_rgb, 3);
@@ -150,7 +150,7 @@ class Def final : public Decoder
     {
         _request = nullptr;
         for (size_t i = 0; i < _sprites.Length (); i++) {
-            var req = _sprites[i].ByName (sprite_name);
+            auto req = _sprites[i].ByName (sprite_name);
             if (req) {
                 SetRequest (req);
                 return this;

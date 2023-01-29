@@ -102,7 +102,7 @@ void Game::SilentLog(bool v)
     // Danger! Returns a Copy?!
     //LATER RTFM
     //var task_info = Game::RM->GetResource (name);
-    const var & task_info = Game::RM->GetResource (name);
+    const auto & task_info = Game::RM->GetResource (name);
     while (! Game::RM->TaskComplete ())
         Game::ProcessThings ();
     return task_info.Resource;
@@ -114,7 +114,7 @@ int Game::Run(int argc, char ** argv)
 {
     // create the main window
     // Again, no plug-in interface yet, so
-    var main_window =
+    auto main_window =
         IWindow::Create<H3R_NS::MainWindow, H3R_NS::SDLWindow>(argc, argv);
 
     Game::MainWindow = main_window;

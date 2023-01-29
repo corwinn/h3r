@@ -73,11 +73,11 @@ LodFS::LodFS(const String & fname)
     _s->Seek (H3R_LOD_UNK2); //TODO what are those? H3bitmap.lod
 
     _entries.Resize (cnt);
-    var data = static_cast<LodFS::Entry *>(_entries);
+    auto data = static_cast<LodFS::Entry *>(_entries);
     Stream::Read (*_s, data, cnt);
     //TODO validate entries
     /*int i {0};
-    for (const var & e : _entries)
+    for (const auto & e : _entries)
         OS::Log_stdout (
             "%s: entry: %004d: %c (%00000008d/%00000008d) \"%s\"" EOL,
             fname.AsZStr (), i++, (e.SizeU > e.SizeC && e.SizeC > 0 ? 'C' : 'U'),
@@ -118,7 +118,7 @@ Stream * LodFS::Get(const String & res)
     //LATER binary search; sort the entry list (I think they're sorted already);
     //      What?! - you expected a hash? - there will be one sooner or later,
     //      no worries.
-    for (const var & e : _entries)
+    for (const auto & e : _entries)
         if (res == reinterpret_cast<const char *>(e.Name))
             return &(GetStream (e));
     return VFS::Get (res);
@@ -127,16 +127,16 @@ Stream * LodFS::Get(const String & res)
 void LodFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
     static VFS::Entry vfs_e {};
-    var prev_info = VFS::VFSInfo {0, ""};
-    var all = _entries.Length ();
-    var i = all-all;
-    for (const var & e : _entries) {
+    auto prev_info = VFS::VFSInfo {0, ""};
+    auto all = _entries.Length ();
+    auto i = all-all;
+    for (const auto & e : _entries) {
         vfs_e.Name = reinterpret_cast<const char *>(e.Name);
         vfs_e.Size = e.SizeU;
         if (! on_entry (GetStream (e), vfs_e)) break;
 
         //TODO there is definitely a field for improvements, still
-        var new_info = VFS::VFSInfo {
+        auto new_info = VFS::VFSInfo {
             static_cast<int>(0.5+(1.0*i++/all*100)), (String &&)vfs_e.Name};
         if (TaskState::Changed (prev_info, new_info)) {
             new_info.SetChanged (true);

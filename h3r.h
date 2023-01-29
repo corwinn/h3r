@@ -38,7 +38,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_H_
 
 // there is no auto - there is var,
-#define var auto
+// #define var auto
+// :D
+// Something managed to conflict with my poor "var":
+//   "mingw64/include/psdk_inc/intrin-impl.h" has a union named "var"
+// there is no var - there is intrin-impl.h, obviously :)
 
 #define H3R_NS h3r
 

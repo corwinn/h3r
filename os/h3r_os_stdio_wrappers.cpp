@@ -111,9 +111,9 @@ off_t Ftell(FILE * stream)
 {
     H3R_ENSURE (nullptr != stream, "can't tell() at null stream")
 
-    var t = ftello (stream);
+    auto t = ftello (stream);
     if (-1 == t) {
-        const var e = H3R_OS_GLOBAL_ERR_CODE;
+        const auto e = H3R_OS_GLOBAL_ERR_CODE;
         if (ESPIPE == e) return ClearErr (stream), H3R_FILE_OP_NOT_SUPPORTED;
         Log_stderr ("  Ftell: unhandled error code: %d" EOL, e);
         H3R_ENSURE(false, "ftell() can't error")
@@ -132,9 +132,9 @@ int Fseek(FILE * stream, off_t offset, int whence)
     if (SEEK_CUR == whence && 0 == offset) return 0;
 
     for (int i = 0; i < REASONABLE_RETRIES; i++) {
-        const var r = fseeko (stream, offset, whence);
+        const auto r = fseeko (stream, offset, whence);
         if (0 == r) return r;
-        const var e = H3R_OS_GLOBAL_ERR_CODE;
+        const auto e = H3R_OS_GLOBAL_ERR_CODE;
         if (ESPIPE == e) return H3R_FILE_OP_NOT_SUPPORTED;
         ClearErr (stream);
         if (! RetrySeek (e)) break;
@@ -149,14 +149,14 @@ template <typename T> void RW(size_t (*p)(T, size_t, size_t, FILE *),
     H3R_ENSURE(nullptr != ptr, "r/w via nullptr is forbidden")
     H3R_ENSURE(nullptr != stream, "r/w with null stream is forbidden")
 
-    var sentinel = Ftell (stream);
+    auto sentinel = Ftell (stream);
     for (int i = 0; i < REASONABLE_RETRIES; i++) {
         if (   sentinel != H3R_FILE_OP_NOT_SUPPORTED
             && sentinel != Ftell (stream)) Fseek (stream, sentinel, SEEK_SET);
         //TODO does retry has meaning when H3R_FILE_OP_NOT_SUPPORTED?
-        const var r = p (ptr, size, nmemb, stream);
+        const auto r = p (ptr, size, nmemb, stream);
         if (r == nmemb) return;
-        const var e = H3R_OS_GLOBAL_ERR_CODE;
+        const auto e = H3R_OS_GLOBAL_ERR_CODE;
         H3R_ENSURE(0 != e, "POSIX r/w expected")
         ClearErr (stream);
         if (EAGAIN == e) Log_stderr ("//TODO: file r/w: handle EAGAIN" EOL);
@@ -186,7 +186,7 @@ FILE * Fopen(const char * path, const char * mode)
     for (int i = 0; i < REASONABLE_RETRIES; i++) {
         FILE * r = fopen (path, mode);
         if (r) return r;
-        const var e = H3R_OS_GLOBAL_ERR_CODE;
+        const auto e = H3R_OS_GLOBAL_ERR_CODE;
         H3R_ENSURE(0 != e, "POSIX fopen expected")
         if (EAGAIN == e) Log_stderr ("//TODO: fopen: handle EAGAIN" EOL);
         else if (EINTR == e) Log_stderr ("//TODO: fopen: handle EINTR" EOL);
@@ -216,9 +216,9 @@ void Fclose(FILE * stream)
     H3R_ENSURE(stdin != stream, "closing stdin is a no no")
 
     for (int i = 0; i < REASONABLE_RETRIES; i++) {
-        const var r = fclose (stream);
+        const auto r = fclose (stream);
         if (0 == r) return;
-        const var e = H3R_OS_GLOBAL_ERR_CODE;
+        const auto e = H3R_OS_GLOBAL_ERR_CODE;
         H3R_ENSURE(0 != e, "POSIX fclose expected")
         if (EAGAIN == e) Log_stderr ("//TODO: fclose: handle EAGAIN" EOL);
         else if (EINTR == e) Log_stderr ("//TODO: fclose: handle EINTR" EOL);
@@ -232,9 +232,9 @@ void Fclose(FILE * stream)
 bool FileExists(const char * path)
 {
     struct stat t {};
-    const var error = stat (path, &t);
+    const auto error = stat (path, &t);
     if (0 == error) return true;
-    const var e = H3R_OS_GLOBAL_ERR_CODE;
+    const auto e = H3R_OS_GLOBAL_ERR_CODE;
     if (ENOENT == e) return false;
     switch (e) {
         case EACCES : Log_stderr ("stat - access denied: ") ; break;
@@ -251,9 +251,9 @@ off_t FileSize(const char * path)
 {
     struct stat t {};
     for (int i = 0; i < REASONABLE_RETRIES; i++) {
-        const var error = stat (path, &t);
+        const auto error = stat (path, &t);
         if (0 == error) return t.st_size;
-        const var e = H3R_OS_GLOBAL_ERR_CODE;
+        const auto e = H3R_OS_GLOBAL_ERR_CODE;
         switch (e) {
             case ENOENT: Log_stderr ("stat - file not found: " EOL); break;
             case EACCES : Log_stderr ("stat - access denied: ") ; break;

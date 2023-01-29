@@ -129,14 +129,18 @@ void SDLWindow::Show()
          return;
     }
 
-    OnShow ();
+    OnShow (); //TODO OnShow called Render() bellow and OnRender () tried using
+               //     uninitialized state;
+    Resized ();//     there are a few things to think about here
+    _initialized = true; //TODO shall this block Resized() too?
 
-    Resized ();
     Render ();//TODO SDL_WINDOWEVENT_EXPOSED gets lost sometimes?
+
 }// Show
 
 void SDLWindow::Render()
 {
+    if (! _initialized) return;
     THE_WAY_IS_SHUT
 
     if (! _gc || ! _visible) return;

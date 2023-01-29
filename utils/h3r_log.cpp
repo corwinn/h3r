@@ -66,9 +66,9 @@ void Log::Flush()
         _fall_back.Log (msg);
     }
     while (! _gq->Empty ()) {
-        var msg = _gq->Dequeue ();
+        auto msg = _gq->Dequeue ();
         if (! _thread_proc.silent)
-            for (var l : _listeners) l->Log (msg);
+            for (auto l : _listeners) l->Log (msg);
     }
 }
 
@@ -83,7 +83,7 @@ Log::Proc * Log::Run()
 void Log::Subscribe(ILog * log_listener)
 {
     H3R_ENSURE(nullptr != log_listener, "log_listener can't be null")
-    for (var l : _listeners) {
+    for (auto l : _listeners) {
         H3R_ENSURE(l != log_listener, "log_listener duplicate")
     }
 

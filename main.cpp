@@ -45,20 +45,44 @@ H3R_ERR_DEFINE_HANDLER(Log,H3R_ERR_HANDLER_UNHANDLED)
 
 #include "h3r_game.h"
 
+#if _WIN32
+#include "windows.h"
+#include "h3r_gl.h"
+#include "h3r_array.h"
+static char ** a2b(PSTR lpCmdLine, int & argc)
+{
+    //TODO implement me
+    static H3R_NS::Array<char> result {H3R_NS::OS::Strlen (lpCmdLine) + 4};
+    H3R_NS::OS::Memmove ((char *) result, lpCmdLine, result.Length () - 4);
+    argc = 1;
+    static char * cptr {};
+    return &cptr;
+    return &(cptr = result);
+}
+
+INT WINAPI WinMain(HINSTANCE, HINSTANCE, PSTR lpCmdLine, INT)
+{
+    H3rGL_Init ();
+    int argc {1};
+    char ** argv {};
+    //char ** argv = a2b (lpCmdLine, argc);
+#else
 int main(int argc, char ** argv)
 {
+#endif
     //TODO Path::GetDirName
-    H3R_ENSURE(argc > 0, "Can't handle your OS - argc can't be < 1")
+    /*H3R_ENSURE(argc > 0, "Can't handle your OS - argc can't be < 1")
     H3R_NS::OS::Log_stdout ("Process: %s" EOL, argv[0]);
-    char * p = argv[0]; // the future base dir or work dir
+    // char * p = argv[0]; // the future base dir or work dir
+    char * p  = "./";
     int len = H3R_NS::OS::Strlen (argv[0]);
     for (int i = len-1; i >= 0; i--)
         if ('/' == p[i] || '\\' == p[i] ) {
             p[i] = '\0';
             break;
         }
-    H3R_NS::OS::Log_stdout ("WorkDir: %s" EOL, p);
+    H3R_NS::OS::Log_stdout ("WorkDir: %s" EOL, p);*/
 
-    H3R_NS::Game game {p};
+    H3R_NS::Game game {"."};
     return game.Run (argc, argv);
 }

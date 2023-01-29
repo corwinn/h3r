@@ -220,7 +220,7 @@ int main(int argc, char ** argv)
     H3R_NS::Array<H3R_NS::byte> palette {3*256}; // RGB
     Read (s, (H3R_NS::byte *)palette, palette.Length ());
 
-    var last_ofs = s.Tell ();
+    auto last_ofs = s.Tell ();
     int scnt = 0;
     for (int i = 0, ecnt = 0; i < bcnt; i++) { // entry count
         // i is group index?
@@ -243,7 +243,7 @@ int main(int argc, char ** argv)
             Read (s, &offset);
             H3R_NS::OS::Log_stdout (
                 "  offset[%d]: %8X" EOL, j, offset);
-            var sentinel = s.Tell ();
+            auto sentinel = s.Tell ();
             // so its not an entry - its a sprite
             bmp._block = i, bmp._sprite = j;
             read_sprite (s.Seek (offset - s.Tell ())); scnt++;
@@ -267,7 +267,7 @@ int main(int argc, char ** argv)
         bmp._bonus_sprite = true;
         bmp._block = bmp._sprite = -1;
         // H3R_NS::OS::Log_stdout ("unparsed" EOL);
-        var sz = s.Size (); // just in case
+        auto sz = s.Size (); // just in case
         s.Seek (last_ofs - s.Tell ());
         while (s.Tell () < sz) {
             H3R_NS::OS::Log_stdout ("Bonus sprite #%d" EOL, ++k);
@@ -337,7 +337,7 @@ void read_sprite(H3R_NS::Stream & s)
     if (1 == type) {
         // an offset table based on its own beginning:
         H3R_NS::Array<unsigned int> off_tbl {(size_t)(h)};
-        var off_table_base = s.Tell ();
+        auto off_table_base = s.Tell ();
         Read (s, (unsigned int *)off_tbl, off_tbl.Length ());
         for (int i = 0; i < h; i++) {
             // H3R_NS::OS::Log_stdout ("Line #%2d" EOL, i);
@@ -361,7 +361,7 @@ void read_sprite(H3R_NS::Stream & s)
         // an offset table based on its own beginning:
         int ofs_num = w >> 5;
         H3R_NS::Array<unsigned short> off_tbl {(size_t)(ofs_num * h)};
-        var off_table_base = s.Tell ();
+        auto off_table_base = s.Tell ();
         Read (s, (unsigned short *)off_tbl, off_tbl.Length ());
         H3R_ENSURE(s.Tell () == (off_table_base + off_tbl[0]),
             "sprite type 3: the 1st offset doesn't match table length")

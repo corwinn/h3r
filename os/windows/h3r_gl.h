@@ -32,55 +32,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#include "h3r_refreadstream.h"
+// q: Why I'm not using your favorite wrapper?
+// a: Try cross-compiling it with a "Qt5OpenGL" application. Then come back and
+//    ask me again. I can not know if other UI frameworks, I could possibly
+//    decide to bridge to, wouldn't conflict with such a wrapper; e.g. I'm
+//    playing short and simple.
+//    Also, its not rocket science. This project is using like < 1% of the
+//    Open GL capabilities, so it is initializing exactly what it needs.
 
-H3R_NAMESPACE
+#ifndef _H3R_GL_H_
+#define _H3R_GL_H_
 
-RefReadStream::RefReadStream(Stream * s, off_t start, off_t size)
-    : Stream {s}, _start{start}, _size{size}
-{
-    Reset ();
-}
+// No static init. because I don't know if you won't decide to statically init.
+// something depending on these pointers. This is temporary, so no need to order
+// static init. at a specific class.
+bool H3rGL_Init();
 
-Stream & RefReadStream::Seek(off_t ofs)
-{
-    H3R_ENSURE(_pos + ofs <= _size, "Bug: RefReadStream: seek overflow")
-    _pos += ofs;
-    return *this;
-}
-
-Stream & RefReadStream::Read(void * buf, size_t bytes)
-{
-    auto p = _start + _pos;
-    if (Stream::Tell () != p) Stream::Seek (p - Stream::Tell ());
-    H3R_ENSURE(Stream::Tell () == p, "Bug: RefReadStream: can't sync to base")
-    H3R_ENSURE(_pos + static_cast<off_t>(bytes) <= _size,
-        "Bug: RefReadStream: read overflow")
-    return _pos += bytes, Stream::Read (buf, bytes), *this;
-}
-
-Stream & RefReadStream::Write(const void *, size_t)
-{
-    H3R_NOT_SUPPORTED_EXC("Write is not supported.")
-}
-
-Stream & RefReadStream::ResetTo(off_t start, off_t size)
-{
-    _start = {start};
-    _size = {size};
-    Reset ();
-    return *this;
-}
-
-Stream & RefReadStream::Reset()
-{
-    _ok = false;
-    _pos = 0;
-    Stream::Seek (_start - Stream::Tell ());
-    H3R_ENSURE(
-        Stream::Tell () == _start, "Bug: RefReadStream: can't sync to base")
-    _ok = true;//TODO should this be used for all ops?
-    return *this;
-}
-
-NAMESPACE_H3R
+#endif

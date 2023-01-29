@@ -77,7 +77,7 @@ class Log final
         public: inline String Dequeue()
         {
             H3R_ENSURE(! Empty (), "Nothing to dequeue.")
-            var d = _g;
+            auto d = _g;
             return _g = (_g + 1) % _buf.Length (), _c--, (String &&)_buf[d];
         }
         public: inline bool Empty() { return 0 == _c; }

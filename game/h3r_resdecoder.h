@@ -51,8 +51,9 @@ class Decoder
 {
     public: Decoder() {}
     public: virtual ~Decoder() {}
-    public: virtual Array<byte> * RGBA() { return nullptr; }
-    public: virtual Array<byte> * RGB() { return nullptr; }
+    public: virtual Array<byte> * ToRGBA() { return nullptr; }
+    // "wingdi.h" didn't like my "RGB" symbol.
+    public: virtual Array<byte> * ToRGB() { return nullptr; }
     public: static int const MAX_SIZE {16384};
 
     public: virtual int Width () { return 0; }
@@ -73,12 +74,12 @@ class Pcx final : public Decoder
             Log::Info ("PCX: no stream " EOL);
     }
     public: ~Pcx() override {}
-    public: inline Array<byte> * RGBA() override
+    public: inline Array<byte> * ToRGBA() override
     {
         if (! _rgba.Empty ()) return &_rgba;
         return Decode (_rgba, 4);
     }
-    public: inline Array<byte> * RGB() override
+    public: inline Array<byte> * ToRGB() override
     {
         if (! _rgb.Empty ()) return &_rgb;
         return Decode (_rgb, 3);
@@ -91,7 +92,7 @@ class Pcx final : public Decoder
         if (nullptr == _s) return &buf;
         if (! *_s) return &buf;
         int size, fmt;
-        var & s = _s->Reset ();
+        auto & s = _s->Reset ();
         Stream::Read (s, &size).Read (s, &_w).Read (s, &_h);
         if (_w <= 0 || _w >= Decoder::MAX_SIZE) {
             Log::Err (String::Format ("PCX: Wrong width: %d" EOL, _w));
@@ -120,7 +121,7 @@ class Pcx final : public Decoder
             Array<byte> pal {3*256};
             byte * p = pal;
             // ZipInflateStream can seek forwards only.
-            var bitmap_sentinel = s.Tell ();
+            auto bitmap_sentinel = s.Tell ();
             s.Seek (size);
             Stream::Read (s, p, pal.Length ());
             s.Reset ();

@@ -35,6 +35,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _H3R_OS_H_
 #define _H3R_OS_H_
 
+#if _WIN32
+#include "windows.h"
+#endif
+
 #include <stdio.h>
 #include <stdint.h>
 #include <limits.h>
@@ -56,14 +60,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //TODO EOL for mac
 #ifndef EOL
-# if _WIN32_
+# if _WIN32
 #  define EOL "\r\n"
 # else
 #  define EOL "\n"
 # endif
 #endif
 
-#if _WIN32_
+#if _WIN32
 # define H3R_PATH_SEPARATOR '\\'
 #else
 # define H3R_PATH_SEPARATOR '/'
@@ -102,10 +106,11 @@ void Log_stderr(const char *, ...);
 inline void Log_stderr(const char * fmt, ...)
 {
 #ifdef H3R_DEBUG
+    static CriticalSection thread_gate {};
     int r {};
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {
-            CriticalSection::Log_stderr};
+            thread_gate};
 
         va_list ap;
         va_start (ap, fmt);
@@ -122,11 +127,11 @@ inline void Log_stderr(const char * fmt, ...)
 // H3R_TEST usage.
 auto Log_stdout = [](const char * fmt, ...)
 {
+    static CriticalSection thread_gate {};
     int r {};
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {
-            CriticalSection::Log_stdout};
-
+            thread_gate};
         va_list ap;
         va_start (ap, fmt);
         r = vprintf (fmt, ap);
@@ -214,7 +219,7 @@ template <typename T> bool EnumFiles(T & c, const char * dn,
 {
     H3R_ENSURE(nullptr != on_file, "on_file can't be null")
     H3R_ENSURE(nullptr != dn, "path name can't be null")
-    var stat_dlen = strlen (dn);
+    auto stat_dlen = strlen (dn);
     H3R_ENSURE(stat_dlen > 0, "path name length can't be <= 0")
     if (H3R_PATH_SEPARATOR == dn[stat_dlen-1]) stat_dlen--;
 
@@ -227,17 +232,17 @@ template <typename T> bool EnumFiles(T & c, const char * dn,
     Malloc (stat_name, stat_name_max_size);
     __pointless_verbosity::try_finally_mfree ___ {stat_name};
     for (dirent * de = nullptr;;) {
-        const var e = H3R_OS_GLOBAL_ERR_CODE;
+        const auto e = H3R_OS_GLOBAL_ERR_CODE;
         de = readdir (ds);
         if (nullptr == de) {
-            const var e2 = H3R_OS_GLOBAL_ERR_CODE;
+            const auto e2 = H3R_OS_GLOBAL_ERR_CODE;
             return e != e2 ? EnumFiles_err (e2, "readdir"), false : true;
         }
         if (! de->d_name[0]) {
             Log_stdout ("Warning: readdir(): empty d_name");
             continue;
         }
-        var len = strlen (de->d_name);
+        auto len = strlen (de->d_name);
         if (1 == len && '.' == de->d_name[0]) continue;
         if (2 == len && '.' == de->d_name[0]
                      && '.' == de->d_name[1]) continue;

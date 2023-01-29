@@ -38,11 +38,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Included at a specific place at h3r_os.h
 //  - using OS::Malloc, OS::Memmove, OS::Mfree, OS::Exit, OS::CriticalSection
 
+static inline OS::CriticalSection & RWGate()
+{
+    static OS::CriticalSection thread_gate {};
+    return thread_gate;
+}
+
 template <typename T> void MM::Add(T * & p, size_t n)
 {
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {
-            OS::CriticalSection::MM};
+            RWGate ()};
 
         //TODO h3r_math.h these computations should be overflow-safe - the
         //                idea is to prevent bad allocation attempts
@@ -78,14 +84,14 @@ template <typename T> void MM::Remove(T * & p)
     if (! p) return;
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {
-            OS::CriticalSection::MM};
+            RWGate ()};
 
         for (int i = _n-1; i >= 0; i--)
             if (_e[i].p == p) {
                 // dLog_stdout ("-Block $%3d: %d bytes" EOL, i, _e[i]->n);
                 _current_bytes -= (_e[i].n + sizeof (Entry));
                 OS::Mfree (p);
-                var bytes = (_n - 1 - i) * sizeof (Entry);
+                auto bytes = (_n - 1 - i) * sizeof (Entry);
                 if (i < _n - 1) OS::Memmove (_e + i, _e + i + 1, bytes);
                 _n--; _f++;
                 return;

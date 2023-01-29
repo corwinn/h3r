@@ -74,8 +74,8 @@ Stream & ZipInflateStream::Read(void * buf, size_t bytes)
         /*OS::Log_stdout (
             "ZipInflateStream::Read prior inflate in:%zu, out:%zu" EOL,
             _zs.avail_in, _zs.avail_out);*/
-        var sentinel1 = _zs.avail_in;
-        var sentinel2 = _zs.avail_out;
+        auto sentinel1 = _zs.avail_in;
+        auto sentinel2 = _zs.avail_out;
         _zr = inflate (&_zs, Z_SYNC_FLUSH);
         /*OS::Log_stdout (
             "ZipInflateStream::Read after inflate in:%zu, out:%zu; zr:%d" EOL,
@@ -98,7 +98,9 @@ Stream & ZipInflateStream::ResetTo(int size, int usize)
 {
     _zs.avail_in = _zs.avail_out = 0;     // caught me by surprise
     _zs.next_in = _zs.next_out = nullptr; // caught me by surprise
-    inflateReset (&_zs); _zr = Z_OK;
+    if (Z_OK != inflateReset (&_zs)) //TODO proper error handling
+        printf ("inflateReset error\r\n");
+    _zr = Z_OK;
     _size = {size}, _usize = {usize};
     /*OS::Log_stdout ("%pZipInflateStream::ResetTo size:%zu, usize:%zu" EOL,
         this, _size, _usize);*/

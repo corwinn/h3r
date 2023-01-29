@@ -76,7 +76,7 @@ static List<Window *> global_win_list {};
 int ui_main(int, char **)
 {
     for (int i = 0; ; i %= global_win_list.Count ()) {
-        var w = global_win_list[i];
+        auto w = global_win_list[i];
         if (w->Closed ()) {
             H3R_DESTROY_OBJECT(w, Window)
             if (global_win_list.Empty ()) break;

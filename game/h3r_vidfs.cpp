@@ -58,7 +58,7 @@ VidFS::VidFS(const String & fname)
     OS::Log_stdout ("%s: entries: %d" EOL, fname.AsZStr (), cnt);
 
     _entries.Resize (cnt);
-    var data = static_cast<VidFS::Entry *>(_entries);
+    auto data = static_cast<VidFS::Entry *>(_entries);
     Stream::Read (*_s, data, cnt);
     // Validate
     for (size_t i = 0; i < _entries.Length (); i++) {
@@ -73,7 +73,7 @@ VidFS::VidFS(const String & fname)
         _entries[i].Name[39] = '\0';
     }
     /*int j {0};
-    for (const var & e : _entries)
+    for (const auto & e : _entries)
         OS::Log_stdout (
             "%s: entry: %004d: %00000008d \"%s\"" EOL,
             fname.AsZStr (), j++, e.Ofs, e.Name);*/
@@ -104,7 +104,7 @@ Stream * VidFS::Get(const String & res)
 
 int VidFS::GetSize(size_t idx)
 {
-    var size = (idx < _entries.Length ()-1 ? _entries[idx+1].Ofs : _last_offset)
+    auto size = (idx < _entries.Length ()-1 ? _entries[idx+1].Ofs : _last_offset)
         - _entries[idx].Ofs;
     H3R_ENSURE(size > 0, "Validate again")
     return size;

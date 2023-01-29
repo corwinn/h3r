@@ -101,7 +101,7 @@ void MainWindow::OnShow()
 
     glGenTextures (1, &_tex);
     Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
-    var byte_arr_ptr = main_window_background.RGB ();
+    auto byte_arr_ptr = main_window_background.ToRGB ();
     if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
         H3R_NS::Log::Err ("Failed to load GamSelBk.pcx");
         return;
@@ -132,7 +132,7 @@ void MainWindow::OnShow()
         << "MMENUQT.def";
     // centered at x=525
     int ww = 0;
-    for (const var & b : mm) {
+    for (const auto & b : mm) {
         Button * btn;
         H3R_CREATE_OBJECT(btn, Button) {b};
         ww = btn->Size ().X > ww ? btn->Size ().X : ww;

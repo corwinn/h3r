@@ -125,7 +125,7 @@ int main(int c, char ** v)
     H3R_CREATE_OBJECT(lod_handler, H3R_NS::LodFS) {};
     RM.Register (lod_handler);
 
-    var task_info = RM.Load (v[1]);
+    auto task_info = RM.Load (v[1]);
     while (! RM.TaskComplete ()) {
         H3R_NS::Log::Info (H3R_NS::String::Format (
             "%s" EOL, task_info.GetInfo ().Message ().AsZStr ()));
@@ -134,7 +134,7 @@ int main(int c, char ** v)
 
     H3R_NS::VFSProgressHandler _on_lod_entry {};
     RM.OnProgress.SetNext (&_on_lod_entry);
-    var task_info_enum = RM.Enumerate (
+    auto task_info_enum = RM.Enumerate (
         [](H3R_NS::Stream & stream, const H3R_NS::VFS::Entry & e)
         {
             //TODO takes 3*entry_num allocs:
@@ -149,7 +149,7 @@ int main(int c, char ** v)
     );
 
     while (! RM.TaskComplete ()) {
-        var info = task_info_enum.GetInfo ();
+        auto info = task_info_enum.GetInfo ();
         if (info.Changed ())
             H3R_NS::Log::Info (
                 H3R_NS::String::Format ("%s\r", info.Message ().AsZStr ()));

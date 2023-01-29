@@ -92,7 +92,7 @@ template <typename T> void print_c(ISortable<T> & c)
 {
     int count {0};
     OS::Log_stdout (" ");
-    for (var a = c.first (); nullptr != a; a = c.next (a))
+    for (auto a = c.first (); nullptr != a; a = c.next (a))
         OS::Log_stdout (" node: %p;", a), count++;
     OS::Log_stdout (" count: %d" EOL, count);
 }
@@ -121,9 +121,9 @@ template <typename T> void sort(ISortable<T> & c)
     // sort each 2 by 2
     int count = 1;
     const int INF_PROTECTION {1<<23};
-    for (var * a = c.first (); nullptr != a;) {
+    for (auto * a = c.first (); nullptr != a;) {
         H3R_ENSURE(count < INF_PROTECTION, "what is it that you're sorting?")
-        var * b = c.next (a);
+        auto * b = c.next (a);
         if (nullptr == b) break; count++;
         //O S::Log_stdout ("cmp (%p, %p)" EOL, a, b);
         if (c.cmp (a, b)) c.insert (a, b), a = c.next (a);
@@ -135,8 +135,8 @@ template <typename T> void sort(ISortable<T> & c)
 
     // merge
     int len = 2;
-    for (var * a = c.first () ; len <= count;) {
-        var * b = a;
+    for (auto * a = c.first () ; len <= count;) {
+        auto * b = a;
         for (int i = 0; nullptr != b && i < len; i++)
             b = c.next (b);
         // OS::Log_stdout (" merge (c, %p, %p, %d)" EOL, a, b, len);

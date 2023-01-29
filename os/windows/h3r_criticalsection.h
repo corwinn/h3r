@@ -32,54 +32,52 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_ZIPINFLATESTREAM_H_
-#define _H3R_ZIPINFLATESTREAM_H_
+#ifndef _H3R_CRITICALSECTION_H_
+#define _H3R_CRITICALSECTION_H_
 
-#include "h3r_stream.h"
-#include <zlib.h>
+// Critical Section Object.
+//
+// Used by base building blocks: Log_stderr, Log_stdout, MM
+
+#include "h3r.h"
+#include "windows.h"
 
 H3R_NAMESPACE
+namespace OS {
 
-// A stream for reading zip-encoded data. You get NotSupportedException on
-// Write() and Seek().
-// It allocates _IN_BUF bytes buffer (4k) so be wary.
-class ZipInflateStream : public Stream
+// Represents a critical section as in "Critical Section Objects".
+class CriticalSection final
 {
-    H3R_CANT_COPY(ZipInflateStream)
-    H3R_CANT_MOVE(ZipInflateStream)
+    H3R_CANT_COPY(CriticalSection)
+    H3R_CANT_MOVE(CriticalSection)
 
-#define public public:
-#define private private:
-    private z_stream _zs {};
-    private int _zr {~Z_OK}, _size, _usize;
-    private const off_t _pos_sentinel; // for ResetTo()
-    private static uInt constexpr _IN_BUF {1<<12}; // zlib: uInt
-    private byte _buf[_IN_BUF] {};
-    public ZipInflateStream(Stream * s, int size, int usize)
-        : Stream {s}, _size{size}, _usize{usize}, _pos_sentinel{s->Tell ()}
-    {
-        _zr = inflateInit (&_zs);//TODO proper error handling
-        if (Z_OK != _zr) printf ("inflateInit failed\r\n");
-    }
-    public ~ZipInflateStream() override { inflateEnd (&_zs); }
-    public inline operator bool() override { return Z_OK == _zr; }
-    public Stream & Seek(off_t) override;
-    // You can use this for progress: 1.0 * Tell() / Size() * 100
-    public off_t Tell() const override; // compressed
-    public off_t Size() const override; // uncompressed
-    public Stream & Read(void *, size_t) override;
-    public Stream & Write(const void *, size_t) override;
+    private: CRITICAL_SECTION _m; // No point using mutex or semaphore.
 
-    // same meaning as constructor parameters
-    public Stream & ResetTo(int size, int usize);
-    public inline virtual Stream & Reset() override
-    {
-        return ResetTo (_size, _usize);
-    }
-#undef public
-#undef private
+    //  POSIX,
+    // there is something for you to learn here.
+    // ~thank_you.
+    public: CriticalSection();
+
+    public: CriticalSection & Acquire();
+
+    public: void Release();
+
+    public: ~CriticalSection();
 };
 
+} // namespace OS
 NAMESPACE_H3R
+
+//TODO avoid repetition: Just copy this for your platform
+namespace __pointless_verbosity
+{
+    struct CriticalSection_Acquire_finally_release final
+    {
+        H3R_NS::OS::CriticalSection & _s;
+        CriticalSection_Acquire_finally_release(H3R_NS::OS::CriticalSection & s)
+            : _s{s.Acquire ()} {}
+        ~CriticalSection_Acquire_finally_release() { _s.Release (); }
+    };
+}
 
 #endif

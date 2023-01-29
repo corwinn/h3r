@@ -59,6 +59,7 @@ class SDLWindow : public OSWindow
     private int _w {800}, _h{600};
     private bool _q {false};
     private bool _visible {false};
+    private bool _initialized {false};
     protected virtual void Show() override;
     protected inline virtual void Hide() override { _visible = false; }
     protected inline virtual void Close() override { _q = true; }

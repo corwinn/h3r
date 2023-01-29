@@ -64,7 +64,7 @@ static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh)
     if (1 == sh.Type) {
         // an offset table based on its own beginning:
         Array<unsigned int> off_tbl {(size_t)(sh.Height)};
-        // var off_table_base = s.Tell ();
+        // auto off_table_base = s.Tell ();
         Stream::Read (s, (unsigned int *)off_tbl, off_tbl.Length ());
         for (int i = 0; i < sh.Height; i++)
             // s.Seek (off_table_base - s.Tell ()).Seek (off_tbl[i]);
@@ -101,7 +101,7 @@ void Def::Init()
 {
     if (nullptr == _s) return;
     if (! *_s) return;
-    var & s = _s->Reset ();
+    auto & s = _s->Reset ();
 
     int type, cnt; // type, width, height, count
     Stream::Read (s, &type).Read (s, &_w).Read (s, &_h).Read (s, &cnt);

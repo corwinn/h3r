@@ -52,9 +52,9 @@ CriticalSection::CriticalSection(bool use_printf)
 {
     pthread_mutexattr_t attr;
 #ifdef H3R_DEBUG
-    var r = pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_ERRORCHECK);
+    auto r = pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_ERRORCHECK);
 #else
-    var r = pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_NORMAL);
+    auto r = pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_NORMAL);
 #endif
     H3R_ENSURE(0 == r, "pthread_mutexattr_settype")
     r = pthread_mutexattr_setpshared (&attr, PTHREAD_PROCESS_PRIVATE);
@@ -65,7 +65,7 @@ CriticalSection::CriticalSection(bool use_printf)
 
 CriticalSection & CriticalSection::Acquire()
 {
-    var r = pthread_mutex_lock (&_m);
+    auto r = pthread_mutex_lock (&_m);
     if (! _printf) {
         H3R_ENSURE(0 == r, "pthread_mutex_lock")
     }
@@ -79,7 +79,7 @@ CriticalSection & CriticalSection::Acquire()
 
 void CriticalSection::Release()
 {
-    var r = pthread_mutex_unlock (&_m);
+    auto r = pthread_mutex_unlock (&_m);
     if (! _printf) {
         H3R_ENSURE(0 == r, "pthread_mutex_unlock")
     }
@@ -92,7 +92,7 @@ void CriticalSection::Release()
 
 CriticalSection::~CriticalSection()
 {
-    var r = pthread_mutex_destroy (&_m);
+    auto r = pthread_mutex_destroy (&_m);
     if (! _printf) {
         H3R_ENSURE(0 == r, "pthread_mutex_destroy")
     }

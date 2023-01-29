@@ -40,6 +40,7 @@ namespace OS {
 
 static int const THREAD_MAX {5}; // Log, Files, MusicRT, Music, SoundFX
 Thread * Thread::Threads[THREAD_MAX];
+HANDLE Thread::ThreadHandles[THREAD_MAX];
 
 //TODO I'm not sure this is a good idea. Threads should start and stop in
 // certain order, for example: the logger thread should stop last - prior main
@@ -49,11 +50,18 @@ Thread::Thread(Proc & p)
     static int ti {0};
     H3R_ENSURE(ti >= 0 && ti < THREAD_MAX, "thread index out of range")
     Thread::Threads[ti++] = this;
-    auto r = pthread_create (&_thr, nullptr, [](void * q) -> void *
+    const LPSECURITY_ATTRIBUTES THREAD_SA {nullptr};
+    const SIZE_T  THREAD_DEFAULT_STACK_SIZE {0};
+    const DWORD   THREAD_RUN_AT_ONCE {0};
+    const LPDWORD THREAD_ID_UNUSED {nullptr};
+    _thr = CreateThread (THREAD_SA, THREAD_DEFAULT_STACK_SIZE,
+        [](void * q) -> DWORD
         {
-            return ((Proc *)q)->Run ();
-        }, &p);
-    H3R_ENSURE(0 == r, "pthread_create failed")
+            ((Proc *)q)->Run ();
+            return 0;
+        }, &p, THREAD_RUN_AT_ONCE, THREAD_ID_UNUSED);
+    H3R_ENSURE(NULL != _thr, "CreateThread failed")
+    Thread::ThreadHandles[ti-1] = _thr;
 }
 
 Thread::~Thread()
@@ -77,29 +85,31 @@ Thread::~Thread()
 /*static*/ void Thread::Sleep(int msec)
 {
     H3R_ENSURE(msec > 0 && msec < 1001, "Sleep under a second please")
-    struct timespec foo {0, msec * 1000000};
-    nanosleep (&foo, nullptr);
+    ::Sleep (msec);
 }
 
 /*static*/ void Thread::SleepForAWhile() { Thread::Sleep (1); }
 
 void Thread::Join()
 {
-    auto r = pthread_join (_thr, nullptr);
-    H3R_ENSURE(0 == r, "pthread_join failed")
+    auto r = WaitForSingleObject (_thr, INFINITE);
+    H3R_ENSURE(WAIT_FAILED != r, "WaitForSingleObject failed")
+    //TODO https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
 }
 
-void Thread::Stop()
+void Thread::Stop(bool signal_only)
 {
     H3R_ENSURE(false == _p.stop, "Thread already stopped")
-    _p.stop = true;
+    _p.stop = true; if (signal_only) return;
     Join ();
 }
 
 /*static*/ void Thread::StopAll()
 {
     // foreach (auto t in Thread.Threads.Where (x => x != null)) t.Stop ();
-    for (auto t : Thread::Threads) if (t) t->Stop ();
+    bool const signal_only = true;
+    for (Thread * t : Thread::Threads) if (t) t->Stop (signal_only);
+    WaitForMultipleObjects (THREAD_MAX, Thread::ThreadHandles, TRUE, INFINITE);
 }
 
 } // namespace OS

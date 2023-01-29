@@ -57,12 +57,12 @@ template <typename T> class List //LATER Insert() - should the need arise
      * thus calling pointless initialization. Don't do:
      * public template <typename R> bool Contains(R itm)
     {
-        for (const var & i : _l) if (i == itm) return true;
+        for (const auto & i : _l) if (i == itm) return true;
         return false;
     }*/
     public bool Contains(const T & itm) const
     {
-        for (const var & i : _l) if (i == itm) return true;
+        for (const auto & i : _l) if (i == itm) return true;
         return false;
     }
     public T & Add(const T & itm)
@@ -76,7 +76,7 @@ template <typename T> class List //LATER Insert() - should the need arise
     {
         Array<T> n {_l.Length ()};
         size_t idx {0};
-        for (const var & i : _l) if (i != itm) n[idx++] = i;
+        for (const auto & i : _l) if (i != itm) n[idx++] = i;
         if (_l.Length () == idx) return false;
         return n.Resize (idx), n.MoveTo (_l), true;
     }

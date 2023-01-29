@@ -60,7 +60,7 @@ class GameArchives final
     private List<Entry> _ba;
     public bool Has(const String & name)
     {
-        for (var & e : _ba) if (e.Name == name) return true;
+        for (auto & e : _ba) if (e.Name == name) return true;
         return false;
     }
     public GameArchives()

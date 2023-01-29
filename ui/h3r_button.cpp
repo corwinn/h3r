@@ -44,14 +44,14 @@ Button::Button(const String & res_name, Control * base)
     : Control {base}
 {
     Def btn_def {Game::GetResource (res_name)};
-    var n = res_name.ToLower ().Replace (".def", "n.pcx");
-    var btn_def_n = btn_def.Query (n);
+    auto n = res_name.ToLower ().Replace (".def", "n.pcx");
+    auto btn_def_n = btn_def.Query (n);
     if (! btn_def_n) {
         H3R_NS::Log::Err (String::Format (
             "Can't find %s[%s]", res_name.AsZStr (), n.AsZStr ()));
         return;
     }
-    var byte_arr_ptr = btn_def_n->RGBA ();
+    auto byte_arr_ptr = btn_def_n->ToRGBA ();
     if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
         H3R_NS::Log::Err (String::Format (
             "Can't load %s[%s]", res_name.AsZStr (), n.AsZStr ()));
@@ -98,7 +98,7 @@ Button::Button(const String & res_name, Control * base)
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     n = res_name.ToLower ().Replace (".def", "h.pcx");
     btn_def_n = btn_def.Query (n);
-    byte_arr_ptr = btn_def_n->RGBA ();
+    byte_arr_ptr = btn_def_n->ToRGBA ();
     glTexImage2D (GL_TEXTURE_2D, 0, /*GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,*/
         GL_RGBA,
         btn_def_n->Width (), // TODO power of 2 UI atlas

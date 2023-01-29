@@ -176,7 +176,7 @@ void store_as_bmp(char * fn,
     }
     else if (24 == bpp)
         // for (int i = 0; i < (bmp_size - 3); i += 3) // RGB -> BGR or BGR -> RGB
-        //    { var t = *(b+i); *(b+i) = *(b+i+2), *(b+i+2) = t; }
+        //    { auto t = *(b+i); *(b+i) = *(b+i+2), *(b+i+2) = t; }
         ;
     else H3R_ENSURE(false, "unknown bpp")
     int bmpofs = HSIZE + pal.Length (), fsize = bmpofs + bmp_size;
@@ -186,7 +186,7 @@ void store_as_bmp(char * fn,
     // *(int *)(h8 + BMP) = 54 + pal.Length ();
 
     H3R_NS::OS::Log_stdout ("old fname: %s" EOL, fn);
-    var len = H3R_NS::OS::Strlen (fn);
+    auto len = H3R_NS::OS::Strlen (fn);
     if (len > 4) fn[len-3] = isupper (fn[len-3]) ? 'B' : 'b',
                  fn[len-2] = isupper (fn[len-2]) ? 'M' : 'm',
                  fn[len-1] = isupper (fn[len-1]) ? 'P' : 'p',

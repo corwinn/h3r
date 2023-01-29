@@ -39,6 +39,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_box.h"
 #include "GL/gl.h"
 
+#if _WIN32
+#include "GL/glext.h"
+#endif
+
 H3R_NAMESPACE
 
 // Graphics Context.

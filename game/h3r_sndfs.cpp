@@ -57,12 +57,12 @@ SndFS::SndFS(const String & fname)
     OS::Log_stdout ("%s: entries: %d" EOL, fname.AsZStr (), cnt);
 
     _entries.Resize (cnt);
-    var data = static_cast<SndFS::Entry *>(_entries);
+    auto data = static_cast<SndFS::Entry *>(_entries);
     Stream::Read (*_s, data, cnt);
     // Validate
-    var file_size = _s->Size ();
+    auto file_size = _s->Size ();
     for (size_t i = 0; i < _entries.Length (); i++) {
-        var & e = _entries[i];
+        auto & e = _entries[i];
         if (e.Ofs < _s->Tell () || e.Ofs >= file_size) {
             Log::Err (String::Format ("%s: Wrong Entry[%0004d].Ofs: "
                 "%zu, out of [%00000008d;%00000008d)" EOL,
@@ -86,7 +86,7 @@ SndFS::SndFS(const String & fname)
         }
     }
     /*int j {0};
-    for (const var & e : _entries)
+    for (const auto & e : _entries)
         OS::Log_stdout (
             "%s: entry: %004d: %00000008d:%00000008d \"%s\"" EOL,
             fname.AsZStr (), j++, e.Ofs, e.Size, e.Name);*/
@@ -109,7 +109,7 @@ Stream & SndFS::GetStream(const SndFS::Entry & e)
 
 Stream * SndFS::Get(const String & res)
 {
-    for (const var & e : _entries)
+    for (const auto & e : _entries)
         if (res == reinterpret_cast<const char *>(e.Name))
             return &(GetStream (e));
     return VFS::Get (res);
@@ -118,7 +118,7 @@ Stream * SndFS::Get(const String & res)
 void SndFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
     static VFS::Entry vfs_e {};
-    for (const var & e : _entries) {
+    for (const auto & e : _entries) {
         vfs_e.Name = reinterpret_cast<const char *>(e.Name);
         vfs_e.Size = e.Size;
         if (! on_entry (GetStream (e), vfs_e)) break;

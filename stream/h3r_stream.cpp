@@ -43,7 +43,7 @@ void Stream::Write(Stream & src, off_t length)
     if (0 == length) length = src.Size () - src.Tell ();
     H3R_ARG_EXC_IF(length < 0, "length can't be < 0")
     while (length) {
-        var const block = length < Stream::STREAM_WRITE_BUF_SIZE
+        auto const block = length < Stream::STREAM_WRITE_BUF_SIZE
             ? length
             : Stream::STREAM_WRITE_BUF_SIZE;
         src.Read (buf, block);

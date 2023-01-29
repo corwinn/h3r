@@ -41,8 +41,8 @@ OS::CriticalSection ResManager::_task_info_gate {};
 
 ResManager::~ResManager()//TODO shouldn't I be an IAsyncTask?
 {
-    for (var * obj : _vfs_objects) H3R_DESTROY_OBJECT(obj, VFS)
-    for (var * obj : _vfs_registry) H3R_DESTROY_OBJECT(obj, VFS)
+    for (auto * obj : _vfs_objects) H3R_DESTROY_OBJECT(obj, VFS)
+    for (auto * obj : _vfs_registry) H3R_DESTROY_OBJECT(obj, VFS)
 }
 
 const ResManager::RMTaskInfo & ResManager::GetResource(const String & name)

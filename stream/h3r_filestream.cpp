@@ -39,14 +39,14 @@ namespace OS {
 
 off_t FileStream::tell() const
 {
-    var r = Ftell (_f);
+    auto r = Ftell (_f);
     H3R_ENSURE(H3R_FILE_OP_NOT_SUPPORTED != r, "tell() is not supported")
     return r;
 }
 
 Stream & FileStream::seek(off_t offset)
 {
-    var r = Fseek (_f, offset, SEEK_CUR);
+    auto r = Fseek (_f, offset, SEEK_CUR);
     H3R_ENSURE(H3R_FILE_OP_NOT_SUPPORTED != r, "seek() is not supported")
     return *this;
 }

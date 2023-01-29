@@ -100,7 +100,7 @@ class ResManager : protected VFS
         {
             __pointless_verbosity::CriticalSection_Acquire_finally_release
                 ____ {_task_info_gate};
-            var result = _progress; _progress.SetChanged (false);
+            auto result = _progress; _progress.SetChanged (false);
             return result;
         }
         public void SetInfo(const TaskState & value)
@@ -140,7 +140,7 @@ class ResManager : protected VFS
         {//TODO progress; see RMGetTask
             State.Result = false;
             State.SetInfo (TaskState {0, "Loading: " + State.Path});
-            for (var * vfs : _subject._vfs_registry)
+            for (auto * vfs : _subject._vfs_registry)
                 State.Result |= _subject.AddVFS (vfs->TryLoad (State.Path));
             State.SetInfo (TaskState {0, "Loaded: " + State.Path});
         }
@@ -153,9 +153,9 @@ class ResManager : protected VFS
         public using RMTask::RMTask;
         public inline void Do() override
         {//TODO progress; see RMGetTask
-            var all = _subject._vfs_objects.Count ();
-            var i = all - all;
-            for (var * vfs : _subject._vfs_objects) {
+            auto all = _subject._vfs_objects.Count ();
+            auto i = all - all;
+            for (auto * vfs : _subject._vfs_objects) {
                 State.SetInfo (TaskState {
                     static_cast<int>(round (1.0*i/all*100)),
                     "Enumerating ..."});
@@ -179,9 +179,9 @@ class ResManager : protected VFS
         public inline void Do() override
         {
             State.Resource = nullptr;
-            var all = _subject._vfs_objects.Count ();
-            var i = all - all;
-            for (var * vfs : _subject._vfs_objects) {
+            auto all = _subject._vfs_objects.Count ();
+            auto i = all - all;
+            for (auto * vfs : _subject._vfs_objects) {
                 State.SetInfo (TaskState {
                     static_cast<int>(round (1.0*i++/all*100)),
                     "Looking for: " + State.Name});
@@ -198,10 +198,10 @@ class ResManager : protected VFS
     // AsyncIO: Return the 1st matching one.
     //TODO what about duplicates? res override policy
     // Usage:
-    //   var res = RM.GetResource ("foo");
+    //   auto res = RM.GetResource ("foo");
     //   while (! RM.Complete ())
     //       UpdateProgressBar (res.GetInfo ());
-    //   var stream = res.Stream;
+    //   auto stream = res.Stream;
     //   use AsyncAdapter to read from the stream;
     public virtual const RMTaskInfo & GetResource(const String & name);
 

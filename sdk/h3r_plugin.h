@@ -114,9 +114,9 @@ VFSPlugIn * CreateVFSPlugIn(PeerInfo *);
 typedef VFSPlugIn * (*PCreateVFSPlugIn)(PeerInfo *);
 
 /* Use case (your mod has its resource in a "7z" archive):
-     var obj = OS::LoadSharedObject ("MyMod_7zFS.dll");
-     var info_proc = obj.GetProc<PGetPlugInInfo> ("GetPlugInInfo");
-     var info = info_proc ();
+     auto obj = OS::LoadSharedObject ("MyMod_7zFS.dll");
+     auto info_proc = obj.GetProc<PGetPlugInInfo> ("GetPlugInInfo");
+     auto info = info_proc ();
      if (info-GetType () == PlugInType::VFS) {
          vfs_plugin = obj.GetProc<PCreateVFSPlugIn> ("CreateVFSPlugIn");
          VFS::RegisterPlugin (vfs_plugin ());
