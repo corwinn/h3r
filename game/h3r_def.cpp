@@ -63,9 +63,10 @@ static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh)
     // The "if" operators are ordered by frequency.
     if (1 == sh.Type) {
         // an offset table based on its own beginning:
-        Array<unsigned int> off_tbl {(size_t)(sh.Height)};
+        // Array<unsigned int> off_tbl {(size_t)(sh.Height)};
         // auto off_table_base = s.Tell ();
-        Stream::Read (s, (unsigned int *)off_tbl, off_tbl.Length ());
+        s.Seek (sh.Height * sizeof (unsigned int));
+        // Stream::Read (s, (unsigned int *)off_tbl, off_tbl.Length ());
         for (int i = 0; i < sh.Height; i++)
             // s.Seek (off_table_base - s.Tell ()).Seek (off_tbl[i]);
             for (int llen = 0; llen < sh.Width; ) {
@@ -78,8 +79,8 @@ static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh)
             }
     }// 1 == sh.Type
     else if (3 == sh.Type) {
-        int ofs_num = sh.Width >> 5;
-        Array<unsigned short> off_tbl {(size_t)(ofs_num * sh.Height)};
+        // int ofs_num = sh.Width >> 5;
+        // Array<unsigned short> off_tbl {(size_t)(ofs_num * sh.Height)};
         read_sprite_224 (s, sh.Width, sh.Height, ptr);
     }
     else if (2 == sh.Type) {
@@ -111,8 +112,10 @@ void Def::Init()
     Stream::Read (s, static_cast<byte *>(_palette), _palette.Length ());
 
     _sprites.Resize (cnt);
-    for (int i = 0; i < cnt; i++)
+    for (int i = 0; i < cnt; i++) {
         _sprites[i].Read (s);
+        _n += _sprites[i].Entries.Length ();
+    }
 
     //LATER There are sprites afterwards. Just have to parse the last
     //      SubSprite in order to get the startup offset.
@@ -140,8 +143,7 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
         // Unfortunately I can't do that with zipstreams yet.
         // _s->Seek(_request.Offset - _s->Tell ())
         // but I can do this:
-        _s->Reset ();
-        _s->Seek (_request->Offset);
+        { _s->Reset (); _s->Seek (_request->Offset); }
         Array<byte> indexed_bitmap {};
         read_sprite (*_s, indexed_bitmap, sh);
         H3R_ENSURE(sh.AnimWidth == _w, "leaf.w != tree.w")

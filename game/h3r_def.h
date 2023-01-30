@@ -76,6 +76,7 @@ class Def final : public ResDecoder
     private: Array<byte> _rgb {};
     private: int _w {};
     private: int _h {};
+    private: int _n {};
     private: Array<byte> _palette {}; // RGB
 
     public: Def(Stream * stream) : ResDecoder {}, _s{stream}
@@ -85,6 +86,7 @@ class Def final : public ResDecoder
         Init ();
     }
     public: ~Def() override {}
+    public: int Num() const { return _n; }
     public: inline Array<byte> * ToRGBA() override
     {
         if (! _rgba.Empty ()) return &_rgba;
