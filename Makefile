@@ -36,7 +36,8 @@ MAKEFLAGS += rR
 
 APP = main
 PLATFORM ?= posix
-WIN_SYSTEM ?= gl/sdl
+RENDER_API ?= gl
+WIN_SYSTEM ?= $(RENDER_API)/sdl
 CC ?= clang
 CXX ?= clang++
 H3R_TEST ?=
@@ -47,11 +48,13 @@ _F  = -fsanitize=address,undefined,integer,leak -fvisibility=hidden
 #TODO release build _F = -fvisibility=hidden -fno-rtti
 _L = -Wl,--as-needed -lpthread -lz -lSDL2 -lSDL2_mixer -lGL
 _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
+ -Igame/$(RENDER_API) \
  -Ios/ui -Ios/ui/$(WIN_SYSTEM) `pkg-config --cflags sdl2`
 
 CXXFLAGS = $(_I) -std=c++11 $(_O) $(_F) $(_W)
 SRC = $(wildcard ./*/*.cpp)
 SRC += $(wildcard os/$(PLATFORM)/*.cpp)
+SRC += $(wildcard game/$(RENDER_API)/*.cpp)
 SRC += $(wildcard os/ui/$(WIN_SYSTEM)/*.cpp)
 SRC := $(filter-out ./prior_publish/%,$(SRC))
 OBJ = $(patsubst %.cpp,%.o,$(SRC))

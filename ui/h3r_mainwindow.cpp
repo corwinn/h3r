@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r_mainwindow.h"
 #include "h3r_game.h"
-#include "h3r_resdecoder.h"
+#include "h3r_pcx.h"
 #include "h3r_thread.h"
 #include "h3r_button.h"
 #include "h3r_list.h"

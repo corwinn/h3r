@@ -47,10 +47,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // If the returned buffer is empty, see the log for errors.
-class Decoder
+class ResDecoder
 {
-    public: Decoder() {}
-    public: virtual ~Decoder() {}
+    public: ResDecoder() {}
+    public: virtual ~ResDecoder() {}
     public: virtual Array<byte> * ToRGBA() { return nullptr; }
     // "wingdi.h" didn't like my "RGB" symbol.
     public: virtual Array<byte> * ToRGB() { return nullptr; }
@@ -59,91 +59,6 @@ class Decoder
     public: virtual int Width () { return 0; }
     public: virtual int Height () { return 0; }
 };
-
-//LATER Issue: CAMPNOSC.PCX (238x143) looks skewed
-class Pcx final : public Decoder
-{
-    private: Stream * _s;
-    private: Array<byte> _rgba {};
-    private: Array<byte> _rgb {};
-    private: int _w {};
-    private: int _h {};
-    public: Pcx(Stream * stream) : Decoder{}, _s{stream}
-    {
-        if (nullptr == stream)
-            Log::Info ("PCX: no stream " EOL);
-    }
-    public: ~Pcx() override {}
-    public: inline Array<byte> * ToRGBA() override
-    {
-        if (! _rgba.Empty ()) return &_rgba;
-        return Decode (_rgba, 4);
-    }
-    public: inline Array<byte> * ToRGB() override
-    {
-        if (! _rgb.Empty ()) return &_rgb;
-        return Decode (_rgb, 3);
-    }
-    public: int Width () override { return _w; }
-    public: int Height () override { return _h; }
-    private: inline Array<byte> * Decode(Array<byte> & buf, int u8_num)
-    {
-        H3R_ENSURE(3 == u8_num || 4 == u8_num, "Can't help you")
-        if (nullptr == _s) return &buf;
-        if (! *_s) return &buf;
-        int size, fmt;
-        auto & s = _s->Reset ();
-        Stream::Read (s, &size).Read (s, &_w).Read (s, &_h);
-        if (_w <= 0 || _w >= Decoder::MAX_SIZE) {
-            Log::Err (String::Format ("PCX: Wrong width: %d" EOL, _w));
-            _w = _h = 0;
-            return &buf;
-        }
-        if (_h <= 0 || _h >= Decoder::MAX_SIZE) {
-            Log::Err (String::Format ("PCX: Wrong height: %d" EOL, _h));
-            _w = _h = 0;
-            return &buf;
-        }
-        fmt = size / (_w * _h);
-        if (1 != fmt && 3 != fmt) {
-            Log::Err (String::Format ("PCX: Unknown format: %d" EOL, fmt));
-            _w = _h = 0;
-            return &buf;
-        }
-        if (_w*_h*fmt != size) {
-            Log::Err (String::Format ("PCX: Wrong size: %d" EOL, size));
-            _w = _h = 0;
-            return &buf;
-        }
-        buf.Resize (u8_num*_w*_h); // A, if present, is 0
-        byte * b = buf, * e = b + buf.Length ();
-        if (1 == fmt) {
-            Array<byte> pal {3*256};
-            byte * p = pal;
-            // ZipInflateStream can seek forwards only.
-            auto bitmap_sentinel = s.Tell ();
-            s.Seek (size);
-            Stream::Read (s, p, pal.Length ());
-            s.Reset ();
-            s.Seek (bitmap_sentinel);
-            byte i;
-            while (b != e) {
-                Stream::Read (s, &i, 1);
-                OS::Memmove (b, p+3*i, 3);
-                b += u8_num;
-            }
-        }
-        else
-            while (b != e) {
-                // nope, something is messed up; why not?
-                // Stream::Read (s, b, fmt); b += u8_num;
-                Stream::Read (s, b, fmt);
-                byte t = *b; *b = *(b+2), *(b+2) = t;
-                b += u8_num;
-            }
-        return &buf;
-    }// Decode
-};// Pcx
 
 NAMESPACE_H3R
 

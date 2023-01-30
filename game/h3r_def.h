@@ -69,7 +69,7 @@ struct SubSpriteHeader final
 //   auto sprite_handler = def.Query ("foo.pcx");
 //   if (sprite_handler) bitmap = sprite_handler->RGBA ();
 //   if (sprite_handler) the_same_bitmap = sprite_handler->RGBA ();
-class Def final : public Decoder
+class Def final : public ResDecoder
 {
     private: Stream * _s;
     private: Array<byte> _rgba {};
@@ -78,7 +78,7 @@ class Def final : public Decoder
     private: int _h {};
     private: Array<byte> _palette {}; // RGB
 
-    public: Def(Stream * stream) : Decoder{}, _s{stream}
+    public: Def(Stream * stream) : ResDecoder {}, _s{stream}
     {
         if (nullptr == stream)
             Log::Info ("DEF: no stream " EOL);
