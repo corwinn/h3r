@@ -52,11 +52,21 @@ class Pcx final : public ResDecoder
     private: Array<byte> _rgb {};
     private: int _w {};
     private: int _h {};
+    private: off_t _bitmap_ofs {}; // 0-based
+    private: int _size {}; // bytes
+    private: int _fmt {}; // 1 (8-bit palette) or 3 (24-bit RGB, no palette)
     public: Pcx(Stream * stream)
         : ResDecoder {}, _s{stream}
     {
         if (nullptr == stream)
             Log::Info ("PCX: no stream " EOL);
+        if (! Init ())  {
+            _s = nullptr; // block all ops
+            _w = _h  = _size = _fmt = 0;
+            _bitmap_ofs = 0;
+            _rgba.Resize (0);
+            _rgb.Resize (0);
+        }
     }
     public: ~Pcx() override {}
     public: inline Array<byte> * ToRGBA() override
@@ -71,49 +81,59 @@ class Pcx final : public ResDecoder
     }
     public: int Width () override { return _w; }
     public: int Height () override { return _h; }
-    private: inline Array<byte> * Decode(Array<byte> & buf, int u8_num)
+    // Init size and format info.
+    private: bool Init()
     {
-        H3R_ENSURE(3 == u8_num || 4 == u8_num, "Can't help you")
-        if (nullptr == _s) return &buf;
-        if (! *_s) return &buf;
-        int size, fmt;
+        if (nullptr == _s) return false;
+        if (! *_s) return false;
         auto & s = _s->Reset ();
-        Stream::Read (s, &size).Read (s, &_w).Read (s, &_h);
+
+        Stream::Read (s, &_size).Read (s, &_w).Read (s, &_h);
         if (_w <= 0 || _w >= ResDecoder::MAX_SIZE) {
             Log::Err (String::Format ("PCX: Wrong width: %d" EOL, _w));
             _w = _h = 0;
-            return &buf;
+            return false;
         }
         if (_h <= 0 || _h >= ResDecoder::MAX_SIZE) {
             Log::Err (String::Format ("PCX: Wrong height: %d" EOL, _h));
             _w = _h = 0;
-            return &buf;
+            return false;
         }
-        fmt = size / (_w * _h);
-        if (1 != fmt && 3 != fmt) {
-            Log::Err (String::Format ("PCX: Unknown format: %d" EOL, fmt));
+        _fmt = _size / (_w * _h);
+        if (1 != _fmt && 3 != _fmt) {
+            Log::Err (String::Format ("PCX: Unknown format: %d" EOL, _fmt));
             _w = _h = 0;
-            return &buf;
+            return false;
         }
-        if (_w*_h*fmt != size) {
-            Log::Err (String::Format ("PCX: Wrong size: %d" EOL, size));
+        if (_w*_h*_fmt != _size) {
+            Log::Err (String::Format ("PCX: Wrong size: %d" EOL, _size));
             _w = _h = 0;
-            return &buf;
+            return false;
         }
+
+        _bitmap_ofs = 12; // _s->Tell () = 128? I can't count on it it seems
+        // printf ("w:%d, h:%d, f:%d, p:%zu" EOL, _w, _h, _fmt, _bitmap_ofs);
+        return true;
+    }// Init
+    private: inline Array<byte> * Decode(Array<byte> & buf, int u8_num)
+    {
+        H3R_ENSURE(3 == u8_num || 4 == u8_num, "Can't help you")
+        { _s->Reset (); _s->Seek (_bitmap_ofs); } // these are coupled
+
         buf.Resize (u8_num*_w*_h); // A, if present, is 0
         byte * b = buf, * e = b + buf.Length ();
-        if (1 == fmt) {
+        if (1 == _fmt) {
             Array<byte> pal {3*256};
             byte * p = pal;
             // ZipInflateStream can seek forwards only.
-            auto bitmap_sentinel = s.Tell ();
-            s.Seek (size);
-            Stream::Read (s, p, pal.Length ());
-            s.Reset ();
-            s.Seek (bitmap_sentinel);
+            // auto bitmap_sentinel = _s->Tell (); avoid until proven otherwise
+            // Use local offsets instead
+            _s->Seek (_size); // skip the bitmap
+            Stream::Read (*_s, p, pal.Length ());
+            { _s->Reset (); _s->Seek (_bitmap_ofs); }
             byte i;
             while (b != e) {
-                Stream::Read (s, &i, 1);
+                Stream::Read (*_s, &i, 1);
                 OS::Memmove (b, p+3*i, 3);
                 b += u8_num;
             }
@@ -122,7 +142,7 @@ class Pcx final : public ResDecoder
             while (b != e) {
                 // nope, something is messed up; why not?
                 // Stream::Read (s, b, fmt); b += u8_num;
-                Stream::Read (s, b, fmt);
+                Stream::Read (*_s, b, _fmt);
                 byte t = *b; *b = *(b+2), *(b+2) = t;
                 b += u8_num;
             }
