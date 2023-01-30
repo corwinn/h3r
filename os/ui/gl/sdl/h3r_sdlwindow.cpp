@@ -117,16 +117,16 @@ void SDLWindow::Show()
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (! _window) {
-         H3R_NS::Log::Err (H3R_NS::String::Format (
+        H3R_NS::Log::Err (H3R_NS::String::Format (
             "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
-         return;
+        return;
     }
 
     _gc = SDL_GL_CreateContext (_window);
     if (! _gc) {
-         H3R_NS::Log::Err (H3R_NS::String::Format (
+        H3R_NS::Log::Err (H3R_NS::String::Format (
             "SDL_GL_CreateContext error: %s" EOL, SDL_GetError ()));
-         return;
+        return;
     }
 
     OnShow (); //TODO OnShow called Render() bellow and OnRender () tried using

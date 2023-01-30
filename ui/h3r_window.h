@@ -53,7 +53,7 @@ H3R_NAMESPACE
 //  * main window
 //  * dialog window
 //
-// It won't process messages while hidden.
+// It shall process messages while hidden.
 // It takes care of ~OSWindow().
 class Window : public IWindow
 {
@@ -80,7 +80,6 @@ class Window : public IWindow
 
     public Window(OSWindow * actual_window);
 
-    // Shall return when the window is closed.
     IW public void Show() override;
     IW public void Hide() override;
     IW public void Close() override;
