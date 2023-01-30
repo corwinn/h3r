@@ -32,37 +32,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_BUTTON_H_
-#define _H3R_BUTTON_H_
+#ifndef _H3R_TEXCACHE_H_
+#define _H3R_TEXCACHE_H_
 
 #include "h3r.h"
-#include "h3r_string.h"
-#include "h3r_point.h"
-#include "h3r_gc.h"
-#include "h3r_control.h"
-#include "h3r_eventargs.h"
-#include "h3r_texcache.h"
+#include <GL/gl.h>
 
 H3R_NAMESPACE
 
-// Its size is stored at the resource it is created from.
-class Button: public Control
-{
-    private: TexCache::Entry _en;
-    private: TexCache::Entry _eh;
-    private: GLuint _vbo {}; // one more to go
+#define public public:
+#define private private:
 
-    public: Button(const String &, Control * = nullptr);
-    public: virtual ~Button() override
+// Use-case:
+//   var e = tc->Cache (w, h, bug, 3)
+//   vertices.uv = e.uv;
+//   ...
+//
+//   TexCache::Bind (e)
+class TexCache final
+{
+    public struct Entry final
     {
-        glDeleteBuffers (1, &_vbo);
+        GLuint Texture {};
+        GLfloat l, t, r, b;
+        int x {};
+        int y {};
+    };
+    private GLint const _tsize;
+    public TexCache();
+    public ~TexCache();
+    public void Invalidate();
+
+    public Entry Cache(GLint w, GLint h, byte * data, int bpp);
+
+    private static GLuint _bound; // currently bound texture
+    public static inline void Bind(TexCache::Entry & e)
+    {
+        if (e.Texture != _bound)
+            glBindTexture (GL_TEXTURE_2D, _bound = e.Texture);
     }
 
-    public: virtual void OnRender(GC &) override;
-    public: virtual void OnMouseMove(const EventArgs &) override;
-
-    private: bool _mouse_over {};
+    public static TexCache * One ();
 };
+
+#undef public
+#undef private
 
 NAMESPACE_H3R
 

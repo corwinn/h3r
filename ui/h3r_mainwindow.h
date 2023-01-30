@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_window.h"
 #include "GL/gl.h"
+#include "h3r_texcache.h"
 
 H3R_NAMESPACE
 
@@ -49,9 +50,11 @@ class MainWindow : public Window
 #define protected protected:
 
     // Open GL state
-    private GLuint _tex, _vbo;
+    private GLuint _vbo;
 
     private int _w {800}, _h{600};
+
+    private TexCache::Entry _e1;
 
     public MainWindow(OSWindow *);
     public ~MainWindow() override;

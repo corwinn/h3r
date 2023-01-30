@@ -65,10 +65,11 @@ MainWindow::MainWindow(OSWindow * actual_window)
     //     (f(z-order) so the entire UI shall be rendered in one gl call
     //     GL_DEPTH_TEST; and compare to the above; choose the less-code one
     //
-    //TODO texture atlas(es) for the static sprites
     //TODO texture atlas(es) for the animated sprites (encode frame number at
     //     some pixel; PixelDB - NoSQL :) )
-    //
+
+    //TODO this Open GL init. code is looking for a place, as well is the
+    //     TexCache; Could it be h3r_renderengine?
     glDisable (GL_COLOR_MATERIAL);
     glEnable (GL_TEXTURE_2D);
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -83,29 +84,20 @@ MainWindow::MainWindow(OSWindow * actual_window)
     glDisable (GL_MULTISAMPLE);
     glShadeModel (GL_FLAT);
 
-    glGenTextures (1, &_tex);
     Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
     auto byte_arr_ptr = main_window_background.ToRGB ();
     if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
         H3R_NS::Log::Err ("Failed to load GamSelBk.pcx");
         return;
     }
-    glBindTexture (GL_TEXTURE_2D, _tex);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexImage2D (GL_TEXTURE_2D, 0, /*GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,*/
-        GL_RGBA,
+    _e1 = TexCache::One ()->Cache (
         main_window_background.Width (),
         main_window_background.Height (),
-        0, GL_RGB, GL_UNSIGNED_BYTE, byte_arr_ptr->operator byte * ());
-
-    GLfloat v[16] {0,0,0,0, 0,1,0,1, 1,0,1,0, 1,1,1,1};
+        byte_arr_ptr->operator byte * (), 3);
+    GLfloat v[16] {
+        0,0,_e1.l,_e1.t, 0,1,_e1.l,_e1.b, 1,0,_e1.r,_e1.t, 1,1,_e1.r,_e1.b};
     glGenBuffers (1, &_vbo);
-    glBindBuffer (GL_ARRAY_BUFFER, _vbo),
+    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     glBufferData (GL_ARRAY_BUFFER, 16*sizeof(GLfloat), v, GL_STATIC_DRAW);
 
     // -- Controls ---------------------------------------------------------
@@ -130,7 +122,7 @@ MainWindow::MainWindow(OSWindow * actual_window)
 
 MainWindow::~MainWindow()
 {
-    glDeleteBuffers (1, &_vbo), glDeleteTextures (1, &_tex);
+    glDeleteBuffers (1, &_vbo);//, glDeleteTextures (1, &_tex);
 }
 
 void MainWindow::OnKeyUp(const EventArgs & e)
@@ -148,7 +140,8 @@ void MainWindow::OnRender()
 {
     glClear (GL_COLOR_BUFFER_BIT);
     glLoadIdentity ();
-    glBindTexture (GL_TEXTURE_2D, _tex);
+
+    TexCache::Bind (_e1);
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     glScalef (_w, _h, 1);
 
