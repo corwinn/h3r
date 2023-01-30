@@ -48,6 +48,8 @@ Stream & ZipInflateStream::Seek(off_t offset)
     return * this;
 }
 
+//TODO this is unreliable: reading 12 bytes, makes it return 128
+//See h3r_pcx.h for an example
 off_t ZipInflateStream::Tell() const { return Stream::Tell () - _zs.avail_in; }
 
 off_t ZipInflateStream::Size() const { return _usize; }
