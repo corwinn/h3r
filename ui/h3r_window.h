@@ -46,7 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-// Bridge: Abstraction.
+// Bridge: Abstraction. In case you're wondering: put nothing specific here.
+//
 // It shall allow you to create a text console version of the game if you dare:
 // just implement OSWindow for it.
 // Use-case:
@@ -80,6 +81,14 @@ class Window : public IWindow
 
     public Window(OSWindow * actual_window);
 
+    //  Window  OSWindow  OSWindow
+    //  | Show  |         |
+    //  |------>|         |
+    //  |       | Show    |
+    //          |-------->|
+    //                    | OnShow()
+    //  |OnShow           |
+    //  |<................|
     IW public void Show() override;
     IW public void Hide() override;
     IW public void Close() override;
