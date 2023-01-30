@@ -79,6 +79,7 @@ class Window : public IWindow
     IW public inline virtual bool Idle() override { return _win->Idle (); }
     IW protected inline virtual void Render() override { _win->Render (); }
 
+    // Use IWindow::Create()
     public Window(OSWindow * actual_window);
 
     //  Window  OSWindow  OSWindow
@@ -86,7 +87,7 @@ class Window : public IWindow
     //  |------>|         |
     //  |       | Show    |
     //          |-------->|
-    //                    | OnShow()
+    //                    | OnShow
     //  |OnShow           |
     //  |<................|
     IW public void Show() override;

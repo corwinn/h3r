@@ -59,22 +59,6 @@ h - hover
 MainWindow::MainWindow(OSWindow * actual_window)
     : Window{actual_window}
 {
-
-}
-
-MainWindow::~MainWindow()
-{
-    glDeleteBuffers (1, &_vbo), glDeleteTextures (1, &_tex);
-}
-
-void MainWindow::OnKeyUp(const EventArgs & e)
-{
-    if (H3R_KEY_Q == e.Key)
-        Close ();
-}
-
-void MainWindow::OnShow()
-{
     //TODO one VBO for all controls on all windows; just let each control know
     //     its offsets (vertex2,uv2) and lengths (glGenLists)
     //TODO then figure out little z-offsets (relative) for each control
@@ -142,6 +126,22 @@ void MainWindow::OnShow()
     for (Control * btn : Controls ())
         btn->SetPos (
             btn->Pos ().X + ((ww - btn->Size ().X) / 2), btn->Pos ().Y);
+}
+
+MainWindow::~MainWindow()
+{
+    glDeleteBuffers (1, &_vbo), glDeleteTextures (1, &_tex);
+}
+
+void MainWindow::OnKeyUp(const EventArgs & e)
+{
+    if (H3R_KEY_Q == e.Key)
+        Close ();
+}
+
+void MainWindow::OnShow()
+{
+
 }// MainWindow::OnShow
 
 void MainWindow::OnRender()

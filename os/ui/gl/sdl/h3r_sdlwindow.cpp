@@ -97,16 +97,6 @@ SDLWindow::SDLWindow(int, char **)
     : OSWindow (0, nullptr)
 {
     if (! global_sdl_init) Init_SDL ();
-}
-
-SDLWindow::~SDLWindow() {}
-
-void SDLWindow::Show()
-{
-    THE_WAY_IS_SHUT
-
-    _visible = true;
-    if (_window) return;
 
     // 2.0 should be enough for a proof of concept
     //TODO request this from the abstraction
@@ -115,7 +105,7 @@ void SDLWindow::Show()
 
     _window = SDL_CreateWindow ("h3r",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
     if (! _window) {
         H3R_NS::Log::Err (H3R_NS::String::Format (
             "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
@@ -128,6 +118,18 @@ void SDLWindow::Show()
             "SDL_GL_CreateContext error: %s" EOL, SDL_GetError ()));
         return;
     }
+}
+
+SDLWindow::~SDLWindow() {}
+
+void SDLWindow::Show()
+{
+    THE_WAY_IS_SHUT
+
+    _initialized = false;
+    if (_visible || ! _window || ! _gc) return;
+    SDL_ShowWindow (_window);
+    _visible = true;
 
     OnShow (); //TODO OnShow called Render() bellow and OnRender () tried using
                //     uninitialized state;
