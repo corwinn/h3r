@@ -84,6 +84,24 @@ static void Init_SDL()
             Mix_GetError ()));
         return;
     }
+    // Ok, the docs state that SDL_mixer allocates MIX_CHANNELS (currently 8)
+    // channels when you open an audio device. That should be enough for this
+    // game:
+    //   * I can hardly imagine use case where more than 2 are being used
+    // The SDL provides this nice struct:
+    // SDL_RWops
+    // It has function pointers, so I can create SDL_RWops_Stream.
+    // The SDL_RWops is a parameter to Mix_Chunk * Mix_LoadWAV_RW().
+    // The chunk is parameter to:
+    // "int Mix_PlayChannel(int channel, Mix_Chunk *chunk, int loops);" and
+    // "Mix_PlayChannel (-1"... "play on the first free channel".
+    // The picture is quite clear. It can play directly from the res manager
+    // via a RefReadStream, in its own thread; IPC: {res_name; command; channel}
+    // This one requires a Queue.
+    // With auto cross-fade based on channel - requires predefined channel
+    // numbers: battle_fx:2, env:4 (the odd being using for the cross-fade);
+    // could work - one way to find out.
+    // Audio Manager is coming to mind - as the Tex Cache.
     Mix_Music * music = Mix_LoadMUS ("MP3/MAINMENU.MP3");
     if (music) Mix_PlayMusic (music, -1);
     global_sdl_mix_init = true;
@@ -105,7 +123,7 @@ SDLWindow::SDLWindow(int, char **)
 
     _window = SDL_CreateWindow ("h3r",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE);
+        SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN /*| SDL_WINDOW_RESIZABLE*/);
     if (! _window) {
         H3R_NS::Log::Err (H3R_NS::String::Format (
             "SDL_CreateWindow error: %s" EOL, SDL_GetError ()));
@@ -174,6 +192,8 @@ void SDLWindow::ProcessMessages()
             case SDL_WINDOWEVENT: HandleWindowEvent (); break;
             case SDL_KEYUP: HandleKeyboardEvent (e); break;
             case SDL_MOUSEMOTION: HandleMouseMotionEvent (e); break;
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP: HandleMouseButtonEvent (e); break;
         }
     }
 }// ProcessMessages
@@ -218,6 +238,26 @@ void SDLWindow::HandleMouseMotionEvent(EventArgs & e)
     e.X = _e.motion.x;
     e.Y = _e.motion.y;
     OnMouseMove (e);
+    e.X = e.Y = 0;
+}
+
+void SDLWindow::HandleMouseButtonEvent(EventArgs & e)
+{
+    THE_WAY_IS_SHUT
+
+    //TODO _e.motion.which; the mouse instance id
+    //     Please don't play with more than one mouse simultaneously :)
+    switch (_e.button.button) {
+        case SDL_BUTTON_LEFT: e.Button = H3R_MKEY_LEFT; break;
+        default: break; // TODO handle the others
+    }
+    e.X = _e.button.x;
+    e.Y = _e.button.y;
+    switch (_e.button.state) {
+        case SDL_PRESSED: OnMouseDown (e); break;
+        case SDL_RELEASED: OnMouseUp (e); break;
+        default: H3R_NS::Log::Info ("Unhandled mouse button state" EOL); break;
+    }
     e.X = e.Y = 0;
 }
 
