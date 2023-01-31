@@ -244,7 +244,7 @@ TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp)
             "TexCache::Cache: tex: %12d, top: %00000.4f, bottom: %00000.4f "
             "left: %00000.4f, right: :%00000.4f" EOL,
             result.Texture, result.t, result.b, result.l, result.r));
-        e.x += clasify_w;
+        e.x += w;
     }
     else {
         Log::Info ("One texture is not enough" EOL);
