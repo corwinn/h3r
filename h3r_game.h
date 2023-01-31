@@ -59,7 +59,9 @@ class Game final
 
                               // These names matter not - their order does.
     private: Log_Stdout _2nd; // You're using OS::Alloc (), OS::Free (), and
+#if LOG_FILE
     private: Log_File   _3rd; //
+#endif
     private: Log        _4th; // Log::Info ()
 
     public: static IWindow * MainWindow;

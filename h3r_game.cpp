@@ -55,10 +55,14 @@ ResManager * Game::RM {};
 IWindow * Game::MainWindow {};
 
 Game::Game(const char * process_path)
+#if LOG_FILE
     : _3rd {"main.log"}
+#endif
 {
     _4th.Subscribe (&_2nd);
-    _4th.Subscribe (&_3rd);
+#if LOG_FILE
+    _4th.Subscribe (&_3rd); // disable the file log for pre-releases
+#endif
 
     H3R_CREATE_OBJECT(Game::RM, ResManager) {};
 
