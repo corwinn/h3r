@@ -63,12 +63,14 @@ class GameArchives final
         for (auto & e : _ba) if (e.Name == name) return true;
         return false;
     }
+    // Something overrode the main background, so disable all but expected,
+    // until overriding is setup.
     public GameArchives()
         : _ba {List<Entry> {}
-            << Entry {String {"H3ab_ahd.snd"}.ToLower ()}
+            /*<< Entry {String {"H3ab_ahd.snd"}.ToLower ()}
             << Entry {String {"H3ab_bmp.lod"}.ToLower ()}
             << Entry {String {"H3ab_ahd.vid"}.ToLower ()}
-            << Entry {String {"H3ab_spr.lod"}.ToLower ()}
+            << Entry {String {"H3ab_spr.lod"}.ToLower ()}*/
             << Entry {String {"Heroes3.snd" }.ToLower ()} // 2 of them
             << Entry {String {"Heroes3.vid" }.ToLower ()}
             << Entry {String {"H3bitmap.lod"}.ToLower ()}
