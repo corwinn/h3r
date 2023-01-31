@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_def.h"
 #include "h3r_log.h"
 #include "h3r_string.h"
+#include "h3r_sdlrwops.h"
 
 H3R_NAMESPACE
 
@@ -48,13 +49,13 @@ Button::Button(const String & res_name, Control * base)
     auto btn_def_n = btn_def.Query (n);
     if (! btn_def_n) {
         H3R_NS::Log::Err (String::Format (
-            "Can't find %s[%s]", res_name.AsZStr (), n.AsZStr ()));
+            "Can't find %s[%s]" EOL, res_name.AsZStr (), n.AsZStr ()));
         return;
     }
     auto byte_arr_ptr = btn_def_n->ToRGBA ();
     if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
         H3R_NS::Log::Err (String::Format (
-            "Can't load %s[%s]", res_name.AsZStr (), n.AsZStr ()));
+            "Can't load %s[%s]" EOL, res_name.AsZStr (), n.AsZStr ()));
         return;
     }
 
@@ -73,14 +74,25 @@ Button::Button(const String & res_name, Control * base)
         btn_def_n->Height (),
         byte_arr_ptr->operator byte * (), 4);
 
+    //TODO to function; or description;
+    n = res_name.ToLower ().Replace (".def", "s.pcx");
+    btn_def_n = btn_def.Query (n);
+    byte_arr_ptr = btn_def_n->ToRGBA ();
+    _es = TexCache::One ()->Cache (
+        btn_def_n->Width (),
+        btn_def_n->Height (),
+        byte_arr_ptr->operator byte * (), 4);
+
     float fw = static_cast<float>(btn_def_n->Width ()),
         fh = static_cast<float>(btn_def_n->Height ());
-    GLfloat v[32] {
+    GLfloat v[48] {
         0,0,_en.l,_en.t, 0,fh,_en.l,_en.b, fw,0,_en.r,_en.t, fw,fh,_en.r,_en.b,
-        0,0,_eh.l,_eh.t, 0,fh,_eh.l,_eh.b, fw,0,_eh.r,_eh.t, fw,fh,_eh.r,_eh.b};
+        0,0,_eh.l,_eh.t, 0,fh,_eh.l,_eh.b, fw,0,_eh.r,_eh.t, fw,fh,_eh.r,_eh.b,
+        0,0,_es.l,_es.t, 0,fh,_es.l,_es.b, fw,0,_es.r,_es.t, fw,fh,_es.r,_es.b
+    };
     glGenBuffers (1, &_vbo);
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
-    glBufferData (GL_ARRAY_BUFFER, 32*sizeof(GLfloat), v, GL_STATIC_DRAW);
+    glBufferData (GL_ARRAY_BUFFER, 48*sizeof(GLfloat), v, GL_STATIC_DRAW);
 }
 
 void Button::OnMouseMove(const EventArgs & e)
@@ -96,6 +108,49 @@ void Button::OnMouseMove(const EventArgs & e)
         ClientRectangle ().Size.X, ClientRectangle ().Size.Y));*/
 }
 
+static Mix_Chunk * global_fx1[MIX_CHANNELS] {};
+
+void Button::OnMouseDown(const EventArgs &)
+{
+    if (! _mouse_over) return;
+    _mouse_down = true;
+    Log::Info ("MouseDown" EOL);
+    auto stream = Game::GetResource ("BUTTON.wav");
+    if (! stream) {
+        Log::Err ("Can't load BUTTON.wav" EOL);
+        return;
+    }
+    SdlRWopsStream wav_ops {stream};
+    int freesrc = true;
+    Mix_Chunk * wav_chunk = Mix_LoadWAV_RW (wav_ops, freesrc);
+    if (! wav_chunk) {
+        Log::Err ("Mix_LoadWAV_RW: can't load BUTTON.wav" EOL);
+        return;
+    }
+    //TODO This complicates things a little bit
+    Mix_ChannelFinished ([](int c) {
+        if (global_fx1[c]) {
+            printf ("Mix_FreeChunk at global_fx1" EOL);
+            Mix_FreeChunk (global_fx1[c]);
+            global_fx1[c] = nullptr;
+        }
+    });
+    global_fx1[Mix_PlayChannel (-1, wav_chunk, 0)] = wav_chunk;
+}
+
+void Button::OnMouseUp(const EventArgs &)
+{
+    //TODO Chain of Responsibility can really come in handy here. You clicked on
+    //     one control - that's it: the others need not get notified. I don't
+    //     need the bubbling/tunneling madness of the "WPF" here.
+    if (! _mouse_down) return; // It was not me
+    _mouse_down = false;
+    // If you release the button outside of the of the thing you clicked on
+    // there shall be no mouse click event.
+    if (! _mouse_over) return;
+    Log::Info ("MouseUp" EOL);
+}
+
 void Button::OnRender(GC &)
 {
     glLoadIdentity ();
@@ -106,7 +161,10 @@ void Button::OnRender(GC &)
 
     GLint ofs = 0;
     TexCache::Bind (_en); // It looks like a tex. bind, but it could be not
-    if (_mouse_over) { TexCache::Bind (_eh); ofs = 4; }
+    if (_mouse_over) {
+        if (_mouse_down) {TexCache::Bind (_es); ofs = 8;}
+        else { TexCache::Bind (_eh); ofs = 4; }
+    }
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
 
     glTranslatef (Pos ().X, Pos ().Y, 0);

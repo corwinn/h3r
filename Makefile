@@ -35,6 +35,7 @@
 MAKEFLAGS += rR
 
 APP = main
+LOG ?= -DLOG_FILE
 PLATFORM ?= posix
 RENDER_API ?= gl
 WIN_SYSTEM ?= $(RENDER_API)/sdl
@@ -43,7 +44,7 @@ CXX ?= clang++
 H3R_TEST ?=
 _W  = -Wall -Wextra -Wshadow
 _O  = -O0 -g -DH3R_DEBUG -DH3R_MM -fno-exceptions -fno-threadsafe-statics \
- $(H3R_TEST) -DGL_GLEXT_PROTOTYPES
+ $(H3R_TEST) -DGL_GLEXT_PROTOTYPES $(LOG)
 _F  = -fsanitize=address,undefined,integer,leak -fvisibility=hidden
 #TODO release build _F = -fvisibility=hidden -fno-rtti
 _L = -Wl,--as-needed -lpthread -lz -lSDL2 -lSDL2_mixer -lGL

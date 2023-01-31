@@ -48,8 +48,9 @@ H3R_NAMESPACE
 // Its size is stored at the resource it is created from.
 class Button: public Control
 {
-    private: TexCache::Entry _en;
-    private: TexCache::Entry _eh;
+    private: TexCache::Entry _en; // up
+    private: TexCache::Entry _eh; // hover
+    private: TexCache::Entry _es; // down
     private: GLuint _vbo {}; // one more to go
 
     public: Button(const String &, Control * = nullptr);
@@ -60,8 +61,11 @@ class Button: public Control
 
     public: virtual void OnRender(GC &) override;
     public: virtual void OnMouseMove(const EventArgs &) override;
+    public: virtual void OnMouseDown(const EventArgs &) override;
+    public: virtual void OnMouseUp(const EventArgs &) override;
 
     private: bool _mouse_over {};
+    private: bool _mouse_down {};
 };
 
 NAMESPACE_H3R

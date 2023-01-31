@@ -87,7 +87,7 @@ MainWindow::MainWindow(OSWindow * actual_window)
     Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
     auto byte_arr_ptr = main_window_background.ToRGB ();
     if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
-        H3R_NS::Log::Err ("Failed to load GamSelBk.pcx");
+        H3R_NS::Log::Err ("Failed to load GamSelBk.pcx" EOL);
         return;
     }
     _e1 = TexCache::One ()->Cache (
