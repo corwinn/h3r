@@ -41,12 +41,12 @@ done: 3rd the project needs a file stream, and a file log
  done: and now it needs fread/fwrite wrappers
  done: and now it needs a main class to order singletons about
 
-and now, index the game resources and create the main game screen
+done: and now, index the game resources and create the main game screen
  done: and now it needs InflateStream
  done: and now it needs a .def parser
-  and now it became clear what the main render loop will do:
-   foreach (visible tile) bitmap.render (tile.nextframe);
-   bitmap2screen (bitmap);
+  done: and now it became clear what the main render loop will do:
+         * select tex atlas
+         * glMultiDrawArrays
   and now it became clear what the game requires: 800 x 600 x 16
   done: and now it needs a .msk parser
  done: and now it needs a .pcx parser
@@ -55,10 +55,8 @@ and now, index the game resources and create the main game screen
   and now it became clear that some .def are not animations but collections
  ring the buffers: start the main menu music and button sound fx
   and now it needs audio options, like: sound quality
-  and now it became clear that I'll have to guess the number of channels used
-   (perhaps I shall dynamically increase them on an "as needed" basis; then:
-    0: music; 1: UI fx; 2+: game fx; or 0, 1: music (fade in/out), 2:UI, 3+:
-    game fx?)
+  done: and now it became clear that I'll have to guess the number of channels
+        used; nothing to gues the SDL2_mixer provides a very clever design.
  done: and now it needs a VFS - abstract away persistent game data
   done: and now it needs a file enumerator
   done: and now it needs sort()
