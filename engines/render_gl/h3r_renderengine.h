@@ -157,8 +157,8 @@ class RenderEngine final
     //  A button needs to get its texture generated so it can auto-size to it,
     //  and that size is needed to perform some limited layout, like centering
     //  a few buttons in a column defined by the widest one.
-    //  Either it can't Upload() here until its final position, or it needs
-    //  a way to update its data here. This method is the 2nd option.
+    //  Either it can't Upload() here, until its final position, or it needs
+    //  a way to update its data. This method is the 2nd option.
     //  The 1st option involves someone else (the one doing the layout) to
     //  Upload() button data here, after it finishes moving it around.
     //public void UpdateGeometry(int key, const H3Rfloat * buf);

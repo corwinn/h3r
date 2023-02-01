@@ -56,7 +56,7 @@ done: and now, index the game resources and create the main game screen
  ring the buffers: start the main menu music and button sound fx
   and now it needs audio options, like: sound quality
   done: and now it became clear that I'll have to guess the number of channels
-        used; nothing to gues the SDL2_mixer provides a very clever design.
+        used; nothing to gues - the SDL2_mixer provides a very clever design.
  done: and now it needs a VFS - abstract away persistent game data
   done: and now it needs a file enumerator
   done: and now it needs sort()
