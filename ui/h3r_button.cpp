@@ -85,14 +85,31 @@ Button::Button(const String & res_name, Control * base)
 
     float fw = static_cast<float>(btn_def_n->Width ()),
         fh = static_cast<float>(btn_def_n->Height ());
+    GLfloat t = Pos ().Y, l = Pos ().X, b = t + fh, r = l + fw;
     GLfloat v[48] {
-        0,0,_en.l,_en.t, 0,fh,_en.l,_en.b, fw,0,_en.r,_en.t, fw,fh,_en.r,_en.b,
-        0,0,_eh.l,_eh.t, 0,fh,_eh.l,_eh.b, fw,0,_eh.r,_eh.t, fw,fh,_eh.r,_eh.b,
-        0,0,_es.l,_es.t, 0,fh,_es.l,_es.b, fw,0,_es.r,_es.t, fw,fh,_es.r,_es.b
+        l,t,_en.l,_en.t, l,b,_en.l,_en.b, r,t,_en.r,_en.t, r,b,_en.r,_en.b,
+        l,t,_eh.l,_eh.t, l,b,_eh.l,_eh.b, r,t,_eh.r,_eh.t, r,b,_eh.r,_eh.b,
+        l,t,_es.l,_es.t, l,b,_es.l,_es.b, r,t,_es.r,_es.t, r,b,_es.r,_es.b
     };
     glGenBuffers (1, &_vbo);
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     glBufferData (GL_ARRAY_BUFFER, 48*sizeof(GLfloat), v, GL_STATIC_DRAW);
+}
+
+Control * Button::SetPos(int x, int y)
+{
+    Control::SetPos (x, y);
+
+    // Engine::UpdateGeometry (_key, v);
+    GLfloat t = Pos ().Y, l = Pos ().X, b = t + Size ().Y, r = l + Size ().X;
+    GLfloat v[48] {
+        l,t,_en.l,_en.t, l,b,_en.l,_en.b, r,t,_en.r,_en.t, r,b,_en.r,_en.b,
+        l,t,_eh.l,_eh.t, l,b,_eh.l,_eh.b, r,t,_eh.r,_eh.t, r,b,_eh.r,_eh.b,
+        l,t,_es.l,_es.t, l,b,_es.l,_es.b, r,t,_es.r,_es.t, r,b,_es.r,_es.b
+    };
+    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
+    glBufferData (GL_ARRAY_BUFFER, 48*sizeof(GLfloat), v, GL_STATIC_DRAW);
+    return this;
 }
 
 void Button::OnMouseMove(const EventArgs & e)
@@ -167,13 +184,13 @@ void Button::OnRender(GC &)
     }
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
 
-    glTranslatef (Pos ().X, Pos ().Y, 0);
+    // glTranslatef (Pos ().X, Pos ().Y, 0);
     glVertexPointer (
         2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
     glTexCoordPointer (
         2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
     glDrawArrays (GL_TRIANGLE_STRIP, ofs, 4);
-    glTranslatef (-Pos ().X, -Pos ().Y, 0);
+    // glTranslatef (-Pos ().X, -Pos ().Y, 0);
 
     /*glDisable (GL_TEXTURE_2D); // implict contract with MainWindow.Show()
                                //LATER to the render engine

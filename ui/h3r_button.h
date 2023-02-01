@@ -59,6 +59,8 @@ class Button: public Control
         glDeleteBuffers (1, &_vbo);
     }
 
+    public: virtual Control * SetPos(int, int) override;
+
     public: virtual void OnRender(GC &) override;
     public: virtual void OnMouseMove(const EventArgs &) override;
     public: virtual void OnMouseDown(const EventArgs &) override;

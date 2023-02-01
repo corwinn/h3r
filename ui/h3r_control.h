@@ -75,14 +75,16 @@ class Control
 
     public: const Point & Pos() { return _bb.Pos; }
     public: const Point & Size() { return _bb.Size; }
-    public: Control * SetPos(int, int);
+    // Let controls know, their position has been changed.
+    public: virtual Control * SetPos(int, int);
 
     // properties
     public: void SetEnabled(bool value) { _enabled = value; }
     public: bool Enabled() { return _enabled; } // Has a specific sprite for it
 
     protected: inline Box & ClientRectangle() { return _bb; }
-    //LATER Allowed for now.
+    //LATER Allowed for now. Its bound to its sprite. Scaling shall be done by
+    //      the render engine regardless of this function here.
     protected: void Resize(int, int);
     protected: virtual bool HitTest(Point & p);
 
