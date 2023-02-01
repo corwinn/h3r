@@ -148,12 +148,12 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
         read_sprite (*_s, indexed_bitmap, sh);
         H3R_ENSURE(sh.AnimWidth == _w, "leaf.w != tree.w")
         H3R_ENSURE(sh.AnimHeight == _h, "leaf.h != tree.h")
-        Log::Info (String::Format ("DEF: %s: W:%d, H:%d, S: " EOL,
-            _request->Name.AsZStr (), _w, _h));
-        Log::Info (String::Format (
+        printf ("DEF: %s: W:%d, H:%d, S: " EOL,
+            _request->Name.AsZStr (), _w, _h);
+        printf (
             "DEF.sh: %s: Type:%d, AW:%d, AH:%d W:%d, H:%d, T:%d, L:%d" EOL,
             _request->Name.AsZStr (), sh.Type, sh.AnimWidth, sh.AnimHeight,
-            sh.Width, sh.Height, sh.Top, sh.Left));
+            sh.Width, sh.Height, sh.Top, sh.Left);
         /*store_as_bmp (const_cast<char *>(_request->Name.AsZStr ()),
             static_cast<const byte *>(indexed_bitmap),
             sh.Width, sh.Height, 8, static_cast<const byte *>(_palette));*/
