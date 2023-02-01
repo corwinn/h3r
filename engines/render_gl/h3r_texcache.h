@@ -55,6 +55,7 @@ class TexCache final
     {
         GLuint Texture {};
         GLfloat l, t, r, b;
+        // internal state; don't modify please
         int x {};
         int y {};
     };

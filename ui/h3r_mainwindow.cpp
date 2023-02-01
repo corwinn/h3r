@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_button.h"
 #include "h3r_list.h"
 #include "h3r_string.h"
+#include "h3r_renderengine.h"
 
 #include <new>
 
@@ -59,30 +60,7 @@ h - hover
 MainWindow::MainWindow(OSWindow * actual_window)
     : Window{actual_window}
 {
-    //TODO one VBO for all controls on all windows; just let each control know
-    //     its offsets (vertex2,uv2) and lengths (glGenLists)
-    //TODO then figure out little z-offsets (relative) for each control
-    //     (f(z-order) so the entire UI shall be rendered in one gl call
-    //     GL_DEPTH_TEST; and compare to the above; choose the less-code one
-    //
-    //TODO texture atlas(es) for the animated sprites (encode frame number at
-    //     some pixel; PixelDB - NoSQL :) )
-
-    //TODO this Open GL init. code is looking for a place, as well is the
-    //     TexCache; Could it be h3r_renderengine?
-    glDisable (GL_COLOR_MATERIAL);
-    glEnable (GL_TEXTURE_2D);
-    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glEnable (GL_CULL_FACE), glCullFace (GL_BACK);
-    glEnable (GL_VERTEX_ARRAY); glEnable (GL_TEXTURE_COORD_ARRAY);
-    glClearColor (.0f, .0f, .0f, 1.f);
-    glDisable (GL_DEPTH_TEST);
-    glDisable (GL_DITHER);
-    glDisable (GL_BLEND);
-    glDisable (GL_LIGHTING);
-    glDisable (GL_FOG);
-    glDisable (GL_MULTISAMPLE);
-    glShadeModel (GL_FLAT);
+    RenderEngine::Init ();
 
     Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
     auto byte_arr_ptr = main_window_background.ToRGB ();
@@ -90,15 +68,10 @@ MainWindow::MainWindow(OSWindow * actual_window)
         H3R_NS::Log::Err ("Failed to load GamSelBk.pcx" EOL);
         return;
     }
-    _e1 = TexCache::One ()->Cache (
-        main_window_background.Width (),
-        main_window_background.Height (),
-        byte_arr_ptr->operator byte * (), 3);
-    GLfloat v[16] {
-        0,0,_e1.l,_e1.t, 0,1,_e1.l,_e1.b, 1,0,_e1.r,_e1.t, 1,1,_e1.r,_e1.b};
-    glGenBuffers (1, &_vbo);
-    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
-    glBufferData (GL_ARRAY_BUFFER, 16*sizeof(GLfloat), v, GL_STATIC_DRAW);
+
+    auto key = RenderEngine::UI ().GenKey ();
+    RenderEngine::UI ().UploadFrame (key, 0, 0, main_window_background.Width (),
+        main_window_background.Height (), byte_arr_ptr->operator byte * (), 3);
 
     // -- Controls ---------------------------------------------------------
 
@@ -106,7 +79,9 @@ MainWindow::MainWindow(OSWindow * actual_window)
     List<String> mm {};
     mm  << "MMENUNG.def" << "MMENULG.def" << "MMENUHS.def" << "MMENUCR.def"
         << "MMENUQT.def";
-    // centered at x=525
+
+    // Centered at x=525
+    // 1. Measure
     int ww = 0;
     for (const auto & b : mm) {
         Button * btn;
@@ -115,15 +90,15 @@ MainWindow::MainWindow(OSWindow * actual_window)
         Add (btn->SetPos (x, y));
         y += btn->Size ().Y + spacing;
     }
+    // 2. Layout
     for (Control * btn : Controls ())
         btn->SetPos (
             btn->Pos ().X + ((ww - btn->Size ().X) / 2), btn->Pos ().Y);
+    // 3. Upload
+    for (Control * btn : Controls ()) btn->UploadFrames ();
 }
 
-MainWindow::~MainWindow()
-{
-    glDeleteBuffers (1, &_vbo);//, glDeleteTextures (1, &_tex);
-}
+MainWindow::~MainWindow() {}
 
 void MainWindow::OnKeyUp(const EventArgs & e)
 {
@@ -131,27 +106,14 @@ void MainWindow::OnKeyUp(const EventArgs & e)
         Close ();
 }
 
-void MainWindow::OnShow()
-{
-
-}// MainWindow::OnShow
+void MainWindow::OnShow() {}
 
 void MainWindow::OnRender()
 {
     glClear (GL_COLOR_BUFFER_BIT);
     glLoadIdentity ();
 
-    TexCache::Bind (_e1);
-    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
-    glScalef (_w, _h, 1);
-
-    glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
-    glTexCoordPointer (
-        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
-    glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
-
-    // Render the controls, if any
-    Window::OnRender ();
+    RenderEngine::UI ().Render ();
 
     OS::Thread::Sleep (16);//TODO timing
 }

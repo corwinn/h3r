@@ -41,25 +41,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_gc.h"
 #include "h3r_control.h"
 #include "h3r_eventargs.h"
-#include "h3r_texcache.h"
 
 H3R_NAMESPACE
 
 // Its size is stored at the resource it is created from.
 class Button: public Control
 {
-    private: TexCache::Entry _en; // up
-    private: TexCache::Entry _eh; // hover
-    private: TexCache::Entry _es; // down
-    private: GLuint _vbo {}; // one more to go
+    private: int _rkey {};
+    private: int _on {}; // up
+    private: int _oh {}; // hover
+    private: int _os {}; // down
+    private: String _sprite_name {};
 
     public: Button(const String &, Control * = nullptr);
     public: virtual ~Button() override
     {
-        glDeleteBuffers (1, &_vbo);
     }
 
     public: virtual Control * SetPos(int, int) override;
+    public: void UploadFrames() override;
 
     public: virtual void OnRender(GC &) override;
     public: virtual void OnMouseMove(const EventArgs &) override;

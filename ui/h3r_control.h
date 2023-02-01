@@ -78,6 +78,11 @@ class Control
     // Let controls know, their position has been changed.
     public: virtual Control * SetPos(int, int);
 
+    // Upload the Frames to the RenderEngine.
+    // This is not called on construction, on purpose: so that layout can be
+    // done prior uploading to the render engine.
+    public: inline virtual void UploadFrames() {}
+
     // properties
     public: void SetEnabled(bool value) { _enabled = value; }
     public: bool Enabled() { return _enabled; } // Has a specific sprite for it
