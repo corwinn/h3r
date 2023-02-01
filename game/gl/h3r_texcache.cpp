@@ -61,14 +61,17 @@ GLuint TexCache::_bound {}; // currently bound texture
     static TexCache TC {}; return &TC;
 }
 
-/*static int const MAX_SIZE {2048};
+#undef TC_STATS
+#ifdef TC_STATS
+static int const MAX_SIZE {2048};
 static int wa[MAX_SIZE] {};
 static int ha[MAX_SIZE] {};
 static int most_frequent_w {}, mf_w_id {};
 static int most_frequent_h {}, mf_h_id {};
 static int total {}, distinct_w {}, distinct_h {};
 static int max_w {}, max_h {};
-static int min_w {MAX_SIZE}, min_h {MAX_SIZE};*/
+static int min_w {MAX_SIZE}, min_h {MAX_SIZE};
+#endif
 
 static GLint H3R_MAX_TEX_SIZE {1<<12};
 
@@ -82,7 +85,8 @@ static GLint TexSize()
 TexCache::TexCache()
     : _tsize{TexSize ()}
 {
-    /*distinct_h = distinct_w = total = most_frequent_w = most_frequent_h = 0;
+#ifdef TC_STATS
+    distinct_h = distinct_w = total = most_frequent_w = most_frequent_h = 0;
     for (auto & v : wa) v = 0;
     for (auto & v : ha) v = 0;
     Log::Info ("TexCache: Preliminary" EOL);
@@ -144,7 +148,8 @@ TexCache::TexCache()
     Log::Info (String::Format (" min h          : %d" EOL, min_h));
     Log::Info (String::Format (" distinct w     : %d" EOL, distinct_w));
     Log::Info (String::Format (" distinct h     : %d" EOL, distinct_h));
-    Log::Info (String::Format (" resources      : %d" EOL, total));*/
+    Log::Info (String::Format (" resources      : %d" EOL, total));
+#endif
 
     Log::Info (String::Format ("Open GL  : %s" EOL, glGetString (GL_VENDOR)));
     Log::Info (String::Format (" Renderer: %s" EOL, glGetString (GL_RENDERER)));
