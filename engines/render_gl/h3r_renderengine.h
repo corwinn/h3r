@@ -72,44 +72,72 @@ using H3Rfloat = GLfloat;
 // is no need for this project to re-invent the wheel. Perhaps one day this
 // project shall be able to use some of the best renderers out there - I know
 // you want to play multi-dimensional "Heroes III"; patience.
+//
+// Right now the z-order equals the order of UploadFrame() it seems; although
+// I'm not sure how Open GL orders things, with equal z coordinates, inside VBO.
+//TODO R&D the topic.
 class RenderEngine final
 {
-    struct TexList final // bind texture id to glMultiDrawArrays
+    // Bind texture id to glMultiDrawArrays. Because frame0 could be at
+    // tex-atlas0 and frame1 could be at tex-atlas1 e.g. Offset=0 shall be at
+    // TexList.Texture == t0, and Offset=4 shall be at another TexList where
+    // Texture == t1.
+    struct TexList final
     {
         GLuint Texture {};
         List<GLint> _index {};
         List<GLsizei> _count {}; // 4, 4, ...
     };
+    // .Texture distinct; one entry per tex-atlas.
     private List<TexList> _tex2_list {};
     private RenderEngine::TexList & ListByTexId(GLuint tex_id);
 
     private GLuint _vbo;
+    private GLsizeiptr _vbo_max_elements;
 
+    // Maps your frames (different uv, same 4 vertexes) to the _index above,
+    // via a texture, because different frames could land in different atlases.
+    // This entry represents one quad (a triangle-strip of four 4-component
+    // vertices), where each frame has the same vertices, but different uv:
+    //   frame0: {l,t,l0,t0}, {l,b,l0,b0}, {r,t,r0,t0}, {r,b,r0,b0},
+    //   frame1: {l,t,l1,t1}, {l,b,l1,b1}, {r,t,r1,t1}, {r,b,r1,b1}, ...
+    // All frames are placed in one giant VBO, but the UV could refer different
+    // texture per frame. Now, the Base offset refers the position of frame0 at
+    // the VBO. Offset=0 refers frame0 at Base, Offset=4 refers frame1, etc.
     private struct Entry final
     {
         // Base offset at the VBO (the sprite starts here).
-        GLint Base {};   // [element] {x,y,u,v}
+        // "element" is one vertex that includes all the components needed for
+        // its processing by the Open GL pipeline.
+        GLint Base {};   // [element] (element:{x,y,u,v})
         // Specifies the currently being rendered sprite frame.
         // Base+Offset is put at _index above.
         GLint Offset {}; // [element] {x,y,u,v}
+        // When false,
+        // ListByTexId(_entries[key].Texture())._index[_entries[key].Key] = 0 (
+        // a.k.a. the invisible quad)
         bool Visible {true};
         int Key; // TexList one
 
         // [0;Offset), [Offset0;Offset1), ...
+        // "Offset" is the upper exclusive limit of the current range.
         struct OffsetRange2TexId final { GLint Offset {}; GLuint Texture {}; };
+        // Maps Offset range to texture. Example: range[0;8) t0, range[8;12) t1.
+        // Groups Frames by Texture - e.g. the name:
+        //   frames.GroupBy (x=>x.Texture);
         List<OffsetRange2TexId> TexFrame {};
-        int Frames {};
-        inline GLuint Texture()
-        {
+        int Frames {}; // Number of frames managed by this Entry
+        inline GLuint Texture() // Returns the texture for current entry.Offset.
+        {//LATER optimize
             if (TexFrame.Count () == 1) return TexFrame[0].Texture;
-            // should be no more than 2, but
+            // should be no more than Count () = 2, but
             for (size_t i = 1; i < TexFrame.Count (); i++)
                 if (Offset >= TexFrame[i-1].Offset
                     && Offset < TexFrame[i].Offset) return TexFrame[i].Texture;
             H3R_ENSURE(false, "You have a bug: unknown texture")
         }
-        inline void SetTexture(GLuint tex_id)
-        {
+        inline void SetTexture(GLuint tex_id) // Update TexFrame
+        {//LATER optimize
             for (size_t i = 0; i < TexFrame.Count (); i++)
                 if (TexFrame[i].Texture == tex_id) {
                     // printf (" update TexFrame: [%d;%d)",
@@ -120,16 +148,18 @@ class RenderEngine final
                     return;
                 }
             OffsetRange2TexId itm {};
-            itm.Offset = Frames * 4; // 4 - {x,y,u,v}
+            itm.Offset = Frames * 4; // 4 - number of elements in a frame
             // printf (" new TexFrame: [0;%d)" EOL, itm.Offset);
             itm.Texture = tex_id;
             TexFrame.Add (itm);
         }
-
+        // Return the next available position at the VBO. [elements]
+        // 4 - number of elements at a frame.
         inline GLint NextBufPos() { return Base + Frames * 4; }
     };// Entry
 
-    // everything that could possibly be rendered
+    // Everything that could possibly be rendered. Accessed by the key returned
+    // by GenKey().
     private List<RenderEngine::Entry> _entries {};
 
     public RenderEngine();
@@ -139,19 +169,33 @@ class RenderEngine final
 
     public void Render();
 
-    // "n" - number of H3Rfloat in "buf"
-    // Just-uploaded things are visible.
-    //public int Upload(const H3Rfloat * buf, size_t n);
+    // Returns a key/handle to identify your sprite with the renderer.
+    // Just-uploaded things, are visible => .Visible is true by default.
     public int GenKey();
+
     // Returns the offset you want applied when calling ChangeOffset()
-    // "l" - left, and "t" - top, are absolute coordinates
+    // "x" - left, and "y" - top, are absolute coordinates.
+    // "bpp" - whatever TexCache::Cache() supports; currently 24(GL_RGB) and
+    // 32(GL_RGBA) - that's your "data" format mind you.
     public int UploadFrame(
         int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp);
 
-    // When a window is shown/hidden
+    // Use when a window is shown/hidden. Hiding the just the window won't do
+    // what you think; the window shall notify all its controls to hide.
+    //TODO this could be simplified by depth testing...
     public void ChangeVisibility(int key, bool state);
-    // A.k.a. Render another frame
+
+    // A.k.a. Render another frame.
+    // When displaying animation this will be called often.
+    // At any given time there are n animated sprites visible; so I think
+    // this shall do: lets say 10000 animations (100x100 map) * 16 FPS = 160000
+    // calls per second.
+    // LATER Perhaps I can do something about it. This game does nothing in real
+    //       time but render sprites and music, so it could be thought about.
     public void ChangeOffset(int key, GLint offset);
+
+    // Shall be enabled if the UploadFrames() design proves wrong.
+    //
     // Do not use very often.
     // Reason:
     //  A button needs to get its texture generated so it can auto-size to it,
@@ -161,7 +205,7 @@ class RenderEngine final
     //  a way to update its data. This method is the 2nd option.
     //  The 1st option involves someone else (the one doing the layout) to
     //  Upload() button data here, after it finishes moving it around.
-    //public void UpdateGeometry(int key, const H3Rfloat * buf);
+    // public void UpdateGeometry(int key, const H3Rfloat * buf);
 
     public static RenderEngine & UI();
 

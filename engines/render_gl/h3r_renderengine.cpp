@@ -47,10 +47,13 @@ static const GLsizeiptr H3R_SPRITE_VERTICES {4}; // {x,y,u,v}[4]
 static const GLsizeiptr H3R_SPRITE_FLOATS
     {H3R_SPRITE_VERTICES * H3R_VERTEX_COMPONENTS};
 static const GLsizeiptr H3R_SPRITE_COMPONENT_SIZE {sizeof(H3Rfloat)};
+
+// Prevent pointless debug sessions where Open GL "doesn't work" just because
+// there is no context yet.
 static bool global_render_gl_init {false};
 
 RenderEngine::RenderEngine() : RenderEngine {H3R_MAX_SPRITE_NUM} {}
-RenderEngine::RenderEngine(GLsizeiptr max_sprites)
+RenderEngine::RenderEngine(GLsizeiptr max_sprite_frames)
 {
     //TODO then figure out little z-offsets (relative) for each control
     //     (f(z-order) so the entire UI shall be rendered in one gl call
@@ -65,9 +68,10 @@ RenderEngine::RenderEngine(GLsizeiptr max_sprites)
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     // The 1st quad is the invisible one (where index points to to remain not
     // visible). This shouldn't slow down Open GL even a bit.
+     // 4=H3R_SPRITE_VERTICES - elements per sprite frame
+    _vbo_max_elements = (1 + max_sprite_frames) * H3R_SPRITE_VERTICES;
     glBufferData (GL_ARRAY_BUFFER,
-        (1 + max_sprites) * H3R_VERTEX_COMPONENTS * H3R_SPRITE_VERTICES
-        * H3R_SPRITE_COMPONENT_SIZE,
+        _vbo_max_elements * H3R_VERTEX_COMPONENTS * H3R_SPRITE_COMPONENT_SIZE,
         nullptr, GL_STATIC_DRAW);
     glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
     glTexCoordPointer (
@@ -97,12 +101,14 @@ int RenderEngine::GenKey()
     e.Base = 4; // [elements] the 1st quad is special ( {x,y,u,v}[4] )
     if (_entries.Count () > 0)
         e.Base = _entries[_entries.Count ()-1].NextBufPos ();
+    H3R_ENSURE(e.Base <= _vbo_max_elements, "VBO overflow: either increase its"
+        " size or implement a multi-VBO solution")
     _entries.Add (e);
     return _entries.Count () - 1;
 }
 
 RenderEngine::TexList & RenderEngine::ListByTexId(GLuint tex_id)
-{
+{//LATER optimize
     for (size_t i = 0; i < _tex2_list.Count (); i++)
         if (_tex2_list[i].Texture == tex_id) return _tex2_list[i];
     // printf ("new TexList" EOL);
@@ -140,30 +146,6 @@ int RenderEngine::UploadFrame(
     return (e.Frames - 1) * H3R_VERTEX_COMPONENTS;
 }
 
-/*int RenderEngine::Upload(const H3Rfloat * buf, size_t n)
-{
-    Entry e {};
-    e.Base = 4; // [elements] the 1st quad is special ( {x,y,u,v}[4] )
-    e.Num = n;
-    if (_entries.Count () > 0)
-        e.Base = _entries[_entries.Count ()-1].NextBufPos ();
-    e.Offset = 0;
-    glBufferSubData (GL_ARRAY_BUFFER,
-        e.Base * H3R_SPRITE_COMPONENTS * sizeof(H3Rfloat),
-        n * sizeof(H3Rfloat), buf);
-    GLenum err = glGetError ();
-    if (GL_NO_ERROR != err) Log::Err ("glBufferSubData error" EOL);
-    Log::Info (String::Format ("Upload: %d at %d, index: %d, count: %d" EOL,
-        n, e.Base * H3R_SPRITE_COMPONENTS * sizeof(H3Rfloat), e.Base, 4
-    ));
-    // length() separate ranges;
-    // count(4) sequential elements form each enabled array, begining at index
-    _index.Add (e.Base);
-    _count.Add (4);
-    _entries.Add (e);
-    return _entries.Count () - 1;
-}*/
-
 void RenderEngine::ChangeVisibility(int key, bool value)
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
@@ -175,7 +157,7 @@ void RenderEngine::ChangeVisibility(int key, bool value)
     else lists._index[e.Key] = 0; // point to the invisible one
 }
 
-//TODO handle missing texture rendering
+//TODO handle "missing texture" rendering
 void RenderEngine::ChangeOffset(int key, GLint value)
 {
     // printf ("RenderEngine::ChangeOffset: key: %d, value: %d" EOL,
@@ -189,7 +171,8 @@ void RenderEngine::ChangeOffset(int key, GLint value)
     lists._index[_entries[key].Key] = _entries[key].Base + _entries[key].Offset;
 }
 
-/*void RenderEngine::UpdateGeometry(int key, const H3Rfloat * buf)
+/* do not delete me, yet
+ * void RenderEngine::UpdateGeometry(int key, const H3Rfloat * buf)
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
     RenderEngine::Entry & e = _entries[key];
