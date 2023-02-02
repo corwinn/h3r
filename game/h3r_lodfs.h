@@ -49,6 +49,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+// Get() will return the same pointer on each invocation! Means: each Get()
+// invalidates the contents of the previous one, unless you requested the same
+// resource with the same content. If you need your data for later use, you
+// better copy it, because the next call to Get() could invalidate it.
+//
 // On 2nd thought this shouldn't be final, should one decide to use own,
 // extended format (better compression for one, and or hashed names, etc.).
 class LodFS : public VFS
