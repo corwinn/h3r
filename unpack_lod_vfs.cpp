@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // lod file format unpacker; it unpacks to the current directory!
 // H3R_MM rule: when the engine is built -DH3R_MM, so does this
-//c clang++ -std=c++11 -I. -Iui -Iasync -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_lod_vfs.cpp -o unpack_lod_vfs main.a -lz
+//c clang++ -std=c++11 -I. -Iasync -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_lod_vfs.cpp -o unpack_lod_vfs main.a -lz
 
 #include <time.h>
 
@@ -46,9 +46,9 @@ H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
 H3R_LOG_STATIC_INIT
 
 #include "h3r_filestream.h"
-#include "h3r_game.h"
 #include "h3r_thread.h"
 #include "h3r_lodfs.h"
+#include "h3r_taskthread.h"
 #include "h3r_taskstate.h"
 #include "h3r_iasynctask.h"
 #include "h3r_vfs.h"
