@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //   - as showcase of how to not write C++ code :)
 
 // /mnt/workspace/drive64_c/games/h3/Maps/Atlantis_v3.h3m
-//c clang++ -std=c++11 -Wall -Wextra -Wshadow -fno-rtti -fno-exceptions -fno-threadsafe-statics -g -O0 parse_map.cpp -o parse_map -Wl,--as-needed
+//c clang++ -std=c++11 -Wall -Wextra -Wshadow -fno-rtti -fno-exceptions -fno-threadsafe-statics -g -O0 parse_map.cpp -o parse_map -Wl,--as-needed -lz
 
 #include <stdlib.h>
 #include <unistd.h>

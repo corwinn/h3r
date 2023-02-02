@@ -34,15 +34,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Q'N'D code.
 
-//c clang++ -std=c++11 -fsanitize=address,undefined,integer -fvisibility=hidden -I. -Ios -Ios/posix -Iutils -Istream -O0 -g -DH3R_DEBUG -fno-exceptions -fno-threadsafe-statics main.a h3r_game.o unpack_snd.cpp -o unpack_snd
+//c clang++ -std=c++11 -fsanitize=address,undefined,integer -fvisibility=hidden -I. -Ios -Ios/posix -Iutils -Istream -O0 -g -DH3R_DEBUG -fno-exceptions -fno-threadsafe-statics main.a unpack_snd.cpp -o unpack_snd
 
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED
 H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
-H3R_ERR_DEFINE_HANDLER(Log,H3R_ERR_HANDLER_UNHANDLED)
 
 #include "h3r_filestream.h"
-#include "h3r_game.h"
 
 H3R_NAMESPACE
 namespace OS {
@@ -67,8 +65,6 @@ int main(int argc, char ** argv)
 {
     if (2 != argc)
         return printf ("usage: unpack_snd sndfile\n");
-
-    H3R_NS::Game game;
 
     H3R_NS::OS::FileStream s {argv[1], H3R_NS::OS::FileStream::Mode::ReadOnly};
 
@@ -95,9 +91,9 @@ int main(int argc, char ** argv)
         s.Read (&ofs[i], 4);
         s.Read (&sz[i], 4);
 #ifdef LIST_ONLY
-        H3R_NS::OS::Log_stdout (
+        printf (
             "Entry #%2d: name: \"%s\", offset: %8d, size: %8d" EOL,
-            i, name[i].AsZStr ().Data (), ofs[i], sz[i]);
+            i, name[i].AsZStr (), ofs[i], sz[i]);
 #endif
     }
 

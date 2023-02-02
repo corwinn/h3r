@@ -40,7 +40,7 @@ L="-DLIST_ONLY"
 F="-fsanitize=address,undefined,integer -fvisibility=hidden \
  -fno-exceptions -fno-threadsafe-statics"
 I="-std=c++11 -I. -Ios -Ios/posix -Iutils -Istream -O0 -g -DH3R_DEBUG"
-OBJ="main.a h3r_game.o"
+OBJ="main.a"
 
 $CXX $I $F         parse_map.cpp -o parse_map -lz
 $CXX $I $F         unpack_lod.cpp -o unpack_lod -lz
