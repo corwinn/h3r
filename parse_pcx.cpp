@@ -42,7 +42,6 @@ static_assert(4 == sizeof(int), "define 32-bit int type");
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED
 H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
-H3R_ERR_DEFINE_HANDLER(Log,H3R_ERR_HANDLER_UNHANDLED)
 
 #include "h3r_filestream.h"
 
