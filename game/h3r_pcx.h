@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-//LATER Issue: CAMPNOSC.PCX (238x143) looks skewed
+//DONE at the prev commit. CAMPNOSC.PCX (238x143) looks fine.
 class Pcx final : public ResDecoder
 {
     private: Stream * _s;
