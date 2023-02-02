@@ -66,8 +66,9 @@ done: and now, index the game resources and create the main game screen
        time - part of complexity management; do you know what happens if I don't
        manage complexity? - "infinite project" happens :)
 
-and now it needs a .fnt parser and text renderer; while the .fnt parser isn't
-strictly required, it can help bring the remake closer to the origin
+done: and now it needs a .fnt parser and text renderer; while the .fnt parser
+      isn't strictly required, it can help bring the remake closer to the
+      origin. I'm adding an option to use FT2 and your favorite fonts.
 
 - simplicity ends here -
 
