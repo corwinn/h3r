@@ -34,15 +34,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // vid file format unpacker; it unpacks to the current directory!
 // H3R_MM rule: when the engine is built -DH3R_MM, so does this
-//c clang++ -std=c++11 -I. -Iasync -Iui -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_vid_vfs.cpp -o unpack_vid_vfs main.a h3r_game.o -lz
+//c clang++ -std=c++11 -I. -Iasync -Ios -Ios/posix -Iutils -Istream -Igame -DH3R_MM -O0 -g -DH3R_DEBUG -fsanitize=address,undefined,integer,leak -fvisibility=hidden -fno-exceptions -fno-threadsafe-statics unpack_vid_vfs.cpp -o unpack_vid_vfs main.a -lz
 
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED
 H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
-H3R_ERR_DEFINE_HANDLER(Log,H3R_ERR_HANDLER_UNHANDLED)
+
+#include "h3r_log.h"
+H3R_LOG_STATIC_INIT
 
 #include "h3r_filestream.h"
-#include "h3r_game.h"
 #include "h3r_vidfs.h"
 
 // allow file replacement
@@ -62,12 +63,9 @@ static H3R_NS::OS::FileErrReplace my_file_err;
 H3R_ERR_DEFINE_HANDLER(File, my_file_err)
 
 int main(int c, char ** v)
-{//TODO async IO, with the main thread displaying progress; and wise quotes
+{
     if (2 != c)
         return printf ("usage: unpack_vid vidfile\n");
-
-    // init the log service
-    H3R_NS::Game game;
 
     H3R_NS::VidFS {v[1]}
         .Walk([](H3R_NS::Stream & stream, const H3R_NS::VFS::Entry & e) -> bool
