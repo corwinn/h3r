@@ -49,13 +49,14 @@ _F  = -fsanitize=address,undefined,integer,leak -fvisibility=hidden
 #TODO release build _F = -fvisibility=hidden -fno-rtti
 _L = -Wl,--as-needed -lpthread -lz -lSDL2 -lSDL2_mixer -lGL
 _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
- -Iengines/$(RENDER_ENGINE) \
+ -Iengines -Iengines/$(RENDER_ENGINE) \
  -Ios/ui -Ios/ui/$(WIN_SYSTEM) `pkg-config --cflags sdl2`
 
 CXXFLAGS = $(_I) -std=c++11 $(_O) $(_F) $(_W)
 SRC = $(wildcard ./*/*.cpp)
 SRC += $(wildcard os/$(PLATFORM)/*.cpp)
 SRC += $(wildcard engines/$(RENDER_ENGINE)/*.cpp)
+SRC += $(wildcard engines/*.cpp)
 SRC += $(wildcard os/ui/$(WIN_SYSTEM)/*.cpp)
 SRC := $(filter-out ./prior_publish/%,$(SRC))
 OBJ = $(patsubst %.cpp,%.o,$(SRC))
