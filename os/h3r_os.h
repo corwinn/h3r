@@ -143,9 +143,19 @@ auto Strncmp = [](const char * a, const char * b, size_t n)
     return strncmp (a, b, n);
 };
 
-auto Memmove = [](void *dest, const void *src, size_t n)
+auto Memmove = [](void * dest, const void * src, size_t n)
 {
     memmove (dest, src, n);
+};
+
+auto Memcpy = [](void * dest, const void * src, size_t n)
+{
+    memcpy (dest, src, n);
+};
+
+auto Memset = [](void * s, int c, size_t n)
+{
+    memset (s, c, n);
 };
 
 auto ToLower = [](int c) { return tolower (c); };
@@ -207,6 +217,12 @@ namespace __pointless_verbosity
         void * d;
         try_finally_mfree(void * v) : d(v) {}
         ~try_finally_mfree() { Mfree (d); }
+    };
+    template <typename T> struct __try_finally_free
+    {
+        T * _state;
+        __try_finally_free(T * state) : _state {state} {}
+        ~__try_finally_free() { Free (_state); }
     };
 }
 // Enumerate all files at directory "dn", in a non-recursive manner.
