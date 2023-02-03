@@ -142,6 +142,9 @@ class String final
     }
 
     public String Replace(const char *, const char *);
+
+    //TODO testme
+    public bool Empty() const { return ! (Length () > 0); }
 };// String
 
 inline bool operator==(const char * c, const String & s)
