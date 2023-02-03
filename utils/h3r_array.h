@@ -47,7 +47,8 @@ template <typename T,
           void (*F)(T * &) = OS::Free> class Array //
 {
     private: T * _data {};
-    private: size_t _len {}; // [T]
+    private: size_t _len {}; // [T] //TODO size_t is a bad idea 0-1 results
+                                    //     in UB: for (i = count-1; i>=0 ; i--)
     private: void free_and_nil() { if (_data) F (_data), _len = 0; }
 
     public: inline const T * Data() const { return _data; }
@@ -151,6 +152,10 @@ template <typename T,
     // Implicit contract with the compiler: short and simple for loop
     public: const T * begin() const { return _data +    0; }
     public: const T * end  () const { return _data + _len; }
+
+    //TODO testme
+    // Set everything to 0 - a.k.a. clear all bits.
+    public: inline void Clear() { OS::Memset (_data, 0, _len * sizeof(T)); }
 }; // template <typename T> class Array
 
 NAMESPACE_H3R
