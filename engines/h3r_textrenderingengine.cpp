@@ -119,6 +119,8 @@ const int H3R_MAX_TEXT_HEIGHT {480}; // TODO measure the at the game
 String TextRenderingEngine::LayoutText(const String & font_name,
     const String & txt, const Box & box, Box & actualbox)
 {
+    H3R_NOT_IMPLEMENTED_EXC
+
     Font * fnt = TryLoadFont (font_name);
     H3R_ENSURE(fnt != nullptr, "Font not found")
     if (H3R_MAX_TEXT_HEIGHT) return txt;
