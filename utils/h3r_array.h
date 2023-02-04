@@ -155,7 +155,19 @@ template <typename T,
 
     //TODO testme
     // Set everything to 0 - a.k.a. clear all bits.
-    public: inline void Clear() { OS::Memset (_data, 0, _len * sizeof(T)); }
+    public: void Clear() { OS::Memset (_data, 0, _len * sizeof(T)); }
+
+    //TODO testme
+    //TODO this doesn't release the memory in use
+    public: void Remove(int index)
+    {
+        size_t idx = static_cast<size_t>(index);//TODO fix this mess
+        H3R_ENSURE(_len > 0, "Bug: you tried to delete from an empty array")
+        H3R_ARG_EXC_IF(idx < 0 || idx >= _len, "Your favorite message [i]")
+        if (idx < _len - 1)
+            OS::Memmove (_data+idx, _data+idx+1, (_len-1-idx)*sizeof(T));
+        _len--;
+    }
 }; // template <typename T> class Array
 
 NAMESPACE_H3R

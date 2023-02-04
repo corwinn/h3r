@@ -80,6 +80,7 @@ template <typename T> class List //LATER Insert() - should the need arise
         if (_l.Length () == idx) return false;
         return n.Resize (idx), n.MoveTo (_l), true;
     }
+    public void RemoveAt(int index) { _l.Remove (index); }//TODO testme
     public T & operator[](size_t i) { return _l[i]; }
     public bool Empty() const { return _l.Empty (); }
     public size_t Count() const { return _l.Length (); }
