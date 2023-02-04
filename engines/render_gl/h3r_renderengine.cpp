@@ -58,9 +58,7 @@ static bool global_render_gl_init {false};
 RenderEngine::RenderEngine() : RenderEngine {H3R_MAX_SPRITE_NUM} {}
 RenderEngine::RenderEngine(GLsizeiptr max_sprite_frames)
 {
-    //TODO then figure out little z-offsets (relative) for each control
-    //     (f(z-order) so the entire UI shall be rendered in one gl call
-    //     GL_DEPTH_TEST; and compare to the above; choose the less-code one
+    //LATER RenderEngine::UI ().ChangeZOrder ()
 
     H3R_ENSURE(global_render_gl_init, "You forgot to call RenderEngine::Init()")
 

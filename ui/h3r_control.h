@@ -66,8 +66,8 @@ class Control
     private: Box _bb; // bounding box
     private: bool _enabled {true}; // whether the user can interact with it
 
-    private: List<Control *> _z;   // z-order; render: from 0 to count-1
-    private: List<Control *> _n;   //LATER non-visible ones; if any
+    //LATER RenderEngine::UI ().ChangeZOrder ()
+    private: List<Control *> _n;   // Sub-controls; could be useless
     private: void Add(Control *);
 
     public: Control(Control * = nullptr);

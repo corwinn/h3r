@@ -74,9 +74,12 @@ using H3Rfloat = GLfloat;
 // project shall be able to use some of the best renderers out there - I know
 // you want to play multi-dimensional "Heroes III"; patience.
 //
-// Right now the z-order equals the order of UploadFrame() it seems; although
-// I'm not sure how Open GL orders things, with equal z coordinates, inside VBO.
-//TODO R&D the topic.
+// Right now the z-order equals the order of UploadFrame(), because that's what
+// glMultiDrawArrays passes to the pipeline.
+// The z-order, if it becomes a requirement, shall be implemented via a z
+// coordinate: {x,y,u,v} shall become {x,y,z,u,v}; with the ability to modify
+// said z coordinate per key. The map window: the map control shall be defined
+// 1st by the map window, so it will be rendered prior everything else.
 class RenderEngine final
 {
     // Bind texture id to glMultiDrawArrays. Because frame0 could be at
