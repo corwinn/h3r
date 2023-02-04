@@ -41,8 +41,8 @@ H3R_NAMESPACE
 GameFont::GameFont(const String & name)
     : Font {name}, _fnt {Game::GetResource (name)}
 {
-    if (_fnt) Log::Info (String::Format ("Font load: %s", name.AsZStr ()));
-    else Log::Err (String::Format ("Font load failed: %s", name.AsZStr ()));
+    if (_fnt) Log::Info (String::Format ("Font load: %s" EOL, name.AsZStr ()));
+    else Log::Err (String::Format ("Font load failed: %s" EOL, name.AsZStr ()));
 }
 
 Point GameFont::MeasureText(const String & text)
@@ -80,7 +80,7 @@ void GameFont::RenderText(const String & text, byte * buf, int w, int h)
     for (size_t i = 0; i < text.Length (); i++) {
         int gw = _fnt.GlyphWidth (txt[i]);
         byte * glyph = _fnt.GlyphBitmap (txt[i]);
-    /*printf ("Glyph %3d:" EOL, txt[i]);
+    /*printf ("Glyph %3d:" EOL, txt[i]); TODO h3r_debug_helpers
     for (int y = 0; y < gh; y++) {
         for (int x = 0; x < gw; x++)
             printf ("%3d ", glyph[y*gw+x]);

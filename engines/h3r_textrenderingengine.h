@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // Renders text into off-screen buffers. Manages glyph caches.
-// Optionally: Manages font objects.
+// Manages font objects.
 // Singleton.
 class TextRenderingEngine final
 {
@@ -67,17 +67,20 @@ class TextRenderingEngine final
     // Layout and render the text into 2-channel LUMINANCE_ALPHA buffer.
     // The "box" could increase in size. Do not manage the returned buffer.
     //LATER Alignment
-    public: byte * RenderText(Font & fnt, const String & txt, int & w, int & h);
+    public: byte * RenderText(const String & font_name, const String & txt,
+        int & w, int & h);
 
-    public: String LayoutText(Font & fnt, const String & txt, const Box & box,
-        Box & actualbox);
+    public: String LayoutText(const String & font_name, const String & txt,
+        const Box & box, Box & actualbox);
+
+    public: Point MeasureText(const String & font_name, const String & txt);
 
     // Helper for font loading + memory management + handle duplicates.
     // Returns nullptr on failure. The "! nullptr" one is managed by the engine.
     // The Font object can be used at RenderText().
     // Feel free to create and manage font objects outside the
     // TextRenderingEngine.
-    public: Font * TryLoadFont(const String & name);
+    private: Font * TryLoadFont(const String & name);
 
     public: static TextRenderingEngine & One();
 };// TextRenderingEngine

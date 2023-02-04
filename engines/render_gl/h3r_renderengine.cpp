@@ -38,6 +38,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_texcache.h"
 #include "h3r_log.h"
 #include "h3r_string.h"
+#include "h3r_textrenderingengine.h"
+#include "h3r_math.h"
+#include "h3r_font.h"
 
 H3R_NAMESPACE
 
@@ -58,9 +61,6 @@ RenderEngine::RenderEngine(GLsizeiptr max_sprite_frames)
     //TODO then figure out little z-offsets (relative) for each control
     //     (f(z-order) so the entire UI shall be rendered in one gl call
     //     GL_DEPTH_TEST; and compare to the above; choose the less-code one
-    //
-    //TODO texture atlas(es) for the animated sprites (encode frame number at
-    //     some pixel; PixelDB - NoSQL :) )
 
     H3R_ENSURE(global_render_gl_init, "You forgot to call RenderEngine::Init()")
 
@@ -73,9 +73,12 @@ RenderEngine::RenderEngine(GLsizeiptr max_sprite_frames)
     glBufferData (GL_ARRAY_BUFFER,
         _vbo_max_elements * H3R_VERTEX_COMPONENTS * H3R_SPRITE_COMPONENT_SIZE,
         nullptr, GL_STATIC_DRAW);
-    glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
+
+    // As it happens this ain't a server state: you bind a VBO, you remind the
+    // server whats what.
+    /*glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
     glTexCoordPointer (
-        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
+        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));*/
 }
 
 RenderEngine::~RenderEngine()
@@ -87,13 +90,29 @@ void RenderEngine::Render()
 {
     // glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     // glDrawArrays (GL_TRIANGLE_STRIP, 4, 4);
+
+    // sprite stage
+    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
+    glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
+    glTexCoordPointer (
+        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
     for (size_t i = 0; i < _tex2_list.Count (); i++ ) {
         glBindTexture (GL_TEXTURE_2D, _tex2_list[i].Texture);
         glMultiDrawArrays (GL_TRIANGLE_STRIP,
             _tex2_list[i]._index.begin (), _tex2_list[i]._count.begin (),
             _tex2_list[i]._index.Count ());
     }
-}
+
+    // text stage
+    for (size_t i = 0; i < _texts.Count (); i++) {
+        glBindTexture (GL_TEXTURE_2D, _texts[i].Texture);
+        glBindBuffer (GL_ARRAY_BUFFER, _texts[i].Vbo);
+        glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
+        glTexCoordPointer (
+            2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
+        glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+    }
+}// RenderEngine::Render()
 
 int RenderEngine::GenKey()
 {
@@ -212,6 +231,76 @@ void RenderEngine::ChangeOffset(int key, GLint value)
     glEnable (GL_TEXTURE_COORD_ARRAY);
 
     global_render_gl_init = true;
+}
+
+// -- Text -------------------------------------------------------------------
+
+int RenderEngine::GenTextKey()
+{
+    RenderEngine::TextEntry entry {};
+    _texts.Add (entry);
+    return _texts.Count () - 1;
+}
+
+// Slow and simple. Let me establish the most use-able protocol first. The game
+// haven't even been started yet; no need to fine tune anything just yet. This
+// is proof of concept code - wasting too much time with it is pointless.
+void RenderEngine::UploadText(
+    int key, const String & font_name, const String & txt, int top, int left)
+{
+    H3R_ENSURE(key >= 0 && key < (int)_texts.Count (), "Bug: wrong key")
+    int w, h;
+    byte * tb = TextRenderingEngine::One ().RenderText (font_name, txt, w, h);
+    int tw = Log2i (w), th = Log2i (h);
+    Array<byte> tex_buf {(size_t)tw*th*2};
+    Font::CopyRectangle (tex_buf, tw, 0, 0, tb, w, h);
+    // int b = t + h, r = l + w;
+    GLfloat t = top, l = left, b = t + h, r = l + w;
+    GLfloat u = 1.f * w / tw, v = 1.f * h / th;
+    RenderEngine::TextEntry & e = _texts[key];
+    if (e.InUse) {
+        glDeleteBuffers (1, &(e.Vbo));
+        glDeleteTextures (1, &(e.Texture));
+    }
+    else
+        e.InUse = true;
+    glGenTextures (1, &(e.Texture));
+    glBindTexture (GL_TEXTURE_2D, e.Texture);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, tw, th,
+        0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, tex_buf.operator byte * ());
+    // same ordering and components as the big VBO (no point but consistency)
+    GLfloat vertices[16] {l,t,0,0, l,b,0,v, r,t,u,0, r,b,u,v};
+    glGenBuffers (1, &(e.Vbo));
+    glBindBuffer (GL_ARRAY_BUFFER, e.Vbo);
+    // Server state:
+    /*glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
+    glTexCoordPointer (
+        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));*/
+    glBufferData (GL_ARRAY_BUFFER, 64, vertices, GL_STATIC_DRAW);
+}
+
+void RenderEngine::UpdateText(
+    int key, const String & font_name, const String & txt, int top, int left)
+{
+    UploadText (key, font_name, txt, top, left);
+}
+
+void RenderEngine::ChangeTextVisibility(int key, bool state)
+{
+    H3R_ENSURE(key >= 0 && key < (int)_texts.Count (), "Bug: wrong key")
+    _texts[key].Visible = state;
+}
+
+void RenderEngine::DeleteText(int key)
+{
+    H3R_ENSURE(key >= 0 && key < (int)_texts.Count (), "Bug: wrong key")
+    _texts.RemoveAt (key);
 }
 
 NAMESPACE_H3R

@@ -116,9 +116,13 @@ static void TextService__ToLines(const String & txt, T & s,
 const int H3R_MAX_TEXT_WIDTH {640}; // TODO measure the at the game
 const int H3R_MAX_TEXT_HEIGHT {480}; // TODO measure the at the game
 
-String TextRenderingEngine::LayoutText(
-    Font & fnt, const String & txt, const Box & box, Box & actualbox)
+String TextRenderingEngine::LayoutText(const String & font_name,
+    const String & txt, const Box & box, Box & actualbox)
 {
+    Font * fnt = TryLoadFont (font_name);
+    H3R_ENSURE(fnt != nullptr, "Font not found")
+    if (H3R_MAX_TEXT_HEIGHT) return txt;
+
     List<String> txt_rows {};
     int line_spacing = 0;
     int tw = 0, th = 0; // TODO MeasureMultilineText - see
@@ -146,11 +150,15 @@ String TextRenderingEngine::LayoutText(
             bh = th;
         actualbox.Size.Y = bh - box.Pos.Y;
     }
+    return txt;
 }
 
 byte * TextRenderingEngine::RenderText(
-    Font & fnt, const String & txt, int & tw, int & th)
+    const String & font_name, const String & txt, int & tw, int & th)
 {
+    Font * fnt = TryLoadFont (font_name);
+    H3R_ENSURE(fnt != nullptr, "Font not found")
+
     tw = th = 0;
     if (txt.Empty ()) return nullptr;
     //TODO shall I render an "Error: Empty String"?
@@ -161,7 +169,7 @@ byte * TextRenderingEngine::RenderText(
     auto trick = [&](String && s)
     {
         txt_rows.Add ((String &&)s);
-        Point & size = txt_rows_size.Add (fnt.MeasureText (s));
+        Point & size = txt_rows_size.Add (fnt->MeasureText (s));
         if (size.X > tw) tw = size.X;
         if (size.Y > hh) hh = size.Y;
         th += size.Y;
@@ -175,7 +183,7 @@ byte * TextRenderingEngine::RenderText(
     //LATER R&D IEnumerable<T> using this.
     TextService__ToLines<decltype(trick)> (txt, trick,
         [](String && s, decltype(trick) & f) -> void { f ((String &&)s); });
-    printf ("TRE: rows: %ul: tw: %d, th: %d, hh: %d" EOL,
+    printf ("TRE: rows: %zu: tw: %d, th: %d, hh: %d" EOL,
         txt_rows.Count (), tw, th, hh);
     H3R_ENSURE(txt_rows.Count () > 0, "Nope; at least one row shall be here")
 
@@ -198,7 +206,7 @@ byte * TextRenderingEngine::RenderText(
         int t = b - hh;
         printf ("TRE: render text of size: w:%d, h:%d" EOL,
             txt_rows_size[i].X, txt_rows_size[i].Y);
-        fnt.RenderText (
+        fnt->RenderText (
             txt_rows[i], row_buf, txt_rows_size[i].X, txt_rows_size[i].Y);
         printf ("TRE: copy rectangle: l:%d, t:%d, w:%d, h:%d" EOL, l, t,
             txt_rows_size[i].X, txt_rows_size[i].Y);
@@ -210,6 +218,15 @@ byte * TextRenderingEngine::RenderText(
 
     return _text_buffer;
 }// TextRenderingEngine::RenderText()
+
+Point TextRenderingEngine::MeasureText(
+    const String & font_name, const String & txt)
+{
+    Font * fnt = TryLoadFont (font_name);
+    H3R_ENSURE(fnt != nullptr, "Font not found")
+
+    return fnt->MeasureText (txt);
+}
 
 TextRenderingEngine & TextRenderingEngine::One()
 {

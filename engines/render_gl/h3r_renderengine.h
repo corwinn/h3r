@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_list.h"
 #include "h3r_array.h"
+#include "h3r_string.h"
 #include <GL/gl.h>
 
 H3R_NAMESPACE
@@ -210,6 +211,28 @@ class RenderEngine final
     public static RenderEngine & UI();
 
     public static void Init();
+
+    // Text
+
+    // Each entry has its own texture and its own VBO; that should be fast
+    // enough for the simplicity.
+    private struct TextEntry
+    {
+        GLuint Texture {};//LATER Glyph cache; there are no more than 128 text
+        GLuint Vbo {};    //      objs visible at once
+        bool Visible {true};
+        bool InUse {false};
+    };
+    List<TextEntry> _texts {};
+    public int GenTextKey();
+    // Layout it prior rendering. Everything TextRenderingEngine::RenderText()
+    // supports, is supported.
+    public void UploadText(int key,
+        const String & font_name, const String & txt, int top, int left);
+    public void UpdateText(int key,
+        const String & font_name, const String & txt, int top, int left);
+    public void ChangeTextVisibility(int key, bool state);
+    public void DeleteText(int key);
 };
 
 #undef public

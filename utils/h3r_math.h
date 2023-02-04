@@ -32,54 +32,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_TEXCACHE_H_
-#define _H3R_TEXCACHE_H_
+#ifndef _H3R_MATH_H_
+#define _H3R_MATH_H_
 
 #include "h3r.h"
-#include <GL/gl.h>
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
-// Use-case:
-//   var e = tc->Cache (w, h, bug, 3)
-//   vertices.uv = e.uv;
-//   ...
-//
-//   TexCache::Bind (e)
-//LATER is there a point creatinc a dynamic tex. atlas (to save resources)?
-//      Dynamic tex. atlas: resize the tex. atlas on an as needed basis.
-class TexCache final
+inline int Log2i(int v)
 {
-    public struct Entry final
-    {
-        GLuint Texture {};
-        GLfloat l, t, r, b;
-        // internal state; don't modify please
-        int x {};
-        int y {};
-    };
-    private GLint const _tsize;
-    public TexCache();
-    public ~TexCache();
-    public void Invalidate();
-
-    public Entry Cache(GLint w, GLint h, byte * data, int bpp);
-
-    private static GLuint _bound; // currently bound texture
-    public static inline void Bind(TexCache::Entry & e)
-    {
-        if (e.Texture != _bound)
-            glBindTexture (GL_TEXTURE_2D, _bound = e.Texture);
-    }
-
-    public static TexCache * One ();
-};
-
-#undef public
-#undef private
+    int r = 1;
+    while (r < v) r <<= 1;
+    return r;
+}
 
 NAMESPACE_H3R
 
