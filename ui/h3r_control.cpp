@@ -40,9 +40,9 @@ void Control::Add(Control * c)
 {
     // Adding one and the same thing twice speaks for an error somewhere;
     // Allowing it will slow things down. Ignoring it would leave wrong code.
-    H3R_ARG_EXC_IF(_z.Contains (c), "duplicate pointer: fix your code")
+    H3R_ARG_EXC_IF(_n.Contains (c), "duplicate pointer: fix your code")
     H3R_ARG_EXC_IF(nullptr == c, "c can't be null")
-    _z.Add (c);
+    _n.Add (c);
 }
 
 Control::Control(Control * base)
