@@ -297,6 +297,10 @@ void RenderEngine::ChangeTextVisibility(int key, bool state)
 
 void RenderEngine::DeleteText(int key)
 {
+#error FIXME
+    //TODO This is a bug; all keys after it, will become wrong keys;
+    //     just use an LL and change the key to Node *.
+    //     This does not cancel the new functionality at Array and List.
     H3R_ENSURE(key >= 0 && key < (int)_texts.Count (), "Bug: wrong key")
     _texts.RemoveAt (key);
 }
