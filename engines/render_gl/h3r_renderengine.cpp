@@ -42,6 +42,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_math.h"
 #include "h3r_font.h"
 
+#include <new>
+
 H3R_NAMESPACE
 
 static const GLsizeiptr H3R_MAX_SPRITE_NUM {1<<17};
@@ -82,6 +84,8 @@ RenderEngine::RenderEngine(GLsizeiptr max_sprite_frames)
 RenderEngine::~RenderEngine()
 {
     glDeleteBuffers (1, &_vbo);
+    while (_texts.Prev ())
+        _texts.Prev ()->Delete ();
 }
 
 void RenderEngine::Render()
@@ -102,9 +106,9 @@ void RenderEngine::Render()
     }
 
     // text stage
-    for (size_t i = 0; i < _texts.Count (); i++) {
-        glBindTexture (GL_TEXTURE_2D, _texts[i].Texture);
-        glBindBuffer (GL_ARRAY_BUFFER, _texts[i].Vbo);
+    for (auto * n = _texts.Prev (); n != nullptr; n = n->Prev ()) {
+        glBindTexture (GL_TEXTURE_2D, n->Data.Texture);
+        glBindBuffer (GL_ARRAY_BUFFER, n->Data.Vbo);
         glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
         glTexCoordPointer (
             2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
@@ -233,20 +237,29 @@ void RenderEngine::ChangeOffset(int key, GLint value)
 
 // -- Text -------------------------------------------------------------------
 
-int RenderEngine::GenTextKey()
+RenderEngine::TextKey::TextKey(LList<RenderEngine::TextEntry> & tail)
 {
-    RenderEngine::TextEntry entry {};
-    _texts.Add (entry);
-    return _texts.Count () - 1;
+    H3R_CREATE_OBJECT(_node, LList<RenderEngine::TextEntry>) {};
+    tail.Insert (_node);
+}
+
+void RenderEngine::TextKey::Delete()
+{
+    auto * node = _node->Delete ();
+    H3R_DESTROY_OBJECT (node, LList<RenderEngine::TextEntry>)
+}
+
+RenderEngine::TextKey RenderEngine::GenTextKey()
+{
+    return RenderEngine::TextKey {_texts};
 }
 
 // Slow and simple. Let me establish the most use-able protocol first. The game
 // haven't even been started yet; no need to fine tune anything just yet. This
 // is proof of concept code - wasting too much time with it is pointless.
-void RenderEngine::UploadText(
-    int key, const String & font_name, const String & txt, int top, int left)
+void RenderEngine::UploadText(TextKey & key,
+    const String & font_name, const String & txt, int top, int left)
 {
-    H3R_ENSURE(key >= 0 && key < (int)_texts.Count (), "Bug: wrong key")
     int w, h;
     byte * tb = TextRenderingEngine::One ().RenderText (font_name, txt, w, h);
     int tw = Log2i (w), th = Log2i (h);
@@ -255,7 +268,7 @@ void RenderEngine::UploadText(
     // int b = t + h, r = l + w;
     GLfloat t = top, l = left, b = t + h, r = l + w;
     GLfloat u = 1.f * w / tw, v = 1.f * h / th;
-    RenderEngine::TextEntry & e = _texts[key];
+    RenderEngine::TextEntry & e = key.Entry ();
     if (e.InUse) {
         glDeleteBuffers (1, &(e.Vbo));
         glDeleteTextures (1, &(e.Texture));
@@ -283,26 +296,20 @@ void RenderEngine::UploadText(
     glBufferData (GL_ARRAY_BUFFER, 64, vertices, GL_STATIC_DRAW);
 }
 
-void RenderEngine::UpdateText(
-    int key, const String & font_name, const String & txt, int top, int left)
+void RenderEngine::UpdateText(TextKey & key,
+    const String & font_name, const String & txt, int top, int left)
 {
     UploadText (key, font_name, txt, top, left);
 }
 
-void RenderEngine::ChangeTextVisibility(int key, bool state)
+void RenderEngine::ChangeTextVisibility(TextKey & key, bool state)
 {
-    H3R_ENSURE(key >= 0 && key < (int)_texts.Count (), "Bug: wrong key")
-    _texts[key].Visible = state;
+    key.ChangeTextVisibility (state);
 }
 
-void RenderEngine::DeleteText(int key)
+void RenderEngine::DeleteText(TextKey & key)
 {
-#error FIXME
-    //TODO This is a bug; all keys after it, will become wrong keys;
-    //     just use an LL and change the key to Node *.
-    //     This does not cancel the new functionality at Array and List.
-    H3R_ENSURE(key >= 0 && key < (int)_texts.Count (), "Bug: wrong key")
-    _texts.RemoveAt (key);
+    key.Delete ();
 }
 
 NAMESPACE_H3R

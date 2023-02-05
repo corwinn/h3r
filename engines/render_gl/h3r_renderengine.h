@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_list.h"
 #include "h3r_array.h"
 #include "h3r_string.h"
+#include "h3r_dll.h"
 #include <GL/gl.h>
 
 H3R_NAMESPACE
@@ -226,16 +227,27 @@ class RenderEngine final
         bool Visible {true};
         bool InUse {false};
     };
-    List<TextEntry> _texts {};
-    public int GenTextKey();
+    private LList<RenderEngine::TextEntry> _texts {};
+    public class TextKey final
+    {
+        private LList<RenderEngine::TextEntry> * _node;
+        public TextKey(LList<RenderEngine::TextEntry> &);
+        public void Delete();
+        public inline void ChangeTextVisibility(bool state)
+        {
+            _node->Data.Visible = state;
+        }
+        public inline RenderEngine::TextEntry & Entry() { return _node->Data; }
+    };
+    public TextKey GenTextKey();
     // Layout it prior rendering. Everything TextRenderingEngine::RenderText()
     // supports, is supported.
-    public void UploadText(int key,
+    public void UploadText(TextKey & key,
         const String & font_name, const String & txt, int top, int left);
-    public void UpdateText(int key,
+    public void UpdateText(TextKey & key,
         const String & font_name, const String & txt, int top, int left);
-    public void ChangeTextVisibility(int key, bool state);
-    public void DeleteText(int key);
+    public void ChangeTextVisibility(TextKey & key, bool state);
+    public void DeleteText(TextKey & key);
 };
 
 #undef public

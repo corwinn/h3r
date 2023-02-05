@@ -1,0 +1,150 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+// Highlighter: C++
+
+#include "h3r_test.h"
+
+//LATER ask the user to free some RAM: Console_Alloc_Error_Handler
+#include "h3r_os_error.h"
+H3R_ERR_DEFINE_UNHANDLED
+H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
+H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
+
+#include "h3r_dll.h"
+
+H3R_NAMESPACE
+
+H3R_TEST_UNIT(h3r_doubly_linked_list)
+
+H3R_TEST_(initial_state)
+    H3R_NS::LList<int> n;
+    H3R_TEST_IS_NULL(n._next)
+    H3R_TEST_IS_NULL(n._prev)
+    H3R_TEST_ARE_EQUAL(0, n.Data)
+    H3R_NS::LList<int *> n2;
+    H3R_TEST_IS_NULL(n2._next)
+    H3R_TEST_IS_NULL(n2._prev)
+    H3R_TEST_ARE_EQUAL(nullptr, n2.Data)
+    H3R_NS::LList<int> n3 {4};
+    H3R_TEST_IS_NULL(n3._next)
+    H3R_TEST_IS_NULL(n3._prev)
+    H3R_TEST_ARE_EQUAL(4, n3.Data)
+H3R_TEST_END
+
+H3R_TEST_(insert)
+    H3R_NS::LList<int> n {1};
+    H3R_NS::LList<int> m {2};
+    auto who = m.Insert (&n); // n m
+    H3R_TEST_ARE_EQUAL(&n, who)
+    H3R_TEST_IS_NULL(n._prev)
+    H3R_TEST_IS_NULL(m._next)
+    H3R_TEST_ARE_EQUAL(&m, n._next)
+    H3R_TEST_ARE_EQUAL(&n, m._prev)
+    H3R_TEST_ARE_EQUAL(1, m._prev->Data)
+    H3R_TEST_ARE_EQUAL(2, n._next->Data)
+    H3R_NS::LList<int> t {3};
+    m.Insert (&t); // n t m
+    H3R_TEST_IS_NULL(n._prev)
+    H3R_TEST_IS_NULL(m._next)
+    H3R_TEST_ARE_EQUAL(&t, m._prev)
+    H3R_TEST_ARE_EQUAL(&m, t._next)
+    H3R_TEST_ARE_EQUAL(&n, t._prev)
+    H3R_TEST_ARE_EQUAL(&t, n._next)
+    H3R_NS::LList<int> u {4};
+    n.Insert (&u); // u n t m
+    H3R_TEST_IS_NULL(u._prev)
+    H3R_TEST_IS_NULL(m._next)
+    H3R_TEST_ARE_EQUAL(&m, t._next)
+    H3R_TEST_ARE_EQUAL(&u, n._prev)
+    H3R_TEST_ARE_EQUAL(&n, u._next)
+    H3R_TEST_ARE_EQUAL(&n, t._prev)
+    H3R_TEST_ARE_EQUAL(&t, n._next)
+    H3R_TEST_ARE_EQUAL(&t, m._prev)
+
+    auto inv_arg_nullnode = [&]() { n.Insert (nullptr); };
+    H3R_TEST_EXCEPTION(ArgumentException, inv_arg_nullnode);
+    auto inv_arg_list_tail = [&]() { n.Insert (&m); };
+    H3R_TEST_EXCEPTION(ArgumentException, inv_arg_list_tail);
+    auto inv_arg_list_head = [&]() { n.Insert (&u); };
+    H3R_TEST_EXCEPTION(ArgumentException, inv_arg_list_head);
+    H3R_NS::LList<int> v {5};
+    auto inv_arg_self = [&]() { v.Insert (&v); };
+    H3R_TEST_EXCEPTION(ArgumentException, inv_arg_self);
+H3R_TEST_END
+
+H3R_TEST_(delete)
+    H3R_NS::LList<int> n {1};
+    n.Delete ();
+    H3R_TEST_IS_NULL(n._prev)
+    H3R_TEST_IS_NULL(n._next)
+    H3R_TEST_ARE_EQUAL(1, n.Data)
+
+    H3R_NS::LList<int> m {2};
+    m.Insert (&n); // n m
+    n.Delete ();
+    H3R_TEST_IS_NULL(n._prev)
+    H3R_TEST_IS_NULL(n._next)
+    H3R_TEST_IS_NULL(m._prev)
+    H3R_TEST_IS_NULL(m._next)
+    H3R_TEST_ARE_EQUAL(1, n.Data)
+    H3R_TEST_ARE_EQUAL(2, m.Data)
+    m.Insert (&n); // n m
+    m.Delete ();
+    H3R_TEST_IS_NULL(n._prev)
+    H3R_TEST_IS_NULL(n._next)
+    H3R_TEST_IS_NULL(m._prev)
+    H3R_TEST_IS_NULL(m._next)
+    H3R_TEST_ARE_EQUAL(1, n.Data)
+    H3R_TEST_ARE_EQUAL(2, m.Data)
+
+    H3R_NS::LList<int> t {3};
+    m.Insert (&n)->Insert (&t); // t n m
+    n.Delete ();
+    H3R_TEST_IS_NULL(n._prev)
+    H3R_TEST_IS_NULL(n._next)
+    H3R_TEST_ARE_EQUAL(1, n.Data)
+    H3R_TEST_IS_NULL(t._prev)
+    H3R_TEST_IS_NULL(m._next)
+    H3R_TEST_ARE_EQUAL(&m, t._next)
+    H3R_TEST_ARE_EQUAL(&t, m._prev)
+H3R_TEST_END
+
+NAMESPACE_H3R
+
+int main()
+{
+    H3R_TEST_RUN
+    return 0;
+}
