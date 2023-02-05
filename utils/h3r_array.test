@@ -104,10 +104,10 @@ H3R_TEST_END
 
 H3R_TEST_(subscript)
     H3R_NS::Array<int> arr;
-    var empty_access = [&]() { arr[8]; };
+    auto empty_access = [&]() { arr[8]; };
     H3R_TEST_EXCEPTION(ArgumentException, empty_access);
     H3R_NS::Array<int> arr1 {1};
-    var overflow_access = [&]() { arr1[1]; };
+    auto overflow_access = [&]() { arr1[1]; };
     H3R_TEST_EXCEPTION(ArgumentException, overflow_access);
     H3R_TEST_ARE_EQUAL (arr1[0], 0)
     arr1[0] = 5;
@@ -201,14 +201,14 @@ H3R_TEST_(append)
     for (int i = BUF_SIZE; i < 2 * BUF_SIZE; i++)
         H3R_TEST_ARE_EQUAL(arr[i], buf[i - BUF_SIZE])
 
-    var wrong_size = [&]() { arr.Append (buf, 0); };
+    auto wrong_size = [&]() { arr.Append (buf, 0); };
     H3R_TEST_EXCEPTION(ArgumentException, wrong_size)
     for (int i = 0; i < BUF_SIZE; i++)
         H3R_TEST_ARE_EQUAL(arr[i], buf[i])
     for (int i = BUF_SIZE; i < 2 * BUF_SIZE; i++)
         H3R_TEST_ARE_EQUAL(arr[i], buf[i - BUF_SIZE])
 
-    var null_ptr = [&]() { arr.Append<char> (nullptr, BUF_SIZE); };
+    auto null_ptr = [&]() { arr.Append<char> (nullptr, BUF_SIZE); };
     H3R_TEST_EXCEPTION(ArgumentException, null_ptr)
     for (int i = 0; i < BUF_SIZE; i++)
         H3R_TEST_ARE_EQUAL(arr[i], buf[i])
@@ -216,7 +216,7 @@ H3R_TEST_(append)
         H3R_TEST_ARE_EQUAL(arr[i], buf[i - BUF_SIZE])
 
     int int_buf[BUF_SIZE] {};
-    var wrong_type = [&]() { arr.Append (int_buf, BUF_SIZE); };
+    auto wrong_type = [&]() { arr.Append (int_buf, BUF_SIZE); };
     H3R_TEST_EXCEPTION(ArgumentException, wrong_type)
     for (int i = 0; i < BUF_SIZE; i++)
         H3R_TEST_ARE_EQUAL(arr[i], buf[i])

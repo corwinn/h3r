@@ -68,7 +68,7 @@ H3R_TEST_(pop)
     H3R_TEST_IS_FALSE(s0.Empty ())
     H3R_TEST_ARE_EQUAL(4, s0.Pop ())
     H3R_TEST_IS_TRUE(s0.Empty ())
-    var underrun_detection = [&]() { s0.Pop (); };
+    auto underrun_detection = [&]() { s0.Pop (); };
     H3R_TEST_EXCEPTION(ArgumentException, underrun_detection)
 H3R_TEST_END
 

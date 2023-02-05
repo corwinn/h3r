@@ -133,11 +133,11 @@ H3R_TEST_END
 
 H3R_TEST_(as_byte_array)
     String a {};
-    var a_arr = a.AsByteArray (); // is not 0-terminated on empty string
+    auto a_arr = a.AsByteArray (); // is not 0-terminated on empty string
     H3R_TEST_ARE_EQUAL(0, a.Length ())
     H3R_TEST_ARE_EQUAL(nullptr, a_arr)
     String b {"b"};
-     var b_arr = b.AsByteArray ();
+    auto b_arr = b.AsByteArray ();
     H3R_TEST_ARE_EQUAL(1, b.Length ())
     H3R_TEST_ARE_EQUAL(1, OS::Strlen (reinterpret_cast<const char *>(b_arr)))
     H3R_TEST_ARE_EQUAL('b', b_arr[0])
@@ -243,7 +243,7 @@ H3R_TEST_END
 H3R_TEST_(zero_terminated_string)
     String a {"foo"};
     const char * b = a; // there are _NZ 0 bytes at the end
-    var arr = a.AsByteArray ();
+    auto arr = a.AsByteArray ();
     H3R_TEST_ARE_EQUAL(3, a.Length ())
     H3R_TEST_ARE_EQUAL('f', a.AsByteArray ()[0])
     H3R_TEST_ARE_EQUAL('o', a.AsByteArray ()[1])
@@ -336,9 +336,9 @@ H3R_TEST_(replace)
     i = h.Replace ("", "a");
     H3R_TEST_ARE_EQUAL(i, "")
 
-    var arg_exc_what = [&]() { h.Replace (nullptr, "a"); };
+    auto arg_exc_what = [&]() { h.Replace (nullptr, "a"); };
     H3R_TEST_EXCEPTION(ArgumentException, arg_exc_what)
-    var arg_exc_with = [&]() { h.Replace ("a", nullptr); };
+    auto arg_exc_with = [&]() { h.Replace ("a", nullptr); };
     H3R_TEST_EXCEPTION(ArgumentException, arg_exc_with)
 
     String j {"aaaaa"};
