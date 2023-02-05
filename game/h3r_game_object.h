@@ -39,7 +39,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _H3R_GAME_OBJECT_H_
 #define _H3R_GAME_OBJECT_H_
+
 #include "h3r.h"
+#include "h3r_iserializable.h"
+#include "h3r_map.h"
+
 H3R_NAMESPACE
 
 /*
@@ -131,10 +135,92 @@ H3R_NAMESPACE
 //   "if (winloss->Refers (obj)) return true" and pass the Denies(AVisit) test.
 // And the above statement does look like a script ...
 //TODO scripting idea
-class Object
+//
+// I do think all these objects can be scripted entirely.
+// OK let me script them in C++ 1st - see what falls out.
+class Object : public ISerializable
 {
-    public: virtual void Visit(Object *) {}
-}
+#define public public:
+#define private private:
+#define protected protected:
+
+    // Game engine. See "game.dia".
+    public virtual void Visit(Object *) {}
+
+    // ISerializable
+    // The file format is like this:
+    //   sentinel = s.Tell ();
+    //   Object obj {s};
+    //   s.Seek (sentinel - s.Tell ())
+    //   Sprites[obj.Sprite ()] defines whose Object descendant shall be
+    //   created.
+    // I'm doing something different, with extensibility in mind:
+    //   Object * o1 = Object::Create (s, map_version, Object {s})
+    public Object(Stream & s)
+        : _location {s}
+    {
+        Stream::Read (s, &_sprite);
+    }
+    private void Serialize(Stream & s) override
+    {
+        static_cast<ISerializable>(_location).Serialize (s);
+        Stream::Write (s, &_sprite);
+    }
+    // "continue reading constructor" - skip pos & sprite; the void* is for C++
+    // it can be anything - just some way to distinct the constructor.
+    protected Object(void *, Stream &) {}
+    private Object() {} // reflection-only constructor
+    // The odd name is a hint to use the "continue reading constructor".
+    public virtual Object * ContinueCreating(Stream &) { return nullptr; }
+    // Register type T to be instantiated for MapVersion+ObjType.
+    public template <typename T> static void Register(
+        h3rMapVersion, h3rObjType);
+    //
+    public static Object * Create(Stream &, h3rMapVersion, const Object &);
+    // The complicated and unpleasant system above speeds-up map loading,
+    // and allows extend-able object management. No more giant switch
+    // statements.
+
+    public virtual ~Object(){}
+
+#undef public
+    // allow to change the type of X, Y, Z, should the need arise, w/o an issue
+    public: struct Pos final : public ISerializable
+    {
+#define public public:
+        h3rCoord X, Y, Z;
+        public Pos() {}
+        public Pos(Stream & s)
+        {
+            Stream::Read (s, &X).Read (s, &Y).Read (s, &Z);
+        }
+        private inline void Serialize(Stream & s) override
+        {
+            Stream::Write (s, &X).Write (s, &Y).Write (s, &Z);
+        }
+    };
+
+    // Dictated by the h3m file format:
+    protected Pos _location;
+    protected h3rObjRef _sprite; // sprite pointer (map.Sprites[])
+
+    public Pos & Location() { return _location; }
+    public h3rObjRef Sprite() const { return _sprite; }
+};// Object
+
+// Use this to make your class get used by the map loader.
+// Basically all built-in objects shall "call" it.
+//LATER perhaps it will be more simple to just register them at main();
+//      the above odd static factory-like risky hard to debug machinery will go
+//      to /dev/null
+#define H3R_REGISTER_OBJECT(O,V,T) \
+static struct _h3r_r_object_##O { \
+    _h3r_r_object_##O () { Object::Register<O> (V, T); } \
+};
+
+#undef public
+#undef private
+#undef protected
 
 NAMESPACE_H3R
 #endif
