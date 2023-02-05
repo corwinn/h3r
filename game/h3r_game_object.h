@@ -94,6 +94,43 @@ H3R_NAMESPACE
 //  * QuietEyeOfTheDragon a1; Hero o1; o1.Visit (a1);
 //
 // Extend: Add new "Object"s, even by a plug-in; also: ScriptedObject : Object.
+//
+// I add a new attribute: alignment; how shall the windmill object handle this
+// new attribute: lets say it shall provide resources to those with equal
+// alignment only? Extending the Windmill object is nice, but - yes there is a
+// "but" :) - what happens If I want 100 distinct objects to handle it? - there
+// will be a lot of extending to do - not good for a single attribute; bad
+// design for me.
+// My new attribute will need an AppliesTo(o1, o2) that defines its application.
+// The map loader shall be instructed to add new attributes to objects that do
+// not have them; how will it know what objects to add it to?
+// The Object will have to identify itself open to new attributes, that support
+// certain operations, like Attributes that SupportsAppliedTo().
+// But: the above attribute shouldn't be applied to mines at a "flag all mines"
+// map - because it could make the map not win-able. Objects related the the
+// win/loss condition will reject SupportsAppliedTo() new attributes.
+// Due to recursive relation between future attribute and future objects, the
+// matching between them shall be done on a predefined set of generalized
+// capabilities.
+//LATER reason why a Decorator won't handle the above use-case; read the book
+//      reason about all impossible solutions;
+// The attributes open a wide area for bugs; what complicates when I remove
+// them? They become Object methods: IsTransient(), and adding new ones becomes
+// impossible: Add Aligment(), now make 100 descendants use it. Or they become
+// scripts: complexity++; speed--; but the recursive relation goes to /dev/null.
+// The good news is there are just two extensible aspects: Object and
+// ObjectAttribute. The risks ObjectAttribute introduces could be partially
+// mitigated by a run-time approval test performed on plug-in load:
+//   - Denies(AVisit) - that it shouldn't
+//   - Deletes(Object) - that it shouldn't
+//   - Modifies(Object) - that it shouldn't
+//   - Modifies(Kingdom) - that it shouldn't
+//   - ...
+// The test then could suggest modifications for AppliesTo(), mostly based on
+// win/loss conditions: for example the Alignment attribute could do:
+//   "if (winloss->Refers (obj)) return true" and pass the Denies(AVisit) test.
+// And the above statement does look like a script ...
+//TODO scripting idea
 class Object
 {
     public: virtual void Visit(Object *) {}
