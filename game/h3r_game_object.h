@@ -52,5 +52,48 @@ H3R_NAMESPACE
  There are rules of course: movement, visitors per host, etc. a.k.a. game-play.
 */
 
+/*
+   There is a game board; on it there are objects. M no.
+
+   I have a hero. I can move him/her around in order to explore the map to find
+   resources, artifacts, experience, to become stronger, build my castle to
+   build an army to win the game. Each turn, my hero has limited amount of
+   movement points. The game is played in turns, its me, then you, then me, ...
+   I can have many heroes, towns/castles, other structures. There are many ways
+   to win/loose the game.
+   A few kingdoms compete for the win. There can be one or more human-controlled
+   kingdom(s) and one or more computer-controlled ones.
+   There are objects on the map (including special patches of land) that can
+   apply bonuses or penalties (including bonus army units, or destroying part of
+   the existing army) to a visiting hero. There are objects where a visiting
+   hero can learn spells or skills. There are objects that move the hero around
+   the map w/o movement point cost. There are objects that block hero movement -
+   impassable objects. There are objects that can give or take, kingdom
+   resources, hero artefacts, hero army.
+
+   I hope that's enough. A picture formed already.
+*/
+
+// Let:
+//  Modifier { Object * Source (); ... }
+//  Hero : Object
+//    Hero::Visit(obj) => obj->Visit (this)
+//  Windmill : Object, Modifier
+//    Windmill::Visit(obj) => if (...) obj->Kingdom ()->Mod (this->Mod ())
+//  MagicPlains : Object, Modifier
+//    MagicPlains::Visit(obj) => Subscribe (obj)->Mod     ( this->Mod ())
+//    MagicPlains::OnLeave(obj) => UnSubscribe (obj)->Mod (-this->Mod ())
+//  Artifact : Object, Modifier
+// Then: Use-case:
+//  * Windmill o1; Hero o2; o2.Visit (o1);
+//  * MagicPlains o1; Hero o2; o2.Visit (o1);
+//  * QuietEyeOfTheDragon a1; Hero o1; o1.Visit (a1);
+//
+// Extend: Add new "Object"s, even by a plug-in; also: ScriptedObject : Object.
+class Object
+{
+    public: virtual void Visit(Object *) {}
+}
+
 NAMESPACE_H3R
 #endif
