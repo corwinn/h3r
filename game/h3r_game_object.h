@@ -58,18 +58,22 @@ H3R_NAMESPACE
    I have a hero. I can move him/her around in order to explore the map to find
    resources, artifacts, experience, to become stronger, build my castle to
    build an army to win the game. Each turn, my hero has limited amount of
-   movement points. The game is played in turns, its me, then you, then me, ...
-   I can have many heroes, towns/castles, other structures. There are many ways
-   to win/loose the game.
+   movement points. The game is played in turns: its me, then you, then me, ...
+   my kingdom can have many heroes, towns/castles, other structures. There are
+   many ways to win/loose the game.
    A few kingdoms compete for the win. There can be one or more human-controlled
    kingdom(s) and one or more computer-controlled ones.
    There are objects on the map (including special patches of land) that can
    apply bonuses or penalties (including bonus army units, or destroying part of
-   the existing army) to a visiting hero. There are objects where a visiting
-   hero can learn spells or skills. There are objects that move the hero around
-   the map w/o movement point cost. There are objects that block hero movement -
-   impassable objects. There are objects that can give or take, kingdom
-   resources, hero artefacts, hero army.
+   the existing army) - modifiers - to a visiting hero and or hers/his kingdom.
+   Different objects have different attributes: there are objects that:
+     - teach spells or skills: modify hero
+     - teleport the hero around the map w/o movement point cost (this is
+       probably one of the infinite turn reasons, at the original game)
+     - block hero movement - impassable objects
+     - give or take (modify): kingdom resources, hero artefacts, hero army
+     - can be "picked-up" or destroyed by a visitor - transient map objects
+     - can become part of the kingdom: modify kingdom
 
    I hope that's enough. A picture formed already.
 */
