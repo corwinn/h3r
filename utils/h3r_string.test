@@ -353,6 +353,15 @@ H3R_TEST_(replace)
     H3R_TEST_ARE_EQUAL("q.xt", n);
 H3R_TEST_END
 
+H3R_TEST_(empty)
+    String a {};
+    String b {""};
+    String c {"c"};
+    H3R_TEST_IS_TRUE(a.Empty ())
+    H3R_TEST_IS_TRUE(b.Empty ())
+    H3R_TEST_IS_FALSE(c.Empty ())
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()

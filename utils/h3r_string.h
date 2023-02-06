@@ -143,7 +143,6 @@ class String final
 
     public String Replace(const char *, const char *);
 
-    //TODO testme
     public bool Empty() const { return ! (Length () > 0); }
 };// String
 
