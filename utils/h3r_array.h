@@ -119,9 +119,9 @@ template <typename T,
         _data = n, _len = l;
     }
 
-    //TODO test me
     // The above one caught a lot of errors, so the tradition continues.
-    // "index" is sizeo(Q)-based.
+    // "index" is sizeof(Q)-based.
+    // Insert num Q at index. Insert at [Length()] is supported.
     public: template <typename Q> void Insert(
         size_t index, const Q * data, size_t num)
     {
@@ -149,20 +149,28 @@ template <typename T,
         return _data[i];
     }
 
-    // Implicit contract with the compiler: short and simple for loop
+    // Implicit contract with the compiler: short and simple for loop.
+    // Nothing simple about it however. Be very careful when using this: RTFM
+    // a.k.a. "The C++ programming Language" - 6.3.6. Specify "auto &"
+    // explicitly or end up with a lot of copies, because 7.7. of the same book.
+    // Also, see "range_for" at the .test
     public: const T * begin() const { return _data +    0; }
     public: const T * end  () const { return _data + _len; }
+    //public: T * begin() { return _data +    0; }
+    //public: T * end  () { return _data + _len; }
 
-    //TODO testme
-    // Set everything to 0 - a.k.a. clear all bits.
-    public: void Clear() { OS::Memset (_data, 0, _len * sizeof(T)); }
+    // Set everything to 0 - clear all bits.
+    public: void Clear()
+    {
+        if (_data && _len > 0)
+            OS::Memset (_data, 0, _len * sizeof(T));
+    }
 
-    //TODO testme
-    //TODO this doesn't release the memory in use
+    // This doesn't release the memory in use.
     public: void Remove(int index)
     {
         size_t idx = static_cast<size_t>(index);//TODO fix this mess
-        H3R_ENSURE(_len > 0, "Bug: you tried to delete from an empty array")
+        H3R_ARG_EXC_IF(_len <= 0, "Bug: delete from an empty array")
         H3R_ARG_EXC_IF(idx < 0 || idx >= _len, "Your favorite message [i]")
         if (idx < _len - 1)
             OS::Memmove (_data+idx, _data+idx+1, (_len-1-idx)*sizeof(T));

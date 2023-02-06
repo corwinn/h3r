@@ -228,9 +228,38 @@ H3R_TEST_(append_bug1)
     H3R_NS::Array<char *> arr;
     char a = 'b';
     char * b = &a;
-    arr.Append(&b, 1);
+    arr.Append (&b, 1);
     H3R_TEST_ARE_EQUAL(arr.Length (), 1)
     H3R_TEST_ARE_EQUAL(arr[0], b)
+H3R_TEST_END
+
+// The compiler complaints are commented out.
+H3R_TEST_(range_for)
+    H3R_NS::Array<char *> arr;
+    char a = 'b';
+    char * b = &a;
+    arr.Append (&b, 1);
+    /*for (auto what_am_i : arr) H3R_TEST_ARE_EQUAL(b[0], what_am_i)
+    for (auto & what_am_i : arr) H3R_TEST_ARE_EQUAL(b[0], what_am_i)
+    for (const auto & what_am_i : arr) H3R_TEST_ARE_EQUAL(b[0], what_am_i)*/
+    for (auto what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i)
+    for (auto & what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i)
+    for (const auto & what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i)
+    for (auto * what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i)
+    for (const auto * what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i)
+    for (auto what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i=what_am_i)
+    // for (auto & what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i=what_am_i)
+    // "const T * begin()" doesn't become "const char * * begin()"
+    for (auto what_am_i : arr) H3R_TEST_ARE_EQUAL(b, &(*what_am_i = 'a'))
+    // for (auto what_am_i : arr) what_am_i = 3.14; // assigning to 'char *'
+    H3R_TEST_ARE_EQUAL('a', a)
+    H3R_TEST_ARE_EQUAL('a', *(arr[0]))
+    // 'char *const &'
+    // for (auto & what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i = b)
+    // 'auto *&' incompatible initializer 'char *const'
+    // for (auto * & what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i)
+    // 'const auto *&' incompatible initializer 'char *const'
+    // for (const auto * & what_am_i : arr) H3R_TEST_ARE_EQUAL(b, what_am_i)
 H3R_TEST_END
 
 H3R_TEST_(append_bug2_pointers_and_arithemtics)
@@ -241,6 +270,78 @@ H3R_TEST_(append_bug2_pointers_and_arithemtics)
     H3R_TEST_ARE_EQUAL(arr.Length (), 2)
     H3R_TEST_ARE_EQUAL(arr[0], pa)
     H3R_TEST_ARE_EQUAL(arr[1], pb)
+H3R_TEST_END
+
+H3R_TEST_(insert)
+    H3R_NS::Array<int> n;
+    int foo[] {1,2,3};
+    //np index: 0, data: foo, num: 3
+    n.Insert (0, foo, 3);
+    H3R_TEST_ARE_EQUAL(3, n.Length ())
+    for (size_t i = 0; i < n.Length (); i++)
+        H3R_TEST_ARE_EQUAL(i+1, (size_t)n[i])
+    //np index: 0, data: foo, num: 3
+    n.Insert (0, foo, 3);
+    H3R_TEST_ARE_EQUAL(6, n.Length ())
+    for (size_t i = 0; i < n.Length (); i++)
+        H3R_TEST_ARE_EQUAL((i % 3)+1, (size_t)n[i])
+    //np index: n.Length (), data: foo, num: 3
+    n.Insert (n.Length (), foo, 3);
+    for (size_t i = 0; i < n.Length (); i++)
+        H3R_TEST_ARE_EQUAL((i % 3)+1, (size_t)n[i])
+
+    H3R_NS::Array<int> arr;
+    char a;
+    int b;
+    int * c = nullptr;
+    auto wrong_type = [&]() { arr.Insert (0, &a, 1); };
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_type)
+    auto wrong_size = [&]() { arr.Insert (0, &b, 0); };
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_size)
+    auto wrong_data = [&]() { arr.Insert (0, c, 1); };
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_data)
+    auto wrong_index = [&]() { arr.Insert (1, &b, 1); };
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_index)
+H3R_TEST_END
+
+H3R_TEST_(clear)
+    int foo[] {1,2,3};
+    H3R_NS::Array<int> n {foo, 3};
+    for (auto & itm : n) H3R_TEST_ARE_NOT_EQUAL(0, itm)
+    n.Clear ();
+    for (auto & itm : n) H3R_TEST_ARE_EQUAL(0, itm)
+H3R_TEST_END
+
+H3R_TEST_(remove)
+    int foo[] {1,2,3};
+    H3R_NS::Array<int> n {foo, 3};
+    H3R_TEST_ARE_EQUAL(3, n.Length ())
+    for (auto & itm : n) H3R_TEST_ARE_NOT_EQUAL(0, itm)
+    n.Remove (0);
+    H3R_TEST_ARE_EQUAL(2, n.Length ())
+    H3R_TEST_ARE_EQUAL(2, n[0])
+    H3R_TEST_ARE_EQUAL(3, n[1])
+    n.Remove (1);
+    H3R_TEST_ARE_EQUAL(1, n.Length ())
+    H3R_TEST_ARE_EQUAL(2, n[0])
+    n.Remove (0);
+    H3R_TEST_ARE_EQUAL(0, n.Length ())
+    // should leave the object in an expected state
+    n.Append (foo, 3);
+    H3R_TEST_ARE_EQUAL(3, n.Length ())
+    H3R_TEST_ARE_EQUAL(1, n[0])
+    H3R_TEST_ARE_EQUAL(2, n[1])
+    H3R_TEST_ARE_EQUAL(3, n[2])
+
+    H3R_NS::Array<int> m {foo, 3};
+    auto wrong_index_a = [&]() { m.Remove (-1); };
+    auto wrong_index_b = [&]() { m.Remove (3); };
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_index_a)
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_index_b)
+
+    H3R_NS::Array<int> p {};
+    auto empty_array = [&]() { p.Remove (42); };
+    H3R_TEST_EXCEPTION(ArgumentException, empty_array)
 H3R_TEST_END
 
 NAMESPACE_H3R
