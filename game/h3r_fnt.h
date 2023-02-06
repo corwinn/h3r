@@ -110,7 +110,7 @@ class Fnt final : public ResDecoder
         Stream::Read (s, static_cast<byte *>(_data), _data.Length ());
         // printf ("fnt: Tell: %zu, Size: %zu" EOL, s.Tell (), s.Size ());
         int pos = 0;
-        for (size_t i = 0; i < ofs.Length (); i++) {
+        for (int i = 0; i < ofs.Length (); i++) {
             // printf ("ofs[%d]: %d, pos: %d" EOL, i, ofs[i], pos);
             H3R_ENSURE(ofs[i] == pos, "Fnt: corrupted data")
             _glyphs[i] = _entries[i];

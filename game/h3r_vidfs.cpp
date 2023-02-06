@@ -61,7 +61,7 @@ VidFS::VidFS(const String & fname)
     auto data = static_cast<VidFS::Entry *>(_entries);
     Stream::Read (*_s, data, cnt);
     // Validate
-    for (size_t i = 0; i < _entries.Length (); i++) {
+    for (int i = 0; i < _entries.Length (); i++) {
         int a = _entries[i].Ofs;
         int b = i < _entries.Length ()-1 ? _entries[i+1].Ofs : _last_offset;
         if (b <= a) {
@@ -96,13 +96,13 @@ Stream & VidFS::GetStream(const VidFS::Entry & e, int size)
 
 Stream * VidFS::Get(const String & res)
 {
-    for (size_t i = 0; i < _entries.Length (); i++)
+    for (int i = 0; i < _entries.Length (); i++)
         if (res == reinterpret_cast<const char *>(_entries[i].Name))
             return &(GetStream (_entries[i], GetSize (i)));
     return VFS::Get (res);
 }
 
-int VidFS::GetSize(size_t idx)
+int VidFS::GetSize(int idx)
 {
     auto size = (idx < _entries.Length ()-1 ? _entries[idx+1].Ofs : _last_offset)
         - _entries[idx].Ofs;
@@ -113,7 +113,7 @@ int VidFS::GetSize(size_t idx)
 void VidFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
     static VFS::Entry vfs_e {};
-    for (size_t i = 0; i < _entries.Length (); i++) {
+    for (int i = 0; i < _entries.Length (); i++) {
         vfs_e.Name = reinterpret_cast<const char *>(_entries[i].Name);
         vfs_e.Size = GetSize (i);
         if (! on_entry (GetStream (_entries[i], vfs_e.Size), vfs_e)) break;

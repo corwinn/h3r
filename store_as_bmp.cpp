@@ -80,7 +80,7 @@ static void store_as_bmp(char * fn,
         *(h8 + COLORS + 1) = *(h8 + COLORS + 5) = 1;
     }
     else if (24 == bpp)
-        // for (int i = 0; i < (bmp_size - 3); i += 3) // RGB -> BGR or BGR -> RGB
+        // for (int i = 0; i < (bmp_size - 3); i+=3) // RGB -> BGR or BGR -> RGB
         //    { auto t = *(b+i); *(b+i) = *(b+i+2), *(b+i+2) = t; }
         ;
     else H3R_ENSURE(false, "unknown bpp")
@@ -103,7 +103,7 @@ static void store_as_bmp(char * fn,
     s.Write (h8, HSIZE);
     if (pal.Length () > 0) s.Write (pal.Data (), pal.Length ());
     // no :) s.Write (b, bmp_size); nothing is simple with these people
-    H3R_NS::Array<H3R_NS::byte> zeroes {(size_t)(bbpl)};
+    H3R_NS::Array<H3R_NS::byte> zeroes {bbpl};
     for (int i = h-1; i >= 0; i--) {
         s.Write (b + i * w * bytes_per_pixel, w * bytes_per_pixel);
         if (bbpl > 0) s.Write (zeroes.Data (), zeroes.Length ());

@@ -58,12 +58,12 @@ static void read_sprite_224(Stream & s, int w, int h, H3R_NS::byte * p)
 static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh)
 {
     Stream::Read (s, &sh);
-    buf.Resize (static_cast<size_t>(sh.Width*sh.Height));
+    buf.Resize (sh.Width*sh.Height);
     byte * ptr = buf;
     // The "if" operators are ordered by frequency.
     if (1 == sh.Type) {
         // an offset table based on its own beginning:
-        // Array<unsigned int> off_tbl {(size_t)(sh.Height)};
+        // Array<unsigned int> off_tbl {sh.Height};
         // auto off_table_base = s.Tell ();
         s.Seek (sh.Height * sizeof (unsigned int));
         // Stream::Read (s, (unsigned int *)off_tbl, off_tbl.Length ());
@@ -80,7 +80,7 @@ static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh)
     }// 1 == sh.Type
     else if (3 == sh.Type) {
         // int ofs_num = sh.Width >> 5;
-        // Array<unsigned short> off_tbl {(size_t)(ofs_num * sh.Height)};
+        // Array<unsigned short> off_tbl {ofs_num * sh.Height};
         read_sprite_224 (s, sh.Width, sh.Height, ptr);
     }
     else if (2 == sh.Type) {

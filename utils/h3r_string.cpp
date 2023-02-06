@@ -37,10 +37,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 using OS::Log_stdout;
-template <typename T> String & String::append(const T * buf, size_t num)
+template <typename T> String & String::append(const T * buf, int num)
 {
     if (num <= 0) return *this;
-    size_t new_size = num + Length () + _NZ;
+    int new_size = num + Length () + _NZ;
     _b.Resize (new_size);
     byte * ptr = _b;
     OS::Memmove (ptr + new_size - _NZ - num, buf, num * sizeof(T));
@@ -48,7 +48,7 @@ template <typename T> String & String::append(const T * buf, size_t num)
 }
 
 String::String(const char * cstr) { append (cstr, OS::Strlen (cstr)); }
-String::String(const byte * cstr, size_t len) { append (cstr, len); }
+String::String(const byte * cstr, int len) { append (cstr, len); }
 
 String::String(Array<byte> && b) { b.MoveTo (_b); }
 
@@ -75,11 +75,11 @@ String String::Format(const char * fmt, ...)
     __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {lock};
 
     // dLog_stdout ("String::Format: fmt: \"%s\"" EOL, fmt);
-    static const size_t MAX_BUF_SIZE {1<<11};
-    static const size_t BUF_SIZE {1};
+    static const int MAX_BUF_SIZE {1<<11};
+    static const int BUF_SIZE {1};
     // Stay out of any static memory managers.
     static Array<byte, OS::Malloc, OS::Mfree> buf {BUF_SIZE};
-    size_t r, len = buf.Length ();
+    int r, len = buf.Length ();
     va_list ap;
     unsigned short iloop = 1;
     do {
@@ -136,7 +136,7 @@ String operator+(const char * l, const String & r)
 String String::ToLower() const //TODO uncode (iconv)
 {
     Array<byte> result = _b;
-    for (size_t i = 0; i < Length (); i++)
+    for (int i = 0; i < Length (); i++)
         result[i] = static_cast<byte>(OS::ToLower (result[i]));
     return String {static_cast<Array<byte> &&>(result)};
 }
@@ -145,9 +145,9 @@ String String::Replace(const char * what, const char * with)
 {
     H3R_ARG_EXC_IF(nullptr == what, "\"what\" can't be null")
     H3R_ARG_EXC_IF(nullptr == with, "\"with\" can't be null")
-    size_t wlen = OS::Strlen (what);
+    int wlen = OS::Strlen (what);
     if (wlen <= 0) return *this;
-    size_t slen = OS::Strlen (what);
+    int slen = OS::Strlen (what);
     if (slen <= 0) return *this;
     if (_b.Empty ()) return *this;
     byte * b = _b;

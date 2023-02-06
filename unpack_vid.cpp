@@ -72,8 +72,8 @@ int main(int argc, char ** argv)
     s.Read (&cnt, 4);
     H3R_ENSURE(cnt > 0 && cnt < 1024, "that's way too many videos")
 
-    H3R_NS::Array<int> ofs {(size_t)cnt};
-    H3R_NS::Array<H3R_NS::String> name {(size_t)cnt};
+    H3R_NS::Array<int> ofs {cnt};
+    H3R_NS::Array<H3R_NS::String> name {cnt};
     for (int i = 0; i < cnt; i++) {
         char fname[40] {};
         s.Read (fname, 40);

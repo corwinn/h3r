@@ -59,16 +59,16 @@ H3R_NAMESPACE
 //TODONT optimize <=> don't use "String" when you need speed
 class String final
 {
-    private static constexpr size_t _NZ {4}; // number of zeroes
+    private static constexpr int _NZ {4}; // number of zeroes
     private Array<byte> _b {};
 
-    private template <typename T> String & append(const T * buf, size_t num);
+    private template <typename T> String & append(const T * buf, int num);
 
     public String() {}
     public String(const char *); // Zero-terminated
 
     // Warning! All 0 at the end shall be ignored!
-    public explicit String(const byte *, size_t);
+    public explicit String(const byte *, int);
 
     private String(Array<byte> &&);
     public String(const String &);
@@ -79,7 +79,7 @@ class String final
     //TODO solve: assertion will fail when "hidden" MAX_BUF_SIZE is reached
     public static String Format(const char *, ...);
 
-    public inline size_t Length() const
+    public inline int Length() const
     {
         H3R_ENSURE(0 == _b.Length () || _b.Length () >= _NZ,
             "Unknown state")
@@ -110,7 +110,7 @@ class String final
     }
     public bool inline operator==(const char * b) const
     {
-        auto b_len = OS::Strlen (b);
+        auto b_len = static_cast<int>(OS::Strlen (b));
         if (b_len != Length ()) return false;
         return ! OS::Strncmp (b, *this, b_len);
     }
@@ -133,7 +133,7 @@ class String final
     public inline bool EndsWith(const char * s)
     {
         auto a = Length ();
-        auto b = OS::Strlen (s);
+        auto b = static_cast<int>(OS::Strlen (s));
         if (b > a) return false;
         //DONE why is this compiling ?! (the test segfaults)
         //     return ! OS::Strncmp (((*this + a) - b), s, b);

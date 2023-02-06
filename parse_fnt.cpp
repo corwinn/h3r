@@ -140,7 +140,7 @@ int main(int argc, char ** argv)
         total_width += width_buf + bearing_x_buf + offset2_buf;
     }
 
-    H3R_NS::Array<H3R_NS::byte> atlas {(size_t)(total_width*3*h)};
+    H3R_NS::Array<H3R_NS::byte> atlas {total_width*3*h};
     H3R_NS::byte * atlas_ptr = atlas;
     int atlas_ptr_w {};
     for (int i = 0; i < 256; i++) {
@@ -153,7 +153,7 @@ int main(int argc, char ** argv)
         auto sentinel = s.Tell ();
         s.Seek ((bitmap_ofs + (32+256*4*4)) - s.Tell ());
 
-        H3R_NS::Array<H3R_NS::byte> glyph {(size_t)(width[i]*h)};
+        H3R_NS::Array<H3R_NS::byte> glyph {width[i]*h};
         H3R_NS::byte * glyph_buf = glyph;
         s.Read (glyph_buf, width[i]*h);
         int advance = bearing_x[i] + width[i] + offset2[i];

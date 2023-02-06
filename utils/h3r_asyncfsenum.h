@@ -95,7 +95,7 @@ template <typename T> class AsyncFsEnum final
         private AsyncFsEnum<T> & _subject;
         private Stack<String> _directories {};
         private String _current_root {};
-        private size_t _stack_load {};
+        private int _stack_load {};
         public EnumItem State;
         public EnumTask(AsyncFsEnum<T> & subject)
             : _subject{subject}, State {0, "Enumerating..."} {}

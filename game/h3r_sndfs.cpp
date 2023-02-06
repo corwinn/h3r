@@ -61,7 +61,7 @@ SndFS::SndFS(const String & fname)
     Stream::Read (*_s, data, cnt);
     // Validate
     auto file_size = _s->Size ();
-    for (size_t i = 0; i < _entries.Length (); i++) {
+    for (int i = 0; i < _entries.Length (); i++) {
         auto & e = _entries[i];
         if (e.Ofs < _s->Tell () || e.Ofs >= file_size) {
             Log::Err (String::Format ("%s: Wrong Entry[%0004d].Ofs: "

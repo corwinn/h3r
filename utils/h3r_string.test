@@ -153,7 +153,8 @@ H3R_TEST_(length)
     String ten {"0123456789"};
     H3R_TEST_ARE_EQUAL(10, ten.Length ())
     H3R_TEST_ARE_EQUAL(
-        OS::Strlen (reinterpret_cast<const char *>(ten.AsByteArray ())),
+        static_cast<int>(
+            OS::Strlen (reinterpret_cast<const char *>(ten.AsByteArray ()))),
         ten.Length ())
 H3R_TEST_END
 

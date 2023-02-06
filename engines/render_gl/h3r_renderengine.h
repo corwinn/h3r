@@ -136,14 +136,14 @@ class RenderEngine final
         {//LATER optimize
             if (TexFrame.Count () == 1) return TexFrame[0].Texture;
             // should be no more than Count () = 2, but
-            for (size_t i = 1; i < TexFrame.Count (); i++)
+            for (int i = 1; i < TexFrame.Count (); i++)
                 if (Offset >= TexFrame[i-1].Offset
                     && Offset < TexFrame[i].Offset) return TexFrame[i].Texture;
             H3R_ENSURE(false, "You have a bug: unknown texture")
         }
         inline void SetTexture(GLuint tex_id) // Update TexFrame
         {//LATER optimize
-            for (size_t i = 0; i < TexFrame.Count (); i++)
+            for (int i = 0; i < TexFrame.Count (); i++)
                 if (TexFrame[i].Texture == tex_id) {
                     // printf (" update TexFrame: [%d;%d)",
                     //   0 == i ? 0 : TexFrame[i-1].Offset, TexFrame[i].Offset);

@@ -130,7 +130,7 @@ class Def final : public ResDecoder
         }
         SubSprite * ByName(const String & name)
         {
-            for (size_t i = 0; i < Entries.Length (); i++)
+            for (int i = 0; i < Entries.Length (); i++)
                 if (Entries[i].Name == name) return &(Entries[i]);
             return nullptr;
         }
@@ -151,7 +151,7 @@ class Def final : public ResDecoder
     public: inline Def * Query(const String & sprite_name)
     {
         _request = nullptr;
-        for (size_t i = 0; i < _sprites.Length (); i++) {
+        for (int i = 0; i < _sprites.Length (); i++) {
             auto req = _sprites[i].ByName (sprite_name);
             if (req) {
                 SetRequest (req);

@@ -51,9 +51,9 @@ namespace { struct ObjectFactory
     private: ObjectFactory() {}
     public: ~ObjectFactory()
     {
-        for (size_t i = 0; i < _obj_factories.Count (); i++) {
+        for (int i = 0; i < _obj_factories.Count (); i++) {
             if (nullptr == _obj_factories[i]) continue;
-            for (size_t j = 0; j < _obj_factories[i]->Count (); j++)
+            for (int j = 0; j < _obj_factories[i]->Count (); j++)
                 if (nullptr != (*_obj_factories[i])[j])
                     (*_obj_factories[i])[j]->~Object (),
                     OS::Mfree ((*_obj_factories[i])[j]);
@@ -61,12 +61,12 @@ namespace { struct ObjectFactory
             OS::Mfree (_obj_factories[i]);
         }
     }
-    private: size_t const _distinct_types {255};
-    private: size_t const _distinct_versions {6};
+    private: int const _distinct_types {255};
+    private: int const _distinct_versions {6};
     private: int MapVersionHash(const h3rMapVersion v)
     {
         // They are 3; double that; you don't need a map still.
-        for (size_t i = 0; i < _map_version_hash.Count (); i++)
+        for (int i = 0; i < _map_version_hash.Count (); i++)
             if (v == _map_version_hash[i]) return i;
         return -1;
     }

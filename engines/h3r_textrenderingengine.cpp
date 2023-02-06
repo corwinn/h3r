@@ -57,7 +57,7 @@ TextRenderingEngine::TextRenderingEngine()
 
 TextRenderingEngine::~TextRenderingEngine()
 {
-    for (size_t i = 0; i < _fonts.Count (); i++)
+    for (int i = 0; i < _fonts.Count (); i++)
         H3R_DESTROY_OBJECT(_fonts[i].F, Font)
     if (_text_buffer) {
         OS::Free (_text_buffer);
@@ -99,18 +99,18 @@ static void TextService__ToLines(const String & txt, T & s,
     void (*on_line)(String &&, T &))
 {
     const byte * buf = txt.AsByteArray (), * l =  buf;
-    int const tlen = static_cast<int>(txt.Length ());
+    int const tlen = txt.Length ();
     for (int i = 0; i < tlen; i++)
         if ('\n' == buf[i] && (i > 0 && buf[i-1] != '\r')) {
-            on_line (String {l, (size_t)((buf + i) - l)}, s);
+            on_line (String {l, (int)((buf + i) - l)}, s);
             l = buf+i+1;
         }
         else if ('\r' == buf[i] && (i < tlen-1 && '\n' == buf[i+1])) {
-            on_line (String {l, (size_t)((buf + i) - l)}, s);
+            on_line (String {l, (int)((buf + i) - l)}, s);
             l = buf+i+2;
         }
     if (l < buf + tlen)
-        on_line (String {l, (size_t)((buf + tlen) - l)}, s);
+        on_line (String {l, (int)((buf + tlen) - l)}, s);
 }
 
 const int H3R_MAX_TEXT_WIDTH {640}; // TODO measure the at the game
@@ -185,7 +185,7 @@ byte * TextRenderingEngine::RenderText(
     //LATER R&D IEnumerable<T> using this.
     TextService__ToLines<decltype(trick)> (txt, trick,
         [](String && s, decltype(trick) & f) -> void { f ((String &&)s); });
-    printf ("TRE: rows: %zu: tw: %d, th: %d, hh: %d" EOL,
+    printf ("TRE: rows: %d: tw: %d, th: %d, hh: %d" EOL,
         txt_rows.Count (), tw, th, hh);
     H3R_ENSURE(txt_rows.Count () > 0, "Nope; at least one row shall be here")
 
@@ -203,7 +203,7 @@ byte * TextRenderingEngine::RenderText(
 
     // render the txt_rows
     int b = hh;
-    for (size_t i = 0 ; i < txt_rows.Count (); i++) {
+    for (int i = 0 ; i < txt_rows.Count (); i++) {
         int l = (tw - txt_rows_size[i].X) / 2; // hcenter
         int t = b - hh;
         printf ("TRE: render text of size: w:%d, h:%d" EOL,

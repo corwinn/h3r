@@ -98,7 +98,7 @@ void RenderEngine::Render()
     glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
     glTexCoordPointer (
         2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
-    for (size_t i = 0; i < _tex2_list.Count (); i++ ) {
+    for (int i = 0; i < _tex2_list.Count (); i++ ) {
         glBindTexture (GL_TEXTURE_2D, _tex2_list[i].Texture);
         glMultiDrawArrays (GL_TRIANGLE_STRIP,
             _tex2_list[i]._index.begin (), _tex2_list[i]._count.begin (),
@@ -130,7 +130,7 @@ int RenderEngine::GenKey()
 
 RenderEngine::TexList & RenderEngine::ListByTexId(GLuint tex_id)
 {//LATER optimize
-    for (size_t i = 0; i < _tex2_list.Count (); i++)
+    for (int i = 0; i < _tex2_list.Count (); i++)
         if (_tex2_list[i].Texture == tex_id) return _tex2_list[i];
     // printf ("new TexList" EOL);
     RenderEngine::TexList new_tex {};
@@ -263,7 +263,7 @@ void RenderEngine::UploadText(TextKey & key,
     int w, h;
     byte * tb = TextRenderingEngine::One ().RenderText (font_name, txt, w, h);
     int tw = Log2i (w), th = Log2i (h);
-    Array<byte> tex_buf {(size_t)tw*th*2};
+    Array<byte> tex_buf {tw*th*2};
     Font::CopyRectangle (tex_buf, tw, 0, 0, tb, w, h);
     // int b = t + h, r = l + w;
     GLfloat t = top, l = left, b = t + h, r = l + w;

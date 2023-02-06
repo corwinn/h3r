@@ -84,7 +84,7 @@ H3R_TEST_END
 H3R_TEST_(count)
     H3R_NS::List<size_t> l;
     H3R_TEST_ARE_EQUAL(0, l.Count ())
-    for (size_t i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; i++) {
         l.Add (i);
         H3R_TEST_ARE_EQUAL(i+1, l.Count ())
     }

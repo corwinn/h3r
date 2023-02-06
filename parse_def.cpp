@@ -333,12 +333,12 @@ void read_sprite(H3R_NS::Stream & s)
     // type3: 15281 sprites
     // type0:   835 sprites
     // type2:   187 sprites
-    H3R_NS::Array<H3R_NS::byte> bitmap {(size_t)(w * h)};
+    H3R_NS::Array<H3R_NS::byte> bitmap {w * h};
     H3R_NS::byte * ptr = (H3R_NS::byte *)bitmap;
 
     if (1 == type) {
         // an offset table based on its own beginning:
-        H3R_NS::Array<unsigned int> off_tbl {(size_t)(h)};
+        H3R_NS::Array<unsigned int> off_tbl {h};
         auto off_table_base = s.Tell ();
         Read (s, (unsigned int *)off_tbl, off_tbl.Length ());
         for (int i = 0; i < h; i++) {
@@ -362,7 +362,7 @@ void read_sprite(H3R_NS::Stream & s)
     else if (3 == type) {
         // an offset table based on its own beginning:
         int ofs_num = w >> 5;
-        H3R_NS::Array<unsigned short> off_tbl {(size_t)(ofs_num * h)};
+        H3R_NS::Array<unsigned short> off_tbl {ofs_num * h};
         auto off_table_base = s.Tell ();
         Read (s, (unsigned short *)off_tbl, off_tbl.Length ());
         H3R_ENSURE(s.Tell () == (off_table_base + off_tbl[0]),

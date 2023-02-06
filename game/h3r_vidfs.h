@@ -70,7 +70,7 @@ class VidFS final : public VFS
 #pragma pack(pop)
     private Array<VidFS::Entry> _entries {};
     private Stream & GetStream(const VidFS::Entry &, int);
-    private int GetSize(size_t);
+    private int GetSize(int);
     public VidFS(const String & path);
     public ~VidFS() override;
     public Stream * Get(const String & name) override;

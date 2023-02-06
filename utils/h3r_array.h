@@ -47,15 +47,15 @@ template <typename T,
           void (*F)(T * &) = OS::Free> class Array //
 {
     private: T * _data {};
-    private: size_t _len {}; // [T] //TODO size_t is a bad idea 0-1 results
-                                    //     in UB: for (i = count-1; i>=0 ; i--)
+    private: int _len {}; // [T]
+
     private: void free_and_nil() { if (_data) F (_data), _len = 0; }
 
     public: inline const T * Data() const { return _data; }
-    public: inline const size_t & Length() const { return _len; }
+    public: inline const int & Length() const { return _len; }
 
     public: Array() {}
-    public: Array(const T * a, size_t n) { Append (a, n); }
+    public: Array(const T * a, int n) { Append (a, n); }
     public: Array(Array<T> && a) { a.MoveTo (*this); }
     public: Array<T> & operator=(Array<T> && a)
     {
@@ -66,7 +66,7 @@ template <typename T,
     {
         return a.CopyTo (*this), *this;
     }
-    public: Array(size_t len) { Resize (len); }
+    public: Array(int len) { Resize (len); }
     public: ~Array() { this->free_and_nil (); }
 
     public: operator T*() const { return _data; }
@@ -86,7 +86,7 @@ template <typename T,
         if (_data && _len > 0) a.Append (_data, _len);
     }
 
-    public: void Resize(size_t len)
+    public: void Resize(int len)
     {
         H3R_ARG_EXC_IF(len < 0, "len < 0")
 
@@ -103,14 +103,14 @@ template <typename T,
         _data = n, _len = len;
     }
 
-    public: template <typename Q> void Append(const Q * data, size_t num)
+    public: template <typename Q> void Append(const Q * data, int num)
     {
         H3R_ARG_EXC_IF(sizeof(Q) != sizeof(T), "sizeof(Q) != sizeof(T)")
         H3R_ARG_EXC_IF(num < 1, "num < 1")
         H3R_ARG_EXC_IF(nullptr == data, "nullptr == data")
 
         T * n {};
-        size_t l = (num + _len);
+        int l = (num + _len);
         A (n, l * sizeof(T));
         T * n1 {n + _len};
         if (_data) OS::Memmove (n, _data, _len * sizeof(T)),
@@ -123,7 +123,7 @@ template <typename T,
     // "index" is sizeof(Q)-based.
     // Insert num Q at index. Insert at [Length()] is supported.
     public: template <typename Q> void Insert(
-        size_t index, const Q * data, size_t num)
+        int index, const Q * data, int num)
     {
         H3R_ARG_EXC_IF(sizeof(Q) != sizeof(T), "sizeof(Q) != sizeof(T)")
         H3R_ARG_EXC_IF(num < 1, "num < 1")
@@ -142,7 +142,7 @@ template <typename T,
 
     public: bool Empty() const { return 0 == _len && nullptr == _data; }
 
-    public: T & operator[](size_t i)
+    public: T & operator[](int i)
     {
         H3R_ARG_EXC_IF(0 == _len, "_len is 0; - no [] acceess")
         H3R_ARG_EXC_IF(i < 0 || i >= _len, "Your favorite message [i]")
@@ -156,8 +156,8 @@ template <typename T,
     // Also, see "range_for" at the .test
     public: const T * begin() const { return _data +    0; }
     public: const T * end  () const { return _data + _len; }
-    //public: T * begin() { return _data +    0; }
-    //public: T * end  () { return _data + _len; }
+    // public: T * begin() { return _data +    0; }
+    // public: T * end  () { return _data + _len; }
 
     // Set everything to 0 - clear all bits.
     public: void Clear()
@@ -167,9 +167,8 @@ template <typename T,
     }
 
     // This doesn't release the memory in use.
-    public: void Remove(int index)
+    public: void Remove(int idx)
     {
-        size_t idx = static_cast<size_t>(index);//TODO fix this mess
         H3R_ARG_EXC_IF(_len <= 0, "Bug: delete from an empty array")
         H3R_ARG_EXC_IF(idx < 0 || idx >= _len, "Your favorite message [i]")
         if (idx < _len - 1)

@@ -49,7 +49,7 @@ template <typename T> class Stack final
 {
     private Array<T> _b;
     private int _sp {-1};
-    public Stack(size_t capacity = 0) : _b{0 == capacity ? 8 : capacity} {}
+    public Stack(int capacity = 0) : _b{0 == capacity ? 8 : capacity} {}
     public void Push(const T & t)
     {
         if (++_sp >= static_cast<int>(_b.Length ()))
@@ -62,7 +62,7 @@ template <typename T> class Stack final
         return static_cast<T &&>(_b[_sp--]);
     }
     public bool Empty() const { return -1 == _sp; }
-    public size_t Size() const { return _b.Length (); }
+    public int Size() const { return _b.Length (); }
 };
 
 #undef public

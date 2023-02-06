@@ -51,8 +51,8 @@ template <typename T> class List //LATER Insert() - should the need arise
 {
     private Array<T> _l; // list
 
-    public List(size_t capacity = 0) : _l{capacity} {}
-    public List(const T * a, size_t n) : _l{} { _l.Append (a, n); }
+    public List(int capacity = 0) : _l{capacity} {}
+    public List(const T * a, int n) : _l{} { _l.Append (a, n); }
     /* Because you could compare to something that is implicitly cast-able to T
      * thus calling pointless initialization. Don't do:
      * public template <typename R> bool Contains(R itm)
@@ -75,15 +75,15 @@ template <typename T> class List //LATER Insert() - should the need arise
     public bool Remove(const T & itm)
     {
         Array<T> n {_l.Length ()};
-        size_t idx {0};
+        int idx {0};
         for (const auto & i : _l) if (i != itm) n[idx++] = i;
         if (_l.Length () == idx) return false;
         return n.Resize (idx), n.MoveTo (_l), true;
     }
     public void RemoveAt(int index) { _l.Remove (index); }//TODO testme
-    public T & operator[](size_t i) { return _l[i]; }
+    public T & operator[](int i) { return _l[i]; }
     public bool Empty() const { return _l.Empty (); }
-    public size_t Count() const { return _l.Length (); }
+    public int Count() const { return _l.Length (); }
     public void Clear() { _l.Resize (0); }
     public const T * begin() const { return _l.begin (); }
     public const T * end  () const { return _l.end (); }

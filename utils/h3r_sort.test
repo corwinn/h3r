@@ -64,7 +64,7 @@ template <typename T> struct SortableArray final : public ISortable<Node>
     Array<T> & _a;
     SortableArray(Array<T> & a) : _a{a}
     {
-        for (size_t i = 0; i < a.Length (); i++) {
+        for (int i = 0; i < a.Length (); i++) {
             Node * n;
             OS::Alloc (n);
             n->Index = i;
@@ -121,7 +121,7 @@ H3R_TEST_(one)
     SortableArray<int> arr_view {arr};
     sort (arr_view);
     H3R_TEST_IS_NOT_NULL(arr_view.first ())
-    size_t count {0};
+    int count {0};
     for (auto a = arr_view.first (); nullptr != a; a = arr_view.next (a))
         count++;
     H3R_TEST_ARE_EQUAL(count, arr.Length ())
@@ -131,7 +131,7 @@ H3R_TEST_END
 template <typename T> static void ChkSorted(Array<T> & arr,
     SortableArray<T> & view, bool s = true)
 {
-    size_t count {0};
+    int count {0};
     for (auto a = view.first (); nullptr != a; a = view.next (a))
         count++;
     H3R_TEST_ARE_EQUAL(count, arr.Length ())
@@ -241,7 +241,7 @@ H3R_TEST_(five)
     Array<int> arr {5};
     SortableArray<int> arr_view {arr};
     const int PMAX = (int)arr.Length () + 1;
-    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+    for (int i = 0; i < arr.Length (); i++) arr[i] = i+1;
 
     sort (arr_view);
     H3R_TEST_IS_NOT_NULL(arr_view.first ())
@@ -270,7 +270,7 @@ H3R_TEST_(six)
     Array<int> arr {6};
     SortableArray<int> arr_view {arr};
     const int PMAX = (int)arr.Length () + 1;
-    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+    for (int i = 0; i < arr.Length (); i++) arr[i] = i+1;
 
     sort (arr_view);
     H3R_TEST_IS_NOT_NULL(arr_view.first ())
@@ -307,7 +307,7 @@ H3R_TEST_(seven)
     Array<int> arr {7};
     SortableArray<int> arr_view {arr};
     const int PMAX = (int)arr.Length () + 1;
-    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+    for (int i = 0; i < arr.Length (); i++) arr[i] = i+1;
 
     sort (arr_view);
     H3R_TEST_IS_NOT_NULL(arr_view.first ())
@@ -338,7 +338,7 @@ H3R_TEST_(eight)
     Array<int> arr {8};
     SortableArray<int> arr_view {arr};
     const int PMAX = (int)arr.Length () + 1;
-    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+    for (int i = 0; i < arr.Length (); i++) arr[i] = i+1;
 
     sort (arr_view);
     H3R_TEST_IS_NOT_NULL(arr_view.first ())
@@ -379,7 +379,7 @@ H3R_TEST_END
 H3R_TEST_(nine)
     Array<int> arr {9};
     SortableArray<int> arr_view {arr};
-    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+    for (int i = 0; i < arr.Length (); i++) arr[i] = i+1;
 
     sort (arr_view);
     H3R_TEST_IS_NOT_NULL(arr_view.first ())
@@ -393,7 +393,7 @@ H3R_TEST_END
 H3R_TEST_(amillion)
     Array<int> arr {1<<20};
     SortableArray<int> arr_view {arr};
-    for (size_t i = 0; i < arr.Length (); i++) arr[i] = i+1;
+    for (int i = 0; i < arr.Length (); i++) arr[i] = i+1;
 
 #ifdef H3R_QSORT
     QSORT_ASC(arr);

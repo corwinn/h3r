@@ -104,7 +104,7 @@ int main(int argc, char ** argv)
     printf (
         "Size  : %5d bytes" EOL "Dim : %dx%dx%d" EOL, size, w, h, fmt << 3);
     if (1 == fmt) {
-        H3R_NS::Array<H3R_NS::byte> b {(size_t)(w * h)}, p {(size_t)(3 * 256)};
+        H3R_NS::Array<H3R_NS::byte> b {w * h}, p {3 * 256};
         // s.Seek (w * h); // bitmap
         s.Read ((H3R_NS::byte *)b, b.Length ());
         // s.Seek (3*256); // palette
@@ -112,7 +112,7 @@ int main(int argc, char ** argv)
         store_as_bmp (argv[1], b, w, h, 8, p);
     }
     else if (3 == fmt) {
-        H3R_NS::Array<H3R_NS::byte> b {(size_t)(w * h * 3)};
+        H3R_NS::Array<H3R_NS::byte> b {w * h * 3};
         // s.Seek (w * h * 3); // bitmap
         s.Read ((H3R_NS::byte *)b, b.Length ());
         store_as_bmp (argv[1], b, w, h, 24, nullptr);

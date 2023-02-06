@@ -51,7 +51,7 @@ Point GameFont::MeasureText(const String & text)
     Point result {};
     result.Y = _fnt.Height ();
     const byte * buf = text.AsByteArray ();
-    for (size_t i = 0; i < text.Length (); i++)
+    for (int i = 0; i < text.Length (); i++)
         result.X += _fnt.HorisontalAdvance (buf[i]);
     return result;
 }
@@ -77,7 +77,7 @@ void GameFont::RenderText(const String & text, byte * buf, int w, int h)
     const byte * txt = text.AsByteArray ();
     int advance0 = _fnt.GlyphXOffset1 (txt[0]);
     int gh = _fnt.Height (); int advance_x = advance0;
-    for (size_t i = 0; i < text.Length (); i++) {
+    for (int i = 0; i < text.Length (); i++) {
         int gw = _fnt.GlyphWidth (txt[i]);
         byte * glyph = _fnt.GlyphBitmap (txt[i]);
     /*printf ("Glyph %3d:" EOL, txt[i]); TODO h3r_debug_helpers
