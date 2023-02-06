@@ -177,7 +177,7 @@ class Object : public ISerializable
         h3rMapVersion, h3rObjType);
     //
     public static Object * Create(Stream &, h3rMapVersion, const Object &);
-    // The complicated and unpleasant system above speeds-up map loading,
+    // The complicated and unpleasant system above, speeds-up map loading,
     // and allows extend-able object management. No more giant switch
     // statements.
 
@@ -208,11 +208,11 @@ class Object : public ISerializable
     public h3rObjRef Sprite() const { return _sprite; }
 };// Object
 
-// Use this to make your class get used by the map loader.
+// Use this to make your class usable by the map loader.
 // Basically all built-in objects shall "call" it.
 //LATER perhaps it will be more simple to just register them at main();
-//      the above odd static factory-like risky hard to debug machinery will go
-//      to /dev/null
+//      the above odd, static, factory-like, risky, hard to debug, machinery
+//      will go to /dev/null
 #define H3R_REGISTER_OBJECT(O,V,T) \
 static struct _h3r_r_object_##O { \
     _h3r_r_object_##O () { Object::Register<O> (V, T); } \
