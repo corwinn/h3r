@@ -156,6 +156,20 @@ H3R_TEST_(reference_mess)
     for (const auto & t : l) H3R_TEST_ARE_EQUAL(i++, t.a);
 H3R_TEST_END
 
+H3R_TEST_(remove_at)
+    auto l = H3R_NS::List<int> {} << 1 << 2 << 3;
+    int i {0};
+    for (auto & t : l) H3R_TEST_ARE_EQUAL(++i, t);
+    l.RemoveAt (0);
+    i = 1;
+    for (auto & t : l) H3R_TEST_ARE_EQUAL(++i, t);
+    l.RemoveAt (1);
+    i = 1;
+    for (auto & t : l) H3R_TEST_ARE_EQUAL(++i, t);
+    l.RemoveAt (0);
+    H3R_TEST_ARE_EQUAL(0, l.Count ());
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()
