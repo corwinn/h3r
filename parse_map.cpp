@@ -155,16 +155,43 @@ template <typename T> class Some0Bytes final
 public:
     Some0Bytes(size_t n)
     {
-        _b = (T *)calloc (n, 1);
+        if (n < 0 || n > 10000) { // size 0 is allowed in town timed event
+            printf ("suspicious byte seqeunce of size %zu" EOL, n);
+            exit (1);
+        }
+        _b = (T *)calloc (n, sizeof(T));
         if (! _b) printf ("Can't alloc %zu bytes. Bye." EOL, n), exit (1);
     }
     ~Some0Bytes() { if (_b) free (_b), _b = nullptr; }
     operator byte *() { return (byte *)_b; }
+    operator const byte *() const { return (const byte *)_b; }
     operator char *() { return (char *)_b; }
     operator const char *() const { return (const char *)_b; }
     operator void *() { return _b; }
     T & operator [](int i) { return  _b[i]; }
 };
+
+namespace {static struct L final
+{
+    template <typename T> L & Fmt(const char * f, T & v)
+    {
+        return printf (f, v), *this;
+    }
+    L & operator<<(const char * v) { return Fmt ("%s", v); }
+    L & operator<<(int v) { return Fmt ("%d", v); }
+    L & operator<<(short v) { return Fmt ("%d", v); }
+    L & operator<<(byte v) { return Fmt ("%d", v); }
+    L & operator<<(L & l) { return l; }
+} Log;}
+
+static inline L & print_byte_sequence(const byte * b, size_t n)
+{
+    if (n <= 0) return Log << "{}";
+    auto e = b + n;
+    Log.Fmt ("{%002X", *b++);
+    while (b < e) Log.Fmt (" %002X", *b++);
+    return Log << "}";
+}
 
 #define MAP_ROE 0x0e
 #define MAP_AB  0x15
@@ -459,16 +486,78 @@ public:
  "There is a maximum of 144 objects of type "Creature Generator 1" on any map!"
 */
 
-// Avoid manual size computation. "virtual template <typename T>":
-template <typename T> bool Read(Stream & br, T & d)
+template <typename T> T Read(Stream & br)
 {
-    return br.Read (&d, sizeof(T));
+    T data;
+    if (! br.Read (&data, sizeof(T))) { printf ("Read failed\n"); exit (1); }
+    return data;
+}
+
+// Avoid manual size computation. "virtual template <typename T>":
+template <typename T> bool Read(Stream & br, T & d, size_t n = 1)
+{
+    if (! br.Read (&d, n * sizeof(T))) { printf ("Read failed\n"); exit (1); }
+    return true;
+}
+template <typename T> void Read(Stream & br, T * d, size_t n = 1)
+{
+    if (! br.Read (d, n * sizeof(T))) { printf ("Read failed\n"); exit (1); }
 }
 
 static bool ReadSkip(Stream & br, size_t n)
 {
     Some0Bytes<byte> buf (n);
-    return br.Read (buf, n);
+    if (! br.Read (buf, n)) {
+        printf ("Read failed\n");
+        exit (1);
+    }
+    return true;
+}
+
+struct MapString
+{
+    int Len;
+    Some0Bytes<byte> Chars;
+    MapString(Stream & s)
+        : Len {Read<int> (s)}, Chars {static_cast<size_t>(Len+1)}
+    {
+        Read (s, Chars.operator byte * (), Len);
+    }
+};
+#pragma pack(push, 1)
+struct MapObject final
+{
+    MapString SpriteName;
+    byte PassMask[6]; // w,h = (sprite_name.s(.def/.msk)).bytes[0],[1]
+    byte TrigMask[6]; // the mask max is 8x6 (at the editor there is a lake 7x3)
+    byte Unk1[2];
+    short TerrainMask; // ?
+    int EdId; // objects[i] = def_id; string ref - editor name
+    int SubId;
+    byte Type; // no idea yet
+    byte PrintPriority; // ?
+    byte Unk2[16];
+    MapObject(Stream & s)
+        : SpriteName {s}
+    {
+        s.Read (&PassMask, sizeof(MapObject) - sizeof(MapString));
+    }
+};
+#pragma pack(pop)
+L & operator<<(L &, MapObject & obj)
+{
+    Log << " sprite: "
+        << obj.SpriteName.Chars.operator const char * () << EOL
+        << " PMask: " << print_byte_sequence (obj.PassMask, 6)
+        << ", TMask: " << print_byte_sequence (obj.TrigMask, 6) << EOL
+        << " U1: " << print_byte_sequence (obj.Unk1, 2)
+        << ", TerrMask: " << obj.TerrainMask
+        << ", EdtorId: " << Log.Fmt ("%3d", obj.EdId)
+        << ", SubId: " << Log.Fmt ("%3d", obj.SubId)
+        << ", Type: " << obj.Type
+        << ", zOrder: " << obj.PrintPriority << EOL
+        << " U2: " << print_byte_sequence (obj.Unk2, 16) << EOL;
+    return Log;
 }
 
 static bool read_string(Stream & br, const char * what)
@@ -1047,50 +1136,58 @@ int main(int argc, char ** argv)
                         MAP_RIVER(t_river_type), t_river_dir,
                         MAP_ROAD(t_road_type), t_road_dir, t_tile_flags);
             }
-    // readDefInfo(); these are the resources used to render the map AFAIU
-    int def_num;
-    if (! Read (br, def_num)) return 1;
-    printf ("def_num      : %d" EOL, def_num);
-    Some0Bytes<byte> def_ids (def_num);
-    for (int i = 0; i < def_num; i++) {
-        if (! read_string(br, "  Anim File : ")) return 1;
-        Some0Bytes<byte> block_mask (6);
-        Some0Bytes<byte> visit_mask (6);
-        if (! br.Read (block_mask, 6)) return 1;
-        if (! br.Read (visit_mask, 6)) return 1;
-        if (! ReadSkip(br, 2)) return 1; // unknown short int
+    // readDefInfo(); these are the distinct objects on the map
+    int obj_num;
+    Read (br, obj_num);
+    printf ("obj_num      : %d" EOL, obj_num);
+    Some0Bytes<int> objects (obj_num);
+    for (int i = 0; i < obj_num; i++) {
+        MapObject obj (br); objects[i] = obj.EdId;
+        Log << "obj[" << Log.Fmt ("%3d", i) << "] " << obj;
+        /*if (! read_string (br, "Sprite : ")) return 1;
+        Some0Bytes<byte> pass_mask (6);
+        Some0Bytes<byte> trig_mask (6);
+        Read (br, pass_mask.operator byte * (), 6);
+        Log << "  passability:" << print_byte_sequence (pass_mask, 6) << EOL;
+        Read (br, trig_mask.operator byte * (), 6);
+        Log << "  triggers:" << print_byte_sequence (trig_mask, 6) << EOL;
+        ReadSkip (br, 2); // unknown short int
         short int terrain_mask;
-        if (! Read (br, terrain_mask)) return 1;
-        printf ("def_terrain_mask: %d" EOL, terrain_mask);
+        Read (br, terrain_mask);
+        Log << "  terrain_mask: " << terrain_mask << EOL;
         int def_id, def_subid;
         if (! Read (br, def_id)) return 1;
-        def_ids[i] = def_id;
-        printf ("def_id: %d" EOL, def_id);
+        objects[i] = def_id;
+        printf ("  def_id: %d" EOL, def_id);
         if (! Read (br, def_subid)) return 1;
-        printf ("def_subid: %d" EOL, def_subid);
+        printf ("  def_subid: %d" EOL, def_subid);
         byte def_type, def_print_priority;
         if (! Read (br, def_type)) return 1;
-        printf ("def_type: %d" EOL, def_type);
+        printf ("  def_type: %d" EOL, def_type);
         if (! Read (br, def_print_priority)) return 1;
-        printf ("def_print_priority: %d" EOL, def_print_priority);
-        if (! ReadSkip(br, 16)) return 1; // ?
+        printf ("  def_print_priority: %d" EOL, def_print_priority);
+        if (! ReadSkip(br, 16)) return 1;*/ // ?
         // readMsk() - reads the .msk file associated with this .def
         // they are using just the 1st 2 bytes to set mask size (w,h)
     }
     // readObjects(); - object placement
-    int obj_num;
-    if (! Read (br, obj_num)) return 1;
-    printf ("obj_num      : %d" EOL, obj_num);
-    for (int i = 0; i < obj_num; i++) {
+    int obj_ref_num;
+    if (! Read (br, obj_ref_num)) return 1;
+    printf ("obj_ref_num      : %d" EOL, obj_ref_num);
+    for (int i = 0; i < obj_ref_num; i++) {
         printf ("  pos: "); read_pos (br); printf (EOL);
         int def_ref;
         if (! Read (br, def_ref)) return 1;
         printf ("  def_ref: %d" EOL, def_ref);
-        if (def_ref < 0 || def_ref >= def_num)
+        if (def_ref < 0 || def_ref >= obj_num)
             return printf ("def_ref out of range"), 1;
-        if (! ReadSkip (br, 5)) return 1; // ??
+        byte unk5[5];
+        if (! br.Read (unk5, 5)) return 1;
+        printf ("  Unknown byte[5]: {%002X, %002X, %002X, %002X, %002X}" EOL,
+            unk5[0], unk5[1], unk5[2], unk5[3], unk5[4]);
+        printf ("  obj type (def_id): %3d" EOL, objects[def_ref]);
         // ok, I need the def_array here
-        switch (def_ids[def_ref]) { //TODO to array of function pointers
+        switch (objects[def_ref]) { //TODO to array of function pointers
             case MAP_O_EVENT: {
                 readMessageAndGuards (br, map_version);
                 int e_exp, e_mana;
@@ -1424,7 +1521,7 @@ int main(int argc, char ** argv)
             case MAP_O_RANDOM_RELIC_ART:
             case MAP_O_SPELL_SCROLL: {
                 readMessageAndGuards (br, map_version);
-                if (MAP_O_SPELL_SCROLL == def_ids[def_ref]) {
+                if (MAP_O_SPELL_SCROLL == objects[def_ref]) {
                     int scroll_id;
                     if (! Read (br, scroll_id)) return 1;
                     printf ("  spell/art: scroll_id: %d" EOL, scroll_id);
@@ -1626,7 +1723,7 @@ int main(int argc, char ** argv)
                 int player_color; //TODO why 32 bits ?
                 if (! Read (br, player_color)) return 1;
                 printf ("  Dwelling: player color: %d" EOL, player_color);
-                if (def_ids[def_ref] != MAP_O_RANDOM_DWELLING_FACTION) {
+                if (objects[def_ref] != MAP_O_RANDOM_DWELLING_FACTION) {
                     int d_id; // This probably contains "alignment"
                     if (! Read (br, d_id)) return 1;
                     printf ("  Dwelling: id: %d" EOL, d_id);
@@ -1640,7 +1737,7 @@ int main(int argc, char ** argv)
                         printf ("  Dwelling: castle1?: %d" EOL, d_castle1);
                     }
                 }
-                if (def_ids[def_ref] != MAP_O_RANDOM_DWELLING_LVL) {
+                if (objects[def_ref] != MAP_O_RANDOM_DWELLING_LVL) {
                     byte min_level, max_level;
                     if (! Read (br, min_level)) return 1;
                     if (! Read (br, max_level)) return 1;
