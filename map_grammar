@@ -77,7 +77,7 @@ struct MapObj
     // 11111111                                (visible at the map editor)
     // 11111111               11            11
     // 01111111               01            10
-    // the mask max is 8x6 perhaps (at the editor there is a lake 7x3)
+    // the mask max is 6x8 perhaps (at the editor there is a lake 3x7)
     // A "Mine" (2x3) has PMask FF FF FF FF FF 1F and TMask 00 00 00 00 00 40:
     // 111 | 000
     // 000 | 010

@@ -1144,31 +1144,6 @@ int main(int argc, char ** argv)
     for (int i = 0; i < obj_num; i++) {
         MapObject obj (br); objects[i] = obj.EdId;
         Log << "obj[" << Log.Fmt ("%3d", i) << "] " << obj;
-        /*if (! read_string (br, "Sprite : ")) return 1;
-        Some0Bytes<byte> pass_mask (6);
-        Some0Bytes<byte> trig_mask (6);
-        Read (br, pass_mask.operator byte * (), 6);
-        Log << "  passability:" << print_byte_sequence (pass_mask, 6) << EOL;
-        Read (br, trig_mask.operator byte * (), 6);
-        Log << "  triggers:" << print_byte_sequence (trig_mask, 6) << EOL;
-        ReadSkip (br, 2); // unknown short int
-        short int terrain_mask;
-        Read (br, terrain_mask);
-        Log << "  terrain_mask: " << terrain_mask << EOL;
-        int def_id, def_subid;
-        if (! Read (br, def_id)) return 1;
-        objects[i] = def_id;
-        printf ("  def_id: %d" EOL, def_id);
-        if (! Read (br, def_subid)) return 1;
-        printf ("  def_subid: %d" EOL, def_subid);
-        byte def_type, def_print_priority;
-        if (! Read (br, def_type)) return 1;
-        printf ("  def_type: %d" EOL, def_type);
-        if (! Read (br, def_print_priority)) return 1;
-        printf ("  def_print_priority: %d" EOL, def_print_priority);
-        if (! ReadSkip(br, 16)) return 1;*/ // ?
-        // readMsk() - reads the .msk file associated with this .def
-        // they are using just the 1st 2 bytes to set mask size (w,h)
     }
     // readObjects(); - object placement
     int obj_ref_num;
