@@ -48,9 +48,20 @@ inline void GetCurrentTime(TimeSpec & value) // [nsec]
     clock_gettime (CLOCK_REALTIME, &value);
 }
 
-inline long TimeSpecDiff(TimeSpec & a, TimeSpec & b) // [nsec]
+inline long TimeSpecDiff(const TimeSpec & a, const TimeSpec & b) // [nsec]
 {
     return ((b.tv_sec - a.tv_sec)*1000000000 + (b.tv_nsec - a.tv_nsec));
+}
+
+inline void TimeNowHms(int & h, int & m, int & s)
+{
+    time_t t;
+    time (&t);
+    struct tm * foo = localtime (&t);
+    if (! foo) return;
+    h = foo->tm_hour;
+    m = foo->tm_min;
+    s = foo->tm_sec;
 }
 
 } // namespace OS

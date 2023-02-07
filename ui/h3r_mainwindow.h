@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_window.h"
 #include "GL/gl.h"
+#include "h3r_label.h"
 
 H3R_NAMESPACE
 
@@ -49,6 +50,7 @@ class MainWindow : public Window
 #define protected protected:
 
     private int _w {800}, _h{600};
+    private List<Label *> _time_labels {};
 
     public MainWindow(OSWindow *);
     public ~MainWindow() override;

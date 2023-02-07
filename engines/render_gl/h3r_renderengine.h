@@ -243,9 +243,9 @@ class RenderEngine final
     // Layout it prior rendering. Everything TextRenderingEngine::RenderText()
     // supports, is supported.
     public void UploadText(TextKey & key,
-        const String & font_name, const String & txt, int top, int left);
+        const String & font_name, const String & txt, int left, int top);
     public void UpdateText(TextKey & key,
-        const String & font_name, const String & txt, int top, int left);
+        const String & font_name, const String & txt, int left, int top);
     public void ChangeTextVisibility(TextKey & key, bool state);
     public void DeleteText(TextKey & key);
 };

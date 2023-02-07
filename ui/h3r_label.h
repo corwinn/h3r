@@ -46,11 +46,21 @@ H3R_NAMESPACE
 class Label: public Control
 {
     private: RenderEngine::TextKey _tkey;
+    private: String _font;
     private: String _text;
 
     public: Label(
         const String &, const String &, const Point &, Control * = nullptr);
     public: ~Label() override {}
+
+    public: inline const String & Text() const { return _text; }
+    public: inline const String & Font() const { return _font; }
+    public: inline void SetText(const String & value)
+    {
+        _text = value;
+        RenderEngine::UI ().UpdateText (
+            _tkey, _font, _text, Pos ().X, Pos ().Y);
+    }
 };
 
 NAMESPACE_H3R

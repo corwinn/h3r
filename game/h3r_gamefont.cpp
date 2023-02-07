@@ -80,7 +80,7 @@ void GameFont::RenderText(const String & text, byte * buf, int w, int h)
     for (int i = 0; i < text.Length (); i++) {
         int gw = _fnt.GlyphWidth (txt[i]);
         byte * glyph = _fnt.GlyphBitmap (txt[i]);
-    /*printf ("Glyph %3d:" EOL, txt[i]); TODO h3r_debug_helpers
+    /*printf ("Glyph %3d:" EOL, txt[i]); // TODO h3r_debug_helpers
     for (int y = 0; y < gh; y++) {
         for (int x = 0; x < gw; x++)
             printf ("%3d ", glyph[y*gw+x]);

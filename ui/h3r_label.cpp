@@ -38,10 +38,11 @@ H3R_NAMESPACE
 
 Label::Label(
     const String & text, const String & font, const Point & pos, Control * base)
-    : Control {base}, _tkey {RenderEngine::UI ().GenTextKey ()}, _text {text}
+    : Control {base}, _tkey {RenderEngine::UI ().GenTextKey ()}, _font {font},
+    _text {text}
 {
     SetPos (pos.X, pos.Y);
-    RenderEngine::UI ().UploadText (_tkey, font, text, pos.X, pos.Y);
+    RenderEngine::UI ().UploadText (_tkey, _font, _text, pos.X, pos.Y);
 }
 
 NAMESPACE_H3R

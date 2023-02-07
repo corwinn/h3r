@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_string.h"
 #include "h3r_renderengine.h"
 #include "h3r_label.h"
+#include "h3r_timing.h"
 
 #include <new>
 
@@ -98,11 +99,21 @@ MainWindow::MainWindow(OSWindow * actual_window)
     // 3. Upload
     for (Control * btn : Controls ()) btn->UploadFrames ();
 
-    Label * test_label;
-    Point test_label_pos {10, 2};
-    H3R_CREATE_OBJECT(test_label, Label) {
-        "Hi ,\n I'm a proof of concept edition", "tiny.fnt", test_label_pos};
-    Add (test_label);
+    // Preview all fonts as real-time clocks
+    List<String> fnt {};
+    fnt << "CALLI10R.FNT" << "CREDITS.FNT" << "HISCORE.FNT" << "MedFont.fnt"
+        << "TIMES08R.FNT" << "bigfont.fnt" << "smalfont.fnt" << "tiny.fnt"
+        << "verd10b.fnt";
+
+    int tx = 365, ty = 285;
+    for (const auto & f : fnt) {
+        Point tpos {tx, ty};
+        Label * lbl;
+        H3R_CREATE_OBJECT(lbl, Label) {"00:00:00", f, tpos};
+        Add (lbl);
+        _time_labels.Add (lbl);
+        ty += 32;
+    }
 }
 
 MainWindow::~MainWindow() {}
@@ -119,8 +130,19 @@ void MainWindow::OnShow()
 
 void MainWindow::OnRender()
 {
+    static int h{}, m{}, s{};
+
     glClear (GL_COLOR_BUFFER_BIT);
     glLoadIdentity ();
+
+    int nh{}, nm{}, ns{};
+    OS::TimeNowHms (nh, nm, ns);
+    if (nh != h || nm != m || ns != s) {
+        h = nh, m = nm, s = ns;
+        auto time_now = String::Format ("%002d:%002d:%002d - ", h, m, s);
+        for (auto lbl : _time_labels)
+            if (lbl) lbl->SetText (time_now + lbl->Font ());
+    }
 
     RenderEngine::UI ().Render ();
 

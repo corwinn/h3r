@@ -258,15 +258,22 @@ RenderEngine::TextKey RenderEngine::GenTextKey()
 // haven't even been started yet; no need to fine tune anything just yet. This
 // is proof of concept code - wasting too much time with it is pointless.
 void RenderEngine::UploadText(TextKey & key,
-    const String & font_name, const String & txt, int top, int left)
+    const String & font_name, const String & txt, int left, int top)
 {
     int w, h;
     byte * tb = TextRenderingEngine::One ().RenderText (font_name, txt, w, h);
+    // This is wrong when the actual w is greater than w
+    /*for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++)
+            printf ("%2X ", tb[y*2*w+2*x]);
+        printf ("\n");
+    }*/
     int tw = Log2i (w), th = Log2i (h);
     Array<byte> tex_buf {tw*th*2};
     Font::CopyRectangle (tex_buf, tw, 0, 0, tb, w, h);
     // int b = t + h, r = l + w;
-    GLfloat t = top, l = left, b = t + h, r = l + w;
+    GLfloat font_size = 1.f;
+    GLfloat t = top, l = left, b = t + font_size*h, r = l + font_size*w;
     GLfloat u = 1.f * w / tw, v = 1.f * h / th;
     RenderEngine::TextEntry & e = key.Entry ();
     if (e.InUse) {
@@ -297,9 +304,9 @@ void RenderEngine::UploadText(TextKey & key,
 }
 
 void RenderEngine::UpdateText(TextKey & key,
-    const String & font_name, const String & txt, int top, int left)
+    const String & font_name, const String & txt, int left, int top)
 {
-    UploadText (key, font_name, txt, top, left);
+    UploadText (key, font_name, txt, left, top);
 }
 
 void RenderEngine::ChangeTextVisibility(TextKey & key, bool state)
