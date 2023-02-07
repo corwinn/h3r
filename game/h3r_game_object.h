@@ -160,11 +160,13 @@ class Object : public ISerializable
         : _location {s}
     {
         Stream::Read (s, &_sprite);
+        s.Read (_unknown, 5);
     }
     private void Serialize(Stream & s) override
     {
         static_cast<ISerializable>(_location).Serialize (s);
         Stream::Write (s, &_sprite);
+        s.Write (_unknown, 5);
     }
     // "continue reading constructor" - skip pos & sprite; the void* is for C++
     // it can be anything - just some way to distinct the constructor.
@@ -203,6 +205,7 @@ class Object : public ISerializable
     // Dictated by the h3m file format:
     protected Pos _location;
     protected h3rObjRef _sprite; // sprite pointer (map.Sprites[])
+    protected byte _unknown[5];
 
     public Pos & Location() { return _location; }
     public h3rObjRef Sprite() const { return _sprite; }
