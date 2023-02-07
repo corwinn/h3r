@@ -1,0 +1,116 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+// Highlighter: C
+
+// Describe a map in a simple grammar. Why? - its a secret ;)
+
+type int -4
+type short -2
+type byte 1
+type EDID int
+
+list "ObjNames.txt"// Data_H3bitmap_lod/ObjNames.txt overrides
+                   // Data_H3bitmap_lod/ObjNames.txt; that's probably because of
+                   // SoD being installed. TODO verify with AB-only install -
+                   // that shall define the override policy; TODO official mod
+                   // detection
+
+// This defines the MapObj fields.
+// Is the map using it?
+table "Objects.txt" EOL("\r\n") FS(" ")
+    Text SpriteName
+    BinaryNumber[48] PassMask // Inverted along Y byte0 is byte5
+    BinaryNumber[48] TrigMask
+    BinaryNumber[9] Unk1
+    BinaryNumber[9] Unk2
+    Integer EdId
+    Integer Unk3
+    Integer Unk4
+    Integer Unk5
+
+??? EDID 135 "Oak Trees" // 0-based: "ObjNames.txt":135 & "ObjNames.txt":186
+
+struct MapString
+    byte Chars[int] // implicit "int Length" accessible via Chars.Length
+
+// The distinct objects used by a map.
+struct MapObj
+    MapString SpriteName // Maps to "Objects.txt".SpriteName
+    // w,h = (${sprite_name/.def/.msk}.bytes)0,1
+    //  0 means impassable; also it is inverted alongside X:
+    // FF FF FF FF FF 7F:
+    // 11111111
+    // 11111111
+    // 11111111 => w,h=2,2 =>    xinvert =>    only the 0 is impassable
+    // 11111111                                (visible at the map editor)
+    // 11111111               11            11
+    // 01111111               01            10
+    // the mask max is 8x6 perhaps (at the editor there is a lake 7x3)
+    // A "Mine" (2x3) has PMask FF FF FF FF FF 1F and TMask 00 00 00 00 00 40:
+    // 111 | 000
+    // 000 | 010
+    // A "Swan Pond" (1x3) has P:...3F, T:...40:
+    // 001 | 010 -> 100 | 010
+    // A "Hill Fort" (3x3) has P:...3F, T:...80:
+    // 111 | 000    111 | 000
+    // 111 | 000 -> 111 | 000
+    // 001 | 100    100 | 001
+    // These masks do match the ones at "Objects.txt" so why are they duplicated
+    // at each map is beyond me.
+    byte PassMask[6] // big-endian ; 1 - passable
+    byte TrigMask[6] // big-endian ; 1 - visit-able (trigger)
+    byte Unk1[2] // Maps to "Objects.txt".Unk1
+    short TerrainMask // Maps to "Objects.txt".Unk2
+    int EdId // Editor Id; line number (0-based) at "ObjNames.txt"
+    int SubId // Maps to "Objects.txt".Unk3
+    byte Type // Maps to "Objects.txt".Unk4
+    byte RenderOrder // Maps to "Objects.txt".Unk5 ; 0 - 1st; n - last
+    byte Unk2[16] // Reserved?
+
+struct Location
+    byte X
+    byte Y
+    byte Z
+
+// They're, at the map, in the order you put them on it, at the editor.
+struct ObjRef
+    Location Pos // it refers the lower right corner of the x-inverted masks
+    int Obj[MapObj] // implicit name index: Obj = MapObj[index]
+    byte Unk1[5]
+    ... Obj.EdId // the next field(s) depend on Obj.EdId
+
+struct Obj.EdId.14
+    int Kingdom // Player color
+
