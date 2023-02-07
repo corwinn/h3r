@@ -210,7 +210,9 @@ void SDLWindow::HandleWindowEvent()
             if (_e.window.data1 > 0 && _e.window.data2 > 0)
                 _w = _e.window.data1, _h = _e.window.data2, Resized ();
         } break;
-        case SDL_WINDOWEVENT_EXPOSED: Render (); break;
+        // The game is rendering using target FPS due to its animations, so this
+        // is redundant and will cause disturbance in measurements.
+        // case SDL_WINDOWEVENT_EXPOSED: Render (); break;
     }
 }
 

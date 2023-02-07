@@ -62,6 +62,7 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 #include "h3r_window.h"
 #include "h3r_list.h"
 #include "h3r_thread.h"
+#include "h3r_timing.h"
 
 H3R_NAMESPACE
 
@@ -131,11 +132,28 @@ void Window::Close()
     _win->Close ();
     _closed = true;
 }
+
 // WndProc. Do not block it.
 void Window::ProcessMessages()
 {
     _win->ProcessMessages ();
-    Render ();//TODO UITimer
+
+    // A good a place as any. For timing that is. It can easily be moved when/if
+    // OnIdle is implemented.
+    // GALLIUM_HUD="VRAM-usage,GPU-load,cpu,fps" . _invoke
+    static OS::TimeSpec frame_a, frame_b;
+    OS::GetCurrentTime (frame_a);
+    Render ();//TODO OnIdle
+    OS::GetCurrentTime (frame_b);
+    auto frame_time = OS::TimeSpecDiff (frame_a, frame_b); // [nsec]
+    if (frame_time > 0) {
+        auto ftus = frame_time / 1000.0; // [usec]
+        auto const TARGET_FPS {32};//TODO to Game - link with Options
+        GLdouble adj = 1000000.0 / TARGET_FPS - ftus; // [usec]
+        //TODO high-resolution OS::Thread::Sleep
+        if (adj > 1000.0 && adj < 1000000.0)
+            OS::Thread::Sleep (static_cast<int>(adj/1000));
+    }
 }
 
 // Observer
