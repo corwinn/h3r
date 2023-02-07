@@ -52,7 +52,7 @@ TextRenderingEngine::TextRenderingEngine()
     H3R_CREATE_OBJECT(f, Fnt) {Game::GetResource ("bigfont.fnt")}; _fonts << f;
     H3R_CREATE_OBJECT(f, Fnt) {Game::GetResource ("smalfont.fnt")}; _fonts << f;
     H3R_CREATE_OBJECT(f, Fnt) {Game::GetResource ("tiny.fnt")}; _fonts << f;
-    H3R_CREATE_OBJECT(f, Fnt) {Game::GetResource ("verd10b")}; _fonts << f;*/
+    H3R_CREATE_OBJECT(f, Fnt) {Game::GetResource ("verd10b.fnt")}; _fonts <<f;*/
 }
 
 TextRenderingEngine::~TextRenderingEngine()
@@ -194,12 +194,13 @@ byte * TextRenderingEngine::RenderText(
     th += line_spacing * (txt_rows.Count () - 1);
     byte * row_buf = Font::AllocateBuffer (tw, hh); // One buffer for each row
     OS::__pointless_verbosity::__try_finally_free<byte> ____ {row_buf};
-    if (tw > _text_width || th > _text_height) {
+    // Well, I can't do that without providing pitch for copy_rectangle()s
+    // if (tw > _text_width || th > _text_height) {
         if (_text_buffer) OS::Free (_text_buffer);
         _text_buffer =
             Font::AllocateBuffer (_text_width = tw, _text_height = th);
         printf ("TRE: resizing rendering buffer to: w:%d, h:%d" EOL, tw, th);
-    }
+    // }
 
     // render the txt_rows
     int b = hh;
@@ -210,11 +211,23 @@ byte * TextRenderingEngine::RenderText(
             txt_rows_size[i].X, txt_rows_size[i].Y);
         fnt->RenderText (
             txt_rows[i], row_buf, txt_rows_size[i].X, txt_rows_size[i].Y);
-        printf ("TRE: copy rectangle: l:%d, t:%d, w:%d, h:%d" EOL, l, t,
-            txt_rows_size[i].X, txt_rows_size[i].Y);
+    /*printf ("After RenderText()\n");
+    for (int y = 0; y < txt_rows_size[i].Y; y++) {
+        for (int x = 0; x < txt_rows_size[i].X; x++)
+            printf ("%2X ", row_buf[y*2*txt_rows_size[i].X+2*x]);
+        printf ("\n");
+    }*/
+        printf ("TRE: copy rectangle: _tw: %d, l:%d, t:%d, w:%d, h:%d" EOL,
+                _text_width, l, t, txt_rows_size[i].X, txt_rows_size[i].Y);
         Font::CopyRectangle (
             _text_buffer, _text_width, l, t,
             row_buf, txt_rows_size[i].X, txt_rows_size[i].Y);
+    /*printf ("After CopyRectangle()\n");
+    for (int y = 0; y < _text_height; y++) {
+        for (int x = 0; x < _text_width; x++)
+            printf ("%2X ", _text_buffer[y*2*_text_width+2*x]);
+        printf ("\n");
+    }*/
         b += hh+line_spacing;
     }
 

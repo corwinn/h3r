@@ -80,7 +80,7 @@ class Font
         byte * dst, int dw, int l, int t, const byte * src, int w, int h)
     {
         size_t dst_row_pitch = dw * 2;
-        byte * dst_row = dst + t * dst_row_pitch + l;
+        byte * dst_row = dst + t * dst_row_pitch + 2*l;
         for (const byte * src_row = src; src_row < src+w*h*2; src_row += w*2) {
             OS::Memcpy (dst_row, src_row, w*2);
             dst_row += dst_row_pitch;
