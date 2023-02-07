@@ -34,13 +34,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Highlighter: C
 
-// Describe a map in a simple grammar. Why? - its a secret ;)
+// Describe a map in a simple grammar. Way more readable this one.
 
+// Machine types
 type int -4
 type short -2
 type byte 1
+type bool byte
 type EDID int
 
+// "struct" and or "enum" generators
 list "ObjNames.txt"// Data_H3bitmap_lod/ObjNames.txt overrides
                    // Data_H3bitmap_lod/ObjNames.txt; that's probably because of
                    // SoD being installed. TODO verify with AB-only install -
@@ -49,7 +52,7 @@ list "ObjNames.txt"// Data_H3bitmap_lod/ObjNames.txt overrides
 
 // This defines the MapObj fields.
 // Is the map using it?
-table "Objects.txt" EOL("\r\n") FS(" ")
+table "Objects.txt" <>EOL("\r\n") <>FS(" ")
     Text SpriteName
     BinaryNumber[48] PassMask // Inverted along Y byte0 is byte5
     BinaryNumber[48] TrigMask
@@ -104,13 +107,232 @@ struct Location
     byte Y
     byte Z
 
-// They're, at the map, in the order you put them on it, at the editor.
+// They're on the map, in the order you put them on it, at the editor.
 struct ObjRef
     Location Pos // it refers the lower right corner of the x-inverted masks
-    int Obj[MapObj] // implicit name index: Obj = MapObj[index]
+    int Obj[MapObj] // implicit name index: Obj = MapObj[index] - look for array
+                    // of MapObj at the global space; Map.Obj for example
     byte Unk1[5]
     ... Obj.EdId // the next field(s) depend on Obj.EdId
 
 struct Obj.EdId.14
     int Kingdom // Player color
 
+enum MapVersion int
+    ROE 0x0e
+    AB  0x15
+    SOD 0x1c
+    WOG 0x33
+
+enum Behavior byte
+    RANDOM   0
+    WARRIOR  1
+    BUILDER  2
+    EXPLORER 3
+
+const MAP_PLAYERS          8
+const MAP_HEROES         156
+const MAP_PRIMARY_SKILLS   4
+const MAP_RESOURCES        8
+
+const MAP_FACTIONS  9 (Version > ROE)
+const MAP_FACTIONS  8 (Version == ROE)
+
+const MAP_DEFAULT_HERO_ID 0xff
+
+struct AllowedHero
+    byte Id
+    MapString Name
+
+struct PlayerCantPlay
+    byte Unk1[13] (Version >= SOD)
+    byte Unk1[12] (Version == AB)
+    byte Unk1[ 6] (Version == ROE)
+
+struct PlayerCanPlay
+    Behavior AITactics
+    byte Unk2 (Version >= SOD) // 16-bit ?
+    byte Unk3 (Version != ROE) // 16-bit ? AllowedFactions
+    byte AllowedFactions
+    bool RandomFaction
+    bool HasMainTown
+    bool GenAtMT (HasMainTown && Version != ROE)
+    bool Gen2 (HasMainTown && Version != ROE) // No idea whats this
+    Location MainTown (HasMainTown)
+    bool RandomHero
+    byte CutomHeroId
+    byte CutomHeroPortrait (CutomHeroId != MAP_DEFAULT_HERO_ID)
+    byte CutomHeroName (CutomHeroId != MAP_DEFAULT_HERO_ID)
+    byte NoIdea (Version != ROE)
+    AllowedHero AllowedHeroes[int] (Version != ROE)
+
+struct Player
+    bool Human
+    bool Computer
+    PlayerCantPlay (!Human && !Computer) // implicit name - merge
+    PlayerCanPlay (Human || Computer)    // implicit name - merge
+
+enum MapVCon byte
+    ACQUIRE_ARTIFACT     0
+    CREATURES            1
+    RESOURCES            2
+    UPGRADE_TOWN         3
+    GRAIL                4
+    DEFEAT_HERO          5
+    CAPTURE_TOWN         6
+    DEFEAT_MONSTER       7
+    FLAG_DWELLINGS       8
+    FLAG_MINES           9
+    TRANSPORT_ARTIFACT  10
+    NONE               255
+
+enum MapLCon
+    TOWN   0
+    HERO   1
+    TIME   2
+    NONE 255
+
+struct VConditionArt
+    byte Type
+    byte Unk1 (Version != ROE) // 16-bit?
+
+struct VConditionQObj
+    byte Type
+    byte Unk1 (Version != ROE) // 16-bit?
+    int Quantity
+
+struct VConditionUpgTown
+    Location Pos
+    byte HallLevel
+    byte CastleLevel
+
+struct VLConditionAtPos
+    Location Pos
+
+struct VConditionObjAtPos
+    byte Type
+    Location Pos
+
+struct VCondition
+    bool AllowNoneAsWell
+    bool AppliesToAI
+    // no AllowNoneAsWell []
+    VConditionArt (VCon == ACQUIRE_ARTIFACT)
+    VConditionQObj (VCon == CREATURES || VCon == RESOURCES)
+    // no AppliesToAI []
+    VConditionUpgTown (VCon == UPGRADE_TOWN)
+    // No AppliesToAI checkbox for DEFEAT_MONSTER
+    // No check-boxes at all for DEFEAT_HERO and GRAIL
+    VLConditionAtPos (VCon >= GRAIL && VCon <= DEFEAT_MONSTER)
+    //TODO There is no AllowNoneAsWell check-box at the editor
+    VConditionObjAtPos (VCon == TRANSPORT_ARTIFACT)
+
+struct WinCondition
+    MapVCon VCon
+    VCondition (VCon != NONE)
+
+struct LCondition
+    VLConditionAtPos (LCon == TOWN || LCon == HERO)
+    int Quantity (LCon == TIME)
+
+struct LooseCondition
+    MapLCon LCon
+    LCondition (LCon != NONE)
+
+struct NoIdeaHero
+    byte      Id
+    byte      PortraitId
+    MapString Name
+    byte      Players // ?
+
+struct Rumor
+    MapString Name
+    MapString Text
+
+struct HeroArtSlot
+    byte (Version == ROE)
+    short (Version != ROE)
+
+struct HeroArts
+    HeroArtSlot Arts[16]
+    HeroArtSlot Mach4
+    HeroArtSlot SpellB
+    HeroArtSlot Misc5 (Version > ROE)
+    byte        Unk1 (Version == ROE)
+    HeroArtSlot Backpack[short]
+
+struct CustomizedHero
+    int       Exp  (bool) // implicit condition read a bool and evaluate it
+    short     SecondarySkills[int] (bool)
+    HeroArts  Arts (bool)
+    MapString Bio  (bool)
+    byte      Sex
+    byte      Spells[9] (bool)
+    byte      PSkills[MAP_PRIMARY_SKILLS] (bool)
+
+struct CHero
+    bool Is // Whats the point of it?
+    CustomizedHero (Is)
+
+struct TTile
+    byte Type
+    byte SFrame
+    byte RiverType
+    byte RiverDir
+    byte RoadType
+    byte RoadDir
+    byte Flags
+
+struct MapEvent
+    MapString Name
+    MapString Message
+    int Resources[MAP_RESOURCES]
+    byte Players // Mask ?
+    byte HumanPlayers (Version > AB)
+    byte ComputerPlayers
+    short FirstDay
+    byte Repeats // Every n days
+    byte Unk1[17]
+
+struct Map <>STREAM(zlibH3m) // specify it requires a specific stream
+    MapVersion Version
+    bool           HasPlayers // What do if not?
+    int            Size       // 36, 72, 108, 144
+    byte           Levels     // 1 or 2
+    MapString      Name
+    MapString      Description
+    byte           Difficulty
+    byte           LevelLimit (Version != ROE)
+    //
+    Player         Players[MAP_PLAYERS]
+    //
+    WinCondition   SpecialWCon
+    LooseCondition SpecialLCon
+    //
+    byte           Teams
+    byte           Team[MAP_PLAYERS]
+    //
+    byte           AllowedHeroes[16] (Version == ROE)
+    byte           AllowedHeroes[20] (Version != ROE)
+    byte           AllowedHeroesNoIdea[int] (Version > ROE)
+    //
+    NoIdeaHero     MysteriousHeroes[byte]
+    byte           Unk1[31]
+    //
+    byte           AllowedArtifacts[17] (Version == AB)
+    byte           AllowedArtifacts[18] (Version > AB)
+    //
+    byte           AllowedSpells[9]
+    byte           AllowedAbilities[4]
+    //
+    Rumor          Rumors[int]
+    //
+    CHero          CustomizedHeroes[MAP_HEROES] (Version >= SOD)
+    //
+    TTile          Terrain[Levels][Size][Size]
+    //
+    MapObj         Obj[int]
+    ObjRef         Ref[int]
+    MapEvent       TimedEvents[int]
+
+// No that's not it. There are "... Obj.EdId" objects to describe yet
