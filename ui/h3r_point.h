@@ -42,6 +42,8 @@ H3R_NAMESPACE
 //TODO no, thats not it :)
 class Point
 {
+    public: Point() : X{}, Y{} {}
+    public: Point(int x, int y) : X{x}, Y{y} {}
     public: int X;
     public: int Y;
 };
