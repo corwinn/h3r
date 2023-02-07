@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_list.h"
 #include "h3r_string.h"
 #include "h3r_renderengine.h"
+#include "h3r_label.h"
 
 #include <new>
 
@@ -96,6 +97,12 @@ MainWindow::MainWindow(OSWindow * actual_window)
             btn->Pos ().X + ((ww - btn->Size ().X) / 2), btn->Pos ().Y);
     // 3. Upload
     for (Control * btn : Controls ()) btn->UploadFrames ();
+
+    Label * test_label;
+    Point test_label_pos {10, 2};
+    H3R_CREATE_OBJECT(test_label, Label) {
+        "Hi ,\n I'm a proof of concept edition", "tiny.fnt", test_label_pos};
+    Add (test_label);
 }
 
 MainWindow::~MainWindow() {}
@@ -108,9 +115,6 @@ void MainWindow::OnKeyUp(const EventArgs & e)
 
 void MainWindow::OnShow()
 {
-    auto textkey = RenderEngine::UI ().GenTextKey ();
-    RenderEngine::UI ().UploadText (textkey, "tiny.fnt",
-        "Hi ,\n I'm a proof of concept edition", 10, 10);
 }
 
 void MainWindow::OnRender()
