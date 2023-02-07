@@ -42,6 +42,9 @@ type short -2
 type byte 1
 type bool byte
 type EDID int
+type ArtId byte (Version == ROE)
+type ArtId short (Version != ROE)
+type PlayerColor byte // fast identify
 
 // "struct" and or "enum" generators
 list "ObjNames.txt"// Data_H3bitmap_lod/ObjNames.txt overrides
@@ -110,13 +113,227 @@ struct Location
 // They're on the map, in the order you put them on it, at the editor.
 struct ObjRef
     Location Pos // it refers the lower right corner of the x-inverted masks
-    int Obj[MapObj] // implicit name index: Obj = MapObj[index] - look for array
-                    // of MapObj at the global space; Map.Obj for example
+    int<>MapObj[] Obj // implicit "int index": MapObj & Obj = MapObj[index] -
+                      // look for array of MapObj at the global space; Map.Obj
+                      // for example
     byte Unk1[5]
     ... Obj.EdId // the next field(s) depend on Obj.EdId
 
-struct Obj.EdId.14
+struct MapCreatures
+    byte  Id (Version == ROE)
+    short Id (Version != ROE)
+    short Num
+
+struct HasMessageAndGuards
+    MapString    Message
+    MapCreatures Creatures[7] (bool)
+    byte         Unk1[4]
+
+struct MessageAndGuards
+    bool HasMessage
+    HasMessageAndGuards (HasMessage)
+
+struct GuardedReward
+    MessageAndGuards MsgAndGuards
+    int   Exp
+    int   Mana
+    byte  Morale
+    byte  Luck
+    int   Resources[MAP_RESOURCES]
+    byte  PSkills[MAP_PRIMARY_SKILLS]
+    short Abilities[byte] // 8:id, 8:level
+    ArtId Artifacts[byte]
+    byte  SpellId[byte]
+    MapCreatures Creatures[byte]
+    byte  Unk1[8]
+
+struct Obj.EdId:26 // "Event" <=> grep -n ^ ObjNames.txt | grep ^$((n+1))
+    GuardedReward
+    byte  AvailableFor
+    bool  ComputerActivate
+    bool  Repeat
+    byte  Unk2[4]
+
+struct MapHero
+    int          Id (Version > ROE)
+    PlayerColor  Color
+    byte         SubId
+    MapString    Name (bool)
+    bool         HasExp (Version > AB)
+    int          Exp (HasExp || Version <= AB)
+    byte         PortraitId (bool)
+    short        SecondarySkills[int] (bool) // 8:first, 8:second
+    MapCreatures Creatures[7] (bool)
+    byte         Formation
+    HeroArts     Artifacts
+    byte         PatrolRadius
+    bool         HasBio (Version > ROE)
+    MapString    Bio (HasBio)
+    byte         Sex (Version > ROE)
+    bool         HasSpells (Version > AB)
+    byte         Spells[9] (HasSpells)
+    byte         SpellId (Version == AB)
+    bool         HasPSkills (Version > AB)
+    byte         PSkills[MAP_PRIMARY_SKILLS] HasPSkills
+    byte         Unk1[16]
+
+struct Obj.EdId:34,70,62 // "Hero", "Random Hero", "Prison"
+    MapHero
+
+struct MonMsg
+    MapString Message
+    int       Resources[MAP_RESOURCES]
+    ArtId     ArtifactId
+
+struct Obj.EdId:54,71-75,162-164 // "Monster", "Random Monster "1-7
+    int    Id (Version > ROE)
+    short  Quantity
+    byte   Disposition
+    MonMsg Message (bool)
+    bool   NeverFlees
+    bool   NotGrowing
+    byte   Unk1[2]
+
+struct Obj.EdId:59,91 // "Ocean Bottle", "Sign"
+    MapString Text
+    byte Unk1[4]
+
+struct MapQuest
+    byte      T // Mission Type
+    byte      m2stats[4]      (T == 2) // ?
+    int       Todo            (T == 1 || T == 3 || T == 4) // ?
+    short     Artifacts[byte] (T == 5)
+    int       Creatures[byte] (T == 6) // 16:type, 16:quantity
+    int       Resources[7]    (T == 7)
+    byte      Todo2           (T == 8 || T == 9)
+    int       Limit           (T != 0)
+    MapString Intro           (T != 0)
+    MapString Meanwhile       (T != 0)
+    MapString Completed       (T != 0)
+
+enum MapSeerRewardType byte
+    NOTHING          0
+    EXPERIENCE       1
+    MANA_POINTS      2
+    MORALE_BONUS     3
+    LUCK_BONUS       4
+    RESOURCES        5
+    PRIMARY_SKILL    6
+    SECONDARY_SKILL  7
+    ARTIFACT         8
+    SPELL            9
+    CREATURE        10
+
+struct Obj.EdId:83 // "Seer's Hut"
+    byte              ArtifactId (Version == ROE)
+    MapQuest          Quest (Version != ROE)
+    MapSeerRewardType R (Quest.T > 0)
+    int   Count      (R == EXPERIENCE || R == MANA_POINTS)
+    byte  Count      (R == MORALE_BONUS || R == LUCK_BONUS)
+    byte  ResId      (R == RESOURCES)
+    int   ResCnt     (R == RESOURCES)
+    byte  SkillId    (R == PRIMARY_SKILL || R == SECONDARY_SKILL)
+    byte  SkillCnt   (R == PRIMARY_SKILL || R == SECONDARY_SKILL)
+    short ArtifactId (R == ARTIFACT)
+    byte  SpellId    (R == SPELL)
+    short MonId      (R == CREATURE)
+    short MonCnt     (R == CREATURE)
+    byte  Unk1[2]    (R != NOTHING)
+    byte  Unk1[3]    (R == NOTHING)
+
+struct Obj.EdId:113 // "Witch Hut"
+    byte PotentialSKillsMask[4] (Version > ROE)
+
+struct Obj.EdId:81 // "Scholar"
+    byte BonusType
+    byte BonusId
+    byte Unk1[6]
+
+struct Obj.EdId:33,219 // "Garrison", "Garrison"
+    PlayerColor  Color
+    MapCreatures Creatures[7]
+    bool         Removable (Version > ROE)
+    byte         Unk1[8]
+
+struct Obj.EdId:5,65-69 // "Artifact", "Random Artifact",
+                        // "Random Treasure Artifact",
+                        // "Random Minor Artifact", "Random Major Artifact",
+                        // "Random Relic"
+    MessageAndGuards MsgAndGuards
+
+struct Obj.EdId:93
+    MessageAndGuards MsgAndGuards // "Spell Scroll"
+    int              ScrollId
+
+struct Obj.EdId:76,79 // "Random Resource", "Resource"
+    MessageAndGuards MsgAndGuards
+    int              Amount // the type seems to be coming from SubId?
+    byte             Unk1[4]
+
+struct TownEvent
+    MapEvent
+    byte     NewBuildingsMask[6]
+    short    EeventCre[7]
+    byte     Unk2[4]
+
+struct Obj.EdId:77,98 // "Random Town", "Town"
+    int          Id                  (Version > ROE)
+    PlayerColor  Color
+    MapString    Name                (bool)
+    MapCreatures Garrison[7]         (bool)
+    byte         Formation
+    bool         CustomizedBuildings
+    byte         BuildMask[6]        (CustomizedBuildings)
+    byte         CantBuildMask[6]    (CustomizedBuildings)
+    bool         HasFort             (!CustomizedBuildings)
+    byte         SpellMaskMust[9]    (Version > ROE)
+    byte         SpellMaskPerhaps[9]
+    TownEvent    Events[int]
+    byte         Alignment           (Version > AB)
+    byte         Unk1[3]
+
+struct Obj.EdId:53,220,17-20 // "Mine", "Mine", "Creature Generator "1-4
+    PlayerColor Color
+    byte        Unk1[3]
+
+struct Obj.EdId:88-90 // "Shrine of Magic Incantation",
+                      // "Shrine of Magic Gesture", "Shrine of Magic Thought"
+    byte SpellId
+    byte Unk1[3]
+
+struct Obj.EdId:6 // "Pandora's Box"
+    GuardedReward
+
+struct Obj.EdId:36 // "Grail"
+    int Radius
+
+struct Obj.EdId:216 // "Random Dwelling"
+    int   Kingdom // Player color
+    int   DweId
+    short NoIdea (DweId == 0)
+    byte  MinLevel
+    byte  MaxLevel
+
+struct Obj.EdId:217 // "" ??
+    int   Kingdom // Player color
+    int   DweId
+    short NoIdea (DweId == 0)
+
+struct Obj.EdId:218 // "" ??
+    int  Kingdom // Player color
+    byte MinLevel
+    byte MaxLevel
+
+struct Obj.EdId:215 // "Quest Guard"
+    MapQuest
+
+struct Obj.EdId:87,42 // "Shipyard", "Lighthouse"
     int Kingdom // Player color
+
+struct Obj.EdId:214 // "Hero Placeholder"
+    PlayerColor Color
+    byte        TypeId
+    byte        HeroPower (255 == TypeId) // ?
 
 enum MapVersion int
     ROE 0x0e
@@ -249,17 +466,13 @@ struct Rumor
     MapString Name
     MapString Text
 
-struct HeroArtSlot
-    byte (Version == ROE)
-    short (Version != ROE)
-
 struct HeroArts
-    HeroArtSlot Arts[16]
-    HeroArtSlot Mach4
-    HeroArtSlot SpellB
-    HeroArtSlot Misc5 (Version > ROE)
-    byte        Unk1 (Version == ROE)
-    HeroArtSlot Backpack[short]
+    ArtId Arts[16]
+    // ArtId Mach4
+    ArtId SpellB
+    ArtId Misc5 (Version > ROE)
+    byte  Unk1 (Version == ROE)
+    ArtId Backpack[short]
 
 struct CustomizedHero
     int       Exp  (bool) // implicit condition read a bool and evaluate it
@@ -334,5 +547,3 @@ struct Map <>STREAM(zlibH3m) // specify it requires a specific stream
     MapObj         Obj[int]
     ObjRef         Ref[int]
     MapEvent       TimedEvents[int]
-
-// No that's not it. There are "... Obj.EdId" objects to describe yet
