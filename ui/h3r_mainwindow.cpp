@@ -62,8 +62,6 @@ h - hover
 MainWindow::MainWindow(OSWindow * actual_window)
     : Window{actual_window}
 {
-    RenderEngine::Init ();
-
     Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
     auto byte_arr_ptr = main_window_background.ToRGB ();
     if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
@@ -130,11 +128,10 @@ void MainWindow::OnShow()
 
 void MainWindow::OnRender()
 {
+    Window::OnRender ();
+
+    // Misusing OnRender as a timing source
     static int h{}, m{}, s{};
-
-    glClear (GL_COLOR_BUFFER_BIT);
-    glLoadIdentity ();
-
     int nh{}, nm{}, ns{};
     OS::TimeNowHms (nh, nm, ns);
     if (nh != h || nm != m || ns != s) {
@@ -143,10 +140,6 @@ void MainWindow::OnRender()
         for (auto lbl : _time_labels)
             if (lbl) lbl->SetText (time_now + lbl->Font ());
     }
-
-    RenderEngine::UI ().Render ();
-
-    OS::Thread::Sleep (16);//TODO timing
 }
 
 void MainWindow::OnResize(int w, int h)

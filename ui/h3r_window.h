@@ -64,6 +64,7 @@ class Window : public IWindow
 #define IW
 
     private OSWindow * _win;
+    protected inline OSWindow * GetOSWindow() { return _win; }
 
     // These simple booleans ... are anything but simple. They are 2 now.
     private bool _visible {false};

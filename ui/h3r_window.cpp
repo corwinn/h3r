@@ -63,6 +63,7 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 #include "h3r_list.h"
 #include "h3r_thread.h"
 #include "h3r_timing.h"
+#include "h3r_renderengine.h"
 
 H3R_NAMESPACE
 
@@ -104,6 +105,7 @@ void Window::Add(Control * c)
 Window::Window(OSWindow * actual_window)
     : _win{actual_window}
 {
+    RenderEngine::Init ();
     global_win_list.Add (this);
 }
 
@@ -179,13 +181,16 @@ void Window::OnMouseUp(const EventArgs &e)
 }
 void Window::OnShow() { _visible = true; }  //TODO forward these?
 void Window::OnHide() { _visible = false; } //
-// Close by default; the base window has no idea how to ask.
+// Close by default; the base window has no idea how to ask, yet.
 void Window::OnClose(bool &) { _closed = true; }
 void Window::OnRender()
 {
-    if (_visible) //LATER this shall cause the continues-from-where-it-stopped
-                  //      effect; is that ok?
-        for (Control * c : _controls) c->OnRender (_gc);
+    glClear (GL_COLOR_BUFFER_BIT);
+    glLoadIdentity ();
+    // Shouldn't be needed - the Windows and Controls are now a document.
+    // if (_visible) //LATER default option: continues-from-where-it-stopped
+    //    for (Control * c : _controls) c->OnRender (_gc);
+    RenderEngine::UI ().Render ();
 }
 // No anchoring, or auto-sizing, so no point forwarding it.
 void Window::OnResize(int, int) {}
