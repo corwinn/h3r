@@ -68,7 +68,18 @@ class Button: public Control
 
     private: bool _mouse_over {};
     private: bool _mouse_down {};
+
+    // Experiment: you attach here a capturing lambda via a template function
+    // pointer: EventDelegate<decltype(cl)>
+    public: void (*OnClick)(Control * sender) {};
 };
+
+template <typename T>
+static void EventDelegate(Control * sender, T & f,
+    void (*On)(Control *, T &))
+{
+    On (sender, f);
+}
 
 NAMESPACE_H3R
 
