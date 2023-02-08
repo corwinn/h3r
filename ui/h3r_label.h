@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+// A very simple control for positioning text on screen.
 class Label: public Control
 {
     private: RenderEngine::TextKey _tkey;
