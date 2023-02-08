@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-// Highlighter: C
+// Highlighter: C#
 
 // Describe a map in a simple grammar. Way more readable this one.
 
@@ -55,7 +55,8 @@ list "ObjNames.txt"// Data_H3bitmap_lod/ObjNames.txt overrides
 
 // This defines the MapObj fields.
 // Is the map using it?
-table "Objects.txt" <>EOL("\r\n") <>FS(" ")
+[TextTable(eol: "\r\n", fs: " ")]
+table "Objects.txt"
     Text SpriteName
     BinaryNumber[48] PassMask // Inverted along Y byte0 is byte5
     BinaryNumber[48] TrigMask
@@ -507,8 +508,9 @@ struct MapEvent
     byte Repeats // Every n days
     byte Unk1[17]
 
-struct Map <>STREAM(zlibH3m) // specify it requires a specific stream
-    MapVersion Version
+[Stream(type: zlibMapStream)] // specify that it requires a specific stream
+format h3m
+    MapVersion     Version
     bool           HasPlayers // What do if not?
     int            Size       // 36, 72, 108, 144
     byte           Levels     // 1 or 2
