@@ -270,7 +270,8 @@ void RenderEngine::UploadText(TextKey & key,
     }*/
     int tw = Log2i (w), th = Log2i (h);
     Array<byte> tex_buf {tw*th*2};
-    Font::CopyRectangle (tex_buf, tw, 0, 0, tb, w, h);
+    Font::CopyRectangle (tex_buf, tw, 0, 0, tb, w, h,
+        TextRenderingEngine::One ().TexBufferPitch ());
     // int b = t + h, r = l + w;
     GLfloat font_size = 1.f;
     GLfloat t = top, l = left, b = t + font_size*h, r = l + font_size*w;
