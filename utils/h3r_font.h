@@ -77,11 +77,13 @@ class Font
     // Complement to the above function.
     // copy width*height from "src" at left,top at "dst"; "dw" is dst width;
     public: static inline void CopyRectangle (
-        byte * dst, int dw, int l, int t, const byte * src, int w, int h)
+        byte * dst, int dw, int l, int t, const byte * src, int w, int h,
+         int src_pitch)
     {
         size_t dst_row_pitch = dw * 2;
         byte * dst_row = dst + t * dst_row_pitch + 2*l;
-        for (const byte * src_row = src; src_row < src+w*h*2; src_row += w*2) {
+        for (const byte * src_row = src; src_row < src+h*src_pitch
+            ; src_row += src_pitch) {
             OS::Memcpy (dst_row, src_row, w*2);
             dst_row += dst_row_pitch;
         }
