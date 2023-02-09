@@ -1,0 +1,219 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+// Highlighter: C++
+
+#include "h3r_test.h"
+
+#include "h3r_os_error.h"
+H3R_ERR_DEFINE_UNHANDLED
+H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
+H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
+
+#include "h3r_log.h"
+H3R_LOG_STATIC_INIT
+
+#include <new>
+#include "h3r_resnamehash.h"
+#include "h3r_lodfs.h"
+#include "h3r_def.h"
+#include "h3r_timing.h"
+
+H3R_NAMESPACE
+
+H3R_TEST_UNIT(h3r_resnamehash)
+
+H3R_TEST_(initial_state)
+    ResNameHash<int> t;
+    auto text1 = "text1";
+    Array<byte> key1 {(const byte *)text1, 5};
+    int val1 = 63;
+    H3R_TEST_IS_FALSE(t.TryGetValue (key1, val1))
+    H3R_TEST_ARE_EQUAL(63, val1)
+H3R_TEST_END
+
+H3R_TEST_(add)
+    ResNameHash<int> t1;
+    ResNameHash<int> t2;
+    ResNameHash<int> t3;
+    auto text1 = "text1";
+    Array<byte> key1 {(const byte *)text1, 5};
+    auto text2 = "text2";
+    Array<byte> key2 {(const byte *)text2, 5};
+    auto text3 = "text3";
+    Array<byte> key3 {(const byte *)text3, 5};
+    int val1 = 7, val2 = 13, val3 = 55;
+
+    t1.Add (key1, val1);
+
+    t2.Add (key1, val1);
+    t2.Add (key2, val2);
+
+    t3.Add (key1, val1);
+    t3.Add (key2, val2);
+    t3.Add (key3, val3);
+
+    int tmp_val {};
+    H3R_TEST_IS_TRUE(t1.TryGetValue (key1, tmp_val))
+    H3R_TEST_ARE_EQUAL(val1, tmp_val)
+
+    H3R_TEST_IS_TRUE(t2.TryGetValue (key1, tmp_val))
+    H3R_TEST_ARE_EQUAL(val1, tmp_val)
+    H3R_TEST_IS_TRUE(t2.TryGetValue (key2, tmp_val))
+    H3R_TEST_ARE_EQUAL(val2, tmp_val)
+
+    H3R_TEST_IS_TRUE(t3.TryGetValue (key1, tmp_val))
+    H3R_TEST_ARE_EQUAL(val1, tmp_val)
+    H3R_TEST_IS_TRUE(t3.TryGetValue (key2, tmp_val))
+    H3R_TEST_ARE_EQUAL(val2, tmp_val)
+    H3R_TEST_IS_TRUE(t3.TryGetValue (key3, tmp_val))
+    H3R_TEST_ARE_EQUAL(val3, tmp_val)
+H3R_TEST_END
+
+H3R_TEST_(add_inverse_order)
+    ResNameHash<int> t;
+    auto text1 = "text1";
+    Array<byte> key1 {(const byte *)text1, 5};
+    auto text2 = "text2";
+    Array<byte> key2 {(const byte *)text2, 5};
+    auto text3 = "text3";
+    Array<byte> key3 {(const byte *)text3, 5};
+    int val1 = 7, val2 = 13, val3 = 55;
+
+    t.Add (key3, val3);
+    t.Add (key2, val2);
+    t.Add (key1, val1);
+
+    int tmp_val {};
+    H3R_TEST_IS_TRUE(t.TryGetValue (key1, tmp_val))
+    H3R_TEST_ARE_EQUAL(val1, tmp_val)
+    H3R_TEST_IS_TRUE(t.TryGetValue (key2, tmp_val))
+    H3R_TEST_ARE_EQUAL(val2, tmp_val)
+    H3R_TEST_IS_TRUE(t.TryGetValue (key3, tmp_val))
+    H3R_TEST_ARE_EQUAL(val3, tmp_val)
+H3R_TEST_END
+
+H3R_TEST_(add_diff_lengths)
+    ResNameHash<int> t;
+    auto text1 = "tex1";
+    Array<byte> key1 {(const byte *)text1, 4};
+    auto text2 = "text2";
+    Array<byte> key2 {(const byte *)text2, 5};
+    auto text3 = "textt3";
+    Array<byte> key3 {(const byte *)text3, 6};
+    int val1 = 7, val2 = 13, val3 = 55;
+
+    t.Add (key3, val3);
+    t.Add (key2, val2);
+    t.Add (key1, val1);
+
+    int tmp_val {};
+    H3R_TEST_IS_TRUE(t.TryGetValue (key1, tmp_val))
+    H3R_TEST_ARE_EQUAL(val1, tmp_val)
+    H3R_TEST_IS_TRUE(t.TryGetValue (key2, tmp_val))
+    H3R_TEST_ARE_EQUAL(val2, tmp_val)
+    H3R_TEST_IS_TRUE(t.TryGetValue (key3, tmp_val))
+    H3R_TEST_ARE_EQUAL(val3, tmp_val)
+H3R_TEST_END
+
+static ResNameHash<int>  * global_t {};
+
+H3R_TEST_(H3sprite_lod)
+    ResNameHash<int> t; global_t = &t;
+    static int value {}, tmp_value {};
+    static OS::TimeSpec time_a, time_b;
+    static long time {}, time_one {1000000000};
+
+    H3R_NS::LodFS {"H3sprite.lod"}
+        .Walk([](H3R_NS::Stream & stream, const H3R_NS::VFS::Entry & e) -> bool
+        {
+            if (! e.Name.ToLower ().EndsWith (".def")) return true;
+            Def sprite {&stream};
+            auto it = sprite.GetIterator ();
+            int i = 0;
+            while (it.Current ()) {
+                OS::GetCurrentTime (time_a);
+                // Unfortunately there are duplicates across sprites, and inside
+                // them, so the key has to be a composite one.
+                String key {String::Format ("%s%d%s",
+                    it.Current ()->AsZStr (), i++, e.Name.AsZStr ())};
+                global_t->Add (key.operator const Array<byte> & (),
+                    value++);
+                OS::GetCurrentTime (time_b);
+                time += OS::TimeSpecDiff (time_a, time_b);
+
+                it.MoveNext ();
+            }
+            return true;
+        });
+    printf ("Inserted: %5d keys; time: %lu [msec]" EOL, value, time/1000000);
+
+    value = 0; time = 0;
+    _10:
+    H3R_NS::LodFS {"H3sprite.lod"}
+        .Walk([](H3R_NS::Stream & stream, const H3R_NS::VFS::Entry & e) -> bool
+        {
+            if (! e.Name.ToLower ().EndsWith (".def")) return true;
+            Def sprite {&stream};
+            auto it = sprite.GetIterator ();
+            int i = 0;
+            while (it.Current ()) {
+                OS::GetCurrentTime (time_a);
+                // Unfortunately there are duplicates across sprites, and inside
+                // them, so the key has to be a composite one.
+                String key {String::Format ("%s%d%s",
+                    it.Current ()->AsZStr (), i++, e.Name.AsZStr ())};
+                H3R_TEST_IS_TRUE(global_t->TryGetValue (
+                    key.operator const Array<byte> & (), tmp_value))
+                OS::GetCurrentTime (time_b);
+                time += OS::TimeSpecDiff (time_a, time_b);
+                value++;
+
+                if (time >= time_one)
+                    return false;
+                it.MoveNext ();
+            }
+            return true;
+        });
+    if (time < time_one) goto _10;
+    printf ("Query: %d keys/s;" EOL, value);
+H3R_TEST_END
+
+NAMESPACE_H3R
+
+int main()
+{
+    H3R_TEST_RUN
+    return 0;
+}
