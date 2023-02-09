@@ -85,7 +85,17 @@ class Def final : public ResDecoder
             Log::Info ("DEF: no stream " EOL);
         Init ();
     }
-    public: ~Def() override {}
+    public: ~Def() override
+    {
+        // A test unit signalled memory leaks here.
+        // The game however did not. It looks like the leak sanitizer isn't ok.
+        //TODO "valgrind" the truth.
+        for (int i = 0; i < _sprites.Length (); i++) {
+            for (int j = 0; j < _sprites[i].Entries.Length (); j++)
+                _sprites[i].Entries[j].~SubSprite ();
+            _sprites[i].~Sprite ();
+        }
+   }
     public: int Num() const { return _n; }
     public: inline Array<byte> * ToRGBA() override
     {
@@ -100,7 +110,7 @@ class Def final : public ResDecoder
     public: int Width () override { return _w; }
     public: int Height () override { return _h; }
 
-    private: struct SubSprite
+    private: struct SubSprite final
     {
         String Name;
         int Offset; // 0-based
@@ -109,14 +119,14 @@ class Def final : public ResDecoder
             Stream::Read (s, &Offset);
         }
     };
-    private: struct Sprite
+    private: struct Sprite final
     {
         Array<SubSprite> Entries;
         void Read(Stream & s)
         {
             s.Seek (+4); // unknown1;
             int cnt;
-            Stream::Read (s, &cnt);
+            Stream::Read (s, &cnt); //TODO Why - you trust your input
             s.Seek (+4); // unknown2
             s.Seek (+4); // unknown3
             Entries.Resize (cnt);
@@ -144,6 +154,33 @@ class Def final : public ResDecoder
             _rgb.Resize (0);
             _request = value;
         }
+    }
+
+    public: class SpriteNameIterator final
+    {
+        private: Def * _src;
+        private: int _idx {-1}, _subidx {0};
+        private: String * _result {};
+        public: SpriteNameIterator(Def * src) : _src{src} { MoveNext (); }
+        public: inline void MoveNext()
+        {
+            if (_src->_sprites.Length () <= 0) return;
+            if (_idx >= 0
+                && _subidx < _src->_sprites[_idx].Entries.Length () - 1)
+                _subidx++;
+            else {
+                if (_idx < _src->_sprites.Length () - 1)
+                    _idx++, _subidx = 0;
+                else { _result = nullptr; return; }
+            }
+            _result = &(_src->_sprites[_idx].Entries[_subidx].Name);
+        }
+        public: inline const String * Current() { return _result; }
+    };
+    friend class Def::SpriteNameIterator;
+    public: inline SpriteNameIterator GetIterator()
+    {
+        return SpriteNameIterator {this};
     }
 
     // Set what RGBA() and RGB() shall return. Null means it wasn't found.
