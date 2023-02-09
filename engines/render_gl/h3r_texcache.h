@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r.h"
 #include <GL/gl.h>
+#include "h3r_string.h"
 
 H3R_NAMESPACE
 
@@ -53,6 +54,7 @@ H3R_NAMESPACE
 //      Dynamic tex. atlas: resize the tex. atlas on an as needed basis.
 class TexCache final
 {
+    // The object is managed by a static hash at Cache()
     public struct Entry final
     {
         GLuint Texture {};
@@ -66,7 +68,12 @@ class TexCache final
     public ~TexCache();
     public void Invalidate();
 
-    public Entry Cache(GLint w, GLint h, byte * data, int bpp);
+    // The "key" part binds TexCache::Entry e.g. you don't have to worry about
+    // duplicate bitmaps as long as they're uniquely identified by a "key".
+    // Make sure your "key" uniquely identifies your bitmap, or you shall get
+    // the wrong TexCache::Entry.
+    public Entry Cache(GLint w, GLint h, byte * data, int bpp,
+        const String & key);
 
     private static GLuint _bound; // currently bound texture
     public static inline void Bind(TexCache::Entry & e)

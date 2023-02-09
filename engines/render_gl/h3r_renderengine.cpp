@@ -139,10 +139,11 @@ RenderEngine::TexList & RenderEngine::ListByTexId(GLuint tex_id)
 }
 
 int RenderEngine::UploadFrame(
-    int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp)
+    int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp,
+    const String & texkey)
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
-    auto uv = TexCache::One ()->Cache (w, h, data, bpp);
+    auto uv = TexCache::One ()->Cache (w, h, data, bpp, texkey);
     GLfloat l = x, t = y, b = t + h, r = l + w;
     GLfloat v[H3R_SPRITE_FLOATS] {
         l,t,uv.l,uv.t, l,b,uv.l,uv.b, r,t,uv.r,uv.t, r,b,uv.r,uv.b};

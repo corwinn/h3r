@@ -182,8 +182,12 @@ class RenderEngine final
     // "x" - left, and "y" - top, are absolute coordinates.
     // "bpp" - whatever TexCache::Cache() supports; currently 24(GL_RGB) and
     // 32(GL_RGBA) - that's your "data" format mind you.
+    // The "texkey" is forwarded to the texcache for the purposes of uniquely
+    // identifying a bitmap being cached there.
+    //TODO this many parameters means composition is required
     public int UploadFrame(
-        int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp);
+        int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp,
+        const String & texkey);
 
     // Use when a window is shown/hidden. Hiding the just the window won't do
     // what you think; the window shall notify all its controls to hide.

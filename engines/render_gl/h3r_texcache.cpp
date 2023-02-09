@@ -44,6 +44,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_log.h"
 #include "h3r_def.h"
 #include "h3r_pcx.h"
+#include "h3r_resnamehash.h"
+
+// Used by the ResNameHash
+#include <new>
 
 H3R_NAMESPACE
 
@@ -200,8 +204,15 @@ static inline int NextP2(int value)//TODO outperform the compiler :)
         value <= 512 ? 512 : 1024;
 }
 
-TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp)
+TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp,
+    const String & key)
 {
+    static ResNameHash<TexCache::Entry> cache {};
+    TexCache::Entry cached_entry {};
+    if (cache.TryGetValue (
+        key.operator const Array<byte> &(), cached_entry))
+        return cached_entry;
+
     int clasify_h = NextP2 (h);
     int clasify_w = NextP2 (w);
     int id = GetKeyIndex (clasify_h);
@@ -255,6 +266,7 @@ TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp)
         printf ("One texture is not enough" EOL);
         //TODO add another texture
     }
+    cache.Add (key.operator const Array<byte> &(), result);
     return result;
 }
 
