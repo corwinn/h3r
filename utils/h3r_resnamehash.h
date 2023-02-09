@@ -70,6 +70,8 @@ template <typename T> class ResNameHash final
     private Array<KeyValue<T> *> _tbl {};
     public ~ResNameHash()
     {
+        printf ("ResNameHash: Used: %d KV pairs; %lu bytes" EOL,
+            _tbl.Length (), sizeof(KeyValue<T>)*_tbl.Length ());
         for (auto kv : _tbl) H3R_DESTROY_OBJECT(kv, KeyValue<T>)
     }
     private int Cmp(const Array<byte> & a, const Array<byte> & b)
