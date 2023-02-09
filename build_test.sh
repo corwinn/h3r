@@ -40,7 +40,8 @@ W="-Wall -Wextra -Wshadow -Wvariadic-macros"
 O="-O0 -g -fno-omit-frame-pointer -fexceptions"
 RTC="-fsanitize=address,undefined,integer"
 C="-fprofile-instr-generate -fcoverage-mapping"
-I="-DH3R_DEBUG -UH3R_MM -I. -Ios -Iutils -Iui -Ios/${PLATFORM}"
+I="-DH3R_DEBUG -UH3R_MM -I. -Ios -Iutils -Iui -Igame -Istream -Iasync \
+ -Ios/${PLATFORM}"
 F="${1:?}"
 FO="test_${F%%.*}"
 FO="${FO//\//_}"
@@ -48,7 +49,7 @@ FO="${FO//\//_}"
 if [ "$F" != "$FO" ]; then
   make clean && make H3R_TEST="-DH3R_TEST -fexceptions -UH3R_MM "
   clang++ $STD $W $O $RTC $C $I main.a -x c++ "$F" -o "$FO" \
-  -Wl,--as-needed
+  -Wl,--as-needed -lz
 else
   echo no no no - the compiler will replace your input w/o a warning
   exit 1
