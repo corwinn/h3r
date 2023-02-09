@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r_game.h"
 // H3R_MM_STATIC_INIT
+#include "h3r_log.h"
 H3R_LOG_STATIC_INIT
 
 #include "h3r_string.h"
@@ -119,7 +120,8 @@ int Game::Run(int argc, char ** argv)
     // create the main window
     // Again, no plug-in interface yet, so
     auto main_window =
-        IWindow::Create<H3R_NS::MainWindow, H3R_NS::SDLWindow>(argc, argv);
+        IWindow::Create<H3R_NS::MainWindow, H3R_NS::SDLWindow>(
+            argc, argv, Point {800, 600});
 
     Game::MainWindow = main_window;
     main_window->Show (); // make it visible

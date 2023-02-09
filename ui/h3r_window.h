@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_control.h"
 #include "h3r_list.h"
 #include "h3r_gc.h"
+#include "h3r_point.h"
 
 H3R_NAMESPACE
 
@@ -64,6 +65,7 @@ class Window : public IWindow
 #define IW
 
     private OSWindow * _win;
+    // Bridge on demand
     protected inline OSWindow * GetOSWindow() { return _win; }
 
     // These simple booleans ... are anything but simple. They are 2 now.
@@ -80,8 +82,15 @@ class Window : public IWindow
     IW public inline virtual bool Idle() override { return _win->Idle (); }
     IW protected inline virtual void Render() override { _win->Render (); }
 
+    // Provide Size for all Window. This is not bridged!
+    private Point _size;
+    protected inline const Point & GetSize() const { return _size; }
+    // Constructor for non-bridged "Window"s. They share the same OSWindow.
+    public Window(Window * base_window, Point && size);
+    public static Window * ActiveWindow; // The one that ProcessMessages
+
     // Use IWindow::Create()
-    public Window(OSWindow * actual_window);
+    public Window(OSWindow * actual_window, Point && size);
 
     //  Window  OSWindow  OSWindow
     //  | Show  |         |

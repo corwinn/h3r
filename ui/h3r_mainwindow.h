@@ -52,7 +52,7 @@ class MainWindow : public Window
     private int _w {800}, _h{600};
     private List<Label *> _time_labels {};
 
-    public MainWindow(OSWindow *);
+    public MainWindow(OSWindow *, Point &&);
     public ~MainWindow() override;
 
     protected virtual void OnKeyUp(const EventArgs &) override;

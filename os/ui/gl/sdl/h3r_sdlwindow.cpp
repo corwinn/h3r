@@ -111,8 +111,8 @@ static void Init_SDL()
 
 H3R_NAMESPACE
 
-SDLWindow::SDLWindow(int, char **)
-    : OSWindow (0, nullptr)
+SDLWindow::SDLWindow(int, char **, Point && size)
+    : OSWindow (0, nullptr), _w{size.X}, _h{size.Y}
 {
     if (! global_sdl_init) Init_SDL ();
 

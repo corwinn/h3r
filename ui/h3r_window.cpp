@@ -93,6 +93,7 @@ int ui_main(int, char **)
 }
 
 GC Window::_gc {};
+Window * Window::ActiveWindow {};
 
 // Code repeats, but I don't intend to re-create ICollection<T>.
 void Window::Add(Control * c)
@@ -102,8 +103,11 @@ void Window::Add(Control * c)
     _controls.Add (c);
 }
 
-Window::Window(OSWindow * actual_window)
-    : _win{actual_window}
+Window::Window(Window * base_window, Point && size)
+    : Window {base_window->_win, static_cast<Point &&>(size)} {}
+
+Window::Window(OSWindow * actual_window, Point && size)
+    : _win{actual_window}, _size{size}
 {
     RenderEngine::Init ();
     global_win_list.Add (this);
@@ -138,6 +142,7 @@ void Window::Close()
 // WndProc. Do not block it.
 void Window::ProcessMessages()
 {
+    Window::ActiveWindow = this;
     _win->ProcessMessages ();
 
     // A good a place as any. For timing that is. It can easily be moved when/if

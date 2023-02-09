@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_os.h"
 #include "h3r_eventargs.h"
+#include "h3r_point.h"
 
 H3R_NAMESPACE
 
@@ -84,12 +85,13 @@ struct IWindow
     // Convenience method.
     // Implicit contract with a matching OSWindow::OSWindow.
     template <typename Abstraction, typename Implementation> static Abstraction *
-    Create(int argc, char ** argv)
+    Create(int argc, char ** argv, Point && size)
     {
         Implementation * a; // The "Window" takes care
-        H3R_CREATE_OBJECT(a, Implementation) {argc, argv};
+        H3R_CREATE_OBJECT(a, Implementation) {
+            argc, argv, static_cast<Point &&>(size)};
         Abstraction * b;
-        H3R_CREATE_OBJECT(b, Abstraction) {a};
+        H3R_CREATE_OBJECT(b, Abstraction) {a, static_cast<Point &&>(size)};
         a->SetEventHandler (b);
         return b;
     }

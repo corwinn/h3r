@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_renderengine.h"
 #include "h3r_label.h"
 #include "h3r_timing.h"
+#include "h3r_messagebox.h"
 
 #include <new>
 
@@ -59,8 +60,9 @@ h - hover
    "quit"        : Data_H3sprite_lod/MMENUQT.def ditto
  */
 
-MainWindow::MainWindow(OSWindow * actual_window)
-    : Window{actual_window}
+MainWindow::MainWindow(OSWindow * actual_window, Point && size)
+    : Window{actual_window, static_cast<Point &&>(size)},
+        _w{size.X}, _h{size.Y}
 {
     Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
     auto byte_arr_ptr = main_window_background.ToRGB ();
@@ -71,7 +73,8 @@ MainWindow::MainWindow(OSWindow * actual_window)
 
     auto key = RenderEngine::UI ().GenKey ();
     RenderEngine::UI ().UploadFrame (key, 0, 0, main_window_background.Width (),
-        main_window_background.Height (), byte_arr_ptr->operator byte * (), 3);
+        main_window_background.Height (), byte_arr_ptr->operator byte * (), 3,
+        "GamSelBk.pcx");
 
     // -- Controls ---------------------------------------------------------
 
@@ -83,13 +86,19 @@ MainWindow::MainWindow(OSWindow * actual_window)
     // Centered at x=525
     // 1. Measure
     int ww = 0;
+    Button * btn_quit {};
     for (const auto & b : mm) {
         Button * btn;
         H3R_CREATE_OBJECT(btn, Button) {b};
         ww = btn->Size ().X > ww ? btn->Size ().X : ww;
         Add (btn->SetPos (x, y));
         y += btn->Size ().Y + spacing;
+        btn_quit = btn;
     }
+    btn_quit->OnClick = [](Control *) {
+        auto dr = MessageBox::Show ("Are you sure you want to quit?",
+            "CALLI10R.FNT", MessageBox::Buttons::OKCancel);
+    };
     // 2. Layout
     for (Control * btn : Controls ())
         btn->SetPos (

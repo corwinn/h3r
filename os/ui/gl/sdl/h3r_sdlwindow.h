@@ -71,7 +71,7 @@ class SDLWindow : public OSWindow
     private void HandleMouseMotionEvent(EventArgs &);
     private void HandleMouseButtonEvent(EventArgs &);
     public void ProcessMessages() override;
-    public SDLWindow(int, char **);
+    public SDLWindow(int, char **, Point &&);
     public ~SDLWindow();
 };
 
