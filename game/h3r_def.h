@@ -138,15 +138,17 @@ class Def final : public ResDecoder
             for (int j = 0; j < cnt; j++)
                 Entries[j].Read (s);
         }
-        SubSprite * ByName(const String & name)
+        // Return both the sprite and its id; used for the unque key id.
+        SubSprite * ByName(const String & name, int & id)
         {
             for (int i = 0; i < Entries.Length (); i++)
-                if (Entries[i].Name == name) return &(Entries[i]);
+                if (Entries[i].Name == name) return &(Entries[id=i]);
             return nullptr;
         }
     };
     private: Array<Sprite> _sprites {};
     private: SubSprite * _request {};
+    private: int _request_id {-1};
     private: inline void SetRequest(SubSprite * value)
     {
         if (value != _request) {
@@ -187,15 +189,23 @@ class Def final : public ResDecoder
     //TODO are there duplicate names?
     public: inline Def * Query(const String & sprite_name)
     {
-        _request = nullptr;
+        _request = nullptr; _request_id = -1;
         for (int i = 0; i < _sprites.Length (); i++) {
-            auto req = _sprites[i].ByName (sprite_name);
+            auto req = _sprites[i].ByName (sprite_name, _request_id);
             if (req) {
                 SetRequest (req);
                 return this;
             }
         }
         return nullptr;
+    }
+    //TODO to Decoder as a virtual one
+    // Use Query() first.
+    public: inline String GetUniqueKey(const String & suffix)
+    {
+        H3R_ENSURE(_request != nullptr, "Use Query() first.")
+        return String::Format ("%s%d%s",
+            _request->Name.AsZStr (), _request_id, suffix.AsZStr ());
     }
 
     private: void Init();
