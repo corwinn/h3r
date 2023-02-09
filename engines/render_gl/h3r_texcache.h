@@ -49,7 +49,7 @@ H3R_NAMESPACE
 //   ...
 //
 //   TexCache::Bind (e)
-//LATER is there a point creatinc a dynamic tex. atlas (to save resources)?
+//LATER is there a point creating a dynamic tex. atlas (to save resources)?
 //      Dynamic tex. atlas: resize the tex. atlas on an as needed basis.
 class TexCache final
 {
