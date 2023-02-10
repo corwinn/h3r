@@ -70,8 +70,10 @@ template <typename T> class ResNameHash final
     private Array<KeyValue<T> *> _tbl {};
     public ~ResNameHash()
     {
-        printf ("ResNameHash: Used: %d KV pairs; %lu bytes" EOL,
-            _tbl.Length (), sizeof(KeyValue<T>)*_tbl.Length ());
+        printf (
+            "ResNameHash: Used: %d KV pairs; %lu bytes; hits: %d, misses: %d"
+            EOL, _tbl.Length (), sizeof(KeyValue<T>)*_tbl.Length (), _hit_cnt,
+            _miss_cnt);
         for (auto kv : _tbl) H3R_DESTROY_OBJECT(kv, KeyValue<T>)
     }
     private int Cmp(const Array<byte> & a, const Array<byte> & b)
@@ -115,12 +117,13 @@ template <typename T> class ResNameHash final
         H3R_CREATE_OBJECT(kv, KeyValue<T>) {key, value};
         _tbl.Insert (idx, &kv, 1);
     }
+    private int _hit_cnt {}, _miss_cnt {};
     public bool TryGetValue(const Array<byte> & key, T & value)
     {
         int idx {-1};
         int res = BSearch (key, idx);
-        if (res != -1) return value = _tbl[res]->Value, true;
-        return false;
+        if (res != -1) return value = _tbl[res]->Value, _hit_cnt++, true;
+        return _miss_cnt++, false;
     }
 };// ResNameHash
 
