@@ -64,8 +64,10 @@ static void CopyGlyph(byte * dst, int w, int px, byte * src, int gw, int gh)
     for (int y = 0; y < gh ; y++) {
         for (int x = 0; x < gw ; x++) {
             byte c = src[y*gw+x];
-            dst_row[2*x] = c > 0 ? 255 : 0;    // 255: 1, 255
-            dst_row[2*x+1] = 1 == c ? 128 : c; // 0.5 alpha for smoothing
+            // dst_row[2*x] = c > 0 ? 255 : 0;    // 255: 1, 255
+            dst_row[2*x] = c; // unmodifiec; they're using 255,243,222
+            // dst_row[2*x+1] = 1 == c ? 128 : c; // 0.5 alpha for smoothing
+            dst_row[2*x+1] = 1 == c ? 200 : c; // 0.78 alpha for smoothing
         }
         dst_row += dst_pitch;
     }
