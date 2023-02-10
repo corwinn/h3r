@@ -49,7 +49,6 @@ class MainWindow : public Window
 #define private private:
 #define protected protected:
 
-    private int _w {800}, _h{600};
     private List<Label *> _time_labels {};
 
     public MainWindow(OSWindow *, Point &&);

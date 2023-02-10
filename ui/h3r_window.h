@@ -64,7 +64,7 @@ class Window : public IWindow
 #define protected protected:
 #define IW
 
-    private OSWindow * _win;
+    private OSWindow * _win; // Shared. Until proved otherwise.
     // Bridge on demand
     protected inline OSWindow * GetOSWindow() { return _win; }
 
@@ -78,16 +78,18 @@ class Window : public IWindow
     protected inline List<Control *> & Controls() { return _controls; }
     private static GC _gc; // One GC should be enough.
 
-    IW public void ProcessMessages() override;
+    IW public void ProcessMessages() override final;
     IW public inline virtual bool Idle() override { return _win->Idle (); }
     IW protected inline virtual void Render() override { _win->Render (); }
 
     // Provide Size for all Window. This is not bridged!
     private Point _size;
-    protected inline const Point & GetSize() const { return _size; }
+    public inline const Point & GetSize() const { return _size; }
+    protected inline void SetSize(Point && p) { _size = p; }
     // Constructor for non-bridged "Window"s. They share the same OSWindow.
     public Window(Window * base_window, Point && size);
     public static Window * ActiveWindow; // The one that ProcessMessages
+    public static Window * MainWindow;
 
     // Use IWindow::Create()
     public Window(OSWindow * actual_window, Point && size);
@@ -113,7 +115,7 @@ class Window : public IWindow
     IW protected virtual void OnMouseUp(const EventArgs &) override;
     IW protected virtual void OnShow() override;
     IW protected virtual void OnHide() override;
-    IW protected virtual void OnClose(bool &) override;
+    IW protected virtual void OnClose(IWindow *, bool &) override;
     IW protected virtual void OnRender() override;
     IW protected virtual void OnResize(int, int) override;
 };

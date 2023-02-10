@@ -41,12 +41,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_gc.h"
 #include "h3r_control.h"
 #include "h3r_eventargs.h"
+#include "h3r_renderengine.h"
 
 H3R_NAMESPACE
 
 // Its size is stored at the resource it is created from.
 class Button: public Control
 {
+    private: RenderEngine * _re {};
     private: int _rkey {};
     private: int _on {}; // up
     private: int _oh {}; // hover
@@ -56,10 +58,12 @@ class Button: public Control
     public: Button(const String &, Control * = nullptr);
     public: virtual ~Button() override
     {
+        if (! _re)
+            RenderEngine::UI ().ChangeVisibility (_rkey, false);
     }
 
     public: virtual Control * SetPos(int, int) override;
-    public: void UploadFrames() override;
+    public: void UploadFrames(RenderEngine * = nullptr) override;
 
     public: virtual void OnRender(GC &) override;
     public: virtual void OnMouseMove(const EventArgs &) override;

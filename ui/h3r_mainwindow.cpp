@@ -61,8 +61,7 @@ h - hover
  */
 
 MainWindow::MainWindow(OSWindow * actual_window, Point && size)
-    : Window{actual_window, static_cast<Point &&>(size)},
-        _w{size.X}, _h{size.Y}
+    : Window{actual_window, static_cast<Point &&>(size)}
 {
     Pcx main_window_background {Game::GetResource ("GamSelBk.pcx")};
     auto byte_arr_ptr = main_window_background.ToRGB ();
@@ -78,7 +77,7 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
 
     // -- Controls ---------------------------------------------------------
 
-    int y = 10 /*measured*/, x = 525 /*measured*/, spacing = 0;
+    int y = 10 /*measured*/, x = 524 /*measured*/, spacing = 0;
     List<String> mm {};
     mm  << "MMENUNG.def" << "MMENULG.def" << "MMENUHS.def" << "MMENUCR.def"
         << "MMENUQT.def";
@@ -96,8 +95,10 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
         btn_quit = btn;
     }
     btn_quit->OnClick = [](Control *) {
+        // The mesage is located at GENRLTXT.TXT:81 (1-based)
         auto dr = MessageBox::Show ("Are you sure you want to quit?",
-            "CALLI10R.FNT", MessageBox::Buttons::OKCancel);
+            "MedFont.fnt", MessageBox::Buttons::OKCancel);
+        //TODO check if all message boxes are using this font
     };
     // 2. Layout
     for (Control * btn : Controls ())
@@ -107,7 +108,7 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
     for (Control * btn : Controls ()) btn->UploadFrames ();
 
     // Preview all fonts as real-time clocks
-    List<String> fnt {};
+    /*List<String> fnt {};
     fnt << "CALLI10R.FNT" << "CREDITS.FNT" << "HISCORE.FNT" << "MedFont.fnt"
         << "TIMES08R.FNT" << "bigfont.fnt" << "smalfont.fnt" << "tiny.fnt"
         << "verd10b.fnt";
@@ -120,13 +121,16 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
         Add (lbl);
         _time_labels.Add (lbl);
         ty += 32;
-    }
+    }*/
+
+    Window::MainWindow = this;
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() { Window::MainWindow = nullptr; }
 
 void MainWindow::OnKeyUp(const EventArgs & e)
 {
+    printf ("MainWindow::OnKeyUp" EOL);
     if (H3R_KEY_Q == e.Key)
         Close ();
 }
@@ -140,7 +144,7 @@ void MainWindow::OnRender()
     Window::OnRender ();
 
     // Misusing OnRender as a timing source
-    static int h{}, m{}, s{};
+    /*static int h{}, m{}, s{};
     int nh{}, nm{}, ns{};
     OS::TimeNowHms (nh, nm, ns);
     if (nh != h || nm != m || ns != s) {
@@ -148,16 +152,17 @@ void MainWindow::OnRender()
         auto time_now = String::Format ("%002d:%002d:%002d - ", h, m, s);
         for (auto lbl : _time_labels)
             if (lbl) lbl->SetText (time_now + lbl->Font ());
-    }
+    }*/
 }
 
 void MainWindow::OnResize(int w, int h)
 {
     if (! w || ! h) return;
-    glViewport (0, 0, _w = w, _h = h);
+    SetSize (Point {w, h});
+    glViewport (0, 0, w, h);
     glMatrixMode (GL_PROJECTION), glLoadIdentity ();
     // Its a 2D game.
-    glOrtho (.0f, _w, _h, .0f, .0f, 1.f);
+    glOrtho (.0f, w, h, .0f, .0f, 1.f);
     // www.opengl.org/archives/resources/faq/technical/transformations.htm
     glTranslatef (.375f, .375f, -.2f);
     glMatrixMode (GL_MODELVIEW), glLoadIdentity ();

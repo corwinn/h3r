@@ -94,6 +94,7 @@ int ui_main(int, char **)
 
 GC Window::_gc {};
 Window * Window::ActiveWindow {};
+Window * Window::MainWindow {};
 
 // Code repeats, but I don't intend to re-create ICollection<T>.
 void Window::Add(Control * c)
@@ -104,7 +105,9 @@ void Window::Add(Control * c)
 }
 
 Window::Window(Window * base_window, Point && size)
-    : Window {base_window->_win, static_cast<Point &&>(size)} {}
+    : Window {base_window->_win, static_cast<Point &&>(size)}
+{
+}
 
 Window::Window(OSWindow * actual_window, Point && size)
     : _win{actual_window}, _size{size}
@@ -115,7 +118,9 @@ Window::Window(OSWindow * actual_window, Point && size)
 
 Window::~Window()
 {
-    H3R_DESTROY_OBJECT(_win, OSWindow)
+    // It provides events, so stop it first.
+    if (global_win_list.Count () <= 1)
+        H3R_DESTROY_OBJECT(_win, OSWindow)
     for (Control * c : _controls)
         H3R_DESTROY_OBJECT(c, Control)
     global_win_list.Remove (this);
@@ -187,7 +192,14 @@ void Window::OnMouseUp(const EventArgs &e)
 void Window::OnShow() { _visible = true; }  //TODO forward these?
 void Window::OnHide() { _visible = false; } //
 // Close by default; the base window has no idea how to ask, yet.
-void Window::OnClose(bool &) { _closed = true; }
+void Window::OnClose(IWindow * sender, bool &)
+{
+    _closed = true;
+    if (sender == _win) { // CloseAll
+        printf ("Handle OSMainWindow closing" EOL);
+        for (auto w : global_win_list) w->_closed = true;
+    }
+}
 void Window::OnRender()
 {
     glClear (GL_COLOR_BUFFER_BIT);

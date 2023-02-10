@@ -48,6 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_gc.h"
 #include "h3r_eventargs.h"
 #include "h3r_event.h"
+#include "h3r_renderengine.h"
 
 #define H3R_CONTROL_DEFAULT_SIZE 32
 
@@ -81,7 +82,7 @@ class Control
     // Upload the Frames to the RenderEngine.
     // This is not called on construction, on purpose: so that layout can be
     // done prior uploading to the render engine.
-    public: inline virtual void UploadFrames() {}
+    public: inline virtual void UploadFrames(RenderEngine * = nullptr) {}
 
     // properties
     public: void SetEnabled(bool value) { _enabled = value; }

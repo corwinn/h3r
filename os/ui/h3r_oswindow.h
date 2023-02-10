@@ -67,7 +67,7 @@ class OSWindow : public IWindow
         inline void OnMouseUp(const EventArgs &) override {}
         inline void OnShow() override {}
         inline void OnHide() override {}
-        inline void OnClose(bool &) override {}
+        inline void OnClose(IWindow *, bool &) override {}
         inline void OnRender() override {}
         inline void OnResize(int, int) override {}
     };
@@ -114,9 +114,9 @@ class OSWindow : public IWindow
     {
         _eh->OnHide ();
     }
-    protected inline virtual void OnClose(bool & cancel) override
+    protected inline virtual void OnClose(IWindow * s, bool & cancel) override
     {
-        _eh->OnClose (cancel);
+        _eh->OnClose (s, cancel);
     }
     protected inline virtual void OnRender() override
     {

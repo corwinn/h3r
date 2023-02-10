@@ -48,6 +48,7 @@ static byte * LoadSpriteFrame(Def & def,
     const String & def_name, const String & frame_name)
 {
     auto frame = def.Query (frame_name);
+    if (! frame) frame = def.QueryCI (frame_name);
     if (! frame) {
         H3R_NS::Log::Err (String::Format (
             "Can't find %s[%s]" EOL, def_name.AsZStr (), frame_name.AsZStr ()));
@@ -72,13 +73,13 @@ Button::Button(const String & res_name, Control * base)
     Def sprite {Game::GetResource (res_name)};
     Resize (sprite.Width (), sprite.Height ());
     _sprite_name = res_name;
-    // printf ("Sprite: %s: %d x %d" EOL,
-    //     _sprite_name.AsZStr (), sprite.Width (), sprite.Height ());
+    /*printf ("Sprite: %s: %d x %d" EOL,
+         _sprite_name.AsZStr (), sprite.Width (), sprite.Height ());*/
 }
 
-void Button::UploadFrames()
+void Button::UploadFrames(RenderEngine * re)
 {
-    auto & RE = RenderEngine::UI ();
+    auto & RE = (_re = re) != nullptr ? *re : RenderEngine::UI ();
     _rkey = RE.GenKey ();
     auto & size = Size ();
     auto & pos = Pos ();
@@ -86,8 +87,8 @@ void Button::UploadFrames()
 
     byte * frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "n.pcx"));
-    // printf ("[%2d] frame: %s %d %d %d %d, ",
-    //    _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
+     printf ("[%2d] frame: %s %d %d %d %d, ",
+        _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
     if (frame)
         _on = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
             sprite.GetUniqueKey (_sprite_name));
@@ -120,7 +121,8 @@ void Button::OnMouseMove(const EventArgs & e)
     p.X = e.X;
     p.Y = e.Y;
     _mouse_over = HitTest (p);
-    RenderEngine::UI ().ChangeOffset (_rkey,
+    RenderEngine & re = _re != nullptr ? *_re : RenderEngine::UI ();
+    re.ChangeOffset (_rkey,
         _mouse_down ? _os : _mouse_over ? _oh : _on);
     /*Log::Info (String::Format (
         "Button::OnMouseMove (%d, %d), hover: %d, _bb (%d, %d, %d, %d)" EOL,
@@ -135,7 +137,8 @@ void Button::OnMouseDown(const EventArgs &)
 {
     if (! _mouse_over) return;
     _mouse_down = true;
-    RenderEngine::UI ().ChangeOffset (_rkey, _os);
+    RenderEngine & re = _re != nullptr ? *_re : RenderEngine::UI ();
+    re.ChangeOffset (_rkey, _os);
     Log::Info ("MouseDown" EOL);
     auto stream = Game::GetResource ("BUTTON.wav");
     if (! stream) {
@@ -167,7 +170,8 @@ void Button::OnMouseUp(const EventArgs &)
     //     need the bubbling/tunneling madness of the "WPF" here.
     if (! _mouse_down) return; // It was not me
     _mouse_down = false;
-    RenderEngine::UI ().ChangeOffset (_rkey, _mouse_over ? _oh : _on);
+    RenderEngine & re = _re != nullptr ? *_re : RenderEngine::UI ();
+    re.ChangeOffset (_rkey, _mouse_over ? _oh : _on);
     // If you release the button outside of the of the thing you clicked on
     // there shall be no mouse click event.
     if (! _mouse_over) return;

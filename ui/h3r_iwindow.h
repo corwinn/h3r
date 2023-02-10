@@ -77,7 +77,8 @@ struct IWindow
     virtual void OnShow() {H3R_NOT_IMPLEMENTED_EXC}
     virtual void OnHide() {H3R_NOT_IMPLEMENTED_EXC}
     // "bool &" - allow the user to cancel the closing.
-    virtual void OnClose(bool &) {H3R_NOT_IMPLEMENTED_EXC}
+    // IWindow * sender
+    virtual void OnClose(IWindow *, bool &) {H3R_NOT_IMPLEMENTED_EXC}
     virtual void OnRender() {H3R_NOT_IMPLEMENTED_EXC}
     virtual void OnResize(int, int) {H3R_NOT_IMPLEMENTED_EXC}
 
