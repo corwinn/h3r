@@ -41,6 +41,7 @@ H3R_NAMESPACE
 
 #define H3R_NO_KEY 0
 #define H3R_KEY_Q 1
+#define H3R_KEY_ESC 2
 
 #define H3R_MKEY_LEFT 1
 

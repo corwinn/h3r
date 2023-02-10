@@ -183,8 +183,8 @@ void SDLWindow::ProcessMessages()
     while (SDL_PollEvent (&_e) != 0) {
         if (_q) continue;
         if (SDL_QUIT == _e.type) {
-            OnClose (_q);
-            if (_q) Close ();
+            OnClose (this, _q);
+            if (_q) Close ();//TODO redundant
         }
         if (_q) continue; //TODO should I?
 
@@ -204,7 +204,7 @@ void SDLWindow::HandleWindowEvent()
 {
     THE_WAY_IS_SHUT
 
-    H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
+    // H3R_NS::Log::Info ("SDL_WINDOWEVENT" EOL);
     switch (_e.window.event) {
         case SDL_WINDOWEVENT_RESIZED: {
             if (_e.window.data1 > 0 && _e.window.data2 > 0)
@@ -221,11 +221,10 @@ void SDLWindow::HandleKeyboardEvent(EventArgs & e)
     THE_WAY_IS_SHUT
 
     switch (_e.key.keysym.scancode) {
-        case SDL_SCANCODE_Q: {
-            e.Key = H3R_KEY_Q;
-            OnKeyUp (e);
-            e.Key = H3R_NO_KEY;
-        } break;
+        case SDL_SCANCODE_Q:
+            { e.Key = H3R_KEY_Q; OnKeyUp (e); e.Key = H3R_NO_KEY; } break;
+        case SDL_SCANCODE_ESCAPE:
+            { e.Key = H3R_KEY_ESC; OnKeyUp (e); e.Key = H3R_NO_KEY; } break;
         default: break;
     }
 }
@@ -245,7 +244,9 @@ void SDLWindow::HandleMouseMotionEvent(EventArgs & e)
 
 void SDLWindow::HandleMouseButtonEvent(EventArgs & e)
 {
-    THE_WAY_IS_SHUT
+    // Handling a dialog in OnMouse event requires re-entry.
+    // I'm opening this gate. Stay tuned for stack overflows.
+    // THE_WAY_IS_SHUT
 
     //TODO _e.motion.which; the mouse instance id
     //     Please don't play with more than one mouse simultaneously :)
