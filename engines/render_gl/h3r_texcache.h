@@ -76,11 +76,13 @@ class TexCache final
         const String & key);
 
     private static GLuint _bound; // currently bound texture
-    public static inline void Bind(TexCache::Entry & e)
+    // Either all are using it, or none. Since there are entities that are'n
+    // uisng the TexCache - like text rendering, this is off.
+    /*public static inline void Bind(TexCache::Entry & e)
     {
         if (e.Texture != _bound)
             glBindTexture (GL_TEXTURE_2D, _bound = e.Texture);
-    }
+    }*/
 
     public static TexCache * One ();
 };

@@ -217,13 +217,13 @@ TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp,
     int clasify_w = NextP2 (w);
     int id = GetKeyIndex (clasify_h);
     TexCache::Entry & e = global_h[id];
-    printf (
+    /*printf (
         "TexCache::Cache: w:%3d, h:%3d, cw:%d, ch:%d, id:%d" EOL,
-        w, h, clasify_w, clasify_h, id);
+        w, h, clasify_w, clasify_h, id);*/
 
     if (0 == e.x && 0 == e.y) {
         glGenTextures (1, &(e.Texture));
-        TexCache::Bind (e);
+        glBindTexture (GL_TEXTURE_2D, _bound = e.Texture);
         // No need for mipmaps, yet
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -244,11 +244,11 @@ TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp,
     if (e.x > 0 && sx <= clasify_w) { e.x = 0; e.y += clasify_h; } // next row
     int sy = H3R_MAX_TEX_SIZE - e.y;
     sx = H3R_MAX_TEX_SIZE - e.x;
-    printf (
+    /*printf (
         "TexCache::Cache: space x:%4d, space y:%4d" EOL,
-        sx, sy);
+        sx, sy);*/
     if (sy >= clasify_h) {
-        TexCache::Bind (e);
+        glBindTexture (GL_TEXTURE_2D, _bound = e.Texture);
         glTexSubImage2D (GL_TEXTURE_2D, 0, e.x, e.y, w, h,
             3 == bpp ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
         result.Texture = e.Texture;
@@ -256,14 +256,15 @@ TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp,
         result.t = 1.f * e.y / H3R_MAX_TEX_SIZE; // top
         result.r = 1.f * (e.x + w) / H3R_MAX_TEX_SIZE; // right
         result.b = 1.f * (e.y + h) / H3R_MAX_TEX_SIZE; // bottom
-        printf (
+        /*printf (
             "TexCache::Cache: tex: %12d, top: %00000.4f, bottom: %00000.4f "
             "left: %00000.4f, right: :%00000.4f" EOL,
-            result.Texture, result.t, result.b, result.l, result.r);
+            result.Texture, result.t, result.b, result.l, result.r);*/
         e.x += w;
     }
     else {
         printf ("One texture is not enough" EOL);
+        OS::Exit (11);
         //TODO add another texture
     }
     cache.Add (key.operator const Array<byte> &(), result);
