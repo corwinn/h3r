@@ -145,6 +145,12 @@ class Def final : public ResDecoder
                 if (Entries[i].Name == name) return &(Entries[id=i]);
             return nullptr;
         }
+        SubSprite * ByNameCI(const String & name, int & id)
+        {
+            for (int i = 0; i < Entries.Length (); i++)
+                if (Entries[i].Name.ToLower () == name) return &(Entries[id=i]);
+            return nullptr;
+        }
     };
     private: Array<Sprite> _sprites {};
     private: SubSprite * _request {};
@@ -186,12 +192,24 @@ class Def final : public ResDecoder
     }
 
     // Set what RGBA() and RGB() shall return. Null means it wasn't found.
-    //TODO are there duplicate names?
+    //TODO are there duplicate names? Yes there are.
     public: inline Def * Query(const String & sprite_name)
     {
         _request = nullptr; _request_id = -1;
         for (int i = 0; i < _sprites.Length (); i++) {
             auto req = _sprites[i].ByName (sprite_name, _request_id);
+            if (req) {
+                SetRequest (req);
+                return this;
+            }
+        }
+        return nullptr;
+    }
+    public: inline Def * QueryCI(const String & sprite_name)
+    {
+        _request = nullptr; _request_id = -1;
+        for (int i = 0; i < _sprites.Length (); i++) {
+            auto req = _sprites[i].ByNameCI (sprite_name, _request_id);
             if (req) {
                 SetRequest (req);
                 return this;
