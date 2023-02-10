@@ -175,7 +175,8 @@ byte * TextRenderingEngine::RenderText(
         if (size.X > tw) tw = size.X;
         if (size.Y > hh) hh = size.Y;
         th += size.Y;
-        printf ("TRE: row: %s: w: %d, h: %d" EOL, s.AsZStr (), size.X, size.Y);
+        // printf ("TRE: row: %s: w: %d, h: %d" EOL, s.AsZStr (), size.X,
+        //     size.Y);
     };
     // The code below should call the code above; I doubt it, but lets see.
     // That's what I call "inversion of control" :D. Ok, more "yield return" but
@@ -185,8 +186,8 @@ byte * TextRenderingEngine::RenderText(
     //LATER R&D IEnumerable<T> using this.
     TextService__ToLines<decltype(trick)> (txt, trick,
         [](String && s, decltype(trick) & f) -> void { f ((String &&)s); });
-    printf ("TRE: rows: %d: tw: %d, th: %d, hh: %d" EOL,
-        txt_rows.Count (), tw, th, hh);
+    // printf ("TRE: rows: %d: tw: %d, th: %d, hh: %d" EOL,
+    //    txt_rows.Count (), tw, th, hh);
     H3R_ENSURE(txt_rows.Count () > 0, "Nope; at least one row shall be here")
 
     // Use center for now.
@@ -207,8 +208,8 @@ byte * TextRenderingEngine::RenderText(
     for (int i = 0 ; i < txt_rows.Count (); i++) {
         int l = (tw - txt_rows_size[i].X) / 2; // hcenter
         int t = b - hh;
-        printf ("TRE: render text of size: w:%d, h:%d" EOL,
-            txt_rows_size[i].X, txt_rows_size[i].Y);
+        // printf ("TRE: render text of size: w:%d, h:%d" EOL,
+        //    txt_rows_size[i].X, txt_rows_size[i].Y);
         fnt->RenderText (
             txt_rows[i], row_buf, txt_rows_size[i].X, txt_rows_size[i].Y);
     /*printf ("After RenderText()\n");
@@ -217,8 +218,8 @@ byte * TextRenderingEngine::RenderText(
             printf ("%2X ", row_buf[y*2*txt_rows_size[i].X+2*x]);
         printf ("\n");
     }*/
-        printf ("TRE: copy rectangle: _tw: %d, l:%d, t:%d, w:%d, h:%d" EOL,
-                _text_width, l, t, txt_rows_size[i].X, txt_rows_size[i].Y);
+        // printf ("TRE: copy rectangle: _tw: %d, l:%d, t:%d, w:%d, h:%d" EOL,
+        //       _text_width, l, t, txt_rows_size[i].X, txt_rows_size[i].Y);
         Font::CopyRectangle (
             _text_buffer, _text_width, l, t,
             row_buf, txt_rows_size[i].X, txt_rows_size[i].Y,
