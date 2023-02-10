@@ -52,7 +52,7 @@ class Label: public Control
 
     public: Label(
         const String &, const String &, const Point &, Control * = nullptr);
-    public: ~Label() override {}
+    public: ~Label() override { RenderEngine::UI ().DeleteText (_tkey); }
 
     public: inline const String & Text() const { return _text; }
     public: inline const String & Font() const { return _font; }
