@@ -66,7 +66,7 @@ RenderEngine::RenderEngine(GLsizeiptr max_sprite_frames)
 
     glGenBuffers (1, &_vbo);
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
-    // The 1st quad is the invisible one (where index points to to remain not
+    // The 1st quad is the invisible one (where index points to, to remain not
     // visible). This shouldn't slow down Open GL even a bit.
      // 4=H3R_SPRITE_VERTICES - elements per sprite frame
     _vbo_max_elements = (1 + max_sprite_frames) * H3R_SPRITE_VERTICES;
@@ -144,6 +144,8 @@ int RenderEngine::UploadFrame(
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
     auto uv = TexCache::One ()->Cache (w, h, data, bpp, texkey);
+    GLenum err2 = glGetError ();//TODO H3RGL_Debug
+    if (GL_NO_ERROR != err2) printf ("TexCache::One () error: %d" EOL, err2);
     GLfloat l = x, t = y, b = t + h, r = l + w;
     GLfloat v[H3R_SPRITE_FLOATS] {
         l,t,uv.l,uv.t, l,b,uv.l,uv.b, r,t,uv.r,uv.t, r,b,uv.r,uv.b};
@@ -152,11 +154,16 @@ int RenderEngine::UploadFrame(
     size_t ofs_bytes =
         (e.Base + e.Frames * 4) * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);
     size_t buf_bytes = H3R_SPRITE_FLOATS * sizeof(H3Rfloat);
-    // printf ("  UploadFrame: t: %d, ofs: %zu, size: %zu" EOL,
-    //    uv.Texture, ofs_bytes, buf_bytes);
+    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
+    /*GLint size = 0;
+    glGetBufferParameteriv (GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+    printf ("  UploadFrame: t: %d, ofs: %zu, size: %zu, avail: %d" EOL,
+        uv.Texture, ofs_bytes, buf_bytes, size);
+    for (int i = 0; i < H3R_SPRITE_FLOATS; i++) printf ("%.2f ", v[i]);
+    printf (EOL);*/
     glBufferSubData (GL_ARRAY_BUFFER, ofs_bytes, buf_bytes, v);
     GLenum err = glGetError ();
-    if (GL_NO_ERROR != err) Log::Err ("glBufferSubData error" EOL);
+    if (GL_NO_ERROR != err) printf ("glBufferSubData error: %d" EOL, err);
     e.Frames++;
     e.SetTexture (uv.Texture);
     auto & lists = ListByTexId (uv.Texture);
@@ -221,14 +228,16 @@ void RenderEngine::ChangeOffset(int key, GLint value)
     glClearColor (.0f, .0f, .0f, 1.f);
     glDisable (GL_DEPTH_TEST);
     glDisable (GL_DITHER);
-    glDisable (GL_BLEND);
+    // glDisable (GL_BLEND);
+    glEnable (GL_BLEND);
+    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable (GL_LIGHTING);
     glDisable (GL_FOG);
     glDisable (GL_MULTISAMPLE);
     glShadeModel (GL_FLAT);
 
-    glEnable (GL_ALPHA_TEST);
-    glAlphaFunc (GL_GEQUAL, 1.0f);
+    // glEnable (GL_ALPHA_TEST);
+    // glAlphaFunc (GL_GEQUAL, 1.0f);
 
     glEnable (GL_VERTEX_ARRAY);
     glEnable (GL_TEXTURE_COORD_ARRAY);
