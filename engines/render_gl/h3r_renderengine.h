@@ -83,6 +83,9 @@ using H3Rfloat = GLfloat;
 // 1st by the map window, so it will be rendered prior everything else.
 class RenderEngine final
 {
+    H3R_CANT_COPY(RenderEngine)
+    H3R_CANT_MOVE(RenderEngine)
+
     // Bind texture id to glMultiDrawArrays. Because frame0 could be at
     // tex-atlas0 and frame1 could be at tex-atlas1 e.g. Offset=0 shall be at
     // TexList.Texture == t0, and Offset=4 shall be at another TexList where
@@ -170,10 +173,10 @@ class RenderEngine final
     // by GenKey().
     private List<RenderEngine::Entry> _entries {};
 
-    public RenderEngine();
+    private RenderEngine();
     public ~RenderEngine();
     // The UI doesn't require that many sprites.
-    public RenderEngine(GLsizeiptr max_sprites);
+    private RenderEngine(GLsizeiptr max_sprites);
 
     public void Render();
     public void Resize(int, int); // The 2D output has been resized.
