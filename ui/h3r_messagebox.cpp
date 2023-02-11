@@ -68,7 +68,6 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     const String & msg, const String & fnt, MessageBox::Buttons btn)
     : DialogWindow {base_window, static_cast<Point &&>(size)},
     _btn_re {6}
-    //, _re {MB_SPRITES}
 {
     H3R_ENSURE(Window::MainWindow != nullptr, "MessageBox requires MainWindow")
     _t = (Window::MainWindow->GetSize ().Y - size.Y) / 2;
@@ -87,7 +86,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         for (int x = 0; x < size.X; x++)
             if ((DS_SIZE-1) == y || 0 == x || (size.X-1) == x)
             // these two and glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            // closely match the original
+            // closely match the original; TODO look for them at the .pal files
                  b1_ptr[y*size.X + x] = 0x82000000u;
             else b1_ptr[y*size.X + x] = 0xc2000000u;
     auto key = _re_keys.Add (re.GenKey ());
@@ -227,19 +226,21 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         return DialogResult::Cancel;
     }
 
-    //TODO it somehow converts text to message box size
+    //TODO it somehow converts text to message box size; there are max w,h;
+    // when max_w is reached: partition the text by inserting new lines; when
+    // max_h is reached: add a scroll bar, and re-partition the text to the
+    // reduced width. Its possible it tries to keep the message box aspect ratio
+    // close to 1 (sqrt(text.width)).
     Point ts = TextRenderingEngine::One ().MeasureText (fnt, msg);
     printf ("Text size: %d %d" EOL, ts.X, ts.Y);
-    // my Text size: 233 20; measured: 232 x 20
-    // The quit dialog box is 320 x 192 w/o the drop shadow;
-    // located at 240,204 - that's centered w/o the drop-shadow.
+    // My Text size: 233 20; measured from a screen-shot: 232 x 20.
     // The text starts at 277,267.
-    // 240+(320-233)/2 = 283 - padding = 6
+    // 240+(320-233)/2 = 283 - left padding = 6.
     // I looks like there are two horizontal boxes: 1 has the text; the other:
     // the buttons; the buttons one has 15 v-padding; their height is 32 with
     // the border; so the top rectangle should be 204-62=142 pixels; lets
-    // vcenter the text in it: 265 - that's -2 padding;
-    // It looks like this was done manually on hand; I can find no auto-layout
+    // vcenter the text in it: 265 - that's -2 padding.
+    // It looks like this was done manually on hand. I can't deduce auto-layout
     // yet.
 
     MessageBox * msgbox;

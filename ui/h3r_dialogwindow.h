@@ -49,8 +49,8 @@ enum class DialogResult {OK, Cancel, Yes, No};
 //
 // All of these drop alpha-blended shadow (bottom and right):
 //   * measurement 1 (GENRLTXT.TXT:Are you sure you want to quit?):
-//      - solid width with ~75% alpha: 7 pixels
-//      - solid border ~50% alpha: 1 pixel
+//      - solid black with ~x% alpha: 7 pixels
+//      - solid black border with ~x% alpha: 1 pixel
 //
 // Decoration: "dialgbox.def":
 //   "DiBoxTL.pcx"
@@ -65,19 +65,27 @@ enum class DialogResult {OK, Cancel, Yes, No};
 //   "DiBoxRL.pcx"
 //   "DiBoxRR.pcx"
 //   "DiBoxRB.pcx"
-//TODO all of the above are blue-ish, and the game ones are red-ish
-// Some of them have their own decoration.
+// After a few screen-shots: the game seems to be using an external palette - a
+// per-player color one - for the UI, with red being the 0 (default, 1st player
+// color); how exactly it does that color mixing is a TODO.
 //
 // The quit dialog box is 320 x 192 w/o the drop shadow; located at 240,204 -
 // that's centered w/o the drop-shadow.
-// The tiling can be done by Open GL itself; the trick is just to hint the tex.
-// parameter.
+// The tiling can be done by Open GL itself but only if using Open GL directly
+// w/o the RenderEngine, unless I parameterize it to support tiling.
 //
 //LATER The drop-shadow shall be done by a shader; unless I find a game res.
 // that represents it, but I doubt it; its probably GDI ROP they're doing.
-// For now it will be a procedurally-generated GL_LUMINANCE_ALPHA.
+// For now it will be a procedurally-generated RGBA.
 //
-// These windows can't use the big UI VBO because it doesn't support recycling.
+// These Window could use the big UI VBO, because of its pass-es, but I'll have
+// to think about storing their keys for re-use. The other option is to enable
+// inserting RenderEngine as a "pass" at the UI one: prior the text pass.
+//
+// The bad news: it has a dialog over a dialog (a map displaying a message;
+// Alt+F4 displays the quit dialog over the 1st one), where text is partially
+// visible; means the z-ordering becomes mandatory: the RenderEngine - not that
+// simple.
 class DialogWindow : public Window
 {
 #define public public:

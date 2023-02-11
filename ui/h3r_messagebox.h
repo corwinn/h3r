@@ -43,33 +43,54 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-// Background: tiling, but a mystery:
-//  DIBOX128.PCX is 128x128 // I'll have to checkout on a screenshot basis
-//  DiBoxBck.pcx is 256x256 // when to use what
+// Quit message box:
 //
-// Button cancel: iCANCEL.def (30 pixels height) ; ICN6432.DEF (32 pixels) ?
-//  "iCANCELn.pcx"
-//  "iCANCELs.pcx"
-//  "iCANCELd.pcx"
-//  "iCANCELh.pcx"
-//  (the one at the quit dialog box is the 30 pixels variant)
-//  (also, some box is drawn around the button: a 66x32 pixels in the q dialog;
-//   there is such a box: "box66x32.pcx")
-// There are 3 OK variants: "IOK6432.DEF", "iOKAY.def" (q dbox), "IOKAY32.DEF"
-//TODO these names must go to some central place
-// The min. size is defined by its decorations at "dialgbox.def": 128 x 128 in
-// order to put 4 corners decors (64x64 each).
+//  - background: tiling, but a mystery:
+//    DIBOX128.PCX is 128x128 // I'll have to checkout on a screenshot basis
+//    DiBoxBck.pcx is 256x256 // when to use what
+//
+//  - another "mystery": the decoration is using different palette than the one
+//    stored at the sprite ("dialgbox.def") - where does it come from? There are
+//    3 .pal files (TODO check them):
+//      Data_H3bitmap_lod/font.pal
+//      Data_H3bitmap_lod/PLAYERS.PAL
+//      Data_H3bitmap_lod/game.pal
+//    why color-mixing here ("dialgbox.def") and bitmaps there (
+//    "agem[LL|LR|UL|UR].def")? - was this game created by teams who did not
+//    communicate with each other?!
+//
+//  - button cancel: iCANCEL.def (30 pixels height) || ICN6432.DEF (32 pixels)?
+//    "iCANCELn.pcx"
+//    "iCANCELs.pcx"
+//    "iCANCELd.pcx"
+//    "iCANCELh.pcx" - ain't using it?!
+//    It is using the 30 pixels variant. Also, some box is drawn around the
+//    button: a 66x32 pixels. There is such a box: "box66x32.pcx" - but its size
+//    is 68x34; the one: "Box64x30.pcx". Why using a bitmap at all - instead of
+//    4 lines?!
+//
+//  - button OK: "IOK6432.DEF", "iOKAY.def" (quit dialog), "IOKAY32.DEF"
+//    Guess.
+//
+//  - the min. size is defined by its decorations at "dialgbox.def": 128x128 -
+//    in order to put the 4 corner decors (64x64 each).
+//
+//TODO all these names must go to some central place.
+//TODO generate the per color "dialgbox.def" on the fly; check if the unknown
+//     bytes doesn't hint something about a color mixer
+//
 class MessageBox final : public DialogWindow
 {
 #define public public:
 #define private private:
 #define protected protected:
 
-    // The two buttons are ending in a tex rendered prior the background one.
-    // This isn't a solution: just a showcase of wrong desing: needed for the
+    // The two buttons are ending in a tex. - rendered prior the background one.
+    // This isn't a solution: just a showcase of wrong design: needed for the
     // correct one. There shall be z-ordering. But lets see how wrong things
-    // are. The message box showed a lot of weak spots in the design.
+    // are: the message box showed a lot of weak spots in the design.
     private RenderEngine _btn_re;
+
     private List<int> _re_keys {};
     private bool _has_dr {};
     private DialogResult _dr {};
