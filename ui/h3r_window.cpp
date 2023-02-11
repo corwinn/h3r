@@ -92,7 +92,7 @@ int ui_main(int, char **)
     return 0;
 }
 
-GC Window::_gc {};
+// GC Window::_gc {};
 Window * Window::ActiveWindow {};
 Window * Window::MainWindow {};
 

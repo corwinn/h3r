@@ -65,7 +65,7 @@ class Button: public Control
     public: virtual Control * SetPos(int, int) override;
     public: void UploadFrames(RenderEngine * = nullptr) override;
 
-    public: virtual void OnRender(GC &) override;
+    // public: virtual void OnRender(GC &) override;
     public: virtual void OnMouseMove(const EventArgs &) override;
     public: virtual void OnMouseDown(const EventArgs &) override;
     public: virtual void OnMouseUp(const EventArgs &) override;

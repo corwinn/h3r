@@ -179,6 +179,6 @@ void Button::OnMouseUp(const EventArgs &)
     if (OnClick) OnClick (this);
 }
 
-void Button::OnRender(GC &) {}
+// void Button::OnRender(GC &) {}
 
 NAMESPACE_H3R

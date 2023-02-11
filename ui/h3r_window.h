@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_oswindow.h"
 #include "h3r_control.h"
 #include "h3r_list.h"
-#include "h3r_gc.h"
+// #include "h3r_gc.h"
 #include "h3r_point.h"
 
 H3R_NAMESPACE
@@ -80,7 +80,7 @@ class Window : public IWindow
     private List<Control *> _controls {};
     public void Add(Control * c);
     protected inline List<Control *> & Controls() { return _controls; }
-    private static GC _gc; // One GC should be enough.
+    // private static GC _gc; // One GC should be enough.
 
     IW public void ProcessMessages() override final;
     IW public inline virtual bool Idle() override { return _win->Idle (); }

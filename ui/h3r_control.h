@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_list.h"
 #include "h3r_point.h"
 #include "h3r_box.h"
-#include "h3r_gc.h"
+// #include "h3r_gc.h"
 #include "h3r_eventargs.h"
 #include "h3r_event.h"
 #include "h3r_renderengine.h"
@@ -100,7 +100,7 @@ class Control
     // No UI editor so these remain empty.
     //TODO figure out a way for the subject(window) to notify its observers
     //     w/o publishing these methods for everyone to call
-    public: virtual void OnRender(GC &) {}
+    public: virtual void OnRender(/*GC &*/) {}
     public: virtual void OnMouseMove(const EventArgs &) {}
     public: virtual void OnMouseUp(const EventArgs &) {}
     public: virtual void OnMouseDown(const EventArgs &) {}

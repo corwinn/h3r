@@ -98,6 +98,8 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
         // The mesage is located at GENRLTXT.TXT:81 (1-based)
         auto dr = MessageBox::Show ("Are you sure you want to quit?",
             "MedFont.fnt", MessageBox::Buttons::OKCancel);
+        if (DialogResult::OK == dr)
+            ;
         //TODO check if all message boxes are using this font
     };
     // 2. Layout

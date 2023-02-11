@@ -45,6 +45,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+//PERHAPS delete me
+
+//
 // Graphics Context.
 // A collection of rendering functions. Simplifies all other rendering code.
 // This is where the glyph and sprite cache will be.
