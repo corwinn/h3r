@@ -189,7 +189,7 @@ void Button::OnMouseUp(const EventArgs &)
     // there shall be no mouse click event.
     if (! _mouse_over) return;
     Log::Info ("MouseUp" EOL);
-    if (OnClick) OnClick (this);
+    OnClick (nullptr);
 }
 
 // void Button::OnRender(GC &) {}

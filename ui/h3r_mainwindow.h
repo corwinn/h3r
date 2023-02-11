@@ -38,11 +38,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_window.h"
 #include "h3r_label.h"
+#include "h3r_event.h"
 
 H3R_NAMESPACE
 
 // MainWindow
-class MainWindow final : public Window
+class MainWindow final : public Window, public IHandleEvents
 {
 #define public public:
 #define private private:
@@ -53,10 +54,12 @@ class MainWindow final : public Window
     public MainWindow(OSWindow *, Point &&);
     public ~MainWindow() override;
 
-    protected void OnKeyUp(const EventArgs &) override;
-    protected void OnShow() override;
-    protected void OnRender() override;
-    protected void OnResize(int w, int h) override;
+    private void OnKeyUp(const EventArgs &) override;
+    private void OnShow() override;
+    private void OnRender() override;
+    private void OnResize(int w, int h) override;
+
+    private void Quit(EventArgs *);
 };
 
 #undef public

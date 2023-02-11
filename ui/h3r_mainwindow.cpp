@@ -94,14 +94,7 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
         y += btn->Size ().Y + spacing;
         btn_quit = btn;
     }
-    btn_quit->OnClick = [](Control *) {
-        // The mesage is located at GENRLTXT.TXT:81 (1-based)
-        auto dr = MessageBox::Show ("Are you sure you want to quit?",
-            "MedFont.fnt", MessageBox::Buttons::OKCancel);
-        if (DialogResult::OK == dr)
-            ;
-        //TODO check if all message boxes are using this font
-    };
+    btn_quit->OnClick.Subscribe (this, &MainWindow::Quit);
     // 2. Layout
     for (Control * btn : Controls ())
         btn->SetPos (
@@ -165,6 +158,16 @@ void MainWindow::OnResize(int w, int h)
 
     if (! w || ! h) return;
     SetSize (Point {w, h});
+}
+
+void MainWindow::Quit(EventArgs *)
+{
+    // The mesage is located at GENRLTXT.TXT:81 (1-based)
+    auto dr = MessageBox::Show ("Are you sure you want to quit?",
+    //TODO check if all message boxes are using this font
+        "MedFont.fnt", MessageBox::Buttons::OKCancel);
+    if (DialogResult::OK == dr)
+        Close ();
 }
 
 NAMESPACE_H3R

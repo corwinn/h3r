@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_control.h"
 #include "h3r_eventargs.h"
 #include "h3r_renderengine.h"
+#include "h3r_event.h"
 
 H3R_NAMESPACE
 
@@ -74,9 +75,8 @@ class Button: public Control
     private: bool _mouse_over {};
     private: bool _mouse_down {};
 
-    // Experiment: you attach here a capturing lambda via a template function
-    // pointer: EventDelegate<decltype(cl)>
-    public: void (*OnClick)(Control * sender) {};
+    // Usage: OnClick.Subscribe (this, &descendant_of_IHandleEvents::handler)
+    public: Event OnClick {};
 };
 
 NAMESPACE_H3R

@@ -217,9 +217,11 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     H3R_CREATE_OBJECT(btn_ok, Button) {"iOKAY.def", this};
     btn_ok->SetPos (327, 335);
     btn_ok->UploadFrames ();
+    btn_ok->OnClick.Subscribe (this, &MessageBox::HandleOKClick);
     H3R_CREATE_OBJECT(btn_cancel, Button) {"iCANCEL.def", this};
     btn_cancel->SetPos (410, 335);
     btn_cancel->UploadFrames ();
+    btn_cancel->OnClick.Subscribe (this, &MessageBox::HandleCancelClick);
 }
 
 /*static*/ DialogResult MessageBox::Show(
@@ -271,6 +273,18 @@ void MessageBox::OnKeyUp(const EventArgs & e)
         _dr = DialogResult::Cancel;
         _has_dr = true;
     }
+}
+
+void MessageBox::HandleOKClick(EventArgs *)
+{
+    printf ("OK clicked" EOL);
+    _dr = DialogResult::OK; _has_dr = true;
+}
+
+void MessageBox::HandleCancelClick(EventArgs *)
+{
+    printf ("Cancel clicked" EOL);
+    _dr = DialogResult::Cancel; _has_dr = true;
 }
 
 NAMESPACE_H3R

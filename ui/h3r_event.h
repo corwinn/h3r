@@ -38,11 +38,62 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_EVENT_H_
 
 #include "h3r.h"
+#include "h3r_list.h"
+#include "h3r_log.h"
 
 H3R_NAMESPACE
 #define public public:
 #define private private:
 
+struct EventArgs;
+
+// You implement this at the class that shall handle events.
+struct IHandleEvents {};
+
+namespace {
+
+using EventHandler = void (IHandleEvents::*)(EventArgs * args);
+// Binder. UI only, so thread-unsafe.
+template <typename Obj> class McastD final
+{
+    public using EventHandler = void (Obj::*)(EventArgs * args);
+    private struct Delegate final
+    {
+        Delegate(EventHandler eh, Obj * object)
+            : EH{eh}, Object{object} {}
+        ~Delegate() { Object = {}; EH = {}; }
+        EventHandler EH;
+        Obj * Object;
+        bool operator==(const Delegate & b) const
+        {
+            return EH == b.EH && Object == b.Object;
+        }
+    };
+    private List<Delegate> _subscribers {};
+    public McastD() {}
+    public ~McastD() { for (auto & d : _subscribers) d.~Delegate (); }
+    public template <typename T> McastD & Subscribe(Obj * obj, T eh)
+    {
+        Delegate d {static_cast<EventHandler>(eh), obj};
+        if (! _subscribers.Contains (d))
+            _subscribers.Add (d);
+        else
+            Log::Info ("Warning: subscribing twice isn't supported" EOL);
+        return *this;
+    }
+    public void operator()(EventArgs * args)
+    {
+        for (auto & d : _subscribers)
+            if (d.Object && d.EH) (d.Object->*d.EH) (args);
+    }
+};// Multi-cast Delegate
+}
+
+// Use this at the event providers: Event OnFoo; notify: OnFoo ();
+using Event = McastD<IHandleEvents>;
+
+//LATER merge this, above.
+//
 // class ShowProgress : public Event
 // {
 //     void Do(class Control * c) override
@@ -58,7 +109,7 @@ H3R_NAMESPACE
 // the one who sent the event. For non-UI events that shall be null obviously.
 // I hope this won't become a showstopper at some point, since I'm combining
 // one too many responsibilities in this single class.
-class Event
+/*class Event
 {
     // Do you know how hard is to turn this into a multi-cast delegate?
     // Not at all.
@@ -77,7 +128,7 @@ class Event
     public inline virtual bool Handled() { return true; }
     // Why is this "virtual" eludes me still. Perhaps on the next re-read.
     public inline virtual void SetNext(Event * next_eh) { _next = next_eh; }
-};
+};*/
 
 // The book responsible for code like the above one:
 // "Design Patterns: Elements of Reusable Object-Oriented Software"

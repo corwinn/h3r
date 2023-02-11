@@ -84,10 +84,10 @@ Control * Control::SetPos(int x, int y)
 
 bool Control::HitTest(Point & p) { return _bb.Contains (p); }
 
-void Control::OnEvent(Event & e)
+/*void Control::OnEvent(Event & e)
 {
     EventArgs foo;
     e.Do (*this, foo);
-}
+}*/
 
 NAMESPACE_H3R

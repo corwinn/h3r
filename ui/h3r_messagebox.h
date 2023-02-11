@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_dialogwindow.h"
 #include "h3r_string.h"
 #include "h3r_list.h"
+#include "h3r_event.h"
 
 H3R_NAMESPACE
 
@@ -79,7 +80,7 @@ H3R_NAMESPACE
 //TODO generate the per color "dialgbox.def" on the fly; check if the unknown
 //     bytes doesn't hint something about a color mixer
 //
-class MessageBox final : public DialogWindow
+class MessageBox final : public DialogWindow, public IHandleEvents
 {
 #define public public:
 #define private private:
@@ -101,6 +102,9 @@ class MessageBox final : public DialogWindow
 
     public DialogResult ShowDialog();
     protected void OnKeyUp(const EventArgs &) override;
+
+    private void HandleOKClick(EventArgs *);
+    private void HandleCancelClick(EventArgs *);
 };
 
 #undef public

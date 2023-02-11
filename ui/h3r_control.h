@@ -123,7 +123,8 @@ class Control
 
     //TODO hint system; MyHint: Event ... show_hint (myhint);
     //     Control.RMB += (Event & ShowHint) => Root().OnEvent (ShowHint);
-    public: virtual void OnEvent(Event &);
+    //     After merging CoR back into the mcast delegate.
+    // public: virtual void OnEvent(Event &);
 };
 
 NAMESPACE_H3R
