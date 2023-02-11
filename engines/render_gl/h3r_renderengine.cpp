@@ -140,7 +140,7 @@ void RenderEngine::Resize(int w, int h)
 
 GLfloat RenderEngine::Depht2z(h3rDepthOrder b)
 {
-    return b * (-(_zfar - _znear)/256) - _zt;
+    return b * (-(_zfar - _znear)/(H3R_LAST_DEPTH+1)) - _zt;
 }
 
 int RenderEngine::GenKey()
