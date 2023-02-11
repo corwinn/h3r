@@ -99,6 +99,8 @@ class RenderEngine final
 
     private GLuint _vbo;
     private GLsizeiptr _vbo_max_elements;
+    private GLfloat _znear = .0f, _zfar = 1.f, _zt = -.2f; // [-0.79;0.2]
+    private GLfloat Depht2z(h3rDepthOrder); // UI Depth to here:z
 
     // Maps your frames (different uv, same 4 vertexes) to the _index above,
     // via a texture, because different frames could land in different atlases.

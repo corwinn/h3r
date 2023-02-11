@@ -132,15 +132,15 @@ void RenderEngine::Resize(int w, int h)
     glViewport (0, 0, w, h);
     glMatrixMode (GL_PROJECTION), glLoadIdentity ();
     // Its a 2D game.
-    glOrtho (.0f, w, h, .0f, .0f, 1.f); // or 1,2 ?!
+    glOrtho (.0f, w, h, .0f, _znear, _zfar); // or 1,2 ?!
     // www.opengl.org/archives/resources/faq/technical/transformations.htm
-    glTranslatef (.375f, .375f, -.2f);
+    glTranslatef (.375f, .375f, _zt);
     glMatrixMode (GL_MODELVIEW), glLoadIdentity ();
 }
-static inline GLfloat byte2z(h3rDepthOrder b)
+
+GLfloat RenderEngine::Depht2z(h3rDepthOrder b)
 {
-    GLfloat near = .0f, far = 1.f, t = -.2f; // [-0.79;0.2]
-    return b * (-(far - near)/256) - t;
+    return b * (-(_zfar - _znear)/256) - _zt;
 }
 
 int RenderEngine::GenKey()
@@ -177,10 +177,7 @@ int RenderEngine::UploadFrame(
     auto uv = TexCache::One ()->Cache (w, h, data, bpp, texkey);
     H3RGL_Debug
     GLfloat l = x, t = y, b = t + h, r = l + w;
-    GLfloat z = byte2z (order); //TODO it has an implicit contract with
-                                // glOrtho() above;
-                     //TODO think aout a way to abstract away the Window & Co
-                     //     out of it
+    GLfloat z = Depht2z (order);
     printf ("Frame: Order: %3d, z: %.5f" EOL, order, z);
     GLfloat v[H3R_SPRITE_FLOATS] {
         l,t,z,uv.l,uv.t, l,b,z,uv.l,uv.b, r,t,z,uv.r,uv.t, r,b,z,uv.r,uv.b};
@@ -251,7 +248,7 @@ void RenderEngine::UpdateRenderOrder(int key, h3rDepthOrder order)
     H3RGL_Debug
     // z is each 3rd: {x,y,z,u,v}
     for (int i = 2; i < buf_data.Length (); i += H3R_VERTEX_COMPONENTS)
-        buf_data[i] = byte2z (order);
+        buf_data[i] = Depht2z (order);
     glBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
     H3RGL_Debug
 }
@@ -352,7 +349,7 @@ void RenderEngine::UploadText(TextKey & key,
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, tw, th,
         0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, tex_buf.operator byte * ());
     // same ordering and components as the big VBO
-    GLfloat z = byte2z (order);
+    GLfloat z = Depht2z (order);
     printf ("Text: Order: %3d, z: %.5f" EOL, order, z);
     GLfloat vertices[20] {l,t,z,0,0, l,b,z,0,v, r,t,z,u,0, r,b,z,u,v};
     glGenBuffers (1, &(e.Vbo));
