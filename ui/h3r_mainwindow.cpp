@@ -73,7 +73,7 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
     auto key = RenderEngine::UI ().GenKey ();
     RenderEngine::UI ().UploadFrame (key, 0, 0, main_window_background.Width (),
         main_window_background.Height (), byte_arr_ptr->operator byte * (), 3,
-        "GamSelBk.pcx");
+        "GamSelBk.pcx", 100);
 
     // -- Controls ---------------------------------------------------------
 
@@ -157,15 +157,10 @@ void MainWindow::OnRender()
 
 void MainWindow::OnResize(int w, int h)
 {
+    Window::OnResize (w, h); // Uncoditional
+
     if (! w || ! h) return;
     SetSize (Point {w, h});
-    glViewport (0, 0, w, h);
-    glMatrixMode (GL_PROJECTION), glLoadIdentity ();
-    // Its a 2D game.
-    glOrtho (.0f, w, h, .0f, .0f, 1.f);
-    // www.opengl.org/archives/resources/faq/technical/transformations.htm
-    glTranslatef (.375f, .375f, -.2f);
-    glMatrixMode (GL_MODELVIEW), glLoadIdentity ();
 }
 
 NAMESPACE_H3R

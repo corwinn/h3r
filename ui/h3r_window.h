@@ -34,6 +34,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Simplicity ends, with the definition of the Window class.
 
+// Do not use specifics here and onwards, like GL.*, D3D.*, etc.
+// Window shall not care about anything system-specific; it has enough other
+// responsibilities as it is.
+
 #ifndef _H3R_WINDOW_H_
 #define _H3R_WINDOW_H_
 
@@ -117,6 +121,7 @@ class Window : public IWindow
     IW protected virtual void OnHide() override;
     IW protected virtual void OnClose(IWindow *, bool &) override;
     IW protected virtual void OnRender() override;
+    // Forget to call this one, and you shall see nothing or a mess.
     IW protected virtual void OnResize(int, int) override;
 };
 

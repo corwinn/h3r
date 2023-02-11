@@ -79,7 +79,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     //TODO there is a lot to think about:
 
     // DropShadow
-    const int DS_SIZE {8};
+    /*const int DS_SIZE {8};
     Array<uint> b1 {size.X*DS_SIZE};
     uint * b1_ptr = b1;
     for (int y = 0; y < DS_SIZE; y++)
@@ -216,7 +216,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     btn_ok->UploadFrames (&_btn_re);
     H3R_CREATE_OBJECT(btn_cancel, Button) {"iCANCEL.def"};
     Add (btn_cancel->SetPos (410, 335));
-    btn_cancel->UploadFrames (&_btn_re);
+    btn_cancel->UploadFrames (&_btn_re);*/
 }
 
 /*static*/ DialogResult MessageBox::Show(

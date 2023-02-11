@@ -37,13 +37,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r.h"
 #include "h3r_window.h"
-#include "GL/gl.h"
 #include "h3r_label.h"
 
 H3R_NAMESPACE
 
-// MainWindowGL
-class MainWindow : public Window
+// MainWindow
+class MainWindow final : public Window
 {
 #define public public:
 #define private private:
@@ -54,10 +53,10 @@ class MainWindow : public Window
     public MainWindow(OSWindow *, Point &&);
     public ~MainWindow() override;
 
-    protected virtual void OnKeyUp(const EventArgs &) override;
-    protected virtual void OnShow() override;
-    protected virtual void OnRender() override;
-    protected virtual void OnResize(int w, int h) override;
+    protected void OnKeyUp(const EventArgs &) override;
+    protected void OnShow() override;
+    protected void OnRender() override;
+    protected void OnResize(int w, int h) override;
 };
 
 #undef public

@@ -91,19 +91,19 @@ void Button::UploadFrames(RenderEngine * re)
         _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
     if (frame)
         _on = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
-            sprite.GetUniqueKey (_sprite_name));
+            sprite.GetUniqueKey (_sprite_name), 101);
 
     frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "h.pcx"));
     if (frame)
         _oh = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
-            sprite.GetUniqueKey (_sprite_name));
+            sprite.GetUniqueKey (_sprite_name), 101);
 
     frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "s.pcx"));
     if (frame)
         _os = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
-            sprite.GetUniqueKey (_sprite_name));
+            sprite.GetUniqueKey (_sprite_name), 101);
     // printf ("ofs: %d %d %d" EOL, _on, _oh, _os);
 }
 

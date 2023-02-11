@@ -78,13 +78,6 @@ class Button: public Control
     public: void (*OnClick)(Control * sender) {};
 };
 
-template <typename T>
-static void EventDelegate(Control * sender, T & f,
-    void (*On)(Control *, T &))
-{
-    On (sender, f);
-}
-
 NAMESPACE_H3R
 
 #endif

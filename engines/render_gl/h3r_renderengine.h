@@ -173,6 +173,7 @@ class RenderEngine final
     public RenderEngine(GLsizeiptr max_sprites);
 
     public void Render();
+    public void Resize(int, int); // The 2D output has been resized.
 
     // Returns a key/handle to identify your sprite with the renderer.
     // Just-uploaded things, are visible => .Visible is true by default.
@@ -185,9 +186,13 @@ class RenderEngine final
     // The "texkey" is forwarded to the texcache for the purposes of uniquely
     // identifying a bitmap being cached there.
     //TODO this many parameters means composition is required
+    //
+    // "render_order": if you want "a" drawn over "b", "a.order" shall be >
+    // "b.order". There shall be no more than 256 distinct things one over
+    // another, so a byte should be enough; change it to short otherwise.
     public int UploadFrame(
         int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp,
-        const String & texkey);
+        const String & texkey, byte render_order);
 
     // Use when a window is shown/hidden. Hiding the just the window won't do
     // what you think; the window shall notify all its controls to hide.

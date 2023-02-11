@@ -161,7 +161,7 @@ void Window::ProcessMessages()
     if (frame_time > 0) {
         auto ftus = frame_time / 1000.0; // [usec]
         auto const TARGET_FPS {32};//TODO to Game - link with Options
-        GLdouble adj = 1000000.0 / TARGET_FPS - ftus; // [usec]
+        double adj = 1000000.0 / TARGET_FPS - ftus; // [usec]
         //TODO high-resolution OS::Thread::Sleep
         if (adj > 1000.0 && adj < 1000000.0)
             OS::Thread::Sleep (static_cast<int>(adj/1000));
@@ -200,16 +200,7 @@ void Window::OnClose(IWindow * sender, bool &)
         for (auto w : global_win_list) w->_closed = true;
     }
 }
-void Window::OnRender()
-{
-    glClear (GL_COLOR_BUFFER_BIT);
-    glLoadIdentity ();
-    // Shouldn't be needed - the Windows and Controls are now a document.
-    // if (_visible) //LATER default option: continues-from-where-it-stopped
-    //    for (Control * c : _controls) c->OnRender (_gc);
-    RenderEngine::UI ().Render ();
-}
-// No anchoring, or auto-sizing, so no point forwarding it.
-void Window::OnResize(int, int) {}
+void Window::OnRender() { RenderEngine::UI ().Render (); }
+void Window::OnResize(int w, int h) { RenderEngine::UI ().Resize (w, h); }
 
 NAMESPACE_H3R

@@ -47,7 +47,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 static const GLsizeiptr H3R_MAX_SPRITE_NUM {1<<17};
-static const GLsizeiptr H3R_VERTEX_COMPONENTS {4}; // x,y,u,v
+static const GLsizeiptr H3R_VERTEX_COMPONENTS {5}; // x,y,z,u,v
+static const GLsizeiptr H3R_VERTEX_COORDS {3}; // x,y,z
+static const GLsizeiptr H3R_VERTEX_UVCOORDS {2}; // x,y,z
 static const GLsizeiptr H3R_SPRITE_VERTICES {4}; // {x,y,u,v}[4]
 static const GLsizeiptr H3R_SPRITE_FLOATS
     {H3R_SPRITE_VERTICES * H3R_VERTEX_COMPONENTS};
@@ -73,12 +75,6 @@ RenderEngine::RenderEngine(GLsizeiptr max_sprite_frames)
     glBufferData (GL_ARRAY_BUFFER,
         _vbo_max_elements * H3R_VERTEX_COMPONENTS * H3R_SPRITE_COMPONENT_SIZE,
         nullptr, GL_STATIC_DRAW);
-
-    // As it happens this ain't a server state: you bind a VBO, you remind the
-    // server whats what.
-    /*glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
-    glTexCoordPointer (
-        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));*/
 }
 
 RenderEngine::~RenderEngine()
@@ -88,16 +84,26 @@ RenderEngine::~RenderEngine()
         _texts.Prev ()->Delete ();
 }
 
+static inline void VBOClientState()
+{
+    glVertexPointer (H3R_VERTEX_COORDS, GL_FLOAT,
+        H3R_VERTEX_COMPONENTS*sizeof(GLfloat), (void *)(0));
+    glTexCoordPointer (
+        H3R_VERTEX_UVCOORDS, GL_FLOAT,
+        H3R_VERTEX_COMPONENTS*sizeof(GLfloat),
+        (void *)(H3R_VERTEX_COORDS*sizeof(GLfloat)));
+}
+
 void RenderEngine::Render()
 {
     // glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     // glDrawArrays (GL_TRIANGLE_STRIP, 4, 4);
+    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity ();
 
     // sprite stage
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
-    glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
-    glTexCoordPointer (
-        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
+    VBOClientState ();
     for (int i = 0; i < _tex2_list.Count (); i++ ) {
         glBindTexture (GL_TEXTURE_2D, _tex2_list[i].Texture);
         glMultiDrawArrays (GL_TRIANGLE_STRIP,
@@ -109,21 +115,40 @@ void RenderEngine::Render()
     for (auto * n = _texts.Prev (); n != nullptr; n = n->Prev ()) {
         glBindTexture (GL_TEXTURE_2D, n->Data.Texture);
         glBindBuffer (GL_ARRAY_BUFFER, n->Data.Vbo);
-        glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
-        glTexCoordPointer (
-            2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));
+        VBOClientState ();
         glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
     }
 }// RenderEngine::Render()
 
+void RenderEngine::Resize(int w, int h)
+{
+    if (w <= 0 || h <= 0) return;
+    glViewport (0, 0, w, h);
+    glMatrixMode (GL_PROJECTION), glLoadIdentity ();
+    // Its a 2D game.
+    glOrtho (.0f, w, h, .0f, .0f, 1.f); // or 1,2 ?!
+    // www.opengl.org/archives/resources/faq/technical/transformations.htm
+    glTranslatef (.375f, .375f, -.2f);
+    glMatrixMode (GL_MODELVIEW), glLoadIdentity ();
+}
+static inline GLfloat byte2z(byte b)
+{
+    GLfloat near = .0f, far = 1.f, t = -.2f; // [-0.79;0.2]
+    return b * (-(far - near)/256) - t;
+}
+
 int RenderEngine::GenKey()
 {
     RenderEngine::Entry e {};
-    e.Base = 4; // [elements] the 1st quad is special ( {x,y,u,v}[4] )
+
+    // [elements] the 1st quad is special ( {x,y,z,u,v}[4] )
+    e.Base = H3R_SPRITE_VERTICES;
+
     if (_entries.Count () > 0)
         e.Base = _entries[_entries.Count ()-1].NextBufPos ();
-    H3R_ENSURE(e.Base <= _vbo_max_elements, "VBO overflow: either increase its"
-        " size or implement a multi-VBO solution")
+    H3R_ENSURE(e.Base+H3R_SPRITE_VERTICES <= _vbo_max_elements,
+        "VBO overflow: either increase its size or implement a multi-VBO "
+        "solution")
     _entries.Add (e);
     return _entries.Count () - 1;
 }
@@ -140,19 +165,25 @@ RenderEngine::TexList & RenderEngine::ListByTexId(GLuint tex_id)
 
 int RenderEngine::UploadFrame(
     int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp,
-    const String & texkey)
+    const String & texkey, byte order)
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
     auto uv = TexCache::One ()->Cache (w, h, data, bpp, texkey);
     GLenum err2 = glGetError ();//TODO H3RGL_Debug
     if (GL_NO_ERROR != err2) printf ("TexCache::One () error: %d" EOL, err2);
     GLfloat l = x, t = y, b = t + h, r = l + w;
+    GLfloat z = byte2z (order); //TODO it has an implicit contract with
+                                // glOrtho() above;
+                     //TODO think aout a way to abstract away the Window & Co
+                     //     out of it
+    printf ("Order: %3d, z: %.5f" EOL, order, z);
     GLfloat v[H3R_SPRITE_FLOATS] {
-        l,t,uv.l,uv.t, l,b,uv.l,uv.b, r,t,uv.r,uv.t, r,b,uv.r,uv.b};
+        l,t,z,uv.l,uv.t, l,b,z,uv.l,uv.b, r,t,z,uv.r,uv.t, r,b,z,uv.r,uv.b};
 
     auto & e = _entries[key];
     size_t ofs_bytes =
-        (e.Base + e.Frames * 4) * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);
+        (e.Base + e.Frames * H3R_SPRITE_VERTICES)
+        * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);
     size_t buf_bytes = H3R_SPRITE_FLOATS * sizeof(H3Rfloat);
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     /*GLint size = 0;
@@ -172,7 +203,7 @@ int RenderEngine::UploadFrame(
         lists._count.Add (H3R_SPRITE_VERTICES);
         e.Key = lists._index.Count () - 1;
     }
-    return (e.Frames - 1) * H3R_VERTEX_COMPONENTS;
+    return (e.Frames - 1) * H3R_SPRITE_VERTICES;
 }
 
 void RenderEngine::ChangeVisibility(int key, bool value)
@@ -226,9 +257,12 @@ void RenderEngine::ChangeOffset(int key, GLint value)
     glEnable (GL_CULL_FACE), glCullFace (GL_BACK);
 
     glClearColor (.0f, .0f, .0f, 1.f);
-    glDisable (GL_DEPTH_TEST);
+
+    glEnable (GL_DEPTH_TEST);
+    glDepthFunc (GL_GEQUAL);
+    glClearDepth (0.0f);
+
     glDisable (GL_DITHER);
-    // glDisable (GL_BLEND);
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable (GL_LIGHTING);
@@ -303,15 +337,13 @@ void RenderEngine::UploadText(TextKey & key,
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, tw, th,
         0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, tex_buf.operator byte * ());
-    // same ordering and components as the big VBO (no point but consistency)
-    GLfloat vertices[16] {l,t,0,0, l,b,0,v, r,t,u,0, r,b,u,v};
+    // same ordering and components as the big VBO
+    GLfloat z = .0f; // one coordinate to rule them all - this has to play
+                     //TODO together with the above one
+    GLfloat vertices[20] {l,t,z,0,0, l,b,z,0,v, r,t,z,u,0, r,b,z,u,v};
     glGenBuffers (1, &(e.Vbo));
     glBindBuffer (GL_ARRAY_BUFFER, e.Vbo);
-    // Server state:
-    /*glVertexPointer (2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(0));
-    glTexCoordPointer (
-        2, GL_FLOAT, 4*sizeof(GLfloat), (void *)(2*sizeof(GLfloat)));*/
-    glBufferData (GL_ARRAY_BUFFER, 64, vertices, GL_STATIC_DRAW);
+    glBufferData (GL_ARRAY_BUFFER, 80, vertices, GL_STATIC_DRAW);
 }
 
 void RenderEngine::UpdateText(TextKey & key,
