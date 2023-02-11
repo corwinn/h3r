@@ -42,6 +42,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_math.h"
 #include "h3r_font.h"
 
+#define H3RGL_Debug \
+{ \
+    for (GLenum a; GL_NO_ERROR != (a = glGetError ());) \
+        printf ("%s:%d glGetError() error: %d" EOL, __FILE__, __LINE__, a); \
+}
+
 #include <new>
 
 H3R_NAMESPACE
@@ -131,7 +137,7 @@ void RenderEngine::Resize(int w, int h)
     glTranslatef (.375f, .375f, -.2f);
     glMatrixMode (GL_MODELVIEW), glLoadIdentity ();
 }
-static inline GLfloat byte2z(byte b)
+static inline GLfloat byte2z(h3rDepthOrder b)
 {
     GLfloat near = .0f, far = 1.f, t = -.2f; // [-0.79;0.2]
     return b * (-(far - near)/256) - t;
@@ -165,18 +171,17 @@ RenderEngine::TexList & RenderEngine::ListByTexId(GLuint tex_id)
 
 int RenderEngine::UploadFrame(
     int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp,
-    const String & texkey, byte order)
+    const String & texkey, h3rDepthOrder order)
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
     auto uv = TexCache::One ()->Cache (w, h, data, bpp, texkey);
-    GLenum err2 = glGetError ();//TODO H3RGL_Debug
-    if (GL_NO_ERROR != err2) printf ("TexCache::One () error: %d" EOL, err2);
+    H3RGL_Debug
     GLfloat l = x, t = y, b = t + h, r = l + w;
     GLfloat z = byte2z (order); //TODO it has an implicit contract with
                                 // glOrtho() above;
                      //TODO think aout a way to abstract away the Window & Co
                      //     out of it
-    printf ("Order: %3d, z: %.5f" EOL, order, z);
+    printf ("Frame: Order: %3d, z: %.5f" EOL, order, z);
     GLfloat v[H3R_SPRITE_FLOATS] {
         l,t,z,uv.l,uv.t, l,b,z,uv.l,uv.b, r,t,z,uv.r,uv.t, r,b,z,uv.r,uv.b};
 
@@ -193,8 +198,7 @@ int RenderEngine::UploadFrame(
     for (int i = 0; i < H3R_SPRITE_FLOATS; i++) printf ("%.2f ", v[i]);
     printf (EOL);*/
     glBufferSubData (GL_ARRAY_BUFFER, ofs_bytes, buf_bytes, v);
-    GLenum err = glGetError ();
-    if (GL_NO_ERROR != err) printf ("glBufferSubData error: %d" EOL, err);
+    H3RGL_Debug
     e.Frames++;
     e.SetTexture (uv.Texture);
     auto & lists = ListByTexId (uv.Texture);
@@ -231,17 +235,26 @@ void RenderEngine::ChangeOffset(int key, GLint value)
     lists._index[_entries[key].Key] = _entries[key].Base + _entries[key].Offset;
 }
 
-/* do not delete me, yet
- * void RenderEngine::UpdateGeometry(int key, const H3Rfloat * buf)
+//TODO Not tested!
+void RenderEngine::UpdateRenderOrder(int key, h3rDepthOrder order)
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
     RenderEngine::Entry & e = _entries[key];
-    glBufferSubData (GL_ARRAY_BUFFER,
-        e.Base * H3R_SPRITE_COMPONENTS * sizeof(H3Rfloat),
-        e.Num * sizeof(H3Rfloat), buf);
-    GLenum err = glGetError ();
-    if (GL_NO_ERROR != err) Log::Err ("glBufferSubData error" EOL);
-}*/
+    // all sprite frames
+    size_t ofs_in_bytes =
+        (e.Base + e.Frames * H3R_SPRITE_VERTICES)
+        * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);
+    size_t buf_in_bytes = H3R_SPRITE_FLOATS * sizeof(H3Rfloat);
+    Array<H3Rfloat> buf_data {static_cast<int>(H3R_SPRITE_FLOATS) * e.Frames};
+    H3Rfloat * buf = buf_data;
+    glGetBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
+    H3RGL_Debug
+    // z is each 3rd: {x,y,z,u,v}
+    for (int i = 2; i < buf_data.Length (); i += H3R_VERTEX_COMPONENTS)
+        buf_data[i] = byte2z (order);
+    glBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
+    H3RGL_Debug
+}
 
 /*static*/ RenderEngine & RenderEngine::UI()
 {
@@ -302,7 +315,8 @@ RenderEngine::TextKey RenderEngine::GenTextKey()
 // haven't even been started yet; no need to fine tune anything just yet. This
 // is proof of concept code - wasting too much time with it is pointless.
 void RenderEngine::UploadText(TextKey & key,
-    const String & font_name, const String & txt, int left, int top)
+    const String & font_name, const String & txt, int left, int top,
+    h3rDepthOrder order)
 {
     int w, h;
     byte * tb = TextRenderingEngine::One ().RenderText (font_name, txt, w, h);
@@ -338,18 +352,20 @@ void RenderEngine::UploadText(TextKey & key,
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, tw, th,
         0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, tex_buf.operator byte * ());
     // same ordering and components as the big VBO
-    GLfloat z = .0f; // one coordinate to rule them all - this has to play
-                     //TODO together with the above one
+    GLfloat z = byte2z (order);
+    printf ("Text: Order: %3d, z: %.5f" EOL, order, z);
     GLfloat vertices[20] {l,t,z,0,0, l,b,z,0,v, r,t,z,u,0, r,b,z,u,v};
     glGenBuffers (1, &(e.Vbo));
     glBindBuffer (GL_ARRAY_BUFFER, e.Vbo);
     glBufferData (GL_ARRAY_BUFFER, 80, vertices, GL_STATIC_DRAW);
 }
 
+//TODO refactor me
 void RenderEngine::UpdateText(TextKey & key,
-    const String & font_name, const String & txt, int left, int top)
+    const String & font_name, const String & txt, int left, int top,
+    h3rDepthOrder order)
 {
-    UploadText (key, font_name, txt, left, top);
+    UploadText (key, font_name, txt, left, top, order);
 }
 
 void RenderEngine::ChangeTextVisibility(TextKey & key, bool state)

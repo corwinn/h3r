@@ -77,6 +77,18 @@ Button::Button(const String & res_name, Control * base)
          _sprite_name.AsZStr (), sprite.Width (), sprite.Height ());*/
 }
 
+Button::Button(const String & res_name, Window * base)
+    : Control {base}
+{
+    // Its needed here just to initialize *this size
+    //TODO
+    Def sprite {Game::GetResource (res_name)};
+    Resize (sprite.Width (), sprite.Height ());
+    _sprite_name = res_name;
+    /*printf ("Sprite: %s: %d x %d" EOL,
+         _sprite_name.AsZStr (), sprite.Width (), sprite.Height ());*/
+}
+
 void Button::UploadFrames(RenderEngine * re)
 {
     auto & RE = (_re = re) != nullptr ? *re : RenderEngine::UI ();
@@ -85,25 +97,26 @@ void Button::UploadFrames(RenderEngine * re)
     auto & pos = Pos ();
     Def sprite {Game::GetResource (_sprite_name)};
 
+    printf ("[%2d] frame: %s %d %d %d %d, ",
+        _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
+
     byte * frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "n.pcx"));
-     printf ("[%2d] frame: %s %d %d %d %d, ",
-        _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
     if (frame)
         _on = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
-            sprite.GetUniqueKey (_sprite_name), 101);
+            sprite.GetUniqueKey (_sprite_name), Depth ());
 
     frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "h.pcx"));
     if (frame)
         _oh = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
-            sprite.GetUniqueKey (_sprite_name), 101);
+            sprite.GetUniqueKey (_sprite_name), Depth ());
 
     frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "s.pcx"));
     if (frame)
         _os = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
-            sprite.GetUniqueKey (_sprite_name), 101);
+            sprite.GetUniqueKey (_sprite_name), Depth ());
     // printf ("ofs: %d %d %d" EOL, _on, _oh, _os);
 }
 

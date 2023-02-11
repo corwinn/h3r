@@ -55,7 +55,8 @@ class Button: public Control
     private: int _os {}; // down
     private: String _sprite_name {};
 
-    public: Button(const String &, Control * = nullptr);
+    public: Button(const String &, Control *);
+    public: Button(const String &, Window *);
     public: virtual ~Button() override
     {
         if (! _re)

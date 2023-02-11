@@ -77,10 +77,28 @@ class Window : public IWindow
     private bool _closed {false};
     public bool Closed() const { return _closed; }
 
+    // It looks like a list, but it isn't. Its a tree. Each Control has the
+    // same list.
     private List<Control *> _controls {};
-    public void Add(Control * c);
+    //LATER IContainer<T>
+    public void AddControl(Control *);
     protected inline List<Control *> & Controls() { return _controls; }
     // private static GC _gc; // One GC should be enough.
+
+    // Automatic depth. You define whats rendered over what, by placing:
+    //  - Window over a Window
+    //  - Control over a Window
+    //  - Control over a Control
+    private h3rDepthOrder _wdepth; // the window depth
+    private h3rDepthOrder _topmost; // the topmost control depth
+    // Used by Window::Window(Window * base_window, ...
+    protected h3rDepthOrder NextDepth(); // the next available depth
+    // Interface for Control::Control(Control *); Avoid walking a tree just
+    // to find how deep it is.
+    public inline h3rDepthOrder Depth() const { return _wdepth; }
+    public void UpdateTopMost(Control *);
+    // Use this function to get next available depth.
+    public static h3rDepthOrder NextDepth(h3rDepthOrder); // Sentinel
 
     IW public void ProcessMessages() override final;
     IW public inline virtual bool Idle() override { return _win->Idle (); }
@@ -90,12 +108,15 @@ class Window : public IWindow
     private Point _size;
     public inline const Point & GetSize() const { return _size; }
     protected inline void SetSize(Point && p) { _size = p; }
+
     // Constructor for non-bridged "Window"s. They share the same OSWindow.
     public Window(Window * base_window, Point && size);
-    public static Window * ActiveWindow; // The one that ProcessMessages
-    public static Window * MainWindow;
+    // The one that ProcessMessages. Switched by ui_main().
+    public static Window * ActiveWindow;
+    public static Window * MainWindow; // Used by MessageBox::Show()
 
-    // Use IWindow::Create()
+    // Use IWindow::Create().
+    // This shall be the MainWindow only! It has _wdepth of 0.
     public Window(OSWindow * actual_window, Point && size);
 
     //  Window  OSWindow  OSWindow

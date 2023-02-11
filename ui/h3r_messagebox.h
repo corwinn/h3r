@@ -85,12 +85,6 @@ class MessageBox final : public DialogWindow
 #define private private:
 #define protected protected:
 
-    // The two buttons are ending in a tex. - rendered prior the background one.
-    // This isn't a solution: just a showcase of wrong design: needed for the
-    // correct one. There shall be z-ordering. But lets see how wrong things
-    // are: the message box showed a lot of weak spots in the design.
-    private RenderEngine _btn_re;
-
     private List<int> _re_keys {};
     private bool _has_dr {};
     private DialogResult _dr {};
@@ -106,7 +100,6 @@ class MessageBox final : public DialogWindow
         const String & msg, const String & fnt, MessageBox::Buttons btn);
 
     public DialogResult ShowDialog();
-    protected void OnRender() override;
     protected void OnKeyUp(const EventArgs &) override;
 };
 

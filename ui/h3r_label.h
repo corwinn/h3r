@@ -51,7 +51,9 @@ class Label: public Control
     private: String _text;
 
     public: Label(
-        const String &, const String &, const Point &, Control * = nullptr);
+        const String &, const String &, const Point &, Control *);
+    public: Label(
+        const String &, const String &, const Point &, Window *);
     public: ~Label() override { RenderEngine::UI ().DeleteText (_tkey); }
 
     public: inline const String & Text() const { return _text; }
@@ -60,7 +62,7 @@ class Label: public Control
     {
         _text = value;
         RenderEngine::UI ().UpdateText (
-            _tkey, _font, _text, Pos ().X, Pos ().Y);
+            _tkey, _font, _text, Pos ().X, Pos ().Y, Depth ());
     }
 };
 

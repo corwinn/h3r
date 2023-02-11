@@ -97,21 +97,41 @@ Window * Window::ActiveWindow {};
 Window * Window::MainWindow {};
 
 // Code repeats, but I don't intend to re-create ICollection<T>.
-void Window::Add(Control * c)
+void Window::AddControl(Control * c)
 {
     H3R_ARG_EXC_IF(_controls.Contains (c), "duplicate pointer: fix your code")
     H3R_ARG_EXC_IF(nullptr == c, "c can't be null")
     _controls.Add (c);
+    c->_depth = NextDepth (_wdepth); // redundant, but still
+    UpdateTopMost (c);
+}
+
+h3rDepthOrder Window::NextDepth() { return Window::NextDepth (_topmost); }
+
+void Window::UpdateTopMost(Control * c)
+{
+    if (c->Depth () > _topmost) _topmost = c->Depth ();
+}
+
+/*static*/ h3rDepthOrder Window::NextDepth(h3rDepthOrder depth)
+{
+    H3R_ENSURE(depth < H3R_LAST_DEPTH, "Depth overflow")
+    return depth + 1;
 }
 
 Window::Window(Window * base_window, Point && size)
-    : Window {base_window->_win, static_cast<Point &&>(size)}
+    : _win{base_window->_win}, _wdepth{base_window->NextDepth ()}, _size{size}
 {
+    H3R_ENSURE(nullptr != Window::MainWindow, "No MainWindow ?!")
+    global_win_list.Add (this);
 }
 
 Window::Window(OSWindow * actual_window, Point && size)
-    : _win{actual_window}, _size{size}
+    : _win{actual_window}, _wdepth{0}, _size{size}
 {
+    static bool once {};
+    H3R_ENSURE(! once, "One MainWindow please")
+    once = true;
     RenderEngine::Init ();
     global_win_list.Add (this);
 }

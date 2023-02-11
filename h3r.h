@@ -68,6 +68,9 @@ H3R_NAMESPACE
 
 using byte = unsigned char;
 
+#define H3R_LAST_DEPTH 255
+using h3rDepthOrder = byte;
+
 // Used by the memory allocator.
 // This remake is expected to use no more than:
 static int const H3R_MEMORY_LIMIT {1<<29}; // [bytes] of RAM.

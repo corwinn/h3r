@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **** END LICENCE BLOCK ****/
 
 #include "h3r_control.h"
+#include "h3r_window.h"
 
 H3R_NAMESPACE
 
@@ -45,10 +46,28 @@ void Control::Add(Control * c)
     _n.Add (c);
 }
 
-Control::Control(Control * base)
+/*static*/ Window * Control::GetWindow(Control * c)
 {
-    if (base) base->Add (this);
+    H3R_ARG_EXC_IF(nullptr == c, "base shan't be null")
+    return c->_window;
+}
+
+Control::Control(Control * base)
+    : _window{GetWindow (base)}
+{
+    H3R_ARG_EXC_IF(this == base, "this can't be base")
+    H3R_ARG_EXC_IF(nullptr == base, "base shan't be null")
+    base->Add (this);
+    _depth = Window::NextDepth (base->_depth);
+    _window->UpdateTopMost (this);
     Resize (H3R_CONTROL_DEFAULT_SIZE, H3R_CONTROL_DEFAULT_SIZE);
+}
+
+Control::Control(Window * base)
+    : _window{base}, _depth{Window::NextDepth (base->Depth ())}
+{
+    H3R_ARG_EXC_IF(nullptr == base, "base shan't be null")
+    base->AddControl (this);
 }
 
 void Control::Resize(int w, int h)

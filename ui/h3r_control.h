@@ -64,14 +64,28 @@ H3R_NAMESPACE
 // necessity, is -Pos();
 class Control
 {
+    protected: using Window = class Window;
+    friend Window;
+
     private: Box _bb; // bounding box
     private: bool _enabled {true}; // whether the user can interact with it
 
-    //LATER RenderEngine::UI ().ChangeZOrder ()
+    protected: Window * _window;
+    protected: h3rDepthOrder _depth;
+    // Render order. See Window: "Automatic depth".
+    protected: inline virtual h3rDepthOrder Depth() { return _depth; }
     private: List<Control *> _n;   // Sub-controls; could be useless
     private: void Add(Control *);
 
-    public: Control(Control * = nullptr);
+    // Handle nullptr at con. init.
+    protected: static Window * GetWindow(Control *);
+
+    // Controls placed directly on another control have the same depth
+    // (control+1); their rendering order is the order of placement.
+    public: Control(Control *); // sets _depth
+    // Controls placed directly on a window have the same depth (window+1);
+    // their rendering order is the order of placement.
+    public: Control(Window *);  // sets _depth
     public: virtual ~Control() {}
 
     public: const Point & Pos() { return _bb.Pos; }

@@ -141,6 +141,7 @@ class RenderEngine final
                     && Offset < TexFrame[i].Offset) return TexFrame[i].Texture;
             H3R_ENSURE(false, "You have a bug: unknown texture")
         }
+        //TODO using H3R_SPRITE_VERTICES <- move it here, very carefully
         inline void SetTexture(GLuint tex_id) // Update TexFrame
         {//LATER optimize
             for (int i = 0; i < TexFrame.Count (); i++)
@@ -192,7 +193,7 @@ class RenderEngine final
     // another, so a byte should be enough; change it to short otherwise.
     public int UploadFrame(
         int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp,
-        const String & texkey, byte render_order);
+        const String & texkey, h3rDepthOrder render_order);
 
     // Use when a window is shown/hidden. Hiding the just the window won't do
     // what you think; the window shall notify all its controls to hide.
@@ -208,8 +209,6 @@ class RenderEngine final
     //       time but render sprites and music, so it could be thought about.
     public void ChangeOffset(int key, GLint offset);
 
-    // Shall be enabled if the UploadFrames() design proves wrong.
-    //
     // Do not use very often.
     // Reason:
     //  A button needs to get its texture generated so it can auto-size to it,
@@ -219,7 +218,10 @@ class RenderEngine final
     //  a way to update its data. This method is the 2nd option.
     //  The 1st option involves someone else (the one doing the layout) to
     //  Upload() button data here, after it finishes moving it around.
-    // public void UpdateGeometry(int key, const H3Rfloat * buf);
+    // Reason:
+    //  You displayed Window2 over Window1, but you need to display Window1
+    //  over Window2 - requires updating the z coordinates of both windows.
+    public void UpdateRenderOrder(int key, h3rDepthOrder order);
 
     public static RenderEngine & UI();
 
@@ -252,9 +254,11 @@ class RenderEngine final
     // Layout it prior rendering. Everything TextRenderingEngine::RenderText()
     // supports, is supported.
     public void UploadText(TextKey & key,
-        const String & font_name, const String & txt, int left, int top);
+        const String & font_name, const String & txt, int left, int top,
+        h3rDepthOrder order);
     public void UpdateText(TextKey & key,
-        const String & font_name, const String & txt, int left, int top);
+        const String & font_name, const String & txt, int left, int top,
+        h3rDepthOrder order);
     public void ChangeTextVisibility(TextKey & key, bool state);
     public void DeleteText(TextKey & key);
 };

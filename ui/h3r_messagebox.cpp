@@ -66,8 +66,7 @@ static void CopyRectangleRGB(
 
 MessageBox::MessageBox(Window * base_window, Point && size,
     const String & msg, const String & fnt, MessageBox::Buttons btn)
-    : DialogWindow {base_window, static_cast<Point &&>(size)},
-    _btn_re {6}
+    : DialogWindow {base_window, static_cast<Point &&>(size)}
 {
     H3R_ENSURE(Window::MainWindow != nullptr, "MessageBox requires MainWindow")
     _t = (Window::MainWindow->GetSize ().Y - size.Y) / 2;
@@ -79,7 +78,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     //TODO there is a lot to think about:
 
     // DropShadow
-    /*const int DS_SIZE {8};
+    const int DS_SIZE {8};
     Array<uint> b1 {size.X*DS_SIZE};
     uint * b1_ptr = b1;
     for (int y = 0; y < DS_SIZE; y++)
@@ -92,7 +91,8 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     auto key = _re_keys.Add (re.GenKey ());
     re.UploadFrame (key, _l+DS_SIZE, _t+size.Y, size.X,
         DS_SIZE, reinterpret_cast<byte *>(b1_ptr), 4,
-        String::Format ("%d%dMessageBoxShadowBottom", size.X, DS_SIZE));
+        String::Format ("%d%dMessageBoxShadowBottom", size.X, DS_SIZE),
+        Depth ());
     H3R_ENSURE(size.Y > DS_SIZE, "MessageBoxes require shadow")
     int s2_h = size.Y-DS_SIZE; // printf ("s2_h: %d" EOL, s2_h);
     b1.Resize (s2_h*DS_SIZE);
@@ -107,7 +107,8 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     key = _re_keys.Add (re.GenKey ());
     re.UploadFrame (key, _l+size.X, _t+DS_SIZE, DS_SIZE,
         s2_h, reinterpret_cast<byte *>(b1_ptr), 4,
-        String::Format ("%d%dMessageBoxShadowRight", DS_SIZE, s2_h));
+        String::Format ("%d%dMessageBoxShadowRight", DS_SIZE, s2_h),
+        Depth());
 
     // Backround; 256x256 on 320x192
     Pcx dlg_back {Game::GetResource ("DiBoxBck.pcx")};
@@ -128,7 +129,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
             //    xn, yn, tw, th);
             key = _re_keys.Add (re.GenKey ());
             re.UploadFrame (key, xn, yn, tw, th, tmp_buf.operator byte * (), 3,
-                String::Format ("DiBoxBck%d%d.pcx", tw, th));
+                String::Format ("DiBoxBck%d%d.pcx", tw, th), Depth ());
         }
 
     // Decoration
@@ -145,7 +146,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         key = _re_keys.Add (re.GenKey ());
         re.UploadFrame (key, _l+dw+i*dw, _t, dw,
             dh, frame_arr->operator byte * (), 4,
-            sprite.GetUniqueKey ("dialgbox.def"));
+            sprite.GetUniqueKey ("dialgbox.def"), Depth ());
     }
     frame = sprite.Query ("DiBoxB.pcx");
     frame_arr = frame->ToRGBA ();
@@ -153,7 +154,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         key = _re_keys.Add (re.GenKey ());
         re.UploadFrame (key, _l+dw+i*dw, _t+size.Y-dh, dw,
             dh, frame_arr->operator byte * (), 4,
-            sprite.GetUniqueKey ("dialgbox.def"));
+            sprite.GetUniqueKey ("dialgbox.def"), Depth ());
     }
     frame = sprite.Query ("DiBoxL.pcx");
     frame_arr = frame->ToRGBA ();
@@ -161,7 +162,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         key = _re_keys.Add (re.GenKey ());
         re.UploadFrame (key, _l, _t+dh, dw,
             dh, frame_arr->operator byte * (), 4,
-            sprite.GetUniqueKey ("dialgbox.def"));
+            sprite.GetUniqueKey ("dialgbox.def"), Depth ());
     }
     frame = sprite.Query ("DiBoxR.pcx");
     frame_arr = frame->ToRGBA ();
@@ -169,34 +170,36 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         key = _re_keys.Add (re.GenKey ());
         re.UploadFrame (key, _l+size.X-dw, _t+dh, dw,
             dh, frame_arr->operator byte * (), 4,
-            sprite.GetUniqueKey ("dialgbox.def"));
+            sprite.GetUniqueKey ("dialgbox.def"), Depth ());
     }
     frame = sprite.Query ("DiBoxTL.pcx");
     frame_arr = frame->ToRGBA ();
     key = _re_keys.Add (re.GenKey ());
     re.UploadFrame (key, _l, _t, dw, dh, frame_arr->operator byte * (), 4,
-        sprite.GetUniqueKey ("dialgbox.def"));
+        sprite.GetUniqueKey ("dialgbox.def"), Depth ());
     frame = sprite.Query ("DiBoxBL.pcx");
     frame_arr = frame->ToRGBA ();
     key = _re_keys.Add (re.GenKey ());
     re.UploadFrame (key, _l, _t+size.Y-dh, dw, dh,
-        frame_arr->operator byte * (), 4, sprite.GetUniqueKey ("dialgbox.def"));
+        frame_arr->operator byte * (), 4,
+        sprite.GetUniqueKey ("dialgbox.def"), Depth ());
     frame = sprite.Query ("DiBoxTR.pcx");
     frame_arr = frame->ToRGBA ();
     key = _re_keys.Add (re.GenKey ());
     re.UploadFrame (key, _l+size.X-dw, _t, dw, dh,
-        frame_arr->operator byte * (), 4, sprite.GetUniqueKey ("dialgbox.def"));
+        frame_arr->operator byte * (), 4,
+        sprite.GetUniqueKey ("dialgbox.def"), Depth ());
     frame = sprite.Query ("DiBoxBR.pcx");
     frame_arr = frame->ToRGBA ();
     key = _re_keys.Add (re.GenKey ());
     re.UploadFrame (key, _l+size.X-dw, _t+size.Y-dh, dw, dh,
-        frame_arr->operator byte * (), 4, sprite.GetUniqueKey ("dialgbox.def"));
+        frame_arr->operator byte * (), 4,
+        sprite.GetUniqueKey ("dialgbox.def"), Depth ());
 
     // Text
     Label * lbl;
     // managed by the Window destructor via Add()
-    H3R_CREATE_OBJECT(lbl, Label) {msg, fnt, Point {277,267}};
-    Add (lbl);
+    H3R_CREATE_OBJECT(lbl, Label) {msg, fnt, Point {277,267}, this};
 
     // Buttons: "box66x32.pcx", iCANCEL.def, iOKAY.def
     // ok the above one is 68x34
@@ -205,18 +208,18 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     auto btn_border_arr = btn_border.ToRGB ();
     key = _re_keys.Add (re.GenKey ());
     re.UploadFrame (key, 326, 334, btn_border.Width (), btn_border.Height (),
-        btn_border_arr->operator byte * (), 3, "Box64x30.pcx");
+        btn_border_arr->operator byte * (), 3, "Box64x30.pcx", Depth ());
     key = _re_keys.Add (re.GenKey ());
     re.UploadFrame (key, 409, 334, btn_border.Width (), btn_border.Height (),
-        btn_border_arr->operator byte * (), 3, "Box64x30.pcx");
+        btn_border_arr->operator byte * (), 3, "Box64x30.pcx", Depth ());
     Button * btn_ok {}, * btn_cancel {};
     // managed by the Window destructor via Add()
-    H3R_CREATE_OBJECT(btn_ok, Button) {"iOKAY.def"};
-    Add (btn_ok->SetPos (327, 335));
-    btn_ok->UploadFrames (&_btn_re);
-    H3R_CREATE_OBJECT(btn_cancel, Button) {"iCANCEL.def"};
-    Add (btn_cancel->SetPos (410, 335));
-    btn_cancel->UploadFrames (&_btn_re);*/
+    H3R_CREATE_OBJECT(btn_ok, Button) {"iOKAY.def", this};
+    btn_ok->SetPos (327, 335);
+    btn_ok->UploadFrames ();
+    H3R_CREATE_OBJECT(btn_cancel, Button) {"iCANCEL.def", this};
+    btn_cancel->SetPos (410, 335);
+    btn_cancel->UploadFrames ();
 }
 
 /*static*/ DialogResult MessageBox::Show(
@@ -247,17 +250,6 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     H3R_CREATE_OBJECT(msgbox, MessageBox) {
         Window::ActiveWindow, Point {320, 192}, msg, fnt, btn};
     return msgbox->ShowDialog ();
-}
-
-void MessageBox::OnRender()
-{
-    Window::OnRender ();
-    /*glPushAttrib (GL_ENABLE_BIT | GL_CURRENT_BIT);
-    glDisable (GL_ALPHA_TEST);
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
-    _btn_re.Render ();
-    /*glPopAttrib ();*/
 }
 
 DialogResult MessageBox::ShowDialog()

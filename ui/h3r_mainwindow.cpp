@@ -73,7 +73,7 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
     auto key = RenderEngine::UI ().GenKey ();
     RenderEngine::UI ().UploadFrame (key, 0, 0, main_window_background.Width (),
         main_window_background.Height (), byte_arr_ptr->operator byte * (), 3,
-        "GamSelBk.pcx", 100);
+        "GamSelBk.pcx", Depth ());
 
     // -- Controls ---------------------------------------------------------
 
@@ -88,9 +88,9 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
     Button * btn_quit {};
     for (const auto & b : mm) {
         Button * btn;
-        H3R_CREATE_OBJECT(btn, Button) {b};
+        H3R_CREATE_OBJECT(btn, Button) {b, this};
         ww = btn->Size ().X > ww ? btn->Size ().X : ww;
-        Add (btn->SetPos (x, y));
+        btn->SetPos (x, y);
         y += btn->Size ().Y + spacing;
         btn_quit = btn;
     }
@@ -109,8 +109,11 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
     // 3. Upload
     for (Control * btn : Controls ()) btn->UploadFrames ();
 
-    // Preview all fonts as real-time clocks
-    /*List<String> fnt {};
+    // Preview all fonts as real-time clocks. These should be at depth: 1.
+    // Here you go: partially visible text. Freeze on MessageBox, because
+    // MainWindow::OnRender() stops being called - here is my block anim. on
+    // dialog window, option.
+    List<String> fnt {};
     fnt << "CALLI10R.FNT" << "CREDITS.FNT" << "HISCORE.FNT" << "MedFont.fnt"
         << "TIMES08R.FNT" << "bigfont.fnt" << "smalfont.fnt" << "tiny.fnt"
         << "verd10b.fnt";
@@ -119,11 +122,10 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
     for (const auto & f : fnt) {
         Point tpos {tx, ty};
         Label * lbl;
-        H3R_CREATE_OBJECT(lbl, Label) {"00:00:00", f, tpos};
-        Add (lbl);
+        H3R_CREATE_OBJECT(lbl, Label) {"00:00:00", f, tpos, this};
         _time_labels.Add (lbl);
         ty += 32;
-    }*/
+    }
 
     Window::MainWindow = this;
 }
@@ -146,7 +148,7 @@ void MainWindow::OnRender()
     Window::OnRender ();
 
     // Misusing OnRender as a timing source
-    /*static int h{}, m{}, s{};
+    static int h{}, m{}, s{};
     int nh{}, nm{}, ns{};
     OS::TimeNowHms (nh, nm, ns);
     if (nh != h || nm != m || ns != s) {
@@ -154,7 +156,7 @@ void MainWindow::OnRender()
         auto time_now = String::Format ("%002d:%002d:%002d - ", h, m, s);
         for (auto lbl : _time_labels)
             if (lbl) lbl->SetText (time_now + lbl->Font ());
-    }*/
+    }
 }
 
 void MainWindow::OnResize(int w, int h)
