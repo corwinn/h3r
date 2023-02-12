@@ -67,6 +67,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     const String & msg, const String & fnt, MessageBox::Buttons btn)
     : DialogWindow {base_window, static_cast<Point &&>(size)}
 {
+    (void)btn;
     H3R_ENSURE(Window::MainWindow != nullptr, "MessageBox requires MainWindow")
     _t = (Window::MainWindow->GetSize ().Y - size.Y) / 2;
     _l = (Window::MainWindow->GetSize ().X - size.X) / 2;
