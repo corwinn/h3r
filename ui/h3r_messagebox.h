@@ -50,16 +50,6 @@ H3R_NAMESPACE
 //    DIBOX128.PCX is 128x128 // I'll have to checkout on a screenshot basis
 //    DiBoxBck.pcx is 256x256 // when to use what
 //
-//  - another "mystery": the decoration is using different palette than the one
-//    stored at the sprite ("dialgbox.def") - where does it come from? There are
-//    3 .pal files (TODO check them):
-//      Data_H3bitmap_lod/font.pal
-//      Data_H3bitmap_lod/PLAYERS.PAL
-//      Data_H3bitmap_lod/game.pal
-//    why color-mixing here ("dialgbox.def") and bitmaps there (
-//    "agem[LL|LR|UL|UR].def")? - was this game created by teams who did not
-//    communicate with each other?!
-//
 //  - button cancel: iCANCEL.def (30 pixels height) || ICN6432.DEF (32 pixels)?
 //    "iCANCELn.pcx"
 //    "iCANCELs.pcx"
@@ -77,8 +67,6 @@ H3R_NAMESPACE
 //    in order to put the 4 corner decors (64x64 each).
 //
 //TODO all these names must go to some central place.
-//TODO generate the per color "dialgbox.def" on the fly; check if the unknown
-//     bytes doesn't hint something about a color mixer
 //
 class MessageBox final : public DialogWindow, public IHandleEvents
 {
