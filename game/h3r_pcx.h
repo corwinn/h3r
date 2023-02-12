@@ -117,6 +117,7 @@ class Pcx final : public ResDecoder
     }// Init
     private: inline Array<byte> * Decode(Array<byte> & buf, int u8_num)
     {
+        if (nullptr == _s) return nullptr;
         H3R_ENSURE(3 == u8_num || 4 == u8_num, "Can't help you")
         { _s->Reset (); _s->Seek (_bitmap_ofs); } // these are coupled
 
