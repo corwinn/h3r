@@ -121,6 +121,8 @@ class Game final
 
     public: static Stream * GetResource(const String & name);
 
+    public: static h3rPlayerColor CurrentPlayerColor;
+
     private: class ResManagerInit final
     {
         private: H3R_NS::GameArchives GA {};

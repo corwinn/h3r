@@ -85,7 +85,11 @@ int main(int argc, char ** argv)
     //    the text from screen-shots has 255,243,222 as color - that's nowhere
     //    to be found?!
     //  Data_H3bitmap_lod/PLAYERS.PAL - 8x32 - player color 0-7
-    //  Data_H3bitmap_lod/game.pal - some ordered sub blocks here
+    //  Data_H3bitmap_lod/game.pal - some ordered sub-blocks here:
+    //    * player colors: 64: [0;7] - same order as at PLAYERS.PAL:
+    //      red, blue, tan, green, orange, purple, teal, pink; <- same order at
+    //      the editor; <- same order at PlColors.txt.
+    //      So whats the primary?
     char sign1[5] {};
     int size1, size2;
     char sign2[9] {};

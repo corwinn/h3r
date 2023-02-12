@@ -46,7 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <new>
 
 H3R_NAMESPACE
-static int const MB_SPRITES {100};
 
 static int Align(int value, int boundary)
 {
@@ -133,7 +132,9 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         }
 
     // Decoration
+    Pal pp {Game::GetResource ("PLAYERS.PAL")};
     Def sprite {Game::GetResource ("dialgbox.def")};
+    sprite.SetPlayerColor (Game::CurrentPlayerColor, pp);
     int dw = sprite.Width (), dh = sprite.Height ();
     // printf ("deco size: %d %d" EOL, dw, dh);
     int tile_x = (size.X - 2*dw), tile_y = (size.Y - 2*dh);
@@ -227,6 +228,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
 /*static*/ DialogResult MessageBox::Show(
     const String & msg, const String & fnt, MessageBox::Buttons btn)
 {
+    (void)btn; //TODO OK only, or OKCancel, etc.
     if (! Window::ActiveWindow) {
         return DialogResult::Cancel;
     }

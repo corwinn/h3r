@@ -55,6 +55,8 @@ ResManager * Game::RM {};
 
 IWindow * Game::MainWindow {};
 
+h3rPlayerColor Game::CurrentPlayerColor {H3R_DEFAULT_PLAYER_COLOR};
+
 Game::Game(const char * process_path)
 #if LOG_FILE
     : _3rd {"main.log"}

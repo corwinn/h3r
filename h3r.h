@@ -71,6 +71,12 @@ using byte = unsigned char;
 #define H3R_LAST_DEPTH 255
 using h3rDepthOrder = byte;
 
+using h3rPlayerColor = byte;
+#define H3R_VALID_PLAYER_COLOR(PC) (PC >= 0 && PC < 8)
+// For some unknown reason the main menu is using 0=Red. See "parse_pal.cpp" for
+// more details.
+#define H3R_DEFAULT_PLAYER_COLOR 0
+
 // Used by the memory allocator.
 // This remake is expected to use no more than:
 static int const H3R_MEMORY_LIMIT {1<<29}; // [bytes] of RAM.

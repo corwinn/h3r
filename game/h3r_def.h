@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_stream.h"
 #include "h3r_string.h"
 #include "h3r_os.h"
+#include "h3r_pal.h"
 
 H3R_NAMESPACE
 
@@ -229,6 +230,20 @@ class Def final : public ResDecoder
     private: void Init();
 
     private: Array<byte> * Decode(Array<byte> & buf, int u8_num);
+
+    //TODO think about a way to automatically set this based on description,
+    //     e.g. a property; for example:
+    //     sprite dialgbox.def
+    //       flags PLAYER_COLOR
+    //TODO check the unknown bytes at the sprite - perhaps something within it
+    //     hints about the above
+    public: inline void SetPlayerColor(h3rPlayerColor pc, const Pal & pal)
+    {
+        H3R_ENSURE(H3R_VALID_PLAYER_COLOR(pc), "pc shall be [0;7]")
+        // "dialgbox.def" is using the last 32 for PlayerColor - I hope they all
+        // are using the same offset and number.
+        pal.Replace (static_cast<byte *>(_palette), 256-32, 32, pc << 5);
+    }
 };// Def
 
 NAMESPACE_H3R
