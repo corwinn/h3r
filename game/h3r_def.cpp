@@ -55,9 +55,21 @@ static void read_sprite_224(Stream & s, int w, int h, H3R_NS::byte * p)
         }
 }
 
-static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh)
+static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh,
+    off_t reset_offset)
 {
     Stream::Read (s, &sh);
+
+    // Data_H3sprite_lod/SGTWMTA.def && Data_H3sprite_lod/SGTWMTB.def
+    // See "parse_def.cpp" for more info.
+    if (sh.Width > sh.AnimWidth && sh.Height > sh.AnimHeight
+        && sh.Left > sh.AnimWidth && sh.Top > sh.AnimHeight) {
+        printf ("Warning: odd sprite. Trying half-header decode." EOL);
+        { s.Reset (); s.Seek (reset_offset+16); }
+        sh.Width = sh.AnimWidth, sh.Height = sh.AnimHeight;
+        sh.Left = 0, sh.Top = 0;
+    }
+
     buf.Resize (sh.Width*sh.Height);
     byte * ptr = buf;
     // The "if" operators are ordered by frequency.
@@ -145,7 +157,7 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
         // but I can do this:
         { _s->Reset (); _s->Seek (_request->Offset); }
         Array<byte> indexed_bitmap {};
-        read_sprite (*_s, indexed_bitmap, sh);
+        read_sprite (*_s, indexed_bitmap, sh, _request->Offset);
         H3R_ENSURE(sh.AnimWidth == _w, "leaf.w != tree.w")
         H3R_ENSURE(sh.AnimHeight == _h, "leaf.h != tree.h")
         printf ("DEF: %s: W:%d, H:%d, S: " EOL,

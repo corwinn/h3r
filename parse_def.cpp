@@ -109,7 +109,8 @@ static struct { // takes care of the render to atlas part
     H3R_NS::byte _semicolon[GH] = {0, 0, 16, 0, 0, 0, 16, 0, 0}; // my font
     inline void put_pixel(int x, int y, int cidx)
     {
-        *((H3R_NS::byte *)*_b + y * _w + x) = cidx;
+        if (y >= 0 && y < _h && x >= 0 && x < _w) // clip when bitmap is smaller
+            *((H3R_NS::byte *)*_b + y * _w + x) = cidx;
     }
     inline void RenderGlyph(const H3R_NS::byte * g, int x, int y, int cidx)
     {//TODONT optimize :)
@@ -177,8 +178,8 @@ static void read_sprite(H3R_NS::Stream & s);
 /* some are coupled with .msk file of size 14; they look like:
   1 w
   1 h
-  6 bit mask - block mask ? (max size 8x6?)
-  6 bit mask - visit mask ?
+  6 bit mask - pass-ability mask (max size 8x6)
+  6 bit mask - trigger(s) mask (activators)
   example: 03 02, 00 00 00 00 E0 E0, 00 00 00 00 00 E0
    has meaning when (the origin is bottom left):
     block:
@@ -195,10 +196,28 @@ static void read_sprite(H3R_NS::Stream & s);
      0000 0000
      0000 0000
      1110 0000
+
+  See map_grammar.MapObj
 */
-//TODO they are using just the 1st 2 bytes to set mask size (w, h);
-//     why ignoring the 12 bytes; if they're masks how do they relate to
-//     the in map masks?
+// Interesting one: Data_H3sprite_lod/SGTWMTB.def:
+//                  (also, Data_H3sprite_lod/SGTWMTA.def)
+//  Width: 320
+//  Height: 320
+//  but:name[0]: "SgTwMt01.pcx"
+//      offset[0]:      3DB
+//      size: 2992: type: 1, aw: 320, ah: 320, w: 1280, h: 1284, l: 1288, t: 1292
+//  Thats invalid w,h,l,t for a sub-sprite?!
+//  db 03 00 00 9b 0f 00 00
+//  Difference between offsets: 16 bytes: ofs_n+1 - ofs_n
+//  sub-sprite0: size: 0b b0 00 00, ofs: 3db
+//  sub-sprite1: size: aa 11 00 00, ofs: f9b  | diff 16 bytes
+//  sub-sprite2: size:            , ofs: 2155 | diff 16 bytes
+//  Shift with -16 bytes at the header while w,h,l,t = aw,ah,0,0: ok.
+// So why are 16 bytes of the header (each nth header (11 at SGTWMTB.def and 1
+// at SGTWMTA.def)) missing? I could have some very specific bug at the lod
+// unpacker, but still? TODO make a packer, then unpacked-packed-unpacked shall
+// equal unpacked; then manually fix these two - packed-unpacked shall equal
+// them.
 int main(int argc, char ** argv)
 {
     if (2 != argc)
@@ -211,6 +230,7 @@ int main(int argc, char ** argv)
     printf (EOL "%s 1st offset: %8X" EOL, argv[1], (uint)s.Tell ());
 
     // named "Entry"?
+    //TODO having two code-bases for the same thing is not ok.
     int type, w, h, bcnt; // bcnt - "group" count if you ask me
     Read (s, &type).Read (s, &w).Read (s, &h).Read (s, &bcnt);
 
@@ -227,24 +247,29 @@ int main(int argc, char ** argv)
     for (int i = 0, ecnt = 0; i < bcnt; i++) { // entry count
         // i is group index?
         // named "EntryBlock" ?
-        s.Seek (+4); // unknown1
+        uint unk;
+        Read (s, &unk); // unknown1
+        printf ("Block[%2d] unk1: %000000008X" EOL, i, unk);
         int cnt2; // some other count?
         Read (s, &cnt2);
-        printf ("Block %2d, sprite count: %d" EOL, i, cnt2);
-        s.Seek (+4); // unknown2
-        s.Seek (+4); // unknown3
+        printf ("Block[%2d] sprite count: %d" EOL, i, cnt2);
+        Read (s, &unk); // unknown2
+        printf ("Block[%2d] unk2: %000000008X" EOL, i, unk);
+        Read (s, &unk); // unknown3
+        printf ("Block[%2d] unk3: %000000008X" EOL, i, unk);
         // EntryBlock.Data
         for (int j = 0; j < cnt2; j++) {
             H3R_NS::Array<H3R_NS::byte> name {14}; // pcx
             Read (s, (H3R_NS::byte *)name, 13);
             printf (
-                "  name[%d]: \"%s\"" EOL, j, (char *)(H3R_NS::byte *)name);
+                "  name[%2d]: \"%s\"" EOL, j, (char *)(H3R_NS::byte *)name);
         }
+        int prev_ofs {};
         for (int j = 0; j < cnt2; j++) {
             int offset; // 0-based
             Read (s, &offset);
-            printf (
-                "  offset[%d]: %8X" EOL, j, offset);
+            printf ("  offset[%d]: %8X, ofs-prev.ofs (ordering): %d" EOL,
+                j, offset, offset-prev_ofs); prev_ofs = offset;
             auto sentinel = s.Tell ();
             // so its not an entry - its a sprite
             bmp._block = i, bmp._sprite = j;
@@ -255,7 +280,9 @@ int main(int argc, char ** argv)
         //TODO the above is an odd way to store data - figure out why
     } // for (int i = 0, ecnt = 0; i < bcnt; i++)
     printf (" offset after all blocks: %8X" EOL, (uint)last_ofs);
-
+#if LIST_ONLY
+    return 0;
+#endif
     // There are a lot of .def files containing series of name-less sprites
     // after the "main" data:
     //   Data_H3ab_spr_lod/AH17_.DEF   - 32 of them; 45 named in 10 blocks
@@ -326,9 +353,18 @@ void read_sprite(H3R_NS::Stream & s)
 
     Read (s, &size).Read (s, &type).Read (s, &aw).Read (s, &ah).
     Read (s, &w).Read (s, &h).Read (s, &l).Read (s, &t);
+
+    // Data_H3sprite_lod/SGTWMTA.def && Data_H3sprite_lod/SGTWMTB.def
+    if (w > aw && h > ah && l > aw && t > ah)
+        s.Seek (-16), w = aw, h = ah, l = 0, t = 0;
+
     printf (
         "   size: %4d: type: %1d, aw: %3d, ah: %3d, w: %3d, h: %3d, l: %2d,"
         " t: %2d" EOL, size, type, aw, ah, w, h, l, t);
+
+#if LIST_ONLY
+    return;
+#endif
     // type1: 32524 sprites
     // type3: 15281 sprites
     // type0:   835 sprites
