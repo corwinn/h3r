@@ -52,17 +52,18 @@ template <typename T> void MM::Add(T * & p, size_t n)
 
         //TODO h3r_math.h these computations should be overflow-safe - the
         //                idea is to prevent bad allocation attempts
-        // Not ovious: SIZE_MAX and INT_MAX are provided by the OS
+        // Not obvious: SIZE_MAX and INT_MAX are provided by the OS
         H3R_ENSURE(n <= H3R_MEMORY_LIMIT, "RAM limit overflow")
         H3R_ENSURE(n <= SIZE_MAX / sizeof(T), "size_t overflow")
         size_t q = n * sizeof (T);
+        // printf ("<>alloc: %lu of size: %lu" EOL, n, sizeof (T));
         const int entry_size = sizeof (Entry);
-        H3R_ENSURE(_current_bytes <= INT_MAX - entry_size, "int overflow")
-        int tmp = _current_bytes + entry_size;
+        H3R_ENSURE(_current_bytes <= SIZE_MAX - entry_size, "size_t overflow")
+        size_t tmp = _current_bytes + entry_size;
         H3R_ENSURE(q <= SIZE_MAX - tmp, "size_t overflow")
         size_t nt = tmp + q;
         H3R_ENSURE(nt <= H3R_MEMORY_LIMIT, "RAM limit overflow")
-        _current_bytes = (int)nt;
+        _current_bytes = nt;
 
         if (_n == _c) {
             _c += 10;

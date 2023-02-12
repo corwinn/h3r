@@ -53,12 +53,12 @@ MM::MM()
 
 MM::~MM()
 {
-    Log_stdout ("Allocated %d entries, total of %d bytes (Entry[] "
-                ": %d bytes, user: %d bytes)" EOL,
+    Log_stdout ("Allocated %lu entries, total of %lu bytes (Entry[] "
+                ": %lu bytes, user: %lu bytes)" EOL,
         _c, _c * sizeof(Entry) + _user_bytes, _c * sizeof(Entry),
         _user_bytes);
-    Log_stdout ("Allocations: %d, frees: %d" EOL, _a, _f);
-    Log_stdout ("Current bytes: %d" EOL, _current_bytes);
+    Log_stdout ("Allocations: %lu, frees: %lu" EOL, _a, _f);
+    Log_stdout ("Current bytes: %lu" EOL, _current_bytes);
     for (int i = 0; i < _n; i++)
         OS::Mfree (_e[i].p);
     _n = _c = _a = _f = _current_bytes = _user_bytes = 0;

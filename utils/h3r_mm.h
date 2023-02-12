@@ -58,8 +58,10 @@ class MM final
     private: struct Entry { void * p {}; size_t n {}; };
     private: Entry * _e {};
     private: int _n {}, _c {}; // num, capacity
-    private: int _user_bytes {}, _a {}, _f {}; // stats
-    private: int _current_bytes {}; // currently allocated bytes
+    // While allocating this much at once isn't happening, cumulative numbers
+    // can easily overflow an "int".
+    private: size_t _user_bytes {}, _a {}, _f {}; // stats
+    private: size_t _current_bytes {}; // currently allocated bytes
     private: MM();
     // friend class H3R_NS::Game;
 
