@@ -69,6 +69,7 @@ class Pcx final : public ResDecoder
         }
     }
     public: ~Pcx() override {}
+    // Encodes A=0 for fmt1 index=0, and A=255 for fmt1 index!=0.
     public: inline Array<byte> * ToRGBA() override
     {
         if (! _rgba.Empty ()) return &_rgba;
@@ -136,11 +137,13 @@ class Pcx final : public ResDecoder
             while (b != e) {
                 Stream::Read (*_s, &i, 1);
                 OS::Memmove (b, p+3*i, 3);
+                if (u8_num == 4)//TODO is it always color 0?
+                    *(b+3) = 0 == i ? 0 : 255; // A = 0 for input color 0
                 b += u8_num;
             }
         }
         else
-            while (b != e) {
+            while (b != e) {//TODO do these have transparent color?
                 // nope, something is messed up; why not?
                 // Stream::Read (s, b, fmt); b += u8_num;
                 Stream::Read (*_s, b, _fmt);

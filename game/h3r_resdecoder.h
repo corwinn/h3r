@@ -51,8 +51,10 @@ class ResDecoder
 {
     public: ResDecoder() {}
     public: virtual ~ResDecoder() {}
+    // This is my slow convert function, where I need to set alpha=f(rgb).
     public: virtual Array<byte> * ToRGBA() { return nullptr; }
     // "wingdi.h" didn't like my "RGB" symbol.
+    // This is the game native format, better left for Open GL to convert to.
     public: virtual Array<byte> * ToRGB() { return nullptr; }
     public: static int const MAX_SIZE {16384};
 

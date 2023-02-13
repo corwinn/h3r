@@ -176,7 +176,8 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
         for (int y = 0; y < sh.Height; y++) {
             for (int x = 0; x < sh.Width; x++) {
                 int i = indexed_bitmap[y*sh.Width + x];
-                if (0 == i) continue; // no point; 0 is good enough mask
+                // encode palette[TRANSPARENT_COLOR_INDEX] with A=0
+                if (4 == u8_num && 0 == i) continue; // RGBA output only
                 int dy = y + sh.Top;
                 int dx = x + sh.Left;
                 byte * p = buf_ptr + dy*pitch + dx*u8_num;
@@ -184,7 +185,6 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
                 *(p+1) = *((byte *)_palette+3*i+1); // |
                 *(p+2) = *((byte *)_palette+3*i+2); // 0 Open GL does not?!
                 if (4 == u8_num) *(p+3) = 255; // opaque
-                //TODO encode palette[TRANSPARENT_COLOR_INDEX] with A=0
                 //TODO encode palette[TRANSPARENT_SHADOW_MAP] with A=?
             }
         }
