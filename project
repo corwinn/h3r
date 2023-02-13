@@ -77,8 +77,25 @@ It will take years to closely match the original, because there is an unknown
 number of hidden (hard-coded) details. It would be so much short and simple
 should they've just published the original source code.
 A few things:
- * UI - there are a few forms and dialogs - nothing to re-discover because most
-        of them are pre-rendered pictures that just need hit rectangles
+ * UI - there are: Window<-MainWindow, <-DialogWindow<-MesageBox<-Hint.
+        There are Control<-Button, <-Label, <-more are coming.
+        Some UI elements are not pre-rendered and require layout, like: dynamic
+        tiling and border decorations (including alpha-blended drop-shadow).
+        Descriptions (size, position, sprite names) are hard-coded it seems.
+        Both the game and its UI are using sprites ("computer graphics
+        sprites" - I used these 1st on 80286, direct video mode 13h, a very long
+        time ago; those were good times ...); some UI elements require color
+        mixing (replacing part of sprite.palette with data from a .pal file).
+        Why is it so important to have a MessageBox?
+         - it is used all over the place
+         - its ancestor (DialogWindow) is used all over the place
+         - it covers 50% of the UI (design) and 95% of all UI objects
+         - it defines 95% of the RenderEngine interface: text rendering,
+           z-ordering, tiling, dynamic geometry
+         - it defines the event-driven part of the UI
+         - it highlights the current weak spots at the current OO design
+        For starters :).
+        Diagram time.
  * done: rendering - z-order, shadow, opacity maps (no; alpha overrides), sprite
          atlases - nothing new here; alpha blending was "found" :) (at fonts; at
          window decoration)
