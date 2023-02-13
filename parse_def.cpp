@@ -248,15 +248,24 @@ int main(int argc, char ** argv)
         // i is group index?
         // named "EntryBlock" ?
         uint unk;
-        Read (s, &unk); // unknown1
+        Read (s, &unk); // this is some auto-inc number: a primary key perhaps?
+        // it correlates to the unreferenced sprites (deleted perhaps? - the
+        // eventual "primary key" has holes in it); its observable at sprites
+        // with bcnt > 1
         printf ("Block[%2d] unk1: %000000008X" EOL, i, unk);
         int cnt2; // some other count?
         Read (s, &cnt2);
         printf ("Block[%2d] sprite count: %d" EOL, i, cnt2);
-        Read (s, &unk); // unknown2
+
+        // Not floating-point; not date or time (that I know of). Doesn't look
+        // like a checksum.
+        // Wizards, help.
+        Read (s, &unk); // unknown2; its always bigger than unknown3
         printf ("Block[%2d] unk2: %000000008X" EOL, i, unk);
-        Read (s, &unk); // unknown3
+        Read (s, &unk); // unknown3; half of its bits == the same unknown2 ones,
+                        //           but are distinct across all sprites
         printf ("Block[%2d] unk3: %000000008X" EOL, i, unk);
+
         // EntryBlock.Data
         for (int j = 0; j < cnt2; j++) {
             H3R_NS::Array<H3R_NS::byte> name {14}; // pcx
@@ -299,7 +308,7 @@ int main(int argc, char ** argv)
         auto sz = s.Size (); // just in case
         s.Seek (last_ofs - s.Tell ());
         while (s.Tell () < sz) {
-            printf ("Bonus sprite #%d" EOL, ++k);
+            printf ("Bonus sprite #%d, ofs: %8X" EOL, ++k, (uint)s.Tell ());
             ++bmp._sprite, read_sprite (s);
             last_ofs = s.Tell ();
         }
@@ -355,6 +364,9 @@ void read_sprite(H3R_NS::Stream & s)
     Read (s, &w).Read (s, &h).Read (s, &l).Read (s, &t);
 
     // Data_H3sprite_lod/SGTWMTA.def && Data_H3sprite_lod/SGTWMTB.def
+    // Their "size" correctly reflects the missing fields, but the sprites
+    // aren't sorted: neither by name, nor by offset: there is no simple way
+    // to detect this half-header.
     if (w > aw && h > ah && l > aw && t > ah)
         s.Seek (-16), w = aw, h = ah, l = 0, t = 0;
 
