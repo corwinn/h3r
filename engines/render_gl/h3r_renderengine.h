@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_array.h"
 #include "h3r_string.h"
 #include "h3r_dll.h"
+#include "h3r_stack.h"
 #include <GL/gl.h>
 
 H3R_NAMESPACE
@@ -188,7 +189,7 @@ class RenderEngine final
     // Returns the offset you want applied when calling ChangeOffset()
     // "x" - left, and "y" - top, are absolute coordinates.
     // "bpp" - whatever TexCache::Cache() supports; currently 24(GL_RGB) and
-    // 32(GL_RGBA) - that's your "data" format mind you.
+    // 32(GL_RGBA) - that's your "data" format mind you; bytes per pixel.
     // The "texkey" is forwarded to the texcache for the purposes of uniquely
     // identifying a bitmap being cached there.
     //TODO this many parameters means composition is required
@@ -236,7 +237,7 @@ class RenderEngine final
 
     // Each entry has its own texture and its own VBO; that should be fast
     // enough for the simplicity.
-    private struct TextEntry
+    private struct TextEntry final
     {
         GLuint Texture {};//LATER Glyph cache; there are no more than 128 text
         GLuint Vbo {};    //      objs visible at once
@@ -269,7 +270,23 @@ class RenderEngine final
 
     // Window
 
-};
+    // These have alpha-blended drop-shadow, and tiling background.
+    // I see no point storing their state, yet. So.
+    private struct WinEntry final
+    {
+        GLuint Texture {};
+        GLuint Vbo {};
+    };
+    private Stack<WinEntry> _win_entries {};
+    // bpp - bytes per pixel
+    public void ShadowRectangle(
+        GLint x, GLint y, GLint w, GLint h,
+        const byte * tile, int tile_bpp, int tile_w, int tile_h,
+        h3rDepthOrder order);
+    // LIFO: Close the last opened one.
+    public void DeleteShadowRectangle();
+
+};// RenderEngine
 
 #undef public
 #undef private

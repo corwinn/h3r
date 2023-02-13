@@ -44,8 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define H3RGL_Debug \
 { \
-    for (GLenum a; GL_NO_ERROR != (a = glGetError ());) \
-        printf ("%s:%d glGetError() error: %d" EOL, __FILE__, __LINE__, a); \
+    for (GLenum _a_; GL_NO_ERROR != (_a_ = glGetError ());) \
+        printf ("%s:%d glGetError() error: %d" EOL, __FILE__, __LINE__, _a_); \
 }
 
 #include <new>
@@ -100,6 +100,20 @@ static inline void VBOClientState()
         (void *)(H3R_VERTEX_COORDS*sizeof(GLfloat)));
 }
 
+// Requires distinct handling because of a bonus color component.
+//TODO glColorPointer them all, if it won't slow things down.
+static inline void WinVBOClientState()
+{
+    const int H3R_COLOR_COMPONENTS {4};
+    const int H3R_UV_COMPONENTS {2};
+    auto stride = (H3R_VERTEX_COMPONENTS+H3R_COLOR_COMPONENTS)*sizeof(GLfloat);
+    glVertexPointer (H3R_VERTEX_COORDS, GL_FLOAT, stride, (void *)(0));
+    glTexCoordPointer (H3R_VERTEX_UVCOORDS, GL_FLOAT, stride,
+        (void *)(H3R_VERTEX_COORDS*sizeof(GLfloat)));
+    glColorPointer (H3R_COLOR_COMPONENTS, GL_FLOAT, stride,
+        (void *)((H3R_VERTEX_COORDS+H3R_UV_COMPONENTS)*sizeof(GLfloat)));
+}
+
 void RenderEngine::Render()
 {
     // glBindBuffer (GL_ARRAY_BUFFER, _vbo);
@@ -107,7 +121,7 @@ void RenderEngine::Render()
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity ();
 
-    // sprite stage
+    // stage1: big sprite VBO
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     VBOClientState ();
     for (int i = 0; i < _tex2_list.Count (); i++ ) {
@@ -117,7 +131,17 @@ void RenderEngine::Render()
             _tex2_list[i]._index.Count ());
     }
 
-    // text stage
+    // stage2: window
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    for (auto w : _win_entries) {
+        glBindTexture (GL_TEXTURE_2D, w.Texture);
+        glBindBuffer (GL_ARRAY_BUFFER, w.Vbo);
+        WinVBOClientState ();
+        glDrawArrays (GL_TRIANGLE_STRIP, 0, 12);
+    }
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    // stage3: text
     for (auto * n = _texts.Prev (); n != nullptr; n = n->Prev ()) {
         glBindTexture (GL_TEXTURE_2D, n->Data.Texture);
         glBindBuffer (GL_ARRAY_BUFFER, n->Data.Vbo);
@@ -280,11 +304,15 @@ void RenderEngine::UpdateRenderOrder(int key, h3rDepthOrder order)
     glDisable (GL_MULTISAMPLE);
     glShadeModel (GL_FLAT);
 
-    // glEnable (GL_ALPHA_TEST);
-    // glAlphaFunc (GL_GEQUAL, 1.0f);
+    glEnable (GL_ALPHA_TEST);
+    // Only a>0 shall pass - stop a=0 fragments from discarding underlying
+    // (their.z>my.z) fragments, by the depth test.
+    // Implicit contract with ResDecoder.ToRGBA()
+    glAlphaFunc (GL_GREATER, 0.0f);
 
     glEnable (GL_VERTEX_ARRAY);
     glEnable (GL_TEXTURE_COORD_ARRAY);
+    glEnable (GL_COLOR_ARRAY);
 
     global_render_gl_init = true;
 }
@@ -300,6 +328,10 @@ RenderEngine::TextKey::TextKey(LList<RenderEngine::TextEntry> & tail)
 void RenderEngine::TextKey::Delete()
 {
     auto * node = _node->Delete ();
+    if (node->Data.InUse) {
+        glDeleteBuffers (1, &(node->Data.Vbo));
+        glDeleteTextures (1, &(node->Data.Texture));
+    }
     H3R_DESTROY_OBJECT (node, LList<RenderEngine::TextEntry>)
 }
 
@@ -373,6 +405,56 @@ void RenderEngine::ChangeTextVisibility(TextKey & key, bool state)
 void RenderEngine::DeleteText(TextKey & key)
 {
     key.Delete ();
+}
+
+// -- Window -----------------------------------------------------------------
+
+void RenderEngine::ShadowRectangle(GLint x, GLint y, GLint w, GLint h,
+    const byte * tile, int tile_bpp, int tile_w, int tile_h,
+    h3rDepthOrder order)
+{
+    // 3 rectangles: light shadow; darker shadow, tiled one
+    GLfloat u = 1.f * w / tile_w, v = 1.f * h / tile_h;
+    GLfloat a = .5f; // looks close enough
+    GLfloat const S {8.f}; // drop-shadow size [pixels]
+    GLfloat l = x, t = y, r = l+w, b = t+h, z = Depht2z (order);
+    GLfloat vx[3*4*9] { // 3 r., 4 v., 9 c. {x,y,z,u,v,r,g,b,a}
+        l+S,t+S,z, 0,0, 0,0,0,a,
+        l+S,b+S,z, 0,0, 0,0,0,a,
+        r+S,t+S,z, 0,0, 0,0,0,a,
+        r+S,b+S,z, 0,0, 0,0,0,a,     // light shadow
+        l+S+1,t+S+1,z, 0,0, 0,0,0,a,
+        l+S+1,b+S-1,z, 0,0, 0,0,0,a,
+        r+S-1,t+S+1,z, 0,0, 0,0,0,a,
+        r+S-1,b+S-1,z, 0,0, 0,0,0,a, // darker shadow
+        l,t,z, 0,0, 1,1,1,1,
+        l,b,z, 0,v, 1,1,1,1,
+        r,t,z, u,0, 1,1,1,1,
+        r,b,z, u,v, 1,1,1,1};        // tiled background
+    RenderEngine::WinEntry e {};
+    glGenTextures (1, &(e.Texture));
+    glBindTexture (GL_TEXTURE_2D, e.Texture);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, tile_w, tile_h,
+        0, 3 == tile_bpp ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, tile);
+    H3RGL_Debug
+    glGenBuffers (1, &(e.Vbo));
+    glBindBuffer (GL_ARRAY_BUFFER, e.Vbo);
+    glBufferData (GL_ARRAY_BUFFER, 3*4*9*sizeof(GLfloat), vx, GL_STATIC_DRAW);
+    H3RGL_Debug
+    _win_entries.Push (e);
+}// RenderEngine::ShadowRectangle()
+
+void RenderEngine::DeleteShadowRectangle()
+{
+    auto e = _win_entries.Pop ();
+    glDeleteBuffers (1, &(e.Vbo));
+    glDeleteTextures (1, &(e.Texture));
 }
 
 NAMESPACE_H3R

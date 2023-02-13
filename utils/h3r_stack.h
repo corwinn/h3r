@@ -63,6 +63,10 @@ template <typename T> class Stack final
     }
     public bool Empty() const { return -1 == _sp; }
     public int Size() const { return _b.Length (); }
+
+    // Act as a pipe
+    public const T * begin() const { return _b.begin (); }
+    public const T * end  () const { return _b.end (); }
 };
 
 #undef public
