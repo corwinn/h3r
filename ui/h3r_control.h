@@ -48,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // #include "h3r_gc.h"
 #include "h3r_eventargs.h"
 #include "h3r_event.h"
-#include "h3r_renderengine.h"
+//#include "h3r_renderengine.h"
 
 #define H3R_CONTROL_DEFAULT_SIZE 32
 
@@ -74,7 +74,7 @@ class Control
     protected: h3rDepthOrder _depth;
     // Render order. See Window: "Automatic depth".
     protected: inline virtual h3rDepthOrder Depth() { return _depth; }
-    private: List<Control *> _n;   // Sub-controls; could be useless
+    private: List<Control *> _n;   // Sub-controls
     private: void Add(Control *);
 
     // Handle nullptr at con. init.
@@ -96,7 +96,7 @@ class Control
     // Upload the Frames to the RenderEngine.
     // This is not called on construction, on purpose: so that layout can be
     // done prior uploading to the render engine.
-    public: inline virtual void UploadFrames(RenderEngine * = nullptr) {}
+    public: inline virtual void UploadFrames(/*RenderEngine * = nullptr*/) {}
 
     // properties
     public: void SetEnabled(bool value) { _enabled = value; }

@@ -38,10 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_string.h"
 #include "h3r_point.h"
-#include "h3r_gc.h"
 #include "h3r_control.h"
 #include "h3r_eventargs.h"
-#include "h3r_renderengine.h"
 #include "h3r_event.h"
 
 H3R_NAMESPACE
@@ -49,7 +47,6 @@ H3R_NAMESPACE
 // Its size is stored at the resource it is created from.
 class Button: public Control
 {
-    private: RenderEngine * _re {};
     private: int _rkey {};
     private: int _on {}; // up
     private: int _oh {}; // hover
@@ -58,16 +55,11 @@ class Button: public Control
 
     public: Button(const String &, Control *);
     public: Button(const String &, Window *);
-    public: virtual ~Button() override
-    {
-        if (! _re)
-            RenderEngine::UI ().ChangeVisibility (_rkey, false);
-    }
+    public: virtual ~Button() override;
 
     public: virtual Control * SetPos(int, int) override;
-    public: void UploadFrames(RenderEngine * = nullptr) override;
+    public: void UploadFrames(/*RenderEngine * = nullptr*/) override;
 
-    // public: virtual void OnRender(GC &) override;
     public: virtual void OnMouseMove(const EventArgs &) override;
     public: virtual void OnMouseDown(const EventArgs &) override;
     public: virtual void OnMouseUp(const EventArgs &) override;
@@ -76,7 +68,7 @@ class Button: public Control
     private: bool _mouse_down {};
 
     // Usage: OnClick.Subscribe (this, &descendant_of_IHandleEvents::handler)
-    public: Event OnClick {};
+    public: Event Click {};
 };
 
 NAMESPACE_H3R

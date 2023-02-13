@@ -94,7 +94,7 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
         y += btn->Size ().Y + spacing;
         btn_quit = btn;
     }
-    btn_quit->OnClick.Subscribe (this, &MainWindow::Quit);
+    btn_quit->Click.Subscribe (this, &MainWindow::Quit);
     // 2. Layout
     for (Control * btn : Controls ())
         btn->SetPos (

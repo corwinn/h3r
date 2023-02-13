@@ -266,6 +266,9 @@ class RenderEngine final
         h3rDepthOrder order);
     public void ChangeTextVisibility(TextKey & key, bool state);
     public void DeleteText(TextKey & key);
+
+    // Window
+
 };
 
 #undef public

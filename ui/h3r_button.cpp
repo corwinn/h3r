@@ -77,6 +77,11 @@ Button::Button(const String & res_name, Control * base)
          _sprite_name.AsZStr (), sprite.Width (), sprite.Height ());*/
 }
 
+Button::~Button()
+{
+    RenderEngine::UI ().ChangeVisibility (_rkey, false);
+}
+
 Button::Button(const String & res_name, Window * base)
     : Control {base}
 {
@@ -89,9 +94,9 @@ Button::Button(const String & res_name, Window * base)
          _sprite_name.AsZStr (), sprite.Width (), sprite.Height ());*/
 }
 
-void Button::UploadFrames(RenderEngine * re)
+void Button::UploadFrames()
 {
-    auto & RE = (_re = re) != nullptr ? *re : RenderEngine::UI ();
+    auto & RE = RenderEngine::UI ();
     _rkey = RE.GenKey ();
     auto & size = Size ();
     auto & pos = Pos ();
@@ -134,7 +139,7 @@ void Button::OnMouseMove(const EventArgs & e)
     p.X = e.X;
     p.Y = e.Y;
     _mouse_over = HitTest (p);
-    RenderEngine & re = _re != nullptr ? *_re : RenderEngine::UI ();
+    RenderEngine & re = RenderEngine::UI ();
     re.ChangeOffset (_rkey,
         _mouse_down ? _os : _mouse_over ? _oh : _on);
     /*Log::Info (String::Format (
@@ -150,7 +155,7 @@ void Button::OnMouseDown(const EventArgs &)
 {
     if (! _mouse_over) return;
     _mouse_down = true;
-    RenderEngine & re = _re != nullptr ? *_re : RenderEngine::UI ();
+    RenderEngine & re = RenderEngine::UI ();
     re.ChangeOffset (_rkey, _os);
     Log::Info ("MouseDown" EOL);
     auto stream = Game::GetResource ("BUTTON.wav");
@@ -183,15 +188,13 @@ void Button::OnMouseUp(const EventArgs &)
     //     need the bubbling/tunneling madness of the "WPF" here.
     if (! _mouse_down) return; // It was not me
     _mouse_down = false;
-    RenderEngine & re = _re != nullptr ? *_re : RenderEngine::UI ();
+    RenderEngine & re = RenderEngine::UI ();
     re.ChangeOffset (_rkey, _mouse_over ? _oh : _on);
     // If you release the button outside of the of the thing you clicked on
     // there shall be no mouse click event.
     if (! _mouse_over) return;
-    Log::Info ("MouseUp" EOL);
-    OnClick (nullptr);
+    // Log::Info ("MouseUp" EOL);
+    Click (nullptr);
 }
-
-// void Button::OnRender(GC &) {}
 
 NAMESPACE_H3R

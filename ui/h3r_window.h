@@ -96,7 +96,7 @@ class Window : public IWindow
     // Interface for Control::Control(Control *); Avoid walking a tree just
     // to find how deep it is.
     public inline h3rDepthOrder Depth() const { return _wdepth; }
-    public void UpdateTopMost(Control *);
+    public void UpdateTopMost(Control *); // Callback for leaf Controls
     // Use this function to get next available depth.
     public static h3rDepthOrder NextDepth(h3rDepthOrder); // Sentinel
 
