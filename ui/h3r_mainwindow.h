@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // MainWindow
-class MainWindow : public Window, public IHandleEvents
+class MainWindow final : public Window, public IHandleEvents
 {
 #define public public:
 #define private private:

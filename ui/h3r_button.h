@@ -58,7 +58,7 @@ class Button: public Control
     public: virtual ~Button() override;
 
     public: virtual Control * SetPos(int, int) override;
-    public: void UploadFrames(/*RenderEngine * = nullptr*/) override;
+    public: void UploadFrames() override;
 
     public: virtual void OnMouseMove(const EventArgs &) override;
     public: virtual void OnMouseDown(const EventArgs &) override;
@@ -67,7 +67,7 @@ class Button: public Control
     private: bool _mouse_over {};
     private: bool _mouse_down {};
 
-    // Usage: OnClick.Subscribe (this, &descendant_of_IHandleEvents::handler)
+    // Usage: Click.Subscribe (this, &descendant_of_IHandleEvents::handler)
     public: Event Click {};
 };
 

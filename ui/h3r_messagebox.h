@@ -68,7 +68,7 @@ H3R_NAMESPACE
 //
 //TODO all these names must go to some central place.
 //
-class MessageBox final : public DialogWindow, public IHandleEvents
+class MessageBox : public DialogWindow, public IHandleEvents
 {
 #define public public:
 #define private private:
