@@ -382,7 +382,7 @@ void RenderEngine::UploadText(TextKey & key,
         0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, tex_buf.operator byte * ());
     // same ordering and components as the big VBO
     GLfloat z = Depht2z (order);
-    printf ("Text: Order: %3d, z: %.5f" EOL, order, z);
+    // printf ("Text: Order: %3d, z: %.5f" EOL, order, z);
     GLfloat vertices[20] {l,t,z,0,0, l,b,z,0,v, r,t,z,u,0, r,b,z,u,v};
     glGenBuffers (1, &(e.Vbo));
     glBindBuffer (GL_ARRAY_BUFFER, e.Vbo);

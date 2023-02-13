@@ -118,8 +118,15 @@ SDLWindow::SDLWindow(int, char **, Point && size)
 
     // 2.0 should be enough for a proof of concept
     //TODO request this from the abstraction
+    //TODO all SDL_GL_SetAttribute and SDL_GL_GetAttribute need error checking.
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute (SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute (SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute (SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute (SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute (SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute (SDL_GL_ALPHA_SIZE, 8);
 
     _window = SDL_CreateWindow ("h3r",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
@@ -136,7 +143,31 @@ SDLWindow::SDLWindow(int, char **, Point && size)
             "SDL_GL_CreateContext error: %s" EOL, SDL_GetError ()));
         return;
     }
-}
+
+    if (-1 == SDL_GL_SetSwapInterval (1)) // VSYNC
+        H3R_NS::Log::Err (H3R_NS::String::Format (
+            "Failed to set vsync:on : %s" EOL, SDL_GetError ()));
+
+    int attr;
+    printf ("SDL2: Open GL response: " EOL);
+    SDL_GL_GetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, &attr);
+    printf ("  OpenGL %d.", attr);
+    SDL_GL_GetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, &attr);
+    printf ("%d" EOL, attr);
+    SDL_GL_GetAttribute (SDL_GL_DOUBLEBUFFER, &attr);
+    printf ("  Double-buffered: %s" EOL, (attr ? "true" : "false"));
+    SDL_GL_GetAttribute (SDL_GL_ACCELERATED_VISUAL, &attr);
+    printf ("  HW Accelration: %s" EOL, (attr ? "true" : "false"));
+    SDL_GL_GetAttribute (SDL_GL_RED_SIZE, &attr);
+    printf ("  RGBA: %d", attr);
+    SDL_GL_GetAttribute (SDL_GL_GREEN_SIZE, &attr);
+    printf (",%d", attr);
+    SDL_GL_GetAttribute (SDL_GL_BLUE_SIZE, &attr);
+    printf (",%d", attr);
+    SDL_GL_GetAttribute (SDL_GL_ALPHA_SIZE, &attr);
+    printf (",%d" EOL, attr);
+    printf ("  V-sync: %d" EOL, SDL_GL_GetSwapInterval ());
+}// SDLWindow::SDLWindow()
 
 SDLWindow::~SDLWindow() {}
 
