@@ -184,6 +184,8 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
                 *(p+1) = *((byte *)_palette+3*i+1); // |
                 *(p+2) = *((byte *)_palette+3*i+2); // 0 Open GL does not?!
                 if (4 == u8_num) *(p+3) = 255; // opaque
+                //TODO encode palette[TRANSPARENT_COLOR_INDEX] with A=0
+                //TODO encode palette[TRANSPARENT_SHADOW_MAP] with A=?
             }
         }
         /*store_as_bmp (const_cast<char *>(_request->Name.AsZStr ()),
