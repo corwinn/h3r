@@ -83,7 +83,7 @@ class MessageBox : public DialogWindow, public IHandleEvents
 
     public MessageBox(Window * base_window, Point && size,
         const String & msg, const String & fnt, MessageBox::Buttons btn);
-    public ~MessageBox() override {}
+    public ~MessageBox() override;
 
     public static DialogResult Show(
         const String & msg, const String & fnt, MessageBox::Buttons btn);

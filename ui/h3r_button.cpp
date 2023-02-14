@@ -79,7 +79,8 @@ Button::Button(const String & res_name, Control * base)
 
 Button::~Button()
 {
-    RenderEngine::UI ().ChangeVisibility (_rkey, false);
+    // This is base Window job now:
+    // RenderEngine::UI ().ChangeVisibility (_rkey, false);
 }
 
 Button::Button(const String & res_name, Window * base)

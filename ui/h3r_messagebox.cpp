@@ -84,9 +84,14 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         dlg_back_arr->operator byte * (), 3,
         dlg_back.Width (), dlg_back.Height (), Depth());
 
+    // Due to the async. nature. of the res-loader, there is observable, and
+    // annoying, partially-rendered UI. It is time to cache things up, show
+    // "loading please wait ...", etc.
+    RenderEngine::UI ().CheckPoint ();
+
     // Decoration
     int key;
-    // using the buttons depth, becase the big UI VBO is rendered prior
+    // using the buttons depth, because the big UI VBO is rendered prior
     // everything else
     int depth = Depth () + 1;
     Pal pp {Game::GetResource ("PLAYERS.PAL")};
@@ -182,6 +187,12 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     btn_cancel->Click.Subscribe (this, &MessageBox::HandleCancelClick);
 }
 
+MessageBox::~MessageBox()
+{
+    RenderEngine::UI ().DeleteShadowRectangle ();
+    RenderEngine::UI ().Rollback ();
+}
+
 /*static*/ DialogResult MessageBox::Show(
     const String & msg, const String & fnt, MessageBox::Buttons btn)
 {
@@ -207,10 +218,8 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     // It looks like this was done manually on hand. I can't deduce auto-layout
     // yet.
 
-    MessageBox * msgbox;
-    H3R_CREATE_OBJECT(msgbox, MessageBox) {
-        Window::ActiveWindow, Point {320, 192}, msg, fnt, btn};
-    return msgbox->ShowDialog ();
+    MessageBox msgbox {Window::ActiveWindow, Point {320, 192}, msg, fnt, btn};
+    return msgbox.ShowDialog ();
 }
 
 DialogResult MessageBox::ShowDialog()
@@ -220,10 +229,6 @@ DialogResult MessageBox::ShowDialog()
         Window::ActiveWindow->ProcessMessages ();
     bool allow_close = true;
     OnClose (this, allow_close);
-    // Hide
-    RenderEngine::UI ().DeleteShadowRectangle ();
-    for (auto & k : _re_keys) RenderEngine::UI ().ChangeVisibility (k, false);
-
     return _dr;
 }
 
