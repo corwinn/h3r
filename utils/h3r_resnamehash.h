@@ -125,10 +125,21 @@ template <typename T> class ResNameHash final
         if (res != -1) return value = _tbl[res]->Value, _hit_cnt++, true;
         return _miss_cnt++, false;
     }
-};// ResNameHash
+
+    //TODO testme
+    public int Count() const { return _tbl.Length (); }
+    public KeyValue<T> ** begin()
+    {
+        return _tbl.operator KeyValue<T> ** ();
+    }
+    public KeyValue<T> ** end  ()
+    {
+        return _tbl.operator KeyValue<T> ** () + _tbl.Length ();
+    }
 
 #undef public
 #undef private
+};// ResNameHash
 
 NAMESPACE_H3R
 
