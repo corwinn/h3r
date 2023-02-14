@@ -204,7 +204,8 @@ static inline int NextP2(int value)//TODO outperform the compiler :)
         value <= 512 ? 512 : 1024;
 }
 
-TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp,
+TexCache::Entry TexCache::Cache(GLint w, GLint h,
+    h3rBitmapCallback data, h3rBitmapFormat fmt,
     const String & key)
 {
     static ResNameHash<TexCache::Entry> cache {};
@@ -250,7 +251,8 @@ TexCache::Entry TexCache::Cache(GLint w, GLint h, byte * data, int bpp,
     if (sy >= clasify_h) {
         glBindTexture (GL_TEXTURE_2D, _bound = e.Texture);
         glTexSubImage2D (GL_TEXTURE_2D, 0, e.x, e.y, w, h,
-            3 == bpp ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
+            h3rBitmapFormat::RGB == fmt ? GL_RGB : GL_RGBA,
+            GL_UNSIGNED_BYTE, data ());
         result.Texture = e.Texture;
         result.l = 1.f * e.x / H3R_MAX_TEX_SIZE; // left
         result.t = 1.f * e.y / H3R_MAX_TEX_SIZE; // top

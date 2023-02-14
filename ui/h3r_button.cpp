@@ -103,25 +103,31 @@ void Button::UploadFrames()
     auto & pos = Pos ();
     Def sprite {Game::GetResource (_sprite_name)};
 
-    printf ("[%2d] frame: %s %d %d %d %d, ",
-        _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
+    // printf ("[%2d] frame: %s %d %d %d %d, ",
+    //    _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
+
+    static byte * bmp_data {};
+    auto bitmap_data = []() { return bmp_data; };
 
     byte * frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "n.pcx"));
-    if (frame)
-        _on = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
+    if ((bmp_data = frame))
+        _on = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+            h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
 
     frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "h.pcx"));
-    if (frame)
-        _oh = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
+    if ((bmp_data = frame))
+        _oh = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+            h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
 
     frame = LoadSpriteFrame (sprite, _sprite_name,
         _sprite_name.ToLower ().Replace (".def", "s.pcx"));
-    if (frame)
-        _os = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, frame, 4,
+    if ((bmp_data = frame))
+        _os = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+            h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
     // printf ("ofs: %d %d %d" EOL, _on, _oh, _os);
 }

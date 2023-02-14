@@ -223,7 +223,7 @@ class RenderEngine final
 
     // Returns the offset you want applied when calling ChangeOffset()
     // "x" - left, and "y" - top, are absolute coordinates.
-    // "bpp" - whatever TexCache::Cache() supports; currently 24(GL_RGB) and
+    // "fmt" - whatever TexCache::Cache() supports; currently 24(GL_RGB) and
     // 32(GL_RGBA) - that's your "data" format mind you; bytes per pixel.
     // The "texkey" is forwarded to the texcache for the purposes of uniquely
     // identifying a bitmap being cached there.
@@ -233,7 +233,8 @@ class RenderEngine final
     // "b.order". There shall be no more than 256 distinct things one over
     // another, so a byte should be enough; change it to short otherwise.
     public int UploadFrame(
-        int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp,
+        int key, GLint x, GLint y, GLint w, GLint h,
+        h3rBitmapCallback data, h3rBitmapFormat fmt,
         const String & texkey, h3rDepthOrder render_order);
 
     // Use when a window is shown/hidden. Hiding the just the window won't do
@@ -316,7 +317,7 @@ class RenderEngine final
     // bpp - bytes per pixel
     public void ShadowRectangle(
         GLint x, GLint y, GLint w, GLint h,
-        const byte * tile, int tile_bpp, int tile_w, int tile_h,
+        const byte * tile, h3rBitmapFormat tile_fmt, int tile_w, int tile_h,
         h3rDepthOrder order);
     // LIFO: Close the last opened one.
     public void DeleteShadowRectangle();

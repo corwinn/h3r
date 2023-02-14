@@ -194,11 +194,12 @@ RenderEngine::TexList & RenderEngine::ListByTexId(GLuint tex_id)
 }
 
 int RenderEngine::UploadFrame(
-    int key, GLint x, GLint y, GLint w, GLint h, byte * data, int bpp,
+    int key, GLint x, GLint y, GLint w, GLint h,
+    h3rBitmapCallback data, h3rBitmapFormat fmt,
     const String & texkey, h3rDepthOrder order)
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
-    auto uv = TexCache::One ()->Cache (w, h, data, bpp, texkey);
+    auto uv = TexCache::One ()->Cache (w, h, data, fmt, texkey);
     H3RGL_Debug
     GLfloat l = x, t = y, b = t + h, r = l + w;
     GLfloat z = Depht2z (order);
@@ -410,7 +411,7 @@ void RenderEngine::DeleteText(TextKey & key)
 // -- Window -----------------------------------------------------------------
 
 void RenderEngine::ShadowRectangle(GLint x, GLint y, GLint w, GLint h,
-    const byte * tile, int tile_bpp, int tile_w, int tile_h,
+    const byte * tile, h3rBitmapFormat tile_fmt, int tile_w, int tile_h,
     h3rDepthOrder order)
 {
     // 3 rectangles: light shadow; darker shadow, tiled one
@@ -441,7 +442,8 @@ void RenderEngine::ShadowRectangle(GLint x, GLint y, GLint w, GLint h,
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, tile_w, tile_h,
-        0, 3 == tile_bpp ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, tile);
+        0, h3rBitmapFormat::RGB == tile_fmt ? GL_RGB : GL_RGBA,
+        GL_UNSIGNED_BYTE, tile);
     H3RGL_Debug
     glGenBuffers (1, &(e.Vbo));
     glBindBuffer (GL_ARRAY_BUFFER, e.Vbo);

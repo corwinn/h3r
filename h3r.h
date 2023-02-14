@@ -77,6 +77,9 @@ using h3rPlayerColor = byte;
 // more details.
 #define H3R_DEFAULT_PLAYER_COLOR 0
 
+enum class h3rBitmapFormat {RGB, RGBA};
+using h3rBitmapCallback = byte* (*)();
+
 // Used by the memory allocator.
 // This remake is expected to use no more than:
 static int const H3R_MEMORY_LIMIT {1<<29}; // [bytes] of RAM.

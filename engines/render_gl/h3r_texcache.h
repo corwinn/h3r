@@ -71,8 +71,10 @@ class TexCache final
     // The "key" part binds TexCache::Entry e.g. you don't have to worry about
     // duplicate bitmaps as long as they're uniquely identified by a "key".
     // Make sure your "key" uniquely identifies your bitmap, or you shall get
-    // the wrong TexCache::Entry.
-    public Entry Cache(GLint w, GLint h, byte * data, int bpp,
+    // the wrong TexCache::Entry. The bitmap "data" shall be requested as
+    // needed.
+    public Entry Cache(GLint w, GLint h,
+        h3rBitmapCallback data, h3rBitmapFormat fmt,
         const String & key);
 
     private static GLuint _bound; // currently bound texture
