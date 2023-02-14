@@ -93,6 +93,8 @@ template <typename T> class List //LATER Insert() - should the need arise
     {
         return Add (r), *this;
     }
+
+    public void Resize(int len) { _l.Resize (len); }
 };// List
 
 #undef public
