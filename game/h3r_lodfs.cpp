@@ -72,9 +72,12 @@ LodFS::LodFS(const String & fname)
 
     _s->Seek (H3R_LOD_UNK2); //TODO what are those? H3bitmap.lod
 
-    _entries.Resize (cnt);
-    auto data = static_cast<LodFS::Entry *>(_entries);
+    Array<LodFS::Entry> entries {cnt};
+    auto data = static_cast<LodFS::Entry *>(entries);
     Stream::Read (*_s, data, cnt);
+    for (auto & e : entries)
+        _entries.Add (String {reinterpret_cast<const char *>(e.Name)}
+            .operator const Array<byte> & (), e);
     //TODO validate entries
     /*int i {0};
     for (const auto & e : _entries)
@@ -82,8 +85,6 @@ LodFS::LodFS(const String & fname)
             "%s: entry: %004d: %c (%00000008d/%00000008d) \"%s\"" EOL,
             fname.AsZStr (), i++, (e.SizeU > e.SizeC && e.SizeC > 0 ? 'C' : 'U'),
                 e.SizeC, e.SizeU, e.Name);*/
-    //LATER if (! sorted) sort (); contract with the binary search below;
-    //      or hash (you should have a DLL already)
 
     H3R_CREATE_OBJECT(_rrs, RefReadStream) {_s, 0, 0};
     H3R_CREATE_OBJECT(_zis, ZipInflateStream) {_rrs, 0, 0};
@@ -92,9 +93,19 @@ LodFS::LodFS(const String & fname)
 
 LodFS::~LodFS()
 {
+    printf ("LodFS::~LodFS()" EOL);
     H3R_DESTROY_OBJECT(_zis, ZipInflateStream)
     H3R_DESTROY_OBJECT(_rrs, RefReadStream)
     H3R_DESTROY_OBJECT(_s, FileStream)
+
+#ifdef IMPROVISED_CACHE
+    for (auto & e : _cache) {
+        if (e->Value.Count > 1) printf ("Cache entry.Count: %3d" EOL,
+            e->Value.Count);
+        if (e->Value.Sd) H3R_DESTROY_OBJECT(e->Value.Sd, Stream)
+        if (e->Value.S) H3R_DESTROY_OBJECT(e->Value.S, Stream)
+    }
+#endif
 }
 
 Stream & LodFS::GetStream(const LodFS::Entry & e)
@@ -115,12 +126,41 @@ Stream & LodFS::GetStream(const LodFS::Entry & e)
 
 Stream * LodFS::Get(const String & res)
 {
-    //LATER binary search; sort the entry list (I think they're sorted already);
-    //      What?! - you expected a hash? - there will be one sooner or later,
-    //      no worries.
-    for (const auto & e : _entries)
-        if (res == reinterpret_cast<const char *>(e.Name))
+#ifdef IMPROVISED_CACHE
+    LodFS::CacheEntry cached_entry {};
+    if (_cache.TryGetValue (res.operator const Array<byte> &(), cached_entry)) {
+        printf ("Cached: %s" EOL, res.AsZStr ());
+        return cached_entry.S;
+    }
+#endif
+    LodFS::Entry e {};
+    if (_entries.TryGetValue (res.operator const Array<byte> &(), e)) {
+#ifdef IMPROVISED_CACHE
+        int size = e.Compressed () ? e.SizeC : e.SizeU;
+        if (size + _cache_size < _CACHE_SIZE) {
+            printf ("Caching: %s, Compressed: %s, Ofs: %10d, Size: %7d, "
+                "Uncompressed size: %7d, Type: %d" EOL, res.AsZStr (),
+                (e.Compressed () ? "true" : "false"), e.Ofs, size, e.SizeU,
+                e.Type);
+            _cache_size += size;
+            _s->Seek (e.Ofs - _s->Tell ());
+            MemoryStream * ms {};
+            H3R_CREATE_OBJECT(ms, MemoryStream) {_s, size}; // read it to RAM
+            if (! e.Compressed ())
+                cached_entry.S = ms;
+            else {
+                ZipInflateStream * zis {};
+                H3R_CREATE_OBJECT(zis, ZipInflateStream) {ms, size, e.SizeU};
+                cached_entry.S = zis; cached_entry.Sd = ms;
+            }
+            _cache.Add (res.operator const Array<byte> &(), cached_entry);
+            return cached_entry.S;
+        }
+        else // cache full -> fallback to uncached, for now
+#endif
             return &(GetStream (e));
+    }
+    // printf ("Not found: %s" EOL, res.AsZStr ());
     return VFS::Get (res);
 }
 
@@ -128,12 +168,12 @@ void LodFS::Walk(bool (*on_entry)(Stream &, const VFS::Entry &))
 {
     static VFS::Entry vfs_e {};
     auto prev_info = VFS::VFSInfo {0, ""};
-    auto all = _entries.Length ();
+    auto all = _entries.Count ();
     auto i = all-all;
-    for (const auto & e : _entries) {
-        vfs_e.Name = reinterpret_cast<const char *>(e.Name);
-        vfs_e.Size = e.SizeU;
-        if (! on_entry (GetStream (e), vfs_e)) break;
+    for (auto e : _entries) {
+        vfs_e.Name = reinterpret_cast<const char *>(e->Value.Name);
+        vfs_e.Size = e->Value.SizeU;
+        if (! on_entry (GetStream (e->Value), vfs_e)) break;
 
         //TODO there is definitely a field for improvements, still
         auto new_info = VFS::VFSInfo {

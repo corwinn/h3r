@@ -191,6 +191,7 @@ static TexCache::Entry global_h[H3R_TEX_KEYS_NUM] {}; // group by height
 
 TexCache::~TexCache()
 {
+    printf ("TexCache::~TexCache()" EOL);
     for (int i = 0; i < H3R_TEX_KEYS_NUM; i++)
         glDeleteTextures (1, &(global_h[i].Texture));
 }

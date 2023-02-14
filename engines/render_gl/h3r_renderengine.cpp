@@ -203,7 +203,7 @@ int RenderEngine::UploadFrame(
     H3RGL_Debug
     GLfloat l = x, t = y, b = t + h, r = l + w;
     GLfloat z = Depht2z (order);
-    printf ("Frame: Order: %3d, z: %.5f" EOL, order, z);
+    // printf ("Frame: Order: %3d, z: %.5f" EOL, order, z);
     GLfloat v[H3R_SPRITE_FLOATS] {
         l,t,z,uv.l,uv.t, l,b,z,uv.l,uv.b, r,t,z,uv.r,uv.t, r,b,z,uv.r,uv.b};
 

@@ -43,9 +43,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_array.h"
 #include "h3r_refreadstream.h"
 #include "h3r_zipinflatestream.h"
+#include "h3r_memorystream.h"
+#include "h3r_resnamehash.h"
 
 // placement new
 #include <new>
+
+#define IMPROVISED_CACHE
 
 H3R_NAMESPACE
 
@@ -59,7 +63,21 @@ H3R_NAMESPACE
 class LodFS : public VFS
 {
 #define public public:
+#define private private:
 #define protected protected:
+
+#ifdef IMPROVISED_CACHE
+    // Improvised cache
+    private struct CacheEntry final
+    {
+        Stream * S {};
+        Stream * Sd {}; // decorator stream ptr: cleanup
+        int Count {1};
+    };
+    private int const _CACHE_SIZE {1<<23}; // [bytes]
+    private int _cache_size {0}; // [bytes]
+    private ResNameHash<LodFS::CacheEntry> _cache {};
+#endif
 
     protected OS::FileStream * _s {};
     protected bool _usable {false};
@@ -74,9 +92,10 @@ class LodFS : public VFS
         int SizeU; // Uncompressed size [bytes]
         int Type;
         int SizeC; // Compressed size [bytes]
+        inline bool Compressed() { return SizeU >= SizeC && SizeC > 0; }
     };
 #pragma pack(pop)
-    protected Array<LodFS::Entry> _entries {};
+    protected ResNameHash<LodFS::Entry> _entries {};
     protected virtual Stream & GetStream(const LodFS::Entry &);
     public LodFS(const String & path);
     public ~LodFS() override;
@@ -95,10 +114,12 @@ class LodFS : public VFS
         H3R_DESTROY_OBJECT(result, LodFS)
         return nullptr;
     }
-};// LodFS
 
 #undef public
+#undef private
 #undef protected
+};// LodFS
+
 NAMESPACE_H3R
 
 #endif
