@@ -112,7 +112,8 @@ class Pcx final : public ResDecoder
             return false;
         }
 
-        _bitmap_ofs = 12; // _s->Tell () = 128? I can't count on it it seems
+        _bitmap_ofs = _s->Tell ();
+        H3R_ENSURE(12 == _s->Tell (), "Bug: fix your stream")
         // printf ("w:%d, h:%d, f:%d, p:%zu" EOL, _w, _h, _fmt, _bitmap_ofs);
         return true;
     }// Init

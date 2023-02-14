@@ -48,9 +48,8 @@ Stream & ZipInflateStream::Seek(off_t offset)
     return * this;
 }
 
-//TODO this is unreliable: reading 12 bytes, makes it return 128
-//See h3r_pcx.h for an example
-off_t ZipInflateStream::Tell() const { return Stream::Tell () - _zs.avail_in; }
+// No point returning the zipstream position unless you're writing a zip parser.
+off_t ZipInflateStream::Tell() const { return _pos; }
 
 off_t ZipInflateStream::Size() const { return _usize; }
 
@@ -87,7 +86,7 @@ Stream & ZipInflateStream::Read(void * buf, size_t bytes)
         H3R_ENSURE(sentinel1 != _zs.avail_in || sentinel2 != _zs.avail_out,
             "ZipInflateStream::Read infinite loop case")
     }
-    return  *this;
+    return _pos += bytes, *this;
 }// Read()
 
 Stream & ZipInflateStream::Write(const void *, size_t)
@@ -106,6 +105,7 @@ Stream & ZipInflateStream::ResetTo(int size, int usize)
     _size = {size}, _usize = {usize};
     /*OS::Log_stdout ("%pZipInflateStream::ResetTo size:%zu, usize:%zu" EOL,
         this, _size, _usize);*/
+    _pos = 0;
     Stream::Seek (_pos_sentinel - Stream::Tell ());
     return *this;
 }

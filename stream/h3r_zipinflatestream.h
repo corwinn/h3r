@@ -53,6 +53,7 @@ class ZipInflateStream : public Stream
     private z_stream _zs {};
     private int _zr {~Z_OK}, _size, _usize;
     private const off_t _pos_sentinel; // for ResetTo()
+    private off_t _pos {}; // how many bytes were decoded so far
     private static uInt constexpr _IN_BUF {1<<12}; // zlib: uInt
     private byte _buf[_IN_BUF] {};
     public ZipInflateStream(Stream * s, int size, int usize)
