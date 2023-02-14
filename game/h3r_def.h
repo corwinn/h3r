@@ -204,9 +204,9 @@ class Def final : public ResDecoder
                 return this;
             }
         }
-        return nullptr;
+        return QueryCI (sprite_name);
     }
-    public: inline Def * QueryCI(const String & sprite_name)
+    private: inline Def * QueryCI(const String & sprite_name)
     {
         _request = nullptr; _request_id = -1;
         for (int i = 0; i < _sprites.Length (); i++) {

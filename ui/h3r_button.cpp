@@ -42,27 +42,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-// To function it is.
-//TODO widely accessible for other controls.
-static byte * LoadSpriteFrame(Def & def,
+static bool QuerySpriteFrame(Def & def,
     const String & def_name, const String & frame_name)
 {
     auto frame = def.Query (frame_name);
-    if (! frame) frame = def.QueryCI (frame_name);
     if (! frame) {
         H3R_NS::Log::Err (String::Format (
             "Can't find %s[%s]" EOL, def_name.AsZStr (), frame_name.AsZStr ()));
-        return nullptr;
+        return false;
     }
-    auto byte_arr = frame->ToRGBA ();
-    if (! byte_arr || byte_arr->Empty ()) {
-        H3R_NS::Log::Err (String::Format (
-            "Can't load %s[%s]" EOL, def_name.AsZStr (), frame_name.AsZStr ()));
-        return nullptr;
-    }
-    // printf ("SpriteFrame: %s: %d x %d" EOL,
-    //     frame_name.AsZStr (), frame->Width (), frame->Height ());
-    return byte_arr->operator byte * ();
+    return true;
 }
 
 Button::Button(const String & res_name, Control * base)
@@ -106,29 +95,45 @@ void Button::UploadFrames()
     // printf ("[%2d] frame: %s %d %d %d %d, ",
     //    _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
 
-    static byte * bmp_data {};
-    auto bitmap_data = []() { return bmp_data; };
+    static Def * sprite_p {};
+    static String * def_n {};
+    static String * sprite_n {};
+    sprite_p = &sprite;
+    def_n = &_sprite_name;
+    auto bitmap_data = []() -> byte *
+    {
+        auto byte_arr = sprite_p->ToRGBA ();
+        if (! byte_arr || byte_arr->Empty ()) {
+            H3R_NS::Log::Err (String::Format (
+            "Can't load %s[%s]" EOL, def_n->AsZStr (), sprite_n->AsZStr ()));
+            return nullptr;
+        }
+        return byte_arr->operator byte * ();
+    };
 
-    byte * frame = LoadSpriteFrame (sprite, _sprite_name,
-        _sprite_name.ToLower ().Replace (".def", "n.pcx"));
-    if ((bmp_data = frame))
+    auto sprite_name = _sprite_name.ToLower ().Replace (".def", "n.pcx");
+    if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
+        sprite_n = &sprite_name;
         _on = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
+    }
 
-    frame = LoadSpriteFrame (sprite, _sprite_name,
-        _sprite_name.ToLower ().Replace (".def", "h.pcx"));
-    if ((bmp_data = frame))
+    sprite_name = _sprite_name.ToLower ().Replace (".def", "h.pcx");
+    if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
+        sprite_n = &sprite_name;
         _oh = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
+    }
 
-    frame = LoadSpriteFrame (sprite, _sprite_name,
-        _sprite_name.ToLower ().Replace (".def", "s.pcx"));
-    if ((bmp_data = frame))
+    sprite_name = _sprite_name.ToLower ().Replace (".def", "s.pcx");
+    if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
+        sprite_n = &sprite_name;
         _os = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
+    }
     // printf ("ofs: %d %d %d" EOL, _on, _oh, _os);
 }
 
