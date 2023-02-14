@@ -101,6 +101,41 @@ class RenderEngine final
     private List<TexList> _tex2_list {};
     private RenderEngine::TexList & ListByTexId(GLuint tex_id);
 
+    private struct CheckPointEntry final
+    {
+        Array<int> TexListCounts {};
+        int EntryCount {};
+    };
+    private Stack<CheckPointEntry> _cp_stack {};
+    // Add a check-point to the animated sprite VBO. The next call to Rollback()
+    // shall restore it to the check-point - all modifications after the check-
+    // point shall be lost. Ideal for things that show for a wile and hide, then
+    // show again after some time, and hide, etc.: like Dialog windows.
+    public inline void CheckPoint()
+    {
+        CheckPointEntry e {};
+        e.TexListCounts.Resize (_tex2_list.Count ());
+        for (int i = 0; i < _tex2_list.Count (); i++) {
+            H3R_ENSURE (
+                _tex2_list[i]._index.Count () ==_tex2_list[i]._count.Count (),
+                "Bug: out of sync. TexList")
+            e.TexListCounts[i] = _tex2_list[i]._index.Count ();
+        }
+        e.EntryCount = _entries.Count ();
+        _cp_stack.Push (e);
+    }
+    public inline void Rollback()
+    {
+        H3R_ENSURE(! _cp_stack.Empty (), "Bug: Rollback w/o a CheckPoint")
+        auto e = _cp_stack.Pop ();
+        _tex2_list.Resize (e.TexListCounts.Length ());
+        for (int i = 0; i < _tex2_list.Count (); i++) {
+            _tex2_list[i]._index.Resize (e.TexListCounts[i]);
+            _tex2_list[i]._count.Resize (e.TexListCounts[i]);
+        }
+        _entries.Resize (e.EntryCount);
+    }
+
     private GLuint _vbo;
     private GLsizeiptr _vbo_max_elements;
     private GLfloat _znear = .0f, _zfar = 1.f, _zt = -.2f; // [-0.79;0.2]
