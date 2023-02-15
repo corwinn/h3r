@@ -165,27 +165,44 @@ void Window::Close()
 }
 
 // WndProc. Do not block it.
+// GALLIUM_HUD="VRAM-usage,GPU-load,cpu,fps" . _invoke
+//
+// Async. task status check granularity min.: TIGHT_LOOP_THRESHOLD [nsec]
+// Removing it completely will cause 100% CPU load (tight loop) - which will
+// actually slow down the async. task.
 void Window::ProcessMessages()
 {
     Window::ActiveWindow = this;
     _win->ProcessMessages ();
 
-    // A good a place as any. For timing that is. It can easily be moved when/if
-    // OnIdle is implemented.
-    // GALLIUM_HUD="VRAM-usage,GPU-load,cpu,fps" . _invoke
     static OS::TimeSpec frame_a, frame_b;
-    OS::GetCurrentTime (frame_a);
-    Render ();//TODO OnIdle
-    OS::GetCurrentTime (frame_b);
-    auto frame_time = OS::TimeSpecDiff (frame_a, frame_b); // [nsec]
-    if (frame_time > 0) {
-        auto ftus = frame_time / 1000.0; // [usec]
-        auto const TARGET_FPS {32};//TODO to Game - link with Options
-        double adj = 1000000.0 / TARGET_FPS - ftus; // [usec]
-        //TODO high-resolution OS::Thread::Sleep
-        if (adj > 1000.0 && adj < 1000000.0)
-            OS::Thread::Sleep (static_cast<int>(adj/1000));
+    static OS::TimeSpec adj_a {}, adj_b;
+    static long adjustment {};
+
+    OS::GetCurrentTime (adj_b);
+    long outside_time = OS::TimeSpecDiff (adj_a, adj_b);
+
+    // This detection shall fail on heavy-loaded machine.
+    long const TIGHT_LOOP_THRESHOLD {100000}; // [nsec]
+    if (outside_time <= TIGHT_LOOP_THRESHOLD) {
+        OS::Thread::NanoSleep (TIGHT_LOOP_THRESHOLD - outside_time);
+        OS::GetCurrentTime (adj_b);
+        outside_time = OS::TimeSpecDiff (adj_a, adj_b);
     }
+
+    adjustment -= outside_time;
+
+    if (adjustment <= 0) {
+        OS::GetCurrentTime (frame_a);
+        Render ();
+        OS::GetCurrentTime (frame_b);
+
+        auto const TARGET_FPS {32};
+        long const F_ALLOWED {1000000000/TARGET_FPS}; // [nsec/frame]
+        adjustment = F_ALLOWED - OS::TimeSpecDiff (frame_a, frame_b);
+    }
+
+    OS::GetCurrentTime (adj_a);
 }
 
 // Observer

@@ -83,7 +83,7 @@ Thread::~Thread()
 }*/
 
 /*static*/ void Thread::Sleep(int msec)
-{
+#error implement nano-second sleep as the POSIX variant
     H3R_ENSURE(msec > 0 && msec < 1001, "Sleep under a second please")
     ::Sleep (msec);
 }

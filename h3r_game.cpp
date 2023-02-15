@@ -114,7 +114,7 @@ void Game::SilentLog(bool v)
     // "async-ui-issue.dia".
     const auto & task_info = Game::RM->GetResource (name);
     while (! Game::RM->TaskComplete ())
-        /*Game::ProcessThings ()*/; // <- causing partially rendered UI!
+        Game::ProcessThings (); // <- causing partially rendered UI!
     return task_info.Resource;
 }
 

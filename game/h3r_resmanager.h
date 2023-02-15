@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_iasynctask.h"
 #include "h3r_list.h"
 #include "h3r_criticalsection.h"
+#include "h3r_timing.h"
 #include <cmath>
 
 H3R_NAMESPACE
@@ -178,16 +179,23 @@ class ResManager : protected VFS
         public using RMTask::RMTask;
         public inline void Do() override
         {
+            static OS::TimeSpec time_a, time_b;
+            OS::GetCurrentTime (time_a);
+
             State.Resource = nullptr;
-            auto all = _subject._vfs_objects.Count ();
-            auto i = all - all;
+            // auto all = _subject._vfs_objects.Count ();
+            // auto i = all - all;
             for (auto * vfs : _subject._vfs_objects) {
-                State.SetInfo (TaskState {
-                    static_cast<int>(round (1.0*i++/all*100)),
-                    "Looking for: " + State.Name});
+                // State.SetInfo (TaskState {
+                //    static_cast<int>(round (1.0*i++/all*100)),
+                //    "Looking for: " + State.Name});
                 // Its assignment, not comparison.
-                if (nullptr != (State.Resource = vfs->Get (State.Name))) return;
+                if (nullptr != (State.Resource = vfs->Get (State.Name))) break;
             }
+
+            OS::GetCurrentTime (time_b);
+            auto frame_time = OS::TimeSpecDiff (time_a, time_b); // [nsec]
+            printf ("RMGetTask: %lu [nsec]" EOL, frame_time);
         }
         public Stream * GetStream()
         {

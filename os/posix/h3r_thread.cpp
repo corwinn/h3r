@@ -81,7 +81,17 @@ Thread::~Thread()
     nanosleep (&foo, nullptr);
 }
 
-/*static*/ void Thread::SleepForAWhile() { Thread::Sleep (1); }
+/*static*/ void Thread::SleepForAWhile()
+{
+    struct timespec foo {0, 100000}; // [nsec]
+    nanosleep (&foo, nullptr);
+}
+
+/*static*/ void Thread::NanoSleep(long nsecs)
+{
+    struct timespec foo {0, nsecs}; // [nsec]
+    nanosleep (&foo, nullptr);
+}
 
 void Thread::Join()
 {
