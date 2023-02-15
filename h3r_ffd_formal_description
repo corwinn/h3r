@@ -1,0 +1,97 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+node    : generalization: each token of the description
+comment : "//" & "/**/"
+object  : starts with a {keyword} (and the preceding {comment}s and
+          {attribute}s) - no empty lines; an empty line or a {keyword}
+          completes current {node} and starts a new one;
+symbol  : a name that binds a {node} to its description; you access your parsed
+          data through the description {symbol}s
+attribute: a list of "[.*]" lines prior a {keyword} line - a hint specific
+           to the code that handles the parsed data; the ".*" is passed
+           directly to your code
+keywords:
+  "type" - defines a binding between a {symbol} and machine type
+  "???" - not decided yet - ignored
+  "list" - ignored for now
+  "table" - ignored for now
+  "struct" - defines a {node} of {node}s - sequential data grouped together
+             and bound to a {symbol}
+  "format" - defines the root {node} of your data format - this is where the
+             parser starts
+  "const" - a {symbol} bound to a {literal}
+  "enum" - a list of {const}s grouped by {type}
+
+literal : a value directly encoded in the FFD:
+  - integer: 32-bit; decimal or hexadecimal
+  - string : character ASCII sequence
+
+expression: a script being evaluated when needed (always enclosed in ()):
+            Important: {symbols} used by a script are resolved:
+              1. globals
+              2. parameters
+              3. backwards from the current node
+            Expressions:
+              - boolean - evaluates to true or false - {node} presence depends
+                on it; supported ops: > < == >= <= != || && ! implicit_symbol;
+              - arithmetic - not implemented yet; not needed yet;
+
+{struct} sub-nodes: {symbol} [{symbol}] [boolean {expression}] [{comment}]
+                    The [] denote: optional.
+                    Important: if there is exactly one {symbol}, its sub-nodes
+                    shall be inserted in its place.
+                    {symbol}s have extras:
+                      - {symbol}[integer {literal}] - defines an array;
+                        up-to 3 dimensions are supported; implicit/explicit
+                        length is supported via {symbols}[{symbol}] - for now
+                        the {expression} {symbol} lookup rules apply;
+
+                    "..." {symbol} - implies variadic {node}s: are not pre-
+                    defined, but based on a {value} coming from a {symbol}; a
+                    look-up table is composed of all {node} variants that match
+                    "struct {value}:{value-list}". The value list supports
+                    integer-only literals for now, so your {value} should
+                    evaluate to integer. You can use "." to access sub-nodes:
+                    "foo.bar" will get the node named "foo" and then get its
+                    sub-node named "bar".
+
+char-set: ASCII; bytes that shall reward you with an exception:
+  [0;10), [11;13), [14;31], [127;255]
+//LATER: Unicode; - its simple, just not a priority right now; lets 1st see if
+//       this will end up as semi-useful design at least
+
+// This shall never be a XML, but eventually, if and when, I shall provide an
+// utility to export it to XML, and import it from one.
+// Much, much, ..., LATER this shall eventually evolve to an independent lib.
