@@ -86,6 +86,7 @@ template <typename T> void MM::Remove(T * & p)
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {
             RWGate ()};
+        if (! p) return;
 
         for (int i = _n-1; i >= 0; i--)
             if (_e[i].p == p) {
