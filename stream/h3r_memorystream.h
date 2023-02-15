@@ -87,6 +87,9 @@ class MemoryStream final : public Stream
     }
     public inline Stream & Reset() override { _pos = 0; return *this; }
 
+    // Direct buffer access.
+    public const byte * Buffer() const { return _buf.operator byte * (); }
+
 #undef public
 #undef private
 };
