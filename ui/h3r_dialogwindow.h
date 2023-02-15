@@ -100,8 +100,12 @@ class DialogWindow : public Window
             _w {base_window}, _size{size}
     {
         Window::GetOSWindow ()->SetEventHandler (this);
+        RenderEngine::UI ().CheckPoint ();
     }
-    public virtual ~DialogWindow() override {}
+    public virtual ~DialogWindow() override
+    {
+        RenderEngine::UI ().Rollback ();
+    }
     protected inline virtual void OnClose(IWindow * s, bool & allow) override
     {
         Window::GetOSWindow ()->SetEventHandler (_w);

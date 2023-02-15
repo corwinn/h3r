@@ -74,11 +74,6 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         dlg_back_arr->operator byte * (), h3rBitmapFormat::RGB,
         dlg_back.Width (), dlg_back.Height (), Depth());
 
-    // Due to the async. nature. of the res-loader, there is observable, and
-    // annoying, partially-rendered UI. It is time to cache things up, show
-    // "loading please wait ...", etc.
-    RenderEngine::UI ().CheckPoint ();
-
     static Def * sprite_p {};
     auto bitmap_data = [](){ return sprite_p->ToRGBA ()->operator byte * (); };
 
@@ -178,7 +173,6 @@ MessageBox::MessageBox(Window * base_window, Point && size,
 MessageBox::~MessageBox()
 {
     RenderEngine::UI ().DeleteShadowRectangle ();
-    RenderEngine::UI ().Rollback ();
 }
 
 /*static*/ DialogResult MessageBox::Show(
