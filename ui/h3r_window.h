@@ -68,6 +68,7 @@ class Window : public IWindow
 #define protected protected:
 #define IW
 
+    //TODO static
     private OSWindow * _win; // Shared. Until proved otherwise.
     // Bridge on demand
     protected inline OSWindow * GetOSWindow() { return _win; }

@@ -170,7 +170,7 @@ void Window::Close()
 // Async. task status check granularity min.: TIGHT_LOOP_THRESHOLD [nsec]
 // Removing it completely will cause 100% CPU load (tight loop) - which will
 // actually slow down the async. task.
-void Window::ProcessMessages()
+void Window::ProcessMessages()//TODO static
 {
     Window::ActiveWindow = this;
     _win->ProcessMessages ();
