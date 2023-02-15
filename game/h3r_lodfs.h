@@ -49,6 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // placement new
 #include <new>
 
+//TODO ensure all caching is optional
 #define IMPROVISED_CACHE
 #undef IMPROVISED_CACHE_UNZIP
 
