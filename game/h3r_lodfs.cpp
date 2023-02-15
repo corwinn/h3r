@@ -145,6 +145,17 @@ Stream * LodFS::Get(const String & res)
             _cache_size += size;
             _s->Seek (e.Ofs - _s->Tell ());
             MemoryStream * ms {};
+#ifdef IMPROVISED_CACHE_UNZIP
+            if (e.Compressed ()) {
+                // cache unpacked; ok its not it; see "async-ui-issue.dia"
+                ZipInflateStream zis {_s, size, e.SizeU};
+                H3R_CREATE_OBJECT(ms, MemoryStream) {&zis, e.SizeU};
+            }
+            else {
+                H3R_CREATE_OBJECT(ms, MemoryStream) {_s, size};
+            }
+            cached_entry.S = ms;
+#else
             H3R_CREATE_OBJECT(ms, MemoryStream) {_s, size}; // read it to RAM
             if (! e.Compressed ())
                 cached_entry.S = ms;
@@ -153,6 +164,7 @@ Stream * LodFS::Get(const String & res)
                 H3R_CREATE_OBJECT(zis, ZipInflateStream) {ms, size, e.SizeU};
                 cached_entry.S = zis; cached_entry.Sd = ms;
             }
+#endif
             _cache.Add (res.operator const Array<byte> &(), cached_entry);
             return cached_entry.S;
         }
