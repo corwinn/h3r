@@ -144,7 +144,16 @@ Control * Button::SetPos(int x, int y)
 }
 
 //TODO there are way too many software events happening in response to the HW
-//     ones; create the interactive event filter
+//     ones; create the interactive event filter:
+//     All events are Enqueued. At a certain time interval (this game doesn't
+//     require very fast keyboard/mouse switching response), they're all
+//     dequeued in a distinct manner, and sent around. Why "manner"? - because
+//     if you managed to move the mouse 10 times for 5 ms (like moving 10 mice
+//     at once), there is no point to notify 10 times, but just once - by
+//     computing the resulting move vector.
+//     If the above idea proves inadequate, just filter out equivalent events
+//     that happen within a constant time interval: say 50 mouse events with
+//     state not changed in < 1ms - notify just once.
 void Button::OnMouseMove(const EventArgs & e)
 {
     static Point p;
