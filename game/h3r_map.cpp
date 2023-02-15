@@ -32,23 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_MAP_H_
-#define _H3R_MAP_H_
-
-#include "h3r.h"
+#include "h3r_map.h"
 
 H3R_NAMESPACE
 
-using h3rMapVersion = int;
-using h3rObjRef = int;
-using h3rObjType = byte;
-using h3rCoord = byte;
-
-class Map
-{
-    // Waiting for the FFD ...
-};
-
 NAMESPACE_H3R
-
-#endif

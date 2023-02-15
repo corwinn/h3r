@@ -32,22 +32,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-#ifndef _H3R_MAP_H_
-#define _H3R_MAP_H_
+#ifndef _H3R_FFD_H_
+#define _H3R_FFD_H_
 
 #include "h3r.h"
+#include "h3r_string.h"
 
 H3R_NAMESPACE
 
-using h3rMapVersion = int;
-using h3rObjRef = int;
-using h3rObjType = byte;
-using h3rCoord = byte;
-
-class Map
+// File Format Description.
+// Wraps a ffd (a simple text file written using a simple grammar) that can be
+// used to parse different (I hope; its h3m for now) file formats.
+// A.k.a. transforms binary files into trees.
+//
+// If this happens to work (is fast enough, is complicated not): Def, Pcx, Fnt,
+// Pal, Lod, Vid, Snd, etc. will become a one-line function call:
+//   data = FFD::File2Tree ("description", "file").
+class FFD
 {
-    // Waiting for the FFD ...
-};
+#define public public:
+#define private private:
+
+    public class Node
+    {
+    };
+
+    public static Node * File2Tree(const String & d, const String & f);
+
+#undef public
+#undef private
+};// FFD
 
 NAMESPACE_H3R
 

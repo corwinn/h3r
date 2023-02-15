@@ -47,6 +47,10 @@ H3R_LOG_STATIC_INIT
 
 #include "h3r_mainwindow.h"
 
+#include "h3r_ffd.h"
+
+#include <new>
+
 H3R_NAMESPACE
 
 TaskThread Game::IOThread {};
@@ -118,10 +122,10 @@ void Game::SilentLog(bool v)
     return task_info.Resource;
 }
 
-#include <new>
-
 int Game::Run(int argc, char ** argv)
 {
+    auto test = FFD::File2Tree ("map_grammar", "Atlantis_1029662174.h3m");
+
     // create the main window
     // Again, no plug-in interface yet, so
     auto main_window =
