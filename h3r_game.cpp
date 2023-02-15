@@ -109,9 +109,12 @@ void Game::SilentLog(bool v)
     // Danger! Returns a Copy?!
     //LATER RTFM
     //var task_info = Game::RM->GetResource (name);
+    // This should take a nanosecond now; why is it slowing things down?
+    // Because: bad timing, and missing sequence diagrams. TODO Resolve at
+    // "async-ui-issue.dia".
     const auto & task_info = Game::RM->GetResource (name);
     while (! Game::RM->TaskComplete ())
-        Game::ProcessThings ();
+        /*Game::ProcessThings ()*/; // <- causing partially rendered UI!
     return task_info.Resource;
 }
 
