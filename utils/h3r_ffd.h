@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r.h"
 #include "h3r_string.h"
+#include "h3r_list.h"
 
 H3R_NAMESPACE
 
@@ -52,6 +53,30 @@ class FFD
 {
 #define public public:
 #define private private:
+
+    // The type of text at the description.
+    public enum class SType {Comment, MachType, TxtList, TxtTable, Unhandled,
+        Struct, Field, Enum, Const, Format};
+    // Syntax node - these are created as a result of parsing the description.
+    public class SNode
+    {
+        public String Attribute {}; // [.*] prior it
+        public SType Type {SType::Unhandled};
+        public SNode * Base {};   // Base->Type == SType::Struct
+        public String Name {};
+        public SNode * DType {};  // Data/dynamic type (Expr: resolved on parse)
+        public bool Array {};     // Is it an array
+        public bool Variadic {};  // "..." Type == SType::Field
+        public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
+        public String VList {};   // Variadic: value list :n,m,p-q,...
+        public List<SNode *> Fields {};
+        public String Expr {};
+        public String Comment {};
+        // Type == SType::MachType
+        public bool Signed {};
+        public int Size {};
+        public SNode * Alias {};  // Alias->Type == SType::MachType
+    };
 
     public class Node
     {

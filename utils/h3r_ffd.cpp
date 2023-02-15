@@ -33,11 +33,54 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **** END LICENCE BLOCK ****/
 
 #include "h3r_ffd.h"
+#include "h3r_filestream.h"
+#include "h3r_memorystream.h"
 
 H3R_NAMESPACE
 
+static inline bool is_whitespace(byte b) { return b < 32; }
+
+static void skip_whitespace(const byte * buf, int len, int & i)
+{
+    int j = i;
+    while (i < len && buf[i] < 32)
+        i++;
+    if (i != j)
+        printf ("skipped whitespace    : [%5d;%5d]" EOL, j, i);
+}
+
+static void skip_nonwhitespace(const byte * buf, int len, int & i)
+{
+    int j = i;
+    while (i < len && buf[i] >= 32 && buf[i] <= 126)
+        i++;
+    if (i != j)
+        printf ("skipped non-whitespace: [%5d;%5d]" EOL, j, i);
+}
+
 /*static*/ FFD::Node * FFD::File2Tree(const String & d, const String & f)
 {
-}
+    OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
+    MemoryStream br {&fh, static_cast<int>(fh.Size ())};
+    const byte * buf = br.Buffer ();
+    int len = static_cast<int>(br.Size ());
+
+    // pre-validate - simplifies the parer
+    for (int i = 0; i < len; i++) {
+        H3R_ENSURE(
+            '\n' == buf[i] || '\r' == buf[i] || (buf[i] >= 32 && buf[i] <= 126),
+            "Wrong chars at description")
+    }
+
+    printf ("parsing %d bytes ffd" EOL, len);
+    // 1. Read the nodes in TB LR manner
+    for (int i = 0, chk = 0; i < len; chk++) {
+        if (is_whitespace (buf[i])) skip_whitespace (buf, len, i);
+        else skip_nonwhitespace (buf, len, i);
+        H3R_ENSURE(chk < len, "infinite loop")
+    }// (int i = 0; i < len;)
+
+    return nullptr;
+}// FFD::File2Tree()
 
 NAMESPACE_H3R
