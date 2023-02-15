@@ -65,7 +65,7 @@ static void skip_nonwhitespace(const byte * buf, int len, int & i)
     const byte * buf = br.Buffer ();
     int len = static_cast<int>(br.Size ());
 
-    // pre-validate - simplifies the parer
+    // pre-validate - simplifies the parser
     for (int i = 0; i < len; i++) {
         H3R_ENSURE(
             '\n' == buf[i] || '\r' == buf[i] || (buf[i] >= 32 && buf[i] <= 126),
