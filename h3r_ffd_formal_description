@@ -38,12 +38,15 @@ object  : starts with a {keyword} (and the preceding {comment}s and
           {attribute}s) - no empty lines; an empty line or a {keyword}
           completes current {node} and starts a new one;
 symbol  : a name that binds a {node} to its description; you access your parsed
-          data through the description {symbol}s
+          data through the description {symbol}s; 1st char: [A-Za-z_], next chars:
+          [0-9A-Za-z_]
 attribute: a list of "[.*]" lines prior a {keyword} line - a hint specific
            to the code that handles the parsed data; the ".*" is passed
            directly to your code
 keywords:
-  "type" - defines a binding between a {symbol} and machine type
+  "type" - defines a binding between a {symbol} and machine type; a single EOL
+           completes it. Ordering ([] - optional):
+             {keyword} {symbol} {size}|{alias} [{expr}] [{comment}]
   "???" - not decided yet - ignored
   "list" - ignored for now
   "table" - ignored for now

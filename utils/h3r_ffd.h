@@ -54,6 +54,9 @@ class FFD
 #define public public:
 #define private private:
 
+    public FFD();
+    public ~FFD();
+
     // The type of text at the description.
     public enum class SType {Comment, MachType, TxtList, TxtTable, Unhandled,
         Struct, Field, Enum, Const, Format};
@@ -76,6 +79,14 @@ class FFD
         public bool Signed {};
         public int Size {};
         public SNode * Alias {};  // Alias->Type == SType::MachType
+        public bool Parse(const byte *, int, int &);
+        public bool ParseMachType(const byte *, int, int &);
+        public bool ParseLater(const byte *, int, int &);
+        public bool ParseAttribute(const byte *, int, int &);
+        public bool ParseStruct(const byte *, int, int &);
+        public bool ParseField(const byte *, int, int &);
+        public bool ParseConst(const byte *, int, int &);
+        public bool ParseEnum(const byte *, int, int &);
     };
 
     public class Node
