@@ -125,6 +125,7 @@ void Game::SilentLog(bool v)
 int Game::Run(int argc, char ** argv)
 {
     auto test = FFD::File2Tree ("map_grammar", "Atlantis_1029662174.h3m");
+    (void)test;
 
     // create the main window
     // Again, no plug-in interface yet, so

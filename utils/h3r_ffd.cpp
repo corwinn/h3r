@@ -38,27 +38,55 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-static inline bool is_whitespace(byte b) { return b < 32; }
+static int global_line = 1;
+
+static inline bool is_whitespace(byte b) { return b <= 32; }
+static inline bool is_comment(const byte * buf, int len, int i)
+{
+    return '/' == buf[i] && i < len-1 && ('/' == buf[i+1] || '*' == buf[i+1]);
+}
+static inline bool is_eol(const byte * buf, int len, int i)
+{
+    if ('\r' == buf[i] && i < len - 1) return '\n' == buf[i+1];
+    return '\n' == buf[i];
+}
+
+// read_while c()
+template <typename F> inline static void read_while(const char * txt,
+    const byte * buf, int len, int & i, F c)
+{
+    int j = i;
+    while (i < len && c ()) {
+        if (is_eol (buf, len, i)) global_line++;
+        i++;
+    }
+    if (i != j)
+        printf ("%3d: read_%s    : [%5d;%5d]" EOL, global_line, txt, j, i);
+}
 
 static void skip_whitespace(const byte * buf, int len, int & i)
 {
-    int j = i;
-    while (i < len && buf[i] < 32)
-        i++;
-    if (i != j)
-        printf ("skipped whitespace    : [%5d;%5d]" EOL, j, i);
+    read_while ("whitespc", buf, len, i, [&](){return buf[i] <= 32;});
+}
+
+// ensure is_comment() returns true prior calling this one
+static void skip_comment(const byte * buf, int len, int & i)
+{
+    if ('/' == buf[i+1])
+        read_while ("comment1", buf, len, i, [&](){return buf[i] != '\n';});
+    else if ('*' == buf[i+1]) {
+        // Yes, that would be slow if I had to parse 60 files per second ...
+        read_while ("commentn", buf, len, i,
+              [&](){return !('*' == buf[i] && i < len-1 && '/' == buf[i+1]);});
 }
 
 static void skip_nonwhitespace(const byte * buf, int len, int & i)
 {
-    int j = i;
-    while (i < len && buf[i] >= 32 && buf[i] <= 126)
-        i++;
-    if (i != j)
-        printf ("skipped non-whitespace: [%5d;%5d]" EOL, j, i);
+    read_while("parse_me", buf, len, i,
+        [&](){return buf[i] > 32 && buf[i] <= 126;});
 }
 
-/*static*/ FFD::Node * FFD::File2Tree(const String & d, const String & f)
+/*static*/ FFD::Node * FFD::File2Tree(const String & d, const String &)
 {
     OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
     MemoryStream br {&fh, static_cast<int>(fh.Size ())};
@@ -76,7 +104,12 @@ static void skip_nonwhitespace(const byte * buf, int len, int & i)
     // 1. Read the nodes in TB LR manner
     for (int i = 0, chk = 0; i < len; chk++) {
         if (is_whitespace (buf[i])) skip_whitespace (buf, len, i);
-        else skip_nonwhitespace (buf, len, i);
+        else if (is_comment (buf, len, i)) {
+            skip_comment (buf, len, i);
+        }
+        else {
+            skip_nonwhitespace (buf, len, i);
+        }
         H3R_ENSURE(chk < len, "infinite loop")
     }// (int i = 0; i < len;)
 
