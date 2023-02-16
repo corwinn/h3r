@@ -74,7 +74,7 @@ static void skip_comment(const byte * buf, int len, int & i)
 {
     if ('/' == buf[i+1])
         read_while ("comment1", buf, len, i, [&](){return buf[i] != '\n';});
-    else if ('*' == buf[i+1]) {
+    else if ('*' == buf[i+1])
         // Yes, that would be slow if I had to parse 60 files per second ...
         read_while ("commentn", buf, len, i,
               [&](){return !('*' == buf[i] && i < len-1 && '/' == buf[i+1]);});
