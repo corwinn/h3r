@@ -40,13 +40,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 static int global_line = 1;
+static int global_column = 1;
 static int const SYMBOL_MAX_LEN {128};
 static int const EXPR_MAX_NESTED_EXPR {10};
 static int const EXPR_MAX_LEN {128};
 
 #define H3R_ENSURE_FFD(C,M) { \
-    if (! (C)) printf ("Error around line %d; code:%s:%d: " M EOL, \
-        global_line, __FILE__, __LINE__), \
+    if (! (C)) printf ("Error around line %d, column: %d; code:%s:%d: " M EOL, \
+        global_line, global_column, __FILE__, __LINE__), \
         OS::Exit (1); }
 
 static inline bool is_whitespace(byte b) { return b <= 32; }
@@ -66,8 +67,8 @@ template <typename F> inline static void read_while(const char * txt,
 {
     int j = i;
     while (i < len && c ()) {
-        if (is_eol (buf, len, i)) global_line++;
-        i++;
+        if (is_eol (buf, len, i)) { global_line++; global_column = 0; }
+        i++; global_column++;
     }
     H3R_ENSURE_FFD(i > j, "Empty read_while")
     printf ("%3d: read_%s    : [%5d;%5d]" EOL, global_line, txt, j, i);
@@ -82,11 +83,14 @@ static void skip_whitespace(const byte * buf, int len, int & i)
 static void skip_comment(const byte * buf, int len, int & i)
 {
     if ('/' == buf[i+1])
-        read_while ("comment1", buf, len, i, [&](){return buf[i] != '\n';});
-    else if ('*' == buf[i+1])
+        read_while (
+            "comment1", buf, len, i, [&](){return ! is_eol (buf, len, i);});
+    else if ('*' == buf[i+1]) {
         // Yes, that would be slow if I had to parse 60 files per second ...
         read_while ("commentn", buf, len, i,
               [&](){return !('*' == buf[i] && i < len-1 && '/' == buf[i+1]);});
+        i+=2; // it ends at '*', so
+    }
 }
 
 // 1000 classes? No thanks.
@@ -173,22 +177,23 @@ static inline int parse_int_literal(const byte * buf, int len, int & i)
     return result * tmp_result;
 }// parse_int_literal()
 
-static void read_expression(const byte * buf, int len, int & i)
+static void read_expression(const byte * buf, int len, int & i,
+    char open = '(', char close = ')')
 {
     int b = 0;
-    H3R_ENSURE_FFD('(' == buf[i], "An expression must start with (")
+    H3R_ENSURE_FFD(open == buf[i], "An expression must start with (")
     int j = i;
     read_while("expr.   ", buf, len, i,
         [&](){
             // Wrong symbols shall be detected at the evaluator - no point to
             // evaluate here.
-            if ('(' == buf[i]) b++;
-            else if (')' == buf[i]) b--;
+            if (open == buf[i]) b++;
+            else if (close == buf[i]) b--;
             H3R_ENSURE_FFD(b >= 0 && b <= EXPR_MAX_NESTED_EXPR, "Wrong expr.")
             return b > 0 && buf[i] >= 32 && buf[i] <= 126;});
-    // It shall complete on ')'
+    // It shall complete on "close"
     // printf ("buf[i]: %2X, j:%5d, i:%5d" EOL, buf[i], j, i);
-    H3R_ENSURE_FFD(')' == buf[i], "Incomplete expr.")
+    H3R_ENSURE_FFD(close == buf[i], "Incomplete expr.")
     H3R_ENSURE_FFD(0 == b, "Bug: incomplete expr.")
     i++;
     H3R_ENSURE_FFD((i - j) <= EXPR_MAX_LEN, "Expr. too long")
@@ -213,6 +218,11 @@ bool FFD::SNode::Parse(const byte * buf, int len, int & i)
             {4, "enum", &FFD::SNode::ParseEnum}};
 
     int j = i;
+    // Attribute "correction"
+    // printf ("global_column: %d, bif[j]:%2X" EOL, global_column, buf[j]);
+    if (1 == global_column && '[' == buf[j])
+        return ParseAttribute (buf, len, i);
+    //
     read_while("parse_me", buf, len, i,
         [&](){return buf[i] > 32 && buf[i] <= 126;});
     int kw_len = i - j;
@@ -280,7 +290,16 @@ bool FFD::SNode::ParseLater(const byte * buf, int len, int & i)
     return true;
 }
 
-bool FFD::SNode::ParseAttribute(const byte *, int, int &) { return false; }
+bool FFD::SNode::ParseAttribute(const byte * buf, int len, int & i)
+{
+    int j = i;
+//np read_expression (buf: buf, len: len, i: i, open: '[', close: ']');
+    read_expression (buf, len, i, '[', ']');
+    printf ("Attribute: "); printf_range (buf, j, i); printf (EOL);
+    Attribute = static_cast<String &&>(String {buf, i-j});
+    return true;
+}
+
 bool FFD::SNode::ParseStruct(const byte *, int, int &) { return false; }
 bool FFD::SNode::ParseField(const byte *, int, int &) { return false; }
 bool FFD::SNode::ParseConst(const byte *, int, int &) { return false; }
