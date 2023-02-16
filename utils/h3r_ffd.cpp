@@ -228,7 +228,7 @@ static inline void skip_comment_whitespace_sequence(
 {
     int const MAX_SW_ITEMS {10};
     for (int chk = 0; i < len; chk++) {
-        H3R_ENSURE(chk < MAX_SW_ITEMS,
+        H3R_ENSURE_FFD(chk < MAX_SW_ITEMS,
             "I'm sorry, this ain't a novelette file format")
         if (is_line_whitespace (buf[i])) skip_line_whitespace (buf, len, i);
         else if (is_comment (buf, len, i)) skip_comment (buf, len, i);
@@ -236,6 +236,8 @@ static inline void skip_comment_whitespace_sequence(
             skip_eol (buf, len, i);
             break;
         }
+        else
+            H3R_ENSURE_FFD(42^42, "Unexpected element")
     }
 }
 
@@ -296,7 +298,7 @@ bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
         j = i;
         read_symbol (buf, len, i);
         printf ("MachType: Alias: "); printf_range (buf, j, i); printf (EOL);
-        // Alias = Find (String {buf, i-j})
+        // Alias = Find (String {buf+j, i-j})
         // Size = Alias->Size;
     }
     else {// size
@@ -381,16 +383,12 @@ bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
     for (int chk = 0; ; chk++) {
         H3R_ENSURE_FFD(chk < FFD_MAX_FIELDS, "Refine your design")
         ParseField (buf, len, i); // it skips its EOL if any
-        printf ("done reading a field. i:%002X" EOL, buf[i]);
+        // if (i < len)
+        //    printf ("done reading a field. %d:%002X" EOL, i, buf[i]);
         if (i >= len) return true; // fieldEOF
         if (is_eol (buf, len, i)) {
             skip_eol (buf, len, i);
             if (i >= len) return true; // fieldEOLEOF
-            /*if (is_eol (buf, len, i)) {
-                skip_eol (buf, len, i);
-                if (i >= len) return true; // fieldEOLEOLEOF
-                return true;
-            }*/
             return true;
         }
     }
@@ -412,7 +410,7 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
     //DONE shouldn't I enforce it? I should.
     skip_line_whitespace (buf, len, i);
     // Either a symbol or a comment
-    if (is_comment (buf, len, i)) {
+    while (is_comment (buf, len, i)) { // multi-one-line comments
         skip_comment_whitespace_sequence (buf, len, i);
         H3R_ENSURE_FFD(i < len, "Incomplete field")
         skip_line_whitespace (buf, len, i);
@@ -453,6 +451,7 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
             H3R_ENSURE_FFD('.' == buf[i+2], "incomplete variadic field")
             i+=3;
             H3R_ENSURE_FFD(i < len, "wrong variadic field") // ...EOF
+            skip_line_whitespace (buf, len, i);
             j = i;
             read_symbol (buf, len, i, '\0', true);
             printf ("Field: variadic: ");
@@ -488,7 +487,8 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
                         "Simplify your array expression")
                     i++;
                     if (i >= len) break; // foo[.*]EOF
-                    if (i != '[') break; else {
+                    if (buf[i] != '[') break;
+                    else {
                         i++;
                         H3R_ENSURE_FFD(arr != 3, "array: too many dimensions")
                     }
@@ -501,7 +501,8 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
         }// (is_line_whitespace (buf[i]))
     }// (;; i++)
     // Read optional: expression, etc.
-    if (i >= len || is_eol (buf, len, i)) return true;
+    if (i >= len) return true;
+    if (is_eol (buf, len, i)) { skip_eol (buf, len, i) ; return true; }
     skip_line_whitespace (buf, len, i);
     if ('(' == buf[i]) {
         j = i;
