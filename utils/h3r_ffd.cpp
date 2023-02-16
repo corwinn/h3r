@@ -268,7 +268,18 @@ bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
     return true;
 }// FFD::SNode::ParseMachType()
 
-bool FFD::SNode::ParseLater(const byte *, int, int &) { return false; }
+bool FFD::SNode::ParseLater(const byte * buf, int len, int & i)
+{
+    read_while ("later   ", buf, len, i,
+        [&](){
+            int ofs = 1;
+            if ('\r' == buf[i] && i < len-1 && '\n' == buf[i])
+                ofs = 2;
+            return !(is_eol (buf, len, i)
+                && i < len-ofs && is_eol (buf, len, i+ofs));});
+    return true;
+}
+
 bool FFD::SNode::ParseAttribute(const byte *, int, int &) { return false; }
 bool FFD::SNode::ParseStruct(const byte *, int, int &) { return false; }
 bool FFD::SNode::ParseField(const byte *, int, int &) { return false; }

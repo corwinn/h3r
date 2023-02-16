@@ -35,8 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 node    : generalization: each token of the description
 comment : "//" & "/**/"
 object  : starts with a {keyword} (and the preceding {comment}s and
-          {attribute}s) - no empty lines; an empty line or a {keyword}
-          completes current {node} and starts a new one;
+          {attribute}s) - no empty lines; an empty line (or a {keyword} -
+          "type" only) completes current {node} and starts a new one;
 symbol  : a name that binds a {node} to its description; you access your parsed
           data through the description {symbol}s; 1st char: [A-Za-z_], next chars:
           [0-9A-Za-z_]
