@@ -68,9 +68,11 @@ class FFD
         public SNode * Base {};   // Base->Type == SType::Struct
         public String Name {};
         public SNode * DType {};  // Data/dynamic type (Expr: resolved on parse)
+        public String DTypeName {}; // Prior resolve
         public bool Array {};     // Is it an array
         public bool Variadic {};  // "..." Type == SType::Field
         public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
+        public bool Composite {}; // replace it with FindDType (Name)
         public String VList {};   // Variadic: value list :n,m,p-q,...
         public List<SNode *> Fields {};
         public String Expr {};
@@ -84,9 +86,11 @@ class FFD
         public bool ParseLater(const byte *, int, int &);
         public bool ParseAttribute(const byte *, int, int &);
         public bool ParseStruct(const byte *, int, int &);
-        public bool ParseField(const byte *, int, int &);
+        private bool ParseField(const byte *, int, int &);
         public bool ParseConst(const byte *, int, int &);
         public bool ParseEnum(const byte *, int, int &);
+
+        private bool ParseCompositeField(const byte *, int, int, int);
     };
 
     public class Node

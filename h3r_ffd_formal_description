@@ -89,6 +89,7 @@ expression: a script being evaluated when needed (always enclosed in ()):
                     evaluate to integer. You can use "." to access sub-nodes:
                     "foo.bar" will get the node named "foo" and then get its
                     sub-node named "bar".
+                    The initial empty space is mandatory.
 
 char-set: ASCII; bytes that shall reward you with an exception:
   [0;10), [11;13), [14;31], [127;255]
