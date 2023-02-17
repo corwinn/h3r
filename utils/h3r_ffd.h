@@ -60,6 +60,7 @@ class FFD
     // The type of text at the description.
     public enum class SType {Comment, MachType, TxtList, TxtTable, Unhandled,
         Struct, Field, Enum, Const, Format};
+    public enum class SConstType {None, Int, Text};
     // Syntax node - these are created as a result of parsing the description.
     public class SNode
     {
@@ -74,13 +75,17 @@ class FFD
         public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
         public bool Composite {}; // replace it with FindDType (Name)
         public String VList {};   // Variadic: value list :n,m,p-q,...
+        public SConstType Const {};
+          public String StringLiteral {};
+          public int IntLiteral {};
         public List<SNode *> Fields {};
         public String Expr {};
         public String Comment {};
         // Type == SType::MachType
         public bool Signed {};
-        public int Size {};
-        public SNode * Alias {};  // Alias->Type == SType::MachType
+          public int Size {};
+          public SNode * Alias {};  // Alias->Type == SType::MachType
+
         public bool Parse(const byte *, int, int &);
         public bool ParseMachType(const byte *, int, int &);
         public bool ParseLater(const byte *, int, int &);

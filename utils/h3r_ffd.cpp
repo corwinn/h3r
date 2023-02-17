@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
+//TODO What am I? -> "const byte * buf, int len, int & i"
+
 #include "h3r_ffd.h"
 #include "h3r_filestream.h"
 #include "h3r_memorystream.h"
@@ -396,7 +398,7 @@ bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
     return false;
 }// FFD::SNode::ParseStruct()
 
-// It isn't "parse" per see, but. "j" - base (where it starts)
+// It isn't "parse" per se, but. "j" - base (where it starts)
 bool FFD::SNode::ParseCompositeField(const byte * buf, int, int i, int j)
 {
     Composite = true;
@@ -514,7 +516,42 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
     return true;
 }// FFD::SNode::ParseField()
 
-bool FFD::SNode::ParseConst(const byte *, int, int &) { return false; }
+bool FFD::SNode::ParseConst(const byte * buf, int len, int & i)
+{
+    // const {symbol} {literal} [{expr}]
+    skip_line_whitespace (buf, len, i);
+    int j = i;
+    read_symbol (buf, len, i);
+    printf ("Const: name: "); printf_range (buf, j, i); printf (EOL);
+    Name = static_cast<String &&>(String {buf+j, i-j});
+    skip_line_whitespace (buf, len, i);
+    // int or string
+    if ('"' == buf[i]) {
+        j = i+1;
+        H3R_ENSURE_FFD(j < len, "incomplete string literal") // "EOF
+        read_expression (buf, len, i, '"', '"'); // yep, it shall read "a"a"a"
+        Const = FFD::SConstType::Text;
+        StringLiteral = static_cast<String &&>(String {buf+j, i-j});
+        printf ("Const: string: %s" EOL, StringLiteral.AsZStr ());
+    }
+    else {
+        Const = FFD::SConstType::Int;
+        IntLiteral = parse_int_literal (buf, len, i);
+        printf ("Const: integer: %d" EOL, IntLiteral);
+    }
+    if (is_eol (buf, len, i)) { skip_eol (buf, len, i); return true; }
+    skip_line_whitespace (buf, len, i);
+    if ('(' == buf[i]) {
+        j = i;
+        read_expression (buf, len, i);
+        printf ("Const: expr: "); printf_range (buf, j, i); printf (EOL);
+        Expr = static_cast<String &&>(String {buf+j, i-j});
+    }
+    else
+        skip_comment_whitespace_sequence (buf, len, i);
+    return true;
+}// FFD::SNode::ParseConst()
+
 bool FFD::SNode::ParseEnum(const byte *, int, int &) { return false; }
 
 /*static*/ FFD::Node * FFD::File2Tree(const String & d, const String &)
