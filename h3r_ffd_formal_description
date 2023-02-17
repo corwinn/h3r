@@ -55,7 +55,8 @@ keywords:
   "format" - defines the root {node} of your data format - this is where the
              parser starts
   "const" - a {symbol} bound to a {literal}
-  "enum" - a list of {const}s grouped by {type}
+  "enum" - a list of {const}s grouped by {type}; the initial empty space for
+           the list items is mandatory;
 
 literal : a value directly encoded in the FFD:
   - integer: 32-bit; decimal or hexadecimal

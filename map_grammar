@@ -404,7 +404,7 @@ enum MapVCon byte
     TRANSPORT_ARTIFACT  10
     NONE               255
 
-enum MapLCon
+enum MapLCon byte
     TOWN   0
     HERO   1
     TIME   2

@@ -47,6 +47,7 @@ static int const FFD_SYMBOL_MAX_LEN {128};
 static int const FFD_EXPR_MAX_NESTED_EXPR {10};
 static int const FFD_EXPR_MAX_LEN {128};
 static int const FFD_MAX_FIELDS {64};
+static int const FFD_MAX_ENUM_ITEMS {64};
 static int const FFD_MAX_ARR_EXPR_LEN {32};
 
 #define H3R_ENSURE_FFD(C,M) { \
@@ -384,6 +385,7 @@ bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
     // Fields
     for (int chk = 0; ; chk++) {
         H3R_ENSURE_FFD(chk < FFD_MAX_FIELDS, "Refine your design")
+        //TODO handle result; add to this->Fields
         ParseField (buf, len, i); // it skips its EOL if any
         // if (i < len)
         //    printf ("done reading a field. %d:%002X" EOL, i, buf[i]);
@@ -552,7 +554,72 @@ bool FFD::SNode::ParseConst(const byte * buf, int len, int & i)
     return true;
 }// FFD::SNode::ParseConst()
 
-bool FFD::SNode::ParseEnum(const byte *, int, int &) { return false; }
+bool FFD::SNode::ParseEnum(const byte * buf, int len, int & i)
+{
+    // enum {symbol} {machine type} [{expr}]
+    //   {symbol} {int literal} [{expr}]
+    skip_line_whitespace (buf, len, i);
+    int j = i;
+    read_symbol (buf, len, i);
+    printf ("Enum: name: "); printf_range (buf, j, i); printf (EOL);
+    Name = static_cast<String &&>(String {buf+j, i-j});
+    skip_line_whitespace (buf, len, i);
+    j = i;
+    read_symbol (buf, len, i);
+    printf ("Enum: type: "); printf_range (buf, j, i); printf (EOL);
+    DTypeName = static_cast<String &&>(String {buf+j, i-j});
+    if (is_eol (buf, len, i))
+        skip_eol (buf, len, i);
+    else {
+        if ('(' == buf[i]) {
+            j = i;
+            read_expression (buf, len, i);
+            printf ("Enum: expr: "); printf_range (buf, j, i); printf (EOL);
+            Expr = static_cast<String &&>(String {buf+j, i-j});
+        }
+        else {
+            H3R_ENSURE_FFD(i < len, "incomplete enum")      // enum foo.*EOF
+            skip_comment_whitespace_sequence (buf, len, i);
+        }
+    }
+    H3R_ENSURE_FFD(i < len, "incomplete enum")      // enum foo.*EOLEOF
+    H3R_ENSURE_FFD(! is_eol (buf, len, i), "Empty enum") // enum foo.*EOLEOL
+    for (int chk = 0; ; chk++) {
+        H3R_ENSURE_FFD(chk < FFD_MAX_ENUM_ITEMS, "Refine your design")
+        // enum item; white-space mandatory;
+        //   {symbol} {int literal} [{expr}]
+        //TODO where will these go
+        skip_line_whitespace (buf, len, i);
+        j = i;
+        read_symbol (buf, len, i);
+        printf ("EnumItem: Name: "); printf_range (buf, j, i); printf (EOL);
+        skip_line_whitespace (buf, len, i);
+        int foo = parse_int_literal (buf, len, i);
+        printf ("EnumItem: Value: %d" EOL, foo);
+        if (is_eol (buf, len, i))
+            skip_eol (buf, len, i);
+        else {
+            if ('(' == buf[i]) {
+                j = i;
+                read_expression (buf, len, i);
+                printf ("EnumItem: expr: ");
+                    printf_range (buf, j, i); printf (EOL);
+                //TODO EnumItem.Expr
+            }
+            else
+                skip_comment_whitespace_sequence (buf, len, i);
+        }
+        //
+        if (i >= len) return true; // itemEOF
+        if (is_eol (buf, len, i)) {
+            skip_eol (buf, len, i);
+            if (i >= len) return true; // itemEOLEOF
+            return true;
+        }
+    }
+    H3R_ENSURE_FFD(42^42, "Bug: You're not handling some use-case")
+    return false;
+}// FFD::SNode::ParseEnum()
 
 /*static*/ FFD::Node * FFD::File2Tree(const String & d, const String &)
 {
