@@ -583,61 +583,53 @@ bool FFD::SNode::ParseConst(const byte * buf, int len, int & i)
     return true;
 }// FFD::SNode::ParseConst()
 
+// enum {symbol} {machine type} [{expr}]
+//     i
+//   {whitespace} {symbol} {int literal} [{expr}]
 bool FFD::SNode::ParseEnum(const byte * buf, int len, int & i)
 {
-    // enum {symbol} {machine type} [{expr}]
-    //   {symbol} {int literal} [{expr}]
     skip_line_whitespace (buf, len, i);
-    int j = i;
-    read_symbol (buf, len, i);
-    printf ("Enum: name: "); printf_range (buf, j, i); printf (EOL);
-    Name = static_cast<String &&>(String {buf+j, i-j});
+    Name = static_cast<String &&>(read_symbol (buf, len, i));
+    printf ("Enum: name: %s" EOL, Name.AsZStr ());
     skip_line_whitespace (buf, len, i);
-    j = i;
-    read_symbol (buf, len, i);
-    printf ("Enum: type: "); printf_range (buf, j, i); printf (EOL);
-    DTypeName = static_cast<String &&>(String {buf+j, i-j});
+    DTypeName = static_cast<String &&>(read_symbol (buf, len, i));
+    printf ("Enum: type: %s" EOL, DTypeName.AsZStr ());
+    DType = _ffd->NodeByName (DTypeName); // resolve: pass 1
     if (is_eol (buf, len, i))
         skip_eol (buf, len, i);
     else {
         if ('(' == buf[i]) {
-            j = i;
-            read_expression (buf, len, i);
-            printf ("Enum: expr: "); printf_range (buf, j, i); printf (EOL);
-            Expr = static_cast<String &&>(String {buf+j, i-j});
+            Expr = static_cast<String &&>(read_expression (buf, len, i));
+            printf ("Enum: expr: %s" EOL, Expr.AsZStr ());
         }
-        else {
-            H3R_ENSURE_FFD(i < len, "incomplete enum")      // enum foo.*EOF
-            skip_comment_whitespace_sequence (buf, len, i);
-        }
+        H3R_ENSURE_FFD(i < len, "Incomplete enum")      // enum foo.*)EOF
+        skip_comment_whitespace_sequence (buf, len, i);
     }
-    H3R_ENSURE_FFD(i < len, "incomplete enum")      // enum foo.*EOLEOF
+    H3R_ENSURE_FFD(i < len, "Incomplete enum")           // enum foo.*EOLEOF
     H3R_ENSURE_FFD(! is_eol (buf, len, i), "Empty enum") // enum foo.*EOLEOL
     for (int chk = 0; ; chk++) {
         H3R_ENSURE_FFD(chk < FFD_MAX_ENUM_ITEMS, "Refine your design")
-        // enum item; white-space mandatory;
-        //   {symbol} {int literal} [{expr}]
-        //TODO where will these go
+        // {whitespace} {symbol} {int literal} [{expr}]
+        // i
         skip_line_whitespace (buf, len, i);
-        j = i;
-        read_symbol (buf, len, i);
-        printf ("EnumItem: Name: "); printf_range (buf, j, i); printf (EOL);
+        EnumItem itm;
+        itm.Name = static_cast<String &&>(read_symbol (buf, len, i));
+        printf ("EnumItem: Name: %s" EOL, itm.Name.AsZStr ());
         skip_line_whitespace (buf, len, i);
-        int foo = parse_int_literal (buf, len, i);
-        printf ("EnumItem: Value: %d" EOL, foo);
+        itm.Value = parse_int_literal (buf, len, i);
+        printf ("EnumItem: Value: %d" EOL, itm.Value);
         if (is_eol (buf, len, i))
             skip_eol (buf, len, i);
         else {
             if ('(' == buf[i]) {
-                j = i;
-                read_expression (buf, len, i);
-                printf ("EnumItem: expr: ");
-                    printf_range (buf, j, i); printf (EOL);
-                //TODO EnumItem.Expr
+                itm.Expr =
+                    static_cast<String &&>(read_expression (buf, len, i));
+                printf ("EnumItem: expr: %s" EOL, itm.Expr.AsZStr ());
             }
             else
                 skip_comment_whitespace_sequence (buf, len, i);
         }
+        EnumItems.Add (itm);
         //
         if (i >= len) return true; // itemEOF
         if (is_eol (buf, len, i)) {

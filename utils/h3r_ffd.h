@@ -65,6 +65,12 @@ class FFD
     public enum class SType {Comment, MachType, TxtList, TxtTable, Unhandled,
         Struct, Field, Enum, Const, Format, Attribute};
     public enum class SConstType {None, Int, Text};
+    public class EnumItem final
+    {
+        public String Name {};
+        public int Value {};
+        public String Expr {};
+    };
     // Syntax node - these are created as a result of parsing the description.
     // Its concatenation of SType. It could become class hierarchy.
     public class SNode final
@@ -80,24 +86,32 @@ class FFD
         public String Name {};
         public SNode * DType {};  // Data/dynamic type (Expr: resolved on parse)
         public String DTypeName {}; // Prior resolve
-        public bool HashKey {};
-        public String HashType {};
-        public bool Array {};     // Is it an array
-        public String Arr[3];
-        public bool Variadic {};  // "..." Type == SType::Field
-        public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
-        public bool Composite {}; // replace it with FindDType (Name)
-        public String ValueList {};   // Variadic: value list :n,m,p-q,...
-        public SConstType Const {};
-          public String StringLiteral {};
-          public int IntLiteral {};
         public List<SNode *> Fields {};
         public String Expr {};
         public String Comment {};
+
+        public bool HashKey {};
+        public String HashType {};
+
+        public bool Array {};     // Is it an array
+        public String Arr[3];
+
+        public bool Variadic {};  // "..." Type == SType::Field
+        public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
+        public String ValueList {};   // Variadic: value list :n,m,p-q,...
+
+        public bool Composite {}; // replace it with FindDType (Name)
+
+        public SConstType Const {};
+        public String StringLiteral {};
+        public int IntLiteral {};
+
         // Type == SType::MachType
         public bool Signed {};
-          public int Size {};
+        public int Size {};
         // public SNode * Alias {};  // This could become useful later
+
+        public List<EnumItem> EnumItems {};
 
         public bool Parse(const byte *, int, int &);
         public bool ParseMachType(const byte *, int, int &);
