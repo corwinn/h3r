@@ -487,12 +487,9 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
             i+=3;
             H3R_ENSURE_FFD(i < len, "Wrong variadic field") // ...EOF
             skip_line_whitespace (buf, len, i);
-            j = i;
             Name =
                 static_cast<String &&>(read_symbol (buf, len, i, '\0', true));
             printf ("Field: variadic. Name: %s" EOL, Name.AsZStr ());
-                printf_range (buf, j, i); printf (EOL);
-            Name = static_cast<String &&>(String {buf+j, i-j});
             break;
         }
         else if (is_eol (buf, len, i)) // compositeEOL
@@ -507,8 +504,7 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
             printf ("Field: type: %s" EOL, DTypeName.AsZStr ());
             DType = _ffd->NodeByName (DTypeName); // resolve: pass 1
             skip_line_whitespace (buf, len, i);
-            j = i;
-            read_symbol (buf, len, i, '[');
+            Name = static_cast<String &&>(read_symbol (buf, len, i, '['));
             if ('[' == buf[i]) {
                 i++;
                 H3R_ENSURE_FFD(i < len, "Incomplete array") // [EOF
@@ -535,8 +531,7 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
                     H3R_ENSURE_FFD(i < len, "incomplete array") // [EOF
                 }
             }// array
-            printf ("Field: name: "); printf_range (buf, j, i); printf (EOL);
-            Name = static_cast<String &&>(String {buf+j, i-j});
+            printf ("Field: name: %s" EOL, Name.AsZStr ());
             break;
         }// (is_line_whitespace (buf[i]))
     }// (;; i++)
@@ -545,10 +540,8 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
     if (is_eol (buf, len, i)) { skip_eol (buf, len, i) ; return true; }
     skip_line_whitespace (buf, len, i);
     if ('(' == buf[i]) {
-        j = i;
-        read_expression (buf, len, i);
-        printf ("Field: expr: "); printf_range (buf, j, i); printf (EOL);
-        Expr = static_cast<String &&>(String {buf+j, i-j});
+        Expr = static_cast<String &&>(read_expression (buf, len, i));
+        printf ("Field: expr: %s" EOL, Expr.AsZStr ());
     }
     skip_comment_whitespace_sequence (buf, len, i);
     return true;
