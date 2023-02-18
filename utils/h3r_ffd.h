@@ -62,8 +62,12 @@ class FFD
         Struct, Field, Enum, Const, Format};
     public enum class SConstType {None, Int, Text};
     // Syntax node - these are created as a result of parsing the description.
-    public class SNode
+    public class SNode final
     {
+        // Allow copying for now
+        private FFD * _ffd;
+        public SNode(FFD * ffd) : _ffd{ffd} {}
+
         public String Attribute {}; // [.*] prior it
         public SType Type {SType::Unhandled};
         public SNode * Base {};   // Base->Type == SType::Struct
@@ -97,6 +101,10 @@ class FFD
 
         private bool ParseCompositeField(const byte *, int, int, int);
     };
+
+    private SNode * _root {};
+    private List<SNode *> _snodes {};
+    private SNode * NodeByName(const String &);
 
     public class Node
     {

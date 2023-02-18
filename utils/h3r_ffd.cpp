@@ -32,12 +32,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
+// All a have is a war I can not win, but I can never stop fighting.
+
+// Sorry for lyric divergence, but I had to solve 54 nice-mountain-view tasks in
+// C#.
+
 //TODO What am I? -> "const byte * buf, int len, int & i"
 
 #include "h3r_ffd.h"
 #include "h3r_filestream.h"
 #include "h3r_memorystream.h"
 #include "h3r_os.h"
+
+#include <new>
 
 H3R_NAMESPACE
 
@@ -112,11 +119,11 @@ static void skip_comment(const byte * buf, int len, int & i)
 }
 
 // 1000 classes? No thanks.
-template <typename F> struct KwParser final
+template <typename F> struct KwParser final // Keyword Parser
 {
-    const int KwLen; // no need to compute it
-    const char * Kw;
-    F Parse;
+    const int KwLen; // Keyword Length - no need to compute it
+    const char * Kw; // Keyword
+    F Parse;         // parse function
 };
 
 /*static void skip_nonwhitespace(const byte * buf, int len, int & i)
@@ -138,7 +145,7 @@ static inline bool symbol_valid_nth(byte b)
     return (b >= '0' && b <= '9') || symbol_valid_1st (b);
 }
 
-static void read_symbol(const byte * buf, int len, int & i,
+static String read_symbol(const byte * buf, int len, int & i,
     // handle variadic list symbols: foo.bar:value-list
     char stop_at = '\0', bool allow_dot = false)
 {
@@ -150,6 +157,7 @@ static void read_symbol(const byte * buf, int len, int & i,
     for (int k = j; k < i; k++) // repeating, but simplifies the code
         H3R_ENSURE_FFD(symbol_valid_nth (buf[k])
             || (allow_dot && '.' == buf[k]), "Wrong symbol name")
+    return static_cast<String &&>(String {buf+j, i-j});
 }
 
 static inline bool is_decimal_number(byte b)
@@ -199,7 +207,7 @@ static inline int parse_int_literal(const byte * buf, int len, int & i)
 }// parse_int_literal()
 
 // Multi-line not handled.
-static void read_expression(const byte * buf, int len, int & i,
+static String read_expression(const byte * buf, int len, int & i,
     char open = '(', char close = ')')
 {
     int b = 0;
@@ -220,6 +228,7 @@ static void read_expression(const byte * buf, int len, int & i,
     H3R_ENSURE_FFD(0 == b, "Bug: incomplete expr.")
     i++;
     H3R_ENSURE_FFD((i - j) <= FFD_EXPR_MAX_LEN, "Expr. too long")
+    return static_cast<String &&>(String {buf+j, i-j});
 }
 
 // Skip any sequence of white-space and comments (MAX_SW_ITEMS max), up to and
@@ -243,9 +252,6 @@ static inline void skip_comment_whitespace_sequence(
             H3R_ENSURE_FFD(42^42, "Unexpected element")
     }
 }
-
-FFD::FFD() {}
-FFD::~FFD() {}
 
 bool FFD::SNode::Parse(const byte * buf, int len, int & i)
 {
@@ -286,23 +292,23 @@ static inline void printf_range(const byte * buf, int a , int b)
 
 bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
 {
+    Type = FFD::SType::MachType;
     // i points right after "type". Single line. An EOL completes it.
     H3R_ENSURE_FFD(i < len, "Incomplete machine type")                // typeEOF
     H3R_ENSURE_FFD(! is_eol (buf, len, i), "Incomplete machine type") // typeEOL
     skip_line_whitespace (buf, len, i);
     // Name
-    int j = i;
-    read_symbol (buf, len, i);
-    printf ("MachType: Symbol: "); printf_range (buf, j, i); printf (EOL);
-    Name = static_cast<String &&>(String {buf+j, i-j});
+    Name = static_cast<String &&>(read_symbol (buf, len, i));
+    printf ("MachType: Symbol: %s" EOL, Name.AsZStr ());
     skip_line_whitespace (buf, len, i);
     // Size or alias.
     if (symbol_valid_1st (buf[i])) { // alias
-        j = i;
-        read_symbol (buf, len, i);
-        printf ("MachType: Alias: "); printf_range (buf, j, i); printf (EOL);
-        // Alias = Find (String {buf+j, i-j})
-        // Size = Alias->Size;
+        String alias = static_cast<String &&>(read_symbol (buf, len, i));
+        printf ("MachType: Alias: %s" EOL, alias.AsZStr ());
+        Alias = _ffd->NodeByName (alias); //TODO there is something redundant;
+        H3R_ENSURE_FFD(Alias != nullptr, "The alias must exist prior whats "
+            "referencing it. I know you want infinite loops; plenty elsewhere.")
+        if (Alias) Size = Alias->Size;    //     perhaps Size() will do
     }
     else {// size
         Size = parse_int_literal (buf, len, i);
@@ -314,10 +320,8 @@ bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
     // There could be an expression
     skip_line_whitespace (buf, len, i);
     if ('(' == buf[i]) {
-        j = i;
-        read_expression (buf, len, i);
-        printf ("MachType: Expr: "); printf_range (buf, j, i); printf (EOL);
-        Expr = static_cast<String &&>(String {buf+j, i-j});
+        Expr = static_cast<String &&>(read_expression (buf, len, i));
+        printf ("MachType: Expr: %s" EOL, Expr.AsZStr ());
     }
     // There could be a comment. But it is handled elsewhere for now.
     return true;
@@ -621,6 +625,21 @@ bool FFD::SNode::ParseEnum(const byte * buf, int len, int & i)
     return false;
 }// FFD::SNode::ParseEnum()
 
+FFD::FFD() {}
+
+FFD::~FFD()
+{
+    for (int i = 0 ; i < _snodes.Count (); i++)
+        H3R_DESTROY_NESTED_OBJECT(_snodes[i], FFD::SNode, SNode)
+}
+
+FFD::SNode * FFD::NodeByName(const String & query)
+{
+    for (auto node : _snodes)
+        if (node->Name == query) return node;
+    return nullptr;
+}
+
 /*static*/ FFD::Node * FFD::File2Tree(const String & d, const String &)
 {
     OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
@@ -636,14 +655,17 @@ bool FFD::SNode::ParseEnum(const byte * buf, int len, int & i)
     }
 
     printf ("parsing %d bytes ffd" EOL, len);
+    FFD ffd {};
     // 1. Read the nodes in TB LR manner
     for (int i = 0, chk = 0; i < len; chk++) {
         if (is_whitespace (buf[i])) skip_whitespace (buf, len, i);
         // Skipped, for now
         else if (is_comment (buf, len, i)) skip_comment (buf, len, i);
         else {
-            FFD::SNode node;
-            node.Parse (buf, len, i);
+            FFD::SNode * node;
+            H3R_CREATE_OBJECT(node, FFD::SNode) {&ffd};
+            ffd._snodes.Add (node);
+            node->Parse (buf, len, i);
         }
         H3R_ENSURE_FFD(chk < len, "infinite loop")
     }// (int i = 0; i < len;)
