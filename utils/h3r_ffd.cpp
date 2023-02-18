@@ -34,8 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // All a have is a war I can not win, but I can never stop fighting.
 
-// Sorry for lyric divergence, but I had to solve 54 nice-mountain-view tasks in
-// C#.
+// Sorry for the lyric divergence, but I had to solve 54 nice-mountain-view
+// tasks in C#.
 
 //TODO What am I? -> "const byte * buf, int len, int & i"
 
