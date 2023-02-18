@@ -79,10 +79,11 @@ class FFD
         public SNode * Base {};   // Base->Type == SType::Struct
         public String Name {};
         public SNode * DType {};  // Data/dynamic type (Expr: resolved on parse)
+        public String DTypeName {}; // Prior resolve
         public bool HashKey {};
         public String HashType {};
-        public String DTypeName {}; // Prior resolve
         public bool Array {};     // Is it an array
+        public String Arr[3];
         public bool Variadic {};  // "..." Type == SType::Field
         public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
         public bool Composite {}; // replace it with FindDType (Name)

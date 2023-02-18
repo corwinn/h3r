@@ -459,7 +459,7 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
             H3R_ENSURE_FFD(i < len && '>' == buf[i], "wrong hash field")
             printf ("Field: hash. Key type: ");
                 printf_range (buf, j, i-1); printf (EOL);
-            // set the type if available
+            // resolve: pass 1
             String hash_key_type {buf+j, i-1-j};
             DType = _ffd->NodeByName (hash_key_type);
             i++; // move after "<>"
@@ -503,24 +503,28 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
             if (is_comment (buf, len, i) || buf[i] == '(' ) // composite
                 { ParseCompositeField (buf, len, i=p, j); break; }
             i = p;
-            printf ("Field: type: "); printf_range (buf, j, i); printf (EOL);
             DTypeName = static_cast<String &&>(String {buf+j, i-j});
+            printf ("Field: type: %s" EOL, DTypeName.AsZStr ());
+            DType = _ffd->NodeByName (DTypeName); // resolve: pass 1
             skip_line_whitespace (buf, len, i);
             j = i;
             read_symbol (buf, len, i, '[');
-            if ('[' == buf[i]) { //TODO array: where to store dimensions?
+            if ('[' == buf[i]) {
                 i++;
-                H3R_ENSURE_FFD(i < len, "incomplete array") // [EOF
+                H3R_ENSURE_FFD(i < len, "Incomplete array") // [EOF
                 H3R_ENSURE_FFD(
-                    ! is_eol (buf, len, i), "incomplete array") // [EOL
+                    ! is_eol (buf, len, i), "Incomplete array") // [EOL
                 Array = true;
                 for (int arr = 1; arr < 4; arr++) {
                     int s = i;
                     read_while ("arr     ", buf, len, i,
-                        [&](){return ']' != buf[i];});
-                    H3R_ENSURE_FFD(']' == buf[i], "incomplete array")
+                        [&](){ return ']' != buf[i]; });
+                    H3R_ENSURE_FFD(']' == buf[i], "Incomplete array")
                     H3R_ENSURE_FFD(i-s <= FFD_MAX_ARR_EXPR_LEN,
                         "Simplify your array expression")
+                    Arr[arr-1] = static_cast<String &&>(String {buf+s, i-s});
+                    printf ("Field: array[%d]=%s" EOL,
+                        arr-1, Arr[arr-1].AsZStr ());
                     i++;
                     if (i >= len) break; // foo[.*]EOF
                     if (buf[i] != '[') break;
