@@ -79,6 +79,8 @@ class FFD
         public SNode * Base {};   // Base->Type == SType::Struct
         public String Name {};
         public SNode * DType {};  // Data/dynamic type (Expr: resolved on parse)
+        public bool HashKey {};
+        public String HashType {};
         public String DTypeName {}; // Prior resolve
         public bool Array {};     // Is it an array
         public bool Variadic {};  // "..." Type == SType::Field
@@ -105,7 +107,7 @@ class FFD
         public bool ParseConst(const byte *, int, int &);
         public bool ParseEnum(const byte *, int, int &);
 
-        private bool ParseCompositeField(const byte *, int, int, int);
+        private bool ParseCompositeField(const byte *, int, int &, int);
 
         public inline bool IsRoot() const { return FFD::SType::Format == Type; }
     };

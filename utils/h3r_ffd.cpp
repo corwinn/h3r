@@ -416,12 +416,20 @@ bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
     return false;
 }// FFD::SNode::ParseStruct()
 
-// It isn't "parse" per se, but. "j" - base (where it starts)
-bool FFD::SNode::ParseCompositeField(const byte * buf, int, int i, int j)
+// {whitespace} {symbol} [{expr}]
+// "j" - base (where it starts)
+bool FFD::SNode::ParseCompositeField(const byte * buf, int len, int & i, int j)
 {
     Composite = true;
     Name = static_cast<String &&>(String {buf+j, i-j});
-    printf ("Field: composite: %s" EOL, Name.AsZStr ());
+    printf ("Field: composite. Name: %s" EOL, Name.AsZStr ());
+    if (is_eol (buf, len, i)) return true;
+    skip_line_whitespace (buf, len, i);
+    if ('(' == buf[i]) {
+        Expr = static_cast<String &&>(read_expression (buf, len, i));
+        printf ("Field: composite. Expr: %s" EOL, Expr.AsZStr ());
+    }
+    // comment(s) and whitespace are handled by FFD::SNode::ParseField()
     return true;
 }
 
@@ -431,6 +439,8 @@ bool FFD::SNode::ParseCompositeField(const byte * buf, int, int i, int j)
 // i
 bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
 {
+    Type = FFD::SType::Field;
+
     skip_line_whitespace (buf, len, i);
     // Either a symbol or a comment
     while (is_comment (buf, len, i)) { // multi-one-line comments
@@ -442,50 +452,53 @@ bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
     int j = i;
     for (;; i++) {
         if ('<' == buf[i]) {// hash field
+            HashKey = true; // this field is hash key: the actual value is:
+                            // HashType[value]
             H3R_ENSURE_FFD(i < len, "wrong hash field") // foo<EOF
             i++;
             H3R_ENSURE_FFD(i < len && '>' == buf[i], "wrong hash field")
-            printf ("Field: implicit node \"0hash key\" of type: ");
+            printf ("Field: hash. Key type: ");
                 printf_range (buf, j, i-1); printf (EOL);
-            i++;
+            // set the type if available
+            String hash_key_type {buf+j, i-1-j};
+            DType = _ffd->NodeByName (hash_key_type);
+            i++; // move after "<>"
             H3R_ENSURE_FFD(i < len, "wrong hash field") // foo<>EOF
-            // Type - array Type; look for a field of said array type
-            j = i;
-            read_symbol (buf, len, i, '[');
+            // Type - array Type; look for a field of said array type.
+            //LATER why matching by type only?
+            HashType = static_cast<String &&>(read_symbol (buf, len, i, '['));
             H3R_ENSURE_FFD(i < len, "wrong hash field") // foo<>bar[EOF
             i++;
             H3R_ENSURE_FFD(i < len && ']' == buf[i], "wrong hash field")
             i++;
             H3R_ENSURE_FFD(i < len, "wrong hash field") // foo<>bar[]EOF
-            printf ("Field: hash type: ");
-                printf_range (buf, j, i); printf (EOL);
+            printf ("Field: hash. HashType: %s" EOL, HashType.AsZStr ());
             // Name - required; hash fields can't be nameless
             skip_line_whitespace (buf, len, i);
-            j = i;
-            read_symbol (buf, len, i);
-            printf ("Field: <> name "); printf_range (buf, j, i); printf (EOL);
-            Name = static_cast<String &&>(String {buf+j, i-j});
+            Name = static_cast<String &&>(read_symbol (buf, len, i));
+            printf ("Field: hash. Name: %s" EOL, Name.AsZStr ());
             break;
         }
         else if ('.' == buf[i]) { // variadic
             Variadic = true;
-            H3R_ENSURE_FFD(i < len-2, "incomplete variadic field")
-            H3R_ENSURE_FFD('.' == buf[i+1], "incomplete variadic field")
-            H3R_ENSURE_FFD('.' == buf[i+2], "incomplete variadic field")
+            H3R_ENSURE_FFD(i < len-2, "Incomplete variadic field")
+            H3R_ENSURE_FFD('.' == buf[i+1], "Incomplete variadic field")
+            H3R_ENSURE_FFD('.' == buf[i+2], "Incomplete variadic field")
             i+=3;
-            H3R_ENSURE_FFD(i < len, "wrong variadic field") // ...EOF
+            H3R_ENSURE_FFD(i < len, "Wrong variadic field") // ...EOF
             skip_line_whitespace (buf, len, i);
             j = i;
-            read_symbol (buf, len, i, '\0', true);
-            printf ("Field: variadic: ");
+            Name =
+                static_cast<String &&>(read_symbol (buf, len, i, '\0', true));
+            printf ("Field: variadic. Name: %s" EOL, Name.AsZStr ());
                 printf_range (buf, j, i); printf (EOL);
             Name = static_cast<String &&>(String {buf+j, i-j});
             break;
         }
-        else if (is_eol(buf, len, i)) // compositeEOL
+        else if (is_eol (buf, len, i)) // compositeEOL
             { ParseCompositeField (buf, len, i, j); break; }
         else if (is_line_whitespace (buf[i])) {// type or composite type
-            int p = i;
+            int p = i; // look-ahead
             skip_line_whitespace (buf, len, i);
             if (is_comment (buf, len, i) || buf[i] == '(' ) // composite
                 { ParseCompositeField (buf, len, i=p, j); break; }
