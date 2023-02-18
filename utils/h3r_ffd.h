@@ -58,15 +58,21 @@ class FFD
     public ~FFD();
 
     // The type of text at the description.
+    //
+    // Attribute are distinct nodes for now; when processing, they're the nth
+    // previous nodes. Its possible that there will be global attributes.
+    //
     public enum class SType {Comment, MachType, TxtList, TxtTable, Unhandled,
-        Struct, Field, Enum, Const, Format};
+        Struct, Field, Enum, Const, Format, Attribute};
     public enum class SConstType {None, Int, Text};
     // Syntax node - these are created as a result of parsing the description.
+    // Its concatenation of SType. It could become class hierarchy.
     public class SNode final
     {
         // Allow copying for now
         private FFD * _ffd;
         public SNode(FFD * ffd) : _ffd{ffd} {}
+        public ~SNode();
 
         public String Attribute {}; // [.*] prior it
         public SType Type {SType::Unhandled};
@@ -78,7 +84,7 @@ class FFD
         public bool Variadic {};  // "..." Type == SType::Field
         public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
         public bool Composite {}; // replace it with FindDType (Name)
-        public String VList {};   // Variadic: value list :n,m,p-q,...
+        public String ValueList {};   // Variadic: value list :n,m,p-q,...
         public SConstType Const {};
           public String StringLiteral {};
           public int IntLiteral {};
@@ -88,7 +94,7 @@ class FFD
         // Type == SType::MachType
         public bool Signed {};
           public int Size {};
-          public SNode * Alias {};  // Alias->Type == SType::MachType
+        // public SNode * Alias {};  // This could become useful later
 
         public bool Parse(const byte *, int, int &);
         public bool ParseMachType(const byte *, int, int &);
@@ -100,6 +106,8 @@ class FFD
         public bool ParseEnum(const byte *, int, int &);
 
         private bool ParseCompositeField(const byte *, int, int, int);
+
+        public inline bool IsRoot() const { return FFD::SType::Format == Type; }
     };
 
     private SNode * _root {};

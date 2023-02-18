@@ -34,9 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // All a have is a war I can not win, but I can never stop fighting.
 
-// Sorry for the lyric divergence, but I had to solve 54 nice-mountain-view
-// tasks in C#.
-
 //TODO What am I? -> "const byte * buf, int len, int & i"
 
 #include "h3r_ffd.h"
@@ -280,7 +277,15 @@ bool FFD::SNode::Parse(const byte * buf, int len, int & i)
     for (auto & kwp : KW)
         if (kwp.KwLen == kw_len && ! OS::Strncmp (
             kwp.Kw, reinterpret_cast<const char *>(buf+j), kw_len)) {
-            if ((this->*kwp.Parse) (buf, len, i)) return true;
+            H3R_ENSURE_FFD(i < len, "Incomplete node")                // .*EOF
+            H3R_ENSURE_FFD(! is_eol (buf, len, i), "Incomplete node") // .*EOL
+            if ((this->*kwp.Parse) (buf, len, i)) {
+                if (6 == kwp.KwLen && ! OS::Strncmp (kwp.Kw, "format", 6))
+                    Type = FFD::SType::Format;
+                return true;
+            }
+            else
+                return false;
         }
     return false;
 }// FFD::SNode::Parse()
@@ -290,29 +295,31 @@ static inline void printf_range(const byte * buf, int a , int b)
     for (int i = a; i < b; i++) printf ("%c", buf[i]);
 }
 
+// type {symbol} {literal}|{symbol} [{expr}]
+//     i
+// Single line. An EOL completes it.
 bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
 {
     Type = FFD::SType::MachType;
-    // i points right after "type". Single line. An EOL completes it.
-    H3R_ENSURE_FFD(i < len, "Incomplete machine type")                // typeEOF
-    H3R_ENSURE_FFD(! is_eol (buf, len, i), "Incomplete machine type") // typeEOL
+
     skip_line_whitespace (buf, len, i);
-    // Name
+    // name
     Name = static_cast<String &&>(read_symbol (buf, len, i));
     printf ("MachType: Symbol: %s" EOL, Name.AsZStr ());
     skip_line_whitespace (buf, len, i);
-    // Size or alias.
+    // size or alias
     if (symbol_valid_1st (buf[i])) { // alias
         String alias = static_cast<String &&>(read_symbol (buf, len, i));
         printf ("MachType: Alias: %s" EOL, alias.AsZStr ());
-        Alias = _ffd->NodeByName (alias); //TODO there is something redundant;
-        H3R_ENSURE_FFD(Alias != nullptr, "The alias must exist prior whats "
+        auto an = _ffd->NodeByName (alias);
+        H3R_ENSURE_FFD(an != nullptr, "The alias must exist prior whats "
             "referencing it. I know you want infinite loops; plenty elsewhere.")
-        if (Alias) Size = Alias->Size;    //     perhaps Size() will do
+        Size = an->Size;
+        Signed = an->Signed;
     }
     else {// size
         Size = parse_int_literal (buf, len, i);
-        if (Size < 0) {Signed = true; Size = -Size;}
+        if (Size < 0) { Signed = true; Size = -Size; }
         printf ("MachType: %d bytes, %s" EOL,
                 Size, (Signed ? "signed" : "unsigned"));
     }
@@ -328,69 +335,75 @@ bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
 }// FFD::SNode::ParseMachType()
 
 // Be careful: leaves i pointing to '\n', or '\r' in the '\r\n' case.
+// {symbol} .*EOLEOL
+//         i
 bool FFD::SNode::ParseLater(const byte * buf, int len, int & i)
 {
-    read_while ("later   ", buf, len, i,
-        [&](){
-            int ofs = 1;
-            if ('\r' == buf[i] && i < len-1 && '\n' == buf[i])
-                ofs = 2;
-            return !(is_eol (buf, len, i)
-                && i < len-ofs && is_eol (buf, len, i+ofs));});
+    read_while ("later   ", buf, len, i, [&](){
+        int ofs = 1;
+        if ('\r' == buf[i] && i < len-1 && '\n' == buf[i])
+            ofs = 2;
+        return !(is_eol (buf, len, i)
+                && i < len-ofs && is_eol (buf, len, i+ofs));
+    });
     return true;
 }
 
 // ^[.*]
+//  i
+// Single line. An EOL completes it.
 bool FFD::SNode::ParseAttribute(const byte * buf, int len, int & i)
 {
-    H3R_ENSURE_FFD(i < len, "Incomplete attribute")                // [EOF
-    H3R_ENSURE_FFD(! is_eol (buf, len, i), "Incomplete attribute") // [EOL
-    int j = i;
+    Type = FFD::SType::Attribute;
+
 //np read_expression (buf: buf, len: len, i: i, open: '[', close: ']');
-    read_expression (buf, len, i, '[', ']');
-    printf ("Attribute: "); printf_range (buf, j, i); printf (EOL);
-    Attribute = static_cast<String &&>(String {buf+j, i-j});
+    Attribute = static_cast<String &&>(read_expression (buf, len, i, '[', ']'));
+    printf ("Attribute: %s" EOL, Attribute.AsZStr ());
     return true;
 }
 
-// struct Obj.EdId:26 // "Event" <=> grep -n ^ ObjNames.txt | grep ^$((n+1))
+FFD::SNode::~SNode()
+{
+    for (int i = 0; i < Fields.Count (); i++)
+        H3R_DESTROY_NESTED_OBJECT(Fields[i], FFD::SNode, SNode)
+}
+
+// struct {symbol}|{variadic-list-item:{value-list}}
+//       i
+// Multi-line. An EOLEOL or EOF, after at least 1 field, completes it.
+// No expression.
 bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
 {
-    // i points right after "struct". Multi-line. An EOLEOL completes it.
-    // Are these really necessary; save for verbose debugging?
-    H3R_ENSURE_FFD(i < len, "Incomplete struct")                // structEOF
-    H3R_ENSURE_FFD(! is_eol (buf, len, i), "Incomplete struct") // structEOL
+    Type = FFD::SType::Struct;
+
     skip_line_whitespace (buf, len, i);
-    int j = i;
 //np read_symbol (buf: buf, len: len, i: i, stop_at: ':', allow_dot: true);
-    read_symbol (buf, len, i, ':', true);
-    printf ("Struct: "); printf_range (buf, j, i); printf (EOL);
-    Name = static_cast<String &&>(String {buf+j, i-j});
+    Name = static_cast<String &&>(read_symbol (buf, len, i, ':', true));
+    printf ("Struct: %s" EOL, Name.AsZStr ());
     if (':' == buf[i]) {
-        printf (", variadic list item" EOL);
+        printf ("Struct: variadic list item" EOL);
         VListItem = true;
         i++;
         H3R_ENSURE_FFD(i < len, "Incomplete value-list")
-        j = i;
-        read_while ("val-list", buf, len, i,
-            [&](){return
-                is_decimal_number (buf[i]) || '-' == buf[i] || ',' == buf[i];});
-        printf ("VList: "); printf_range (buf, j, i); printf (EOL);
+        int j = i;
+        read_while ("val-list", buf, len, i, [&](){ return
+            is_decimal_number (buf[i]) || '-' == buf[i] || ',' == buf[i]; });
+        ValueList = static_cast<String &&>(String {buf+j, i-j});
+        printf ("Struct: ValueList: %s" EOL, ValueList.AsZStr ());
     }
-    // No expression.
-    // It completes with EOLEOL or EOF, and contains fields.
-    // Skip remaining white-space(s) and comment(s).
+    // skip remaining white-space(s) and comment(s)
     H3R_ENSURE_FFD(i < len, "Incomplete struct")      // struct foo.*EOF
-    // printf ("i (%002X) prior scws: %d" EOL, buf[i], i);
     skip_comment_whitespace_sequence (buf, len, i);
-    // printf ("i after scws: %d" EOL, i);
     H3R_ENSURE_FFD(i < len, "Incomplete struct")      // struct foo.*EOLEOF
     H3R_ENSURE_FFD(! is_eol (buf, len, i), "Empty struct") // struct foo.*EOLEOL
-    // Fields
+    // fields
     for (int chk = 0; ; chk++) {
         H3R_ENSURE_FFD(chk < FFD_MAX_FIELDS, "Refine your design")
-        //TODO handle result; add to this->Fields
-        ParseField (buf, len, i); // it skips its EOL if any
+        SNode * node;
+        H3R_CREATE_OBJECT(node, FFD::SNode) {_ffd};
+        Fields.Add (node);
+        if (! node->ParseField (buf, len, i)) // it skips its EOL if any
+            return false;
         // if (i < len)
         //    printf ("done reading a field. %d:%002X" EOL, i, buf[i]);
         if (i >= len) return true; // fieldEOF
@@ -400,7 +413,6 @@ bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
             return true;
         }
     }
-    H3R_ENSURE_FFD(42^42, "Bug: You're not handling some use-case")
     return false;
 }// FFD::SNode::ParseStruct()
 
@@ -408,14 +420,17 @@ bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
 bool FFD::SNode::ParseCompositeField(const byte * buf, int, int i, int j)
 {
     Composite = true;
-    printf ("Field: composite: "); printf_range (buf, j, i); printf (EOL);
     Name = static_cast<String &&>(String {buf+j, i-j});
+    printf ("Field: composite: %s" EOL, Name.AsZStr ());
     return true;
 }
 
+// {whitespace} {symbol} [{symbol}] [{expr}]
+// {whitespace} {symbol}<>{symbol}[] {symbol}
+// {whitespace} ... {variadic-list-name}
+// i
 bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
 {
-    //DONE shouldn't I enforce it? I should.
     skip_line_whitespace (buf, len, i);
     // Either a symbol or a comment
     while (is_comment (buf, len, i)) { // multi-one-line comments
@@ -621,7 +636,6 @@ bool FFD::SNode::ParseEnum(const byte * buf, int len, int & i)
             return true;
         }
     }
-    H3R_ENSURE_FFD(42^42, "Bug: You're not handling some use-case")
     return false;
 }// FFD::SNode::ParseEnum()
 
@@ -654,9 +668,8 @@ FFD::SNode * FFD::NodeByName(const String & query)
             "Wrong chars at description")
     }
 
-    printf ("parsing %d bytes ffd" EOL, len);
+    printf ("TB LR parsing %d bytes ffd" EOL, len);
     FFD ffd {};
-    // 1. Read the nodes in TB LR manner
     for (int i = 0, chk = 0; i < len; chk++) {
         if (is_whitespace (buf[i])) skip_whitespace (buf, len, i);
         // Skipped, for now
@@ -666,6 +679,12 @@ FFD::SNode * FFD::NodeByName(const String & query)
             H3R_CREATE_OBJECT(node, FFD::SNode) {&ffd};
             ffd._snodes.Add (node);
             node->Parse (buf, len, i);
+            if (node->IsRoot ()) {
+                H3R_ENSURE_FFD(nullptr == ffd._root, "Multiple formats in a "
+                    "single description aren't supported yet")
+                ffd._root = node;
+                printf ("Ready to parse: %s" EOL, node->Name.AsZStr ());
+            }
         }
         H3R_ENSURE_FFD(chk < len, "infinite loop")
     }// (int i = 0; i < len;)
