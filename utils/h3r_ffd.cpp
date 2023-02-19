@@ -34,8 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // All a have is a war I can not win, but I can never stop fighting.
 
-//TODO What am I? -> "const byte * buf, int len, int & i"
-
 #include "h3r_ffd.h"
 #include "h3r_filestream.h"
 #include "h3r_memorystream.h"
@@ -45,76 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-static int global_line = 1;
-static int global_column = 1;
-static int const FFD_SYMBOL_MAX_LEN {128};
-static int const FFD_EXPR_MAX_NESTED_EXPR {10};
-static int const FFD_EXPR_MAX_LEN {128};
-static int const FFD_MAX_FIELDS {64};
-static int const FFD_MAX_ENUM_ITEMS {64};
-static int const FFD_MAX_ARR_EXPR_LEN {32};
-
-#define H3R_ENSURE_FFD(C,M) { \
-    if (! (C)) printf ("Error around line %d, column: %d; code:%s:%d: " M EOL, \
-        global_line, global_column, __FILE__, __LINE__), \
-        OS::Exit (1); }
-
-static inline bool is_whitespace(byte b) { return b <= 32; }
-static inline bool is_line_whitespace(byte b) { return 32 == b || 9 == b; }
-static inline bool is_comment(const byte * buf, int len, int i)
-{
-    return '/' == buf[i] && i < len-1 && ('/' == buf[i+1] || '*' == buf[i+1]);
-}
-static inline bool is_eol(const byte * buf, int len, int i)
-{
-    if ('\r' == buf[i] && i < len-1) return '\n' == buf[i+1];
-    return '\n' == buf[i];
-}
-static inline void skip_eol(const byte * buf, int len, int & i)
-{
-    if ('\r' == buf[i] && i < len-1 && '\n' == buf[i+1])
-        i+=2, global_line++, global_column = 1;
-    else if ('\n' == buf[i]) i++, global_line++, global_column = 1;
-}
-
-// read_while c()
-template <typename F> inline static void read_while(const char * txt,
-    const byte * buf, int len, int & i, F c)
-{
-    int j = i;
-    while (i < len && c ()) {
-        if (is_eol (buf, len, i)) { global_line++; global_column = 0; }
-        i++; global_column++;
-    }
-    H3R_ENSURE_FFD(i > j, "Empty read_while")
-    printf ("%3d: read_%s    : [%5d;%5d]" EOL, global_line, txt, j, i);
-}
-
-static void skip_whitespace(const byte * buf, int len, int & i)
-{
-    read_while ("whitespc", buf, len, i, [&](){return buf[i] <= 32;});
-}
-
-static void skip_line_whitespace(const byte * buf, int len, int & i)
-{
-    read_while ("lwhitesp", buf, len, i,
-        [&](){return is_line_whitespace (buf[i]);});
-}
-
-// ensure is_comment() returns true prior calling this one
-static void skip_comment(const byte * buf, int len, int & i)
-{
-    if ('/' == buf[i+1])
-        read_while (
-            "comment1", buf, len, i, [&](){return ! is_eol (buf, len, i);});
-    else if ('*' == buf[i+1]) {
-        // Yes, that would be slow if I had to parse 60 files per second ...
-        read_while ("commentn", buf, len, i,
-              [&](){return !('*' == buf[i] && i < len-1 && '/' == buf[i+1]);});
-        i+=2; // it ends at '*', so
-    }
-}
-
 // 1000 classes? No thanks.
 template <typename F> struct KwParser final // Keyword Parser
 {
@@ -123,137 +51,10 @@ template <typename F> struct KwParser final // Keyword Parser
     F Parse;         // parse function
 };
 
-/*static void skip_nonwhitespace(const byte * buf, int len, int & i)
-{
-    read_while("parse_me", buf, len, i,
-        [&](){return buf[i] > 32 && buf[i] <= 126;});
-}*/
-
-// When "unicode", this shall become "const byte * + len"
-static inline bool symbol_valid_1st(byte b)
-{
-    // [A-Za-z_]
-    return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || '_' == b;
-}
-
-static inline bool symbol_valid_nth(byte b)
-{
-    // [0-9A-Za-z_]
-    return (b >= '0' && b <= '9') || symbol_valid_1st (b);
-}
-
-static String read_symbol(const byte * buf, int len, int & i,
-    // handle variadic list symbols: foo.bar:value-list
-    char stop_at = '\0', bool allow_dot = false)
-{
-    H3R_ENSURE_FFD(symbol_valid_1st (buf[i]), "Wrong symbol name")
-    int j = i;
-    read_while("symbol  ", buf, len, i,
-        [&](){return buf[i] != stop_at && buf[i] > 32 && buf[i] <= 126;});
-    H3R_ENSURE_FFD((i - j) <= FFD_SYMBOL_MAX_LEN, "Symbol too long")
-    for (int k = j; k < i; k++) // repeating, but simplifies the code
-        H3R_ENSURE_FFD(symbol_valid_nth (buf[k])
-            || (allow_dot && '.' == buf[k]), "Wrong symbol name")
-    return static_cast<String &&>(String {buf+j, i-j});
-}
-
-static inline bool is_decimal_number(byte b)
-{
-    return b >= '0' && b <= '9';
-}
-static inline bool is_hexadecimal_number(byte b)
-{
-    return (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F')
-        || is_decimal_number (b);
-}
-static inline bool is_upper(byte b)
-{
-    return (b >= 'A' && b <= 'Z');
-}
-
-//TODO testme
-static inline int parse_int_literal(const byte * buf, int len, int & i)
-{
-    static int const N[16] {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-    int result = 1; bool h = false;
-    if ('-' == buf[i]) { result = -1; i++; }
-    else if ('0' == buf[i] && i+1 < len && 'x' == buf[i+1]) { i+=2; h = true; }
-    // 123 = 3*(10^0) + 2*(10^1) + 1*(10^2)
-    // 1ff = f*(16^0) + f*(16^1) + 1*(16^2)
-    H3R_ENSURE_FFD(i < len, "Incomplete integer literal") // -EOF
-    // integer: nnnnnnnnnn; hexadecimal int: nnnnnnnn
-    int j = i, tmp_result = 0;
-    if (h) {
-        read_while ("int lit.", buf, len, i,
-                    [&](){return is_hexadecimal_number (buf[i]);});
-        H3R_ENSURE_FFD(i - j <= 8, "Integer literal too long")
-        for (int k = i-1, p = 1; k >= j; k--, p *= 16) {
-            int number = is_decimal_number (buf[k]) ? buf[k] - '0'
-                : 10 + buf[k] - (is_upper (buf[k]) ? 'A' : 'a');
-            tmp_result += N[number] * p;
-        }
-    }
-    else {
-        read_while ("int lit.", buf, len, i,
-                    [&](){return is_decimal_number (buf[i]);});
-        H3R_ENSURE_FFD(i - j <= 10, "Integer literal too long")
-        for (int k = i-1, p = 1; k >= j; k--, p *= 10)
-            tmp_result += N[buf[k] - '0'] * p;
-    }
-    return result * tmp_result;
-}// parse_int_literal()
-
-// Multi-line not handled.
-static String read_expression(const byte * buf, int len, int & i,
-    char open = '(', char close = ')')
-{
-    int b = 0;
-    H3R_ENSURE_FFD(open == buf[i], "An expression must start with (")
-    int j = i;
-    read_while("expr.   ", buf, len, i,
-        [&](){
-            // Wrong symbols shall be detected at the evaluator - no point to
-            // evaluate here.
-            if (open == buf[i]) b++;
-            else if (close == buf[i]) b--;
-            H3R_ENSURE_FFD(
-                b >= 0 && b <= FFD_EXPR_MAX_NESTED_EXPR, "Wrong expr.")
-            return b > 0 && buf[i] >= 32 && buf[i] <= 126;});
-    // It shall complete on "close"
-    // printf ("buf[i]: %2X, j:%5d, i:%5d" EOL, buf[i], j, i);
-    H3R_ENSURE_FFD(close == buf[i], "Incomplete expr.")
-    H3R_ENSURE_FFD(0 == b, "Bug: incomplete expr.")
-    i++;
-    H3R_ENSURE_FFD((i - j) <= FFD_EXPR_MAX_LEN, "Expr. too long")
-    return static_cast<String &&>(String {buf+j, i-j});
-}
-
-// Skip any sequence of white-space and comments (MAX_SW_ITEMS max), up to and
-// including an EOL|EOF (multi-line comment EOL(s) doesn't count).
-// Long name on purpose. TODO re-design me for a short name, or modify the
-// grammar.
-static inline void skip_comment_whitespace_sequence(
-    const byte * buf, int len, int & i)
-{
-    int const MAX_SW_ITEMS {10};
-    for (int chk = 0; i < len; chk++) {
-        H3R_ENSURE_FFD(chk < MAX_SW_ITEMS,
-            "I'm sorry, this ain't a novelette file format")
-        if (is_line_whitespace (buf[i])) skip_line_whitespace (buf, len, i);
-        else if (is_comment (buf, len, i)) skip_comment (buf, len, i);
-        else if (is_eol (buf, len, i)) {
-            skip_eol (buf, len, i);
-            break;
-        }
-        else
-            H3R_ENSURE_FFD(42^42, "Unexpected element")
-    }
-}
-
-bool FFD::SNode::Parse(const byte * buf, int len, int & i)
+bool FFD::SNode::Parse(FFDParser & parser)
 {
     static int const KW_LEN {9};
-    static KwParser<bool (FFD::SNode::*)(const byte * buf, int len, int & i)>
+    static KwParser<bool (FFD::SNode::*)(FFDParser &)>
         const KW[KW_LEN] {
             {4, "type", &FFD::SNode::ParseMachType},
             {3, "???", &FFD::SNode::ParseLater},
@@ -265,21 +66,21 @@ bool FFD::SNode::Parse(const byte * buf, int len, int & i)
             {5, "const", &FFD::SNode::ParseConst},
             {4, "enum", &FFD::SNode::ParseEnum}};
 
-    int j = i;
+    int j = parser.Tell ();
     // Attribute "correction"
-    // printf ("global_column: %d, bif[j]:%2X" EOL, global_column, buf[j]);
-    if (1 == global_column && '[' == buf[j])
-        return ParseAttribute (buf, len, i);
+    // printf ("column: %d, buf[j]:%2X" EOL, parser.Column (),
+    //     *(parser.BufAt (j)));
+    if (1 == parser.Column () && parser.AtAttributeStart ())
+        return ParseAttribute (parser);
     //
-    read_while("parse_me", buf, len, i,
-        [&](){return buf[i] > 32 && buf[i] <= 126;});
-    int kw_len = i - j;
+    parser.ReadNonWhiteSpace ();
+    int kw_len = parser.Tell () - j;
     for (auto & kwp : KW)
         if (kwp.KwLen == kw_len && ! OS::Strncmp (
-            kwp.Kw, reinterpret_cast<const char *>(buf+j), kw_len)) {
-            H3R_ENSURE_FFD(i < len, "Incomplete node")                // .*EOF
-            H3R_ENSURE_FFD(! is_eol (buf, len, i), "Incomplete node") // .*EOL
-            if ((this->*kwp.Parse) (buf, len, i)) {
+            kwp.Kw, parser.BufAt (j), kw_len)) {
+            H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete node") // .*EOF
+            H3R_ENSURE_FFD(! parser.IsEol (), "Incomplete node") // .*EOL
+            if ((this->*kwp.Parse) (parser)) {
                 if (6 == kwp.KwLen && ! OS::Strncmp (kwp.Kw, "format", 6))
                     Type = FFD::SType::Format;
                 return true;
@@ -290,26 +91,21 @@ bool FFD::SNode::Parse(const byte * buf, int len, int & i)
     return false;
 }// FFD::SNode::Parse()
 
-static inline void printf_range(const byte * buf, int a , int b)
-{
-    for (int i = a; i < b; i++) printf ("%c", buf[i]);
-}
-
 // type {symbol} {literal}|{symbol} [{expr}]
 //     i
 // Single line. An EOL completes it.
-bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
+bool FFD::SNode::ParseMachType(FFDParser & parser)
 {
     Type = FFD::SType::MachType;
 
-    skip_line_whitespace (buf, len, i);
+    parser.SkipLineWhitespace ();
     // name
-    Name = static_cast<String &&>(read_symbol (buf, len, i));
+    Name = static_cast<String &&>(parser.ReadSymbol ());
     printf ("MachType: Symbol: %s" EOL, Name.AsZStr ());
-    skip_line_whitespace (buf, len, i);
+    parser.SkipLineWhitespace ();
     // size or alias
-    if (symbol_valid_1st (buf[i])) { // alias
-        String alias = static_cast<String &&>(read_symbol (buf, len, i));
+    if (parser.SymbolValid1st ()) { // alias
+        String alias = static_cast<String &&>(parser.ReadSymbol ());
         printf ("MachType: Alias: %s" EOL, alias.AsZStr ());
         auto an = _ffd->NodeByName (alias);
         H3R_ENSURE_FFD(an != nullptr, "The alias must exist prior whats "
@@ -318,16 +114,16 @@ bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
         Signed = an->Signed;
     }
     else {// size
-        Size = parse_int_literal (buf, len, i);
+        Size = parser.ParseIntLiteral ();
         if (Size < 0) { Signed = true; Size = -Size; }
         printf ("MachType: %d bytes, %s" EOL,
                 Size, (Signed ? "signed" : "unsigned"));
     }
-    if (is_eol (buf, len, i)) return true; // completed
+    if (parser.IsEol ()) return true; // completed
     // There could be an expression
-    skip_line_whitespace (buf, len, i);
-    if ('(' == buf[i]) {
-        Expr = static_cast<String &&>(read_expression (buf, len, i));
+    parser.SkipLineWhitespace ();
+    if (parser.AtExprStart ()) {
+        Expr = static_cast<String &&>(parser.ReadExpression ());
         printf ("MachType: Expr: %s" EOL, Expr.AsZStr ());
     }
     // There could be a comment. But it is handled elsewhere for now.
@@ -337,27 +133,21 @@ bool FFD::SNode::ParseMachType(const byte * buf, int len, int & i)
 // Be careful: leaves i pointing to '\n', or '\r' in the '\r\n' case.
 // {symbol} .*EOLEOL
 //         i
-bool FFD::SNode::ParseLater(const byte * buf, int len, int & i)
+bool FFD::SNode::ParseLater(FFDParser & parser)
 {
-    read_while ("later   ", buf, len, i, [&](){
-        int ofs = 1;
-        if ('\r' == buf[i] && i < len-1 && '\n' == buf[i])
-            ofs = 2;
-        return !(is_eol (buf, len, i)
-                && i < len-ofs && is_eol (buf, len, i+ofs));
-    });
+    parser.SkipUntilDoubleEol ();
     return true;
 }
 
 // ^[.*]
 //  i
 // Single line. An EOL completes it.
-bool FFD::SNode::ParseAttribute(const byte * buf, int len, int & i)
+bool FFD::SNode::ParseAttribute(FFDParser & parser)
 {
     Type = FFD::SType::Attribute;
 
-//np read_expression (buf: buf, len: len, i: i, open: '[', close: ']');
-    Attribute = static_cast<String &&>(read_expression (buf, len, i, '[', ']'));
+//np ReadExpression (open: '[', close: ']');
+    Attribute = static_cast<String &&>(parser.ReadExpression ('[', ']'));
     printf ("Attribute: %s" EOL, Attribute.AsZStr ());
     return true;
 }
@@ -372,44 +162,41 @@ FFD::SNode::~SNode()
 //       i
 // Multi-line. An EOLEOL or EOF, after at least 1 field, completes it.
 // No expression.
-bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
+bool FFD::SNode::ParseStruct(FFDParser & parser)
 {
     Type = FFD::SType::Struct;
 
-    skip_line_whitespace (buf, len, i);
-//np read_symbol (buf: buf, len: len, i: i, stop_at: ':', allow_dot: true);
-    Name = static_cast<String &&>(read_symbol (buf, len, i, ':', true));
+    parser.SkipLineWhitespace ();
+//np ReadSymbol (stop_at: ':', allow_dot: true);
+    Name = static_cast<String &&>(parser.ReadSymbol (':', true));
     printf ("Struct: %s" EOL, Name.AsZStr ());
-    if (':' == buf[i]) {
+    if (parser.AtVListSep ()) {
         printf ("Struct: variadic list item" EOL);
         VListItem = true;
-        i++;
-        H3R_ENSURE_FFD(i < len, "Incomplete value-list")
-        int j = i;
-        read_while ("val-list", buf, len, i, [&](){ return
-            is_decimal_number (buf[i]) || '-' == buf[i] || ',' == buf[i]; });
-        ValueList = static_cast<String &&>(String {buf+j, i-j});
+        parser.SkipOneByte ();
+        H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete value-list")
+        ValueList = static_cast<String &&>(parser.ReadValueList ());
         printf ("Struct: ValueList: %s" EOL, ValueList.AsZStr ());
     }
     // skip remaining white-space(s) and comment(s)
-    H3R_ENSURE_FFD(i < len, "Incomplete struct")      // struct foo.*EOF
-    skip_comment_whitespace_sequence (buf, len, i);
-    H3R_ENSURE_FFD(i < len, "Incomplete struct")      // struct foo.*EOLEOF
-    H3R_ENSURE_FFD(! is_eol (buf, len, i), "Empty struct") // struct foo.*EOLEOL
+    H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete struct")// struct .*EOF
+    parser.SkipCommentWhitespaceSequence ();
+    H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete struct")// struct .*EOLEOF
+    H3R_ENSURE_FFD(! parser.IsEol (), "Empty struct") // struct foo.*EOLEOL
     // fields
     for (int chk = 0; ; chk++) {
         H3R_ENSURE_FFD(chk < FFD_MAX_FIELDS, "Refine your design")
         SNode * node;
         H3R_CREATE_OBJECT(node, FFD::SNode) {_ffd};
         Fields.Add (node);
-        if (! node->ParseField (buf, len, i)) // it skips its EOL if any
+        if (! node->ParseField (parser)) // it skips its EOL if any
             return false;
-        // if (i < len)
+        // if (parser.HasMoreData ())
         //    printf ("done reading a field. %d:%002X" EOL, i, buf[i]);
-        if (i >= len) return true; // fieldEOF
-        if (is_eol (buf, len, i)) {
-            skip_eol (buf, len, i);
-            if (i >= len) return true; // fieldEOLEOF
+        if (! parser.HasMoreData ()) return true; // fieldEOF
+        if (parser.IsEol ()) {
+            parser.SkipEol ();
+            if (! parser.HasMoreData ()) return true; // fieldEOLEOF
             return true;
         }
     }
@@ -418,15 +205,15 @@ bool FFD::SNode::ParseStruct(const byte * buf, int len, int & i)
 
 // {whitespace} {symbol} [{expr}]
 // "j" - base (where it starts)
-bool FFD::SNode::ParseCompositeField(const byte * buf, int len, int & i, int j)
+bool FFD::SNode::ParseCompositeField(FFDParser & parser, int j)
 {
     Composite = true;
-    Name = static_cast<String &&>(String {buf+j, i-j});
+    Name = static_cast<String &&>(parser.StringAt (j, parser.Tell ()-j));
     printf ("Field: composite. Name: %s" EOL, Name.AsZStr ());
-    if (is_eol (buf, len, i)) return true;
-    skip_line_whitespace (buf, len, i);
-    if ('(' == buf[i]) {
-        Expr = static_cast<String &&>(read_expression (buf, len, i));
+    if (parser.IsEol ()) return true;
+    parser.SkipLineWhitespace ();
+    if (parser.AtExprStart ()) {
+        Expr = static_cast<String &&>(parser.ReadExpression ());
         printf ("Field: composite. Expr: %s" EOL, Expr.AsZStr ());
     }
     // comment(s) and whitespace are handled by FFD::SNode::ParseField()
@@ -437,204 +224,191 @@ bool FFD::SNode::ParseCompositeField(const byte * buf, int len, int & i, int j)
 // {whitespace} {symbol}<>{symbol}[] {symbol}
 // {whitespace} ... {variadic-list-name}
 // i
-bool FFD::SNode::ParseField(const byte * buf, int len, int & i)
+bool FFD::SNode::ParseField(FFDParser & parser)
 {
     Type = FFD::SType::Field;
 
-    skip_line_whitespace (buf, len, i);
+    parser.SkipLineWhitespace ();
     // Either a symbol or a comment
-    while (is_comment (buf, len, i)) { // multi-one-line comments
-        skip_comment_whitespace_sequence (buf, len, i);
-        H3R_ENSURE_FFD(i < len, "Incomplete field")
-        skip_line_whitespace (buf, len, i);
+    while (parser.IsComment ()) { // multi-one-line comments
+        parser.SkipCommentWhitespaceSequence ();
+        H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete field")
+        parser.SkipLineWhitespace ();
     }
     // What is it? "type<>type[] symbol" or "typeEOL" or "type " or "..."
-    int j = i;
-    for (;; i++) {
-        if ('<' == buf[i]) {// hash field
+    int j = parser.Tell ();
+    for (;; parser.SkipOneByte ()) {
+        if (parser.AtHashStart ()) {// hash field
             HashKey = true; // this field is hash key: the actual value is:
                             // HashType[value]
-            H3R_ENSURE_FFD(i < len, "wrong hash field") // foo<EOF
-            i++;
-            H3R_ENSURE_FFD(i < len && '>' == buf[i], "wrong hash field")
-            printf ("Field: hash. Key type: ");
-                printf_range (buf, j, i-1); printf (EOL);
+            H3R_ENSURE_FFD(parser.HasMoreData (), "wrong hash field") // foo<EOF
+            parser.SkipOneByte ();
+            H3R_ENSURE_FFD(parser.HasMoreData () && parser.AtHashEnd (),
+                "wrong hash field")
             // resolve: pass 1
-            String hash_key_type {buf+j, i-1-j};
+            String hash_key_type = static_cast<String &&>(
+                parser.StringAt (j, parser.Tell ()-1-j));
+            printf ("Field: hash. Key type: %s" EOL, hash_key_type.AsZStr ());
             DType = _ffd->NodeByName (hash_key_type);
-            i++; // move after "<>"
-            H3R_ENSURE_FFD(i < len, "wrong hash field") // foo<>EOF
+            parser.SkipOneByte (); // move after "<>"
+            H3R_ENSURE_FFD(parser.HasMoreData (), "wrong hash field") // .*<>EOF
             // Type - array Type; look for a field of said array type.
             //LATER why matching by type only?
-            HashType = static_cast<String &&>(read_symbol (buf, len, i, '['));
-            H3R_ENSURE_FFD(i < len, "wrong hash field") // foo<>bar[EOF
-            i++;
-            H3R_ENSURE_FFD(i < len && ']' == buf[i], "wrong hash field")
-            i++;
-            H3R_ENSURE_FFD(i < len, "wrong hash field") // foo<>bar[]EOF
+            HashType = static_cast<String &&>(parser.ReadSymbol ('['));
+            H3R_ENSURE_FFD(parser.HasMoreData (), "wrong hash field") // .*[EOF
+            parser.SkipOneByte ();
+            H3R_ENSURE_FFD(parser.HasMoreData () && parser.AtArrEnd (),
+                "wrong hash field")
+            parser.SkipOneByte ();
+            H3R_ENSURE_FFD(parser.HasMoreData (), "wrong hash field") // .*[]EOF
             printf ("Field: hash. HashType: %s" EOL, HashType.AsZStr ());
             // Name - required; hash fields can't be nameless
-            skip_line_whitespace (buf, len, i);
-            Name = static_cast<String &&>(read_symbol (buf, len, i));
+            parser.SkipLineWhitespace ();
+            Name = static_cast<String &&>(parser.ReadSymbol ());
             printf ("Field: hash. Name: %s" EOL, Name.AsZStr ());
             break;
         }
-        else if ('.' == buf[i]) { // variadic
+        else if (parser.AtVariadicStart ()) { // variadic
             Variadic = true;
-            H3R_ENSURE_FFD(i < len-2, "Incomplete variadic field")
-            H3R_ENSURE_FFD('.' == buf[i+1], "Incomplete variadic field")
-            H3R_ENSURE_FFD('.' == buf[i+2], "Incomplete variadic field")
-            i+=3;
-            H3R_ENSURE_FFD(i < len, "Wrong variadic field") // ...EOF
-            skip_line_whitespace (buf, len, i);
-            Name =
-                static_cast<String &&>(read_symbol (buf, len, i, '\0', true));
+            parser.ReadVariadicField (); // "..."
+            H3R_ENSURE_FFD(parser.HasMoreData (), "Wrong variadic field") //.EOF
+            parser.SkipLineWhitespace ();
+            Name = static_cast<String &&>(parser.ReadSymbol ('\0', true));
             printf ("Field: variadic. Name: %s" EOL, Name.AsZStr ());
             break;
         }
-        else if (is_eol (buf, len, i)) // compositeEOL
-            { ParseCompositeField (buf, len, i, j); break; }
-        else if (is_line_whitespace (buf[i])) {// type or composite type
-            int p = i; // look-ahead
-            skip_line_whitespace (buf, len, i);
-            if (is_comment (buf, len, i) || buf[i] == '(' ) // composite
-                { ParseCompositeField (buf, len, i=p, j); break; }
-            i = p;
-            DTypeName = static_cast<String &&>(String {buf+j, i-j});
+        else if (parser.IsEol ()) // compositeEOL
+            { ParseCompositeField (parser, j); break; }
+        else if (parser.IsLineWhitespace ()) {// type or composite type
+            int p = parser.Tell (); // look-ahead
+            parser.SkipLineWhitespace ();
+            if (parser.IsComment () || parser.AtExprStart ()) // composite
+                { ParseCompositeField (parser.SetCurrent (p), j); break; }
+            parser.SetCurrent (p);
+            DTypeName =
+                static_cast<String &&>(parser.StringAt (j, parser.Tell ()-j));
             printf ("Field: type: %s" EOL, DTypeName.AsZStr ());
             DType = _ffd->NodeByName (DTypeName); // resolve: pass 1
-            skip_line_whitespace (buf, len, i);
-            Name = static_cast<String &&>(read_symbol (buf, len, i, '['));
-            if ('[' == buf[i]) {
-                i++;
-                H3R_ENSURE_FFD(i < len, "Incomplete array") // [EOF
-                H3R_ENSURE_FFD(
-                    ! is_eol (buf, len, i), "Incomplete array") // [EOL
+            parser.SkipLineWhitespace ();
+            Name = static_cast<String &&>(parser.ReadSymbol ('['));
+            if (parser.AtArrStart ()) {
+                parser.SkipOneByte ();
+                H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete array")// [EOF
+                H3R_ENSURE_FFD(! parser.IsEol (), "Incomplete array") // [EOL
                 Array = true;
                 for (int arr = 1; arr < 4; arr++) {
-                    int s = i;
-                    read_while ("arr     ", buf, len, i,
-                        [&](){ return ']' != buf[i]; });
-                    H3R_ENSURE_FFD(']' == buf[i], "Incomplete array")
-                    H3R_ENSURE_FFD(i-s <= FFD_MAX_ARR_EXPR_LEN,
-                        "Simplify your array expression")
-                    Arr[arr-1] = static_cast<String &&>(String {buf+s, i-s});
+                    Arr[arr-1] = static_cast<String &&>(parser.ReadArrDim ());
                     printf ("Field: array[%d]=%s" EOL,
                         arr-1, Arr[arr-1].AsZStr ());
-                    i++;
-                    if (i >= len) break; // foo[.*]EOF
-                    if (buf[i] != '[') break;
+                    if (! parser.HasMoreData ()) break; // foo[.*]EOF
+                    if (! parser.AtArrStart ()) break;
                     else {
-                        i++;
+                        parser.SkipOneByte ();
                         H3R_ENSURE_FFD(arr != 3, "array: too many dimensions")
                     }
-                    H3R_ENSURE_FFD(i < len, "incomplete array") // [EOF
+                    H3R_ENSURE_FFD(parser.HasMoreData (),
+                        "incomplete array") // [EOF
                 }
             }// array
             printf ("Field: name: %s" EOL, Name.AsZStr ());
             break;
-        }// (is_line_whitespace (buf[i]))
+        }// (parser.IsLineWhitespace ())
     }// (;; i++)
     // Read optional: expression, etc.
-    if (i >= len) return true;
-    if (is_eol (buf, len, i)) { skip_eol (buf, len, i) ; return true; }
-    skip_line_whitespace (buf, len, i);
-    if ('(' == buf[i]) {
-        Expr = static_cast<String &&>(read_expression (buf, len, i));
+    if (! parser.HasMoreData ()) return true;
+    if (parser.IsEol ()) { parser.SkipEol () ; return true; }
+    parser.SkipLineWhitespace ();
+    if (parser.AtExprStart ()) {
+        Expr = static_cast<String &&>(parser.ReadExpression ());
         printf ("Field: expr: %s" EOL, Expr.AsZStr ());
     }
-    skip_comment_whitespace_sequence (buf, len, i);
+    parser.SkipCommentWhitespaceSequence ();
     return true;
 }// FFD::SNode::ParseField()
 
 // const {symbol} {literal} [{expr}]
 //      i
-bool FFD::SNode::ParseConst(const byte * buf, int len, int & i)
+bool FFD::SNode::ParseConst(FFDParser & parser)
 {
     Type = FFD::SType::Const;
 
-    skip_line_whitespace (buf, len, i);
-    Name = static_cast<String &&>(read_symbol (buf, len, i));
+    parser.SkipLineWhitespace ();
+    Name = static_cast<String &&>(parser.ReadSymbol ());
     printf ("Const: name: %s" EOL, Name.AsZStr ());
-    skip_line_whitespace (buf, len, i);
+    parser.SkipLineWhitespace ();
     // int or string
-    if ('"' == buf[i]) {
-        int j = i+1;
-        H3R_ENSURE_FFD(j < len, "Incomplete string literal") // "EOF
-        //LATER fix: yep, it shall read "a"a"a"
-        read_expression (buf, len, i, '"', '"');
+    if (parser.AtDoubleQuote ()) {
         Const = FFD::SConstType::Text;
-        StringLiteral = static_cast<String &&>(String {buf+j, i-j});
+        StringLiteral = static_cast<String &&>(parser.ReadStringLiteral ());
         printf ("Const: string: %s" EOL, StringLiteral.AsZStr ());
     }
     else {
         Const = FFD::SConstType::Int;
-        IntLiteral = parse_int_literal (buf, len, i);
+        IntLiteral = parser.ParseIntLiteral ();
         printf ("Const: integer: %d" EOL, IntLiteral);
     }
-    if (is_eol (buf, len, i)) { skip_eol (buf, len, i); return true; }
-    skip_line_whitespace (buf, len, i);
-    if ('(' == buf[i]) {
-        Expr = static_cast<String &&>(read_expression (buf, len, i));
+    if (parser.IsEol ()) { parser.SkipEol (); return true; }
+    parser.SkipLineWhitespace ();
+    if (parser.AtExprStart ()) {
+        Expr = static_cast<String &&>(parser.ReadExpression ());
         printf ("Const: expr: %s" EOL, Expr.AsZStr ());
     }
     else
-        skip_comment_whitespace_sequence (buf, len, i);
+        parser.SkipCommentWhitespaceSequence ();
     return true;
 }// FFD::SNode::ParseConst()
 
 // enum {symbol} {machine type} [{expr}]
 //     i
 //   {whitespace} {symbol} {int literal} [{expr}]
-bool FFD::SNode::ParseEnum(const byte * buf, int len, int & i)
+bool FFD::SNode::ParseEnum(FFDParser & parser)
 {
-    skip_line_whitespace (buf, len, i);
-    Name = static_cast<String &&>(read_symbol (buf, len, i));
+    parser.SkipLineWhitespace ();
+    Name = static_cast<String &&>(parser.ReadSymbol ());
     printf ("Enum: name: %s" EOL, Name.AsZStr ());
-    skip_line_whitespace (buf, len, i);
-    DTypeName = static_cast<String &&>(read_symbol (buf, len, i));
+    parser.SkipLineWhitespace ();
+    DTypeName = static_cast<String &&>(parser.ReadSymbol ());
     printf ("Enum: type: %s" EOL, DTypeName.AsZStr ());
     DType = _ffd->NodeByName (DTypeName); // resolve: pass 1
-    if (is_eol (buf, len, i))
-        skip_eol (buf, len, i);
+    if (parser.IsEol ())
+        parser.SkipEol ();
     else {
-        if ('(' == buf[i]) {
-            Expr = static_cast<String &&>(read_expression (buf, len, i));
+        if (parser.AtExprStart ()) {
+            Expr = static_cast<String &&>(parser.ReadExpression ());
             printf ("Enum: expr: %s" EOL, Expr.AsZStr ());
         }
-        H3R_ENSURE_FFD(i < len, "Incomplete enum")      // enum foo.*)EOF
-        skip_comment_whitespace_sequence (buf, len, i);
+        H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete enum") // foo.*)EOF
+        parser.SkipCommentWhitespaceSequence ();
     }
-    H3R_ENSURE_FFD(i < len, "Incomplete enum")           // enum foo.*EOLEOF
-    H3R_ENSURE_FFD(! is_eol (buf, len, i), "Empty enum") // enum foo.*EOLEOL
+    H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete enum") // enum foo.*EOLEOF
+    H3R_ENSURE_FFD(! parser.IsEol (), "Empty enum") // enum foo.*EOLEOL
     for (int chk = 0; ; chk++) {
         H3R_ENSURE_FFD(chk < FFD_MAX_ENUM_ITEMS, "Refine your design")
         // {whitespace} {symbol} {int literal} [{expr}]
         // i
-        skip_line_whitespace (buf, len, i);
+        parser.SkipLineWhitespace ();
         EnumItem itm;
-        itm.Name = static_cast<String &&>(read_symbol (buf, len, i));
+        itm.Name = static_cast<String &&>(parser.ReadSymbol ());
         printf ("EnumItem: Name: %s" EOL, itm.Name.AsZStr ());
-        skip_line_whitespace (buf, len, i);
-        itm.Value = parse_int_literal (buf, len, i);
+        parser.SkipLineWhitespace ();
+        itm.Value = parser.ParseIntLiteral ();
         printf ("EnumItem: Value: %d" EOL, itm.Value);
-        if (is_eol (buf, len, i))
-            skip_eol (buf, len, i);
+        if (parser.IsEol ())
+            parser.SkipEol ();
         else {
-            if ('(' == buf[i]) {
-                itm.Expr =
-                    static_cast<String &&>(read_expression (buf, len, i));
+            if (parser.AtExprStart ()) {
+                itm.Expr = static_cast<String &&>(parser.ReadExpression ());
                 printf ("EnumItem: expr: %s" EOL, itm.Expr.AsZStr ());
             }
             else
-                skip_comment_whitespace_sequence (buf, len, i);
+                parser.SkipCommentWhitespaceSequence ();
         }
         EnumItems.Add (itm);
         //
-        if (i >= len) return true; // itemEOF
-        if (is_eol (buf, len, i)) {
-            skip_eol (buf, len, i);
-            if (i >= len) return true; // itemEOLEOF
+        if (! parser.HasMoreData ()) return true; // itemEOF
+        if (parser.IsEol ()) {
+            parser.SkipEol ();
+            if (! parser.HasMoreData ()) return true; // itemEOLEOF
             return true;
         }
     }
@@ -672,15 +446,16 @@ FFD::SNode * FFD::NodeByName(const String & query)
 
     printf ("TB LR parsing %d bytes ffd" EOL, len);
     FFD ffd {};
-    for (int i = 0, chk = 0; i < len; chk++) {
-        if (is_whitespace (buf[i])) skip_whitespace (buf, len, i);
+    FFDParser parser {buf, len};
+    for (int i = 0, chk = 0; parser.HasMoreData (); chk++) {
+        if (parser.IsWhitespace ()) parser.SkipWhitespace ();
         // Skipped, for now
-        else if (is_comment (buf, len, i)) skip_comment (buf, len, i);
+        else if (parser.IsComment ()) parser.SkipComment ();
         else {
             FFD::SNode * node;
             H3R_CREATE_OBJECT(node, FFD::SNode) {&ffd};
             ffd._snodes.Add (node);
-            node->Parse (buf, len, i);
+            node->Parse (parser);
             if (node->IsRoot ()) {
                 H3R_ENSURE_FFD(nullptr == ffd._root, "Multiple formats in a "
                     "single description aren't supported yet")

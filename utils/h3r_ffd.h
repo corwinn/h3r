@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_string.h"
 #include "h3r_list.h"
+#include "h3r_ffdparser.h"
 
 H3R_NAMESPACE
 
@@ -113,19 +114,19 @@ class FFD
 
         public List<EnumItem> EnumItems {};
 
-        public bool Parse(const byte *, int, int &);
-        public bool ParseMachType(const byte *, int, int &);
-        public bool ParseLater(const byte *, int, int &);
-        public bool ParseAttribute(const byte *, int, int &);
-        public bool ParseStruct(const byte *, int, int &);
-        private bool ParseField(const byte *, int, int &);
-        public bool ParseConst(const byte *, int, int &);
-        public bool ParseEnum(const byte *, int, int &);
+        public bool Parse(FFDParser &);
+        public bool ParseMachType(FFDParser &);
+        public bool ParseLater(FFDParser &);
+        public bool ParseAttribute(FFDParser &);
+        public bool ParseStruct(FFDParser &);
+        private bool ParseField(FFDParser &);
+        public bool ParseConst(FFDParser &);
+        public bool ParseEnum(FFDParser &);
 
-        private bool ParseCompositeField(const byte *, int, int &, int);
+        private bool ParseCompositeField(FFDParser &, int);
 
         public inline bool IsRoot() const { return FFD::SType::Format == Type; }
-    };
+    };// SNode
 
     private SNode * _root {};
     private List<SNode *> _snodes {};
