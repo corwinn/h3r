@@ -37,13 +37,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r.h"
 #include "h3r_string.h"
+#include "h3r_dbg.h"
 
 H3R_NAMESPACE
 
 #define H3R_ENSURE_FFD(C,M) { \
-    if (! (C)) printf ("Error around line %d, column: %d; code:%s:%d: " M EOL, \
-        parser.Line (), parser.Column (), __FILE__, __LINE__), \
-        OS::Exit (1); }
+    if (! (C)) { Dbg << "Error around line " << parser.Line () \
+        << ", column: " << parser.Column () \
+        << "; code:" << __FILE__ << ":" << __LINE__ << ": " << M <<  EOL; \
+        OS::Exit (1); }}
 
 #define FFD_SYMBOL_MAX_LEN 128
 #define FFD_EXPR_MAX_NESTED_EXPR 10

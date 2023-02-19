@@ -38,9 +38,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 #define H3R_ENSURE_LFFD(C,M) { \
-    if (! (C)) printf ("Error around line %d, column: %d; code:%s:%d: " M EOL, \
-        (*this).Line (), (*this).Column (), __FILE__, __LINE__), \
-        OS::Exit (1); }
+    if (! (C)) { Dbg << "Error around line " << (*this).Line () \
+        << ", column: " << (*this).Column () \
+        << "; code:" << __FILE__ << ":" << __LINE__ << ": " << M <<  EOL; \
+        OS::Exit (1); }}
 
 bool FFDParser::IsWhitespace() { return _buf[_i] <= 32; }
 bool FFDParser::IsLineWhitespace() { return 32 == _buf[_i] || 9 == _buf[_i]; }
@@ -199,7 +200,6 @@ String FFDParser::ReadExpression(char open, char close)
                 b >= 0 && b <= FFD_EXPR_MAX_NESTED_EXPR, "Wrong expr.")
             return b > 0 && _buf[_i] >= 32 && _buf[_i] <= 126;});
     // It shall complete on "close"
-    // printf ("buf[i]: %2X, j:%5d, i:%5d" EOL, buf[i], j, i);
     H3R_ENSURE_LFFD(close == _buf[_i], "Incomplete expr.")
     H3R_ENSURE_LFFD(0 == b, "Bug: incomplete expr.")
     _i++;
