@@ -127,7 +127,7 @@ class String final
     //   FileStream.Write (foo.AsByteArray (), foo.Length ())
     public inline const byte * AsByteArray() const { return _b.Data (); }
     // Avoid pointless copying. Take care: String.Length() and Array.Length()
-    // might differ. TODO testme
+    // might differ.
     public inline explicit operator const Array<byte> &() const { return _b; }
 
     // Using POSIX tolower().

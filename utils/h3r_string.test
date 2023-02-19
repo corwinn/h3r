@@ -362,6 +362,14 @@ H3R_TEST_(empty)
     H3R_TEST_IS_FALSE(c.Empty ())
 H3R_TEST_END
 
+H3R_TEST_(const_array_ref)
+    String c {"c"};
+    const Array<byte> & t = c.operator const Array<byte> & ();
+    H3R_TEST_IS_TRUE(t.Length () != c.Length ())
+    H3R_TEST_ARE_EQUAL(5, t.Length ())
+    H3R_TEST_ARE_EQUAL(1, c.Length ())
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()
