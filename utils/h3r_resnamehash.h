@@ -126,7 +126,6 @@ template <typename T> class ResNameHash final
         return _miss_cnt++, false;
     }
 
-    //TODO testme
     public int Count() const { return _tbl.Length (); }
     public KeyValue<T> ** begin()
     {

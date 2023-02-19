@@ -210,6 +210,53 @@ H3R_TEST_(H3sprite_lod)
     printf ("Query: %d keys/s;" EOL, value);
 H3R_TEST_END
 
+H3R_TEST_(count)
+    ResNameHash<int> t;
+    H3R_TEST_ARE_EQUAL(0, t.Count ())
+    auto text1 = "tex1";
+    Array<byte> key1 {(const byte *)text1, 4};
+    auto text2 = "text2";
+    Array<byte> key2 {(const byte *)text2, 5};
+    auto text3 = "textt3";
+    Array<byte> key3 {(const byte *)text3, 6};
+    int val1 = 7, val2 = 13, val3 = 55;
+    t.Add (key3, val3);
+    t.Add (key2, val2);
+    t.Add (key1, val1);
+    H3R_TEST_ARE_EQUAL(3, t.Count ())
+H3R_TEST_END
+
+H3R_TEST_(range_for)
+    ResNameHash<int> t;
+    auto text1 = "tex1";
+    Array<byte> key1 {(const byte *)text1, 4};
+    auto text2 = "tex2a";
+    Array<byte> key2 {(const byte *)text2, 5};
+    auto text3 = "tex3bc";
+    Array<byte> key3 {(const byte *)text3, 6};
+    int val1 = 7, val2 = 13, val3 = 55;
+    t.Add (key3, val3);
+    t.Add (key2, val2);
+    t.Add (key1, val1);
+
+    int i = 0;
+    for (auto & kvp : t) {
+        if (0 == i) {
+            H3R_TEST_ARE_EQUAL (val1, kvp->Value)
+            H3R_TEST_ARE_EQUAL (key1.Length (), kvp->Key.Length ())
+        }
+        if (1 == i) {
+            H3R_TEST_ARE_EQUAL (val2, kvp->Value)
+            H3R_TEST_ARE_EQUAL (key2.Length (), kvp->Key.Length ())
+        }
+        if (2 == i) {
+            H3R_TEST_ARE_EQUAL (val3, kvp->Value)
+            H3R_TEST_ARE_EQUAL (key3.Length (), kvp->Key.Length ())
+        }
+        i++;
+    }
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()
