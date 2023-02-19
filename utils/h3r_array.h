@@ -66,6 +66,17 @@ template <typename T,
     {
         return a.CopyTo (*this), *this;
     }
+    public: bool operator==(const Array<T> & a)
+    {
+        return _len != a._len ? false
+            : 0 == OS::Strncmp (
+                reinterpret_cast<const char *>(_data),
+                reinterpret_cast<const char *>(a._data), sizeof(T)*_len);
+    }
+    public: bool operator!=(const Array<T> & a)
+    {
+        return ! (operator== (a));
+    }
     public: Array(int len) { Resize (len); }
     public: ~Array() { this->free_and_nil (); }
 

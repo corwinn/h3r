@@ -243,15 +243,15 @@ H3R_TEST_(range_for)
     for (auto & kvp : t) {
         if (0 == i) {
             H3R_TEST_ARE_EQUAL (val1, kvp->Value)
-            H3R_TEST_ARE_EQUAL (key1.Length (), kvp->Key.Length ())
+            H3R_TEST_ARE_EQUAL (key1, kvp->Key)
         }
         if (1 == i) {
             H3R_TEST_ARE_EQUAL (val2, kvp->Value)
-            H3R_TEST_ARE_EQUAL (key2.Length (), kvp->Key.Length ())
+            H3R_TEST_ARE_EQUAL (key2, kvp->Key)
         }
         if (2 == i) {
             H3R_TEST_ARE_EQUAL (val3, kvp->Value)
-            H3R_TEST_ARE_EQUAL (key3.Length (), kvp->Key.Length ())
+            H3R_TEST_ARE_EQUAL (key3, kvp->Key)
         }
         i++;
     }
