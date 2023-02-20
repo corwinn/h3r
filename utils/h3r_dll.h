@@ -75,6 +75,8 @@ template <typename T> class LList
         return n;
     }
 
+    // Misleading name: foo.InsertAfter (bar) inserts bar after foo.
+    //LATER misleading vs confusion?
     // prev-this-next becomes prev-this-n-next
     public Node * InsertAfter(Node * n)
     {
