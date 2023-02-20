@@ -143,6 +143,11 @@ auto Strncmp = [](const char * a, const char * b, size_t n)
     return strncmp (a, b, n);
 };
 
+auto Memcmp = [](const void * a, const void * b, size_t n)
+{
+    return memcmp (a, b, n);
+};
+
 auto Memmove = [](void * dest, const void * src, size_t n)
 {
     memmove (dest, src, n);
