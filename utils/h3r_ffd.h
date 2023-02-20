@@ -90,6 +90,12 @@ class FFD
             Prev->WalkBackwards (on_node);
         }
         private SNode * NodeByName(const String &);
+        public template <typename F> void WalkForward(F on_node)
+        {
+            if (! on_node (this)) return;
+            if (nullptr == Next) return;
+            Next->WalkForward (on_node);
+        }
 
         public String Attribute {}; // [.*] prior it
         public SType Type {SType::Unhandled};
@@ -141,7 +147,7 @@ class FFD
     private SNode * _root {};
     // An LL is preferable to a list, because each node should be able to look
     // at its neighbors w/o accessing third party objects.
-    private FFD::SNode * _tail {}; // DLL<FFD::SNode>
+    private FFD::SNode * _tail {}, * _head {}; // DLL<FFD::SNode>
 
     public class Node
     {

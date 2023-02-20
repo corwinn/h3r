@@ -189,6 +189,7 @@ bool FFD::SNode::ParseStruct(FFDParser & parser)
         H3R_ENSURE_FFD(chk < FFD_MAX_FIELDS, "Refine your design")
         SNode * node;
         H3R_CREATE_OBJECT(node, FFD::SNode) {};
+        node->Base = this;
         Fields.Add (node);
         if (! node->ParseField (parser)) // it skips its EOL if any
             return false;
@@ -251,7 +252,7 @@ bool FFD::SNode::ParseField(FFDParser & parser)
             String hash_key_type = static_cast<String &&>(
                 parser.StringAt (j, parser.Tell ()-1-j));
             Dbg << "Field: hash. Key type: " << hash_key_type << EOL;
-            DType = NodeByName (hash_key_type);
+            DType = Base->NodeByName (hash_key_type);
             parser.SkipOneByte (); // move after "<>"
             H3R_ENSURE_FFD(parser.HasMoreData (), "wrong hash field") // .*<>EOF
             // Type - array Type; look for a field of said array type.
@@ -290,7 +291,7 @@ bool FFD::SNode::ParseField(FFDParser & parser)
             DTypeName =
                 static_cast<String &&>(parser.StringAt (j, parser.Tell ()-j));
             Dbg << "Field: type: " << DTypeName << EOL;
-            DType = NodeByName (DTypeName); // resolve: pass 1
+            DType = Base->NodeByName (DTypeName); // resolve: pass 1
             parser.SkipLineWhitespace ();
             Name = static_cast<String &&>(parser.ReadSymbol ('['));
             if (parser.AtArrStart ()) {
@@ -426,21 +427,61 @@ FFD::~FFD()
         H3R_DESTROY_NESTED_OBJECT(dnode, FFD::SNode, SNode)
     }
     H3R_ENSURE(nullptr == _tail, "bug: something like an LL")
+    _head = _tail;
 }
 
 FFD::SNode * FFD::SNode::NodeByName(const String & query)
 {
     FFD::SNode * result = {};
     WalkBackwards([&](FFD::SNode * node) {
+        // Dbg << "NodeByName: " << query  << " : " << node->Name << EOL;
         if (node->Name == query) { result = node; return false; }
         return true;
     });
     return result;
 }
 
+static void print_node(FFD::SNode * n)
+{
+    switch (n->Type) {
+        case FFD::SType::MachType: Dbg << "+MachType: "; break;
+        case FFD::SType::Struct: Dbg << "+Struct: "; break;
+        case FFD::SType::Field: Dbg << "+Field: "; break;
+        case FFD::SType::Enum: Dbg << "+Enum: "; break;
+        case FFD::SType::Const: Dbg << "+Const: "; break;
+        case FFD::SType::Format: Dbg << "+Format: "; break;
+        case FFD::SType::Attribute: Dbg << "+Attribute: "; break;
+        default: Dbg << "+Unhandled: "; break;
+    };
+
+    if (nullptr == n) { Dbg << "[null]" << EOL; return; }
+    if (n->HashKey) Dbg << "[hk]";
+    if (n->Array) Dbg << "[arr]";
+    if (n->Variadic) Dbg << "[var]";
+    if (n->VListItem) Dbg << "[vli]";
+    if (n->Composite) Dbg << "[comp]";
+    if (n->Signed) Dbg << "[signed]";
+    Dbg << " Name: \"" << n->Name << "\", "
+        << "DType: \"";
+    if (nullptr == n->DType) Dbg << "unresolved:" << n->DTypeName;
+    else Dbg << n->DType->Name;
+    Dbg << "\"" << EOL;
+}
+
 static void print_tree(FFD::SNode * n)
 {
-
+    if (nullptr == n) {
+        Dbg << "null tree - nothing to print" << EOL;
+        return;
+    }
+    Dbg << "The tree:" << EOL;
+    n->WalkForward ([&](FFD::SNode * n) -> bool {
+        print_node (n);
+        for (auto sn : n->Fields) {
+            Dbg << "  "; print_node (sn);
+        }
+        return true;
+    });
 }
 
 /*static*/ FFD::Node * FFD::File2Tree(const String & d, const String &)
@@ -468,7 +509,7 @@ static void print_tree(FFD::SNode * n)
             FFD::SNode * node;
             H3R_CREATE_OBJECT(node, FFD::SNode) {};
             if (nullptr == ffd._tail)
-                ffd._tail = node;
+                ffd._tail = ffd._head = node;
             else {
                 node->Prev = ffd._tail;
                 node->Next = ffd._tail->Next;
@@ -486,6 +527,7 @@ static void print_tree(FFD::SNode * n)
         }
         H3R_ENSURE_FFD(chk < len, "infinite loop")
     }// (int i = 0; i < len;)
+    print_tree (ffd._head);
     // 2. Fasten DType - only those with "! Expr.Empty ()" shall remain null -
     //    they're being resolved at "runtime".
 
