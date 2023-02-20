@@ -108,7 +108,7 @@ bool FFD::SNode::ParseMachType(FFDParser & parser)
     if (parser.SymbolValid1st ()) { // alias
         String alias = static_cast<String &&>(parser.ReadSymbol ());
         Dbg << "MachType: Alias: " << alias << EOL;
-        auto an = _ffd->NodeByName (alias);
+        auto an = NodeByName (alias);
         H3R_ENSURE_FFD(an != nullptr, "The alias must exist prior whats "
             "referencing it. I know you want infinite loops; plenty elsewhere.")
         Size = an->Size;
@@ -188,7 +188,7 @@ bool FFD::SNode::ParseStruct(FFDParser & parser)
     for (int chk = 0; ; chk++) {
         H3R_ENSURE_FFD(chk < FFD_MAX_FIELDS, "Refine your design")
         SNode * node;
-        H3R_CREATE_OBJECT(node, FFD::SNode) {_ffd};
+        H3R_CREATE_OBJECT(node, FFD::SNode) {};
         Fields.Add (node);
         if (! node->ParseField (parser)) // it skips its EOL if any
             return false;
@@ -251,7 +251,7 @@ bool FFD::SNode::ParseField(FFDParser & parser)
             String hash_key_type = static_cast<String &&>(
                 parser.StringAt (j, parser.Tell ()-1-j));
             Dbg << "Field: hash. Key type: " << hash_key_type << EOL;
-            DType = _ffd->NodeByName (hash_key_type);
+            DType = NodeByName (hash_key_type);
             parser.SkipOneByte (); // move after "<>"
             H3R_ENSURE_FFD(parser.HasMoreData (), "wrong hash field") // .*<>EOF
             // Type - array Type; look for a field of said array type.
@@ -290,7 +290,7 @@ bool FFD::SNode::ParseField(FFDParser & parser)
             DTypeName =
                 static_cast<String &&>(parser.StringAt (j, parser.Tell ()-j));
             Dbg << "Field: type: " << DTypeName << EOL;
-            DType = _ffd->NodeByName (DTypeName); // resolve: pass 1
+            DType = NodeByName (DTypeName); // resolve: pass 1
             parser.SkipLineWhitespace ();
             Name = static_cast<String &&>(parser.ReadSymbol ('['));
             if (parser.AtArrStart ()) {
@@ -370,7 +370,7 @@ bool FFD::SNode::ParseEnum(FFDParser & parser)
     parser.SkipLineWhitespace ();
     DTypeName = static_cast<String &&>(parser.ReadSymbol ());
     Dbg << "Enum: type: " << DTypeName << EOL;
-    DType = _ffd->NodeByName (DTypeName); // resolve: pass 1
+    DType = NodeByName (DTypeName); // resolve: pass 1
     if (parser.IsEol ())
         parser.SkipEol ();
     else {
@@ -420,15 +420,22 @@ FFD::FFD() {}
 
 FFD::~FFD()
 {
-    for (int i = 0 ; i < _snodes.Count (); i++)
-        H3R_DESTROY_NESTED_OBJECT(_snodes[i], FFD::SNode, SNode)
+    while (_tail) {
+        auto dnode = _tail;
+        _tail = _tail->Prev;
+        H3R_DESTROY_NESTED_OBJECT(dnode, FFD::SNode, SNode)
+    }
+    H3R_ENSURE(nullptr == _tail, "bug: something like an LL")
 }
 
-FFD::SNode * FFD::NodeByName(const String & query)
+FFD::SNode * FFD::SNode::NodeByName(const String & query)
 {
-    for (auto node : _snodes)
-        if (node->Name == query) return node;
-    return nullptr;
+    FFD::SNode * result = {};
+    WalkBackwards([&](FFD::SNode * node) {
+        if (node->Name == query) { result = node; return false; }
+        return true;
+    });
+    return result;
 }
 
 static void print_tree(FFD::SNode * n)
@@ -459,8 +466,16 @@ static void print_tree(FFD::SNode * n)
         else if (parser.IsComment ()) parser.SkipComment ();
         else {
             FFD::SNode * node;
-            H3R_CREATE_OBJECT(node, FFD::SNode) {&ffd};
-            ffd._snodes.Add (node);
+            H3R_CREATE_OBJECT(node, FFD::SNode) {};
+            if (nullptr == ffd._tail)
+                ffd._tail = node;
+            else {
+                node->Prev = ffd._tail;
+                node->Next = ffd._tail->Next;
+                if (ffd._tail->Next) ffd._tail->Next->Prev = node;
+                ffd._tail->Next = node;
+                ffd._tail = node;
+            }
             node->Parse (parser);
             if (node->IsRoot ()) {
                 H3R_ENSURE_FFD(nullptr == ffd._root, "Multiple formats in a "

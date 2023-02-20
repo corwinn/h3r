@@ -77,9 +77,19 @@ class FFD
     public class SNode final
     {
         // Allow copying for now
-        private FFD * _ffd;
-        public SNode(FFD * ffd) : _ffd{ffd} {}
+        public SNode() {}
         public ~SNode();
+
+        // a temporary not OO LL <=> until the h3r_dll situation gets resolved
+        public SNode * Prev {};
+        public SNode * Next {};
+        private template <typename F> void WalkBackwards(F on_node)
+        {
+            if (! on_node (this)) return;
+            if (nullptr == Prev) return;
+            Prev->WalkBackwards (on_node);
+        }
+        private SNode * NodeByName(const String &);
 
         public String Attribute {}; // [.*] prior it
         public SType Type {SType::Unhandled};
@@ -129,8 +139,9 @@ class FFD
     };// SNode
 
     private SNode * _root {};
-    private List<SNode *> _snodes {};
-    private SNode * NodeByName(const String &);
+    // An LL is preferable to a list, because each node should be able to look
+    // at its neighbors w/o accessing third party objects.
+    private FFD::SNode * _tail {}; // DLL<FFD::SNode>
 
     public class Node
     {

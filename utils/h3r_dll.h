@@ -43,6 +43,8 @@ H3R_NAMESPACE
 #define private private:
 
 // Doubly-linked list of T. T shall have default constructor; use T * otherwise.
+//TODO this isn't a re-usable linked list, its a linked list of T; get the T out
+//     of it.
 template <typename T> class LList
 {
     public using Node = LList<T>;
