@@ -59,7 +59,8 @@ template <typename T> class LList
     public LList() : Data {} {}
     public LList(const T & data) : Data {data} {}
 
-    // Insert "n" at "this"
+    // Insert "n" at "this".
+    // prev-this-next becomes prev-n-this-next
     public Node * Insert(Node * n)
     {
         H3R_ARG_EXC_IF(nullptr == n, "Inserting null is a wrong idea")
@@ -71,6 +72,21 @@ template <typename T> class LList
         n->_prev = _prev;
         if (_prev) _prev->_next = n;
         _prev = n;
+        return n;
+    }
+
+    // prev-this-next becomes prev-this-n-next
+    public Node * InsertAfter(Node * n)
+    {
+        H3R_ARG_EXC_IF(nullptr == n, "Inserting null is a wrong idea")
+        H3R_ARG_EXC_IF(nullptr != n->_next || nullptr != n->_prev,
+            "Can't insert a list")
+        H3R_ARG_EXC_IF(this == n, "Don't do that")
+
+        n->_prev = this;
+        n->_next = _next;
+        if (_next) _next->_prev = n;
+        _next = n;
         return n;
     }
 

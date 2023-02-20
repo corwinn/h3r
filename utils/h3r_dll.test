@@ -104,6 +104,47 @@ H3R_TEST_(insert)
     H3R_TEST_EXCEPTION(ArgumentException, inv_arg_self);
 H3R_TEST_END
 
+H3R_TEST_(insertf_ater)
+    H3R_NS::LList<int> n {1};
+    H3R_NS::LList<int> m {2};
+    auto who = m.InsertAfter (&n); // m n
+    H3R_TEST_ARE_EQUAL(&n, who)
+    H3R_TEST_IS_NULL(n._next)
+    H3R_TEST_IS_NULL(m._prev)
+    H3R_TEST_ARE_EQUAL(&m, n._prev)
+    H3R_TEST_ARE_EQUAL(&n, m._next)
+    H3R_TEST_ARE_EQUAL(1, m._next->Data)
+    H3R_TEST_ARE_EQUAL(2, n._prev->Data)
+    H3R_NS::LList<int> t {3};
+    n.InsertAfter (&t); // m n t
+    H3R_TEST_IS_NULL(t._next)
+    H3R_TEST_IS_NULL(m._prev)
+    H3R_TEST_ARE_EQUAL(&t, n._next)
+    H3R_TEST_ARE_EQUAL(&m, n._prev)
+    H3R_TEST_ARE_EQUAL(&n, m._next)
+    H3R_TEST_ARE_EQUAL(&n, t._prev)
+    H3R_NS::LList<int> u {4};
+    m.InsertAfter (&u); // m u n t
+    H3R_TEST_IS_NULL(m._prev)
+    H3R_TEST_IS_NULL(t._next)
+    H3R_TEST_ARE_EQUAL(&u, m._next)
+    H3R_TEST_ARE_EQUAL(&m, u._prev)
+    H3R_TEST_ARE_EQUAL(&n, u._next)
+    H3R_TEST_ARE_EQUAL(&u, n._prev)
+    H3R_TEST_ARE_EQUAL(&t, n._next)
+    H3R_TEST_ARE_EQUAL(&n, t._prev)
+
+    auto inv_arg_nullnode = [&]() { n.InsertAfter (nullptr); };
+    H3R_TEST_EXCEPTION(ArgumentException, inv_arg_nullnode);
+    auto inv_arg_list_tail = [&]() { n.InsertAfter (&m); };
+    H3R_TEST_EXCEPTION(ArgumentException, inv_arg_list_tail);
+    auto inv_arg_list_head = [&]() { n.InsertAfter (&u); };
+    H3R_TEST_EXCEPTION(ArgumentException, inv_arg_list_head);
+    H3R_NS::LList<int> v {5};
+    auto inv_arg_self = [&]() { v.InsertAfter (&v); };
+    H3R_TEST_EXCEPTION(ArgumentException, inv_arg_self);
+H3R_TEST_END
+
 H3R_TEST_(delete)
     H3R_NS::LList<int> n {1};
     n.Delete ();

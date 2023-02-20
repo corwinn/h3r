@@ -431,6 +431,11 @@ FFD::SNode * FFD::NodeByName(const String & query)
     return nullptr;
 }
 
+static void print_tree(FFD::SNode * n)
+{
+
+}
+
 /*static*/ FFD::Node * FFD::File2Tree(const String & d, const String &)
 {
     OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
