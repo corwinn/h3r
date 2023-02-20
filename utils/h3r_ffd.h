@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_string.h"
 #include "h3r_list.h"
 #include "h3r_ffdparser.h"
+#include "h3r_stream.h"
 
 H3R_NAMESPACE
 
@@ -149,9 +150,17 @@ class FFD
     // at its neighbors w/o accessing third party objects.
     private FFD::SNode * _tail {}, * _head {}; // DLL<FFD::SNode>
 
+    // Node = f (SNode, Stream)
     public class Node
     {
-    };
+        byte * _data {};
+        int _len {};
+        public Node(SNode *, Stream *) {}
+        public ~Node() {}
+        public String AsString();
+        public int AsInt();
+        // etc.
+    };// Node
 
     public static Node * File2Tree(const String & d, const String & f);
 
