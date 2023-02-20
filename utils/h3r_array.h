@@ -69,9 +69,7 @@ template <typename T,
     public: bool operator==(const Array<T> & a)
     {
         return _len != a._len ? false
-            : 0 == OS::Strncmp (
-                reinterpret_cast<const char *>(_data),
-                reinterpret_cast<const char *>(a._data), sizeof(T)*_len);
+            : 0 == OS::Memcmp (_data, a._data, sizeof(T)*_len);
     }
     public: bool operator!=(const Array<T> & a)
     {
