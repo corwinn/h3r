@@ -50,7 +50,7 @@ namespace OS {
 
 CriticalSection::CriticalSection()
 {
-    pthread_mutexattr_t attr;
+    pthread_mutexattr_t attr {};
 #ifdef H3R_DEBUG
     auto r = pthread_mutexattr_settype (&attr, PTHREAD_MUTEX_ERRORCHECK);
 #else

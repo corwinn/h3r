@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
+//v valgrind --leak-check=full --suppressions=val.supp ./main
+
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED
 H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
