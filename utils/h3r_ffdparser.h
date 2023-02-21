@@ -99,7 +99,7 @@ class FFDParser
     public void SkipEol();
     public void SkipUntilDoubleEol();
     // read_while c()
-    public template <typename F> inline void ReadWhile(const char * txt, F c)
+    public template <typename F> inline void ReadWhile(const char *, F c)
     {
         int j = _i;
         while (_i < _len && c ()) {
@@ -107,7 +107,7 @@ class FFDParser
             _i++; _column++;
         }
         auto parser = *this;
-        printf ("%3d: read_%s    : [%5d;%5d]" EOL, _line, txt, j, _i);
+        // printf ("%3d: read_%s    : [%5d;%5d]" EOL, _line, txt, j, _i);
         H3R_ENSURE_FFD(_i > j, "Empty read_while")
     }
     public void ReadNonWhiteSpace();

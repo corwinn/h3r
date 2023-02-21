@@ -528,6 +528,7 @@ static void resolve_all_types(FFD::SNode * n)
     Dbg << "TB LR parsing " << len << " bytes ffd" << EOL;
     FFD ffd {};
     FFDParser parser {buf, len};
+    Dbg.Enabled = false;
     for (int chk = 0; parser.HasMoreData (); chk++) {
         if (parser.IsWhitespace ()) parser.SkipWhitespace ();
         // Skipped, for now
@@ -549,6 +550,7 @@ static void resolve_all_types(FFD::SNode * n)
                 H3R_ENSURE_FFD(nullptr == ffd._root, "Multiple formats in a "
                     "single description aren't supported yet")
                 ffd._root = node;
+                Dbg.Enabled = true;
                 Dbg << "Ready to parse: " << node->Name << EOL;
             }
         }
