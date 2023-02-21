@@ -94,7 +94,7 @@ template <typename T> void MM::Remove(T * & p)
                 _current_bytes -= (_e[i].n + sizeof (Entry));
                 OS::Mfree (p);
                 auto bytes = (_n - 1 - i) * sizeof (Entry);
-                if (i < _n - 1) OS::Memmove (_e + i, _e + i + 1, bytes);
+                if (bytes > 0) OS::Memmove (_e + i, _e + i + 1, bytes);
                 _n--; _f++;
                 return;
             }
