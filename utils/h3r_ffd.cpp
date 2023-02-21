@@ -211,8 +211,9 @@ bool FFD::SNode::ParseStruct(FFDParser & parser)
 bool FFD::SNode::ParseCompositeField(FFDParser & parser, int j)
 {
     Composite = true;
-    Name = static_cast<String &&>(parser.StringAt (j, parser.Tell ()-j));
-    Dbg << "Field: composite. Name: " << Name << EOL;
+    DTypeName = static_cast<String &&>(parser.StringAt (j, parser.Tell ()-j));
+    Name = "{composite}";
+    Dbg << "Field: composite. DTypeName: " << DTypeName << EOL;
     if (parser.IsEol ()) return true;
     parser.SkipLineWhitespace ();
     if (parser.AtExprStart ()) {
@@ -365,6 +366,8 @@ bool FFD::SNode::ParseConst(FFDParser & parser)
 //   {whitespace} {symbol} {int literal} [{expr}]
 bool FFD::SNode::ParseEnum(FFDParser & parser)
 {
+    Type = FFD::SType::Enum;
+
     parser.SkipLineWhitespace ();
     Name = static_cast<String &&>(parser.ReadSymbol ());
     Dbg << "Enum: name: " << Name << EOL;
@@ -430,14 +433,19 @@ FFD::~FFD()
     _head = _tail;
 }
 
+//LATER use h3r_resnamehash
 FFD::SNode * FFD::SNode::NodeByName(const String & query)
 {
     FFD::SNode * result = {};
     WalkBackwards([&](FFD::SNode * node) {
-        // Dbg << "NodeByName: " << query  << " : " << node->Name << EOL;
         if (node->Name == query) { result = node; return false; }
         return true;
     });
+    if (nullptr == result)
+        WalkForward([&](FFD::SNode * node) {
+            if (node->Name == query) { result = node; return false; }
+            return true;
+        });
     return result;
 }
 
@@ -463,11 +471,13 @@ static void print_node(FFD::SNode * n)
     if (n->Signed) Dbg << "[signed]";
     Dbg << " Name: \"" << n->Name << "\", "
         << "DType: \"";
-    if (nullptr == n->DType) Dbg << "unresolved:" << n->DTypeName;
+    if (nullptr == n->DType) {
+        if (! n->NoDType ())
+            Dbg << "unresolved:" << n->DTypeName;
+    }
     else Dbg << n->DType->Name;
     Dbg << "\"" << EOL;
 }
-
 static void print_tree(FFD::SNode * n)
 {
     if (nullptr == n) {
@@ -482,6 +492,23 @@ static void print_tree(FFD::SNode * n)
         }
         return true;
     });
+}
+
+void FFD::SNode::ResolveTypes()
+{
+    for (auto sn : Fields) sn->ResolveTypes ();
+
+    if (DType || NoDType ()) return;
+    if (DTypeName.Empty ()) {
+        Dbg << "neither dtype nor dtypename: \"" << Name << "\"" << EOL;
+        return;
+    }
+    DType = Base ? Base->NodeByName (DTypeName)
+        : NodeByName (DTypeName);
+}
+static void resolve_all_types(FFD::SNode * n)
+{
+    n->WalkForward ([&](FFD::SNode * nn){ nn->ResolveTypes (); return true; });
 }
 
 /*static*/ FFD::Node * FFD::File2Tree(const String & d, const String &)
@@ -527,6 +554,7 @@ static void print_tree(FFD::SNode * n)
         }
         H3R_ENSURE_FFD(chk < len, "infinite loop")
     }// (int i = 0; i < len;)
+    resolve_all_types (ffd._head);
     print_tree (ffd._head);
     // 2. Fasten DType - only those with "! Expr.Empty ()" shall remain null -
     //    they're being resolved at "runtime".

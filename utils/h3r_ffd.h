@@ -59,6 +59,8 @@ class FFD
     public FFD();
     public ~FFD();
 
+    // TODO FFD::Load ("description").Parse ("foo");
+
     // The type of text at the description.
     //
     // Attribute are distinct nodes for now; when processing, they're the nth
@@ -91,6 +93,9 @@ class FFD
             Prev->WalkBackwards (on_node);
         }
         private SNode * NodeByName(const String &);
+        // Call after all nodes are parsed. Allows for dependency-independent
+        // order of things at the description.
+        public void ResolveTypes();
         public template <typename F> void WalkForward(F on_node)
         {
             if (! on_node (this)) return;
@@ -143,6 +148,14 @@ class FFD
         private bool ParseCompositeField(FFDParser &, int);
 
         public inline bool IsRoot() const { return FFD::SType::Format == Type; }
+        // DType not possible: a.k.a. some nodes do not require/have dtype.
+        public inline bool NoDType()
+        {
+            switch (Type) {
+                case (SType::Field): case (SType::Enum): return false;
+                default: return true;
+            };
+        }
     };// SNode
 
     private SNode * _root {};
