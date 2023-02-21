@@ -89,6 +89,7 @@ int ui_main(int, char **)
             i++;
         }
     }
+    global_win_list.Clear ();
     return 0;
 }
 

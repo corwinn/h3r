@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_oswindow.h"
 #include <SDL.h>
 #include <SDL_opengl.h>
+#include <SDL2/SDL_mixer.h>
 
 H3R_NAMESPACE
 
@@ -56,6 +57,7 @@ class SDLWindow : public OSWindow
     private SDL_Event _e;
     private SDL_Window * _window {};
     private SDL_GLContext _gc {};
+    private Mix_Music * _music {};
     private int _w {800}, _h{600};
     private bool _q {false};
     private bool _visible {false};

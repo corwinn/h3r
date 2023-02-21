@@ -48,7 +48,7 @@ MM::MM()
     the_way_is_shut = false;
     // H3R_ENSURE(! MM::_one, "I'm a c++ singleton!")
     // MM::_one = this;
-    OS::Log_stdout ("MM::MM ()" EOL);
+    // OS::Log_stdout ("MM::MM ()" EOL);
 }
 
 MM::~MM()

@@ -74,11 +74,10 @@ template <typename T> class List //LATER Insert() - should the need arise
     // Returns whether something was removed (found) or not.
     public bool Remove(const T & itm)
     {
-        Array<T> n {_l.Length ()};
         int idx {0};
-        for (const auto & i : _l) if (i != itm) n[idx++] = i;
-        if (_l.Length () == idx) return false;
-        return n.Resize (idx), n.MoveTo (_l), true;
+        for (const auto & i : _l) if (i != itm) _l[idx++] = i;
+        if (idx < _l.Length ()) { _l.Resize (idx); return true; }
+        return false;
     }
     public void RemoveAt(int index) { _l.Remove (index); }
     public T & operator[](int i) { return _l[i]; }

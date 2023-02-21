@@ -279,7 +279,9 @@ void RenderEngine::UpdateRenderOrder(int key, h3rDepthOrder order)
 }
 
 /*static*/ RenderEngine & RenderEngine::UI()
-{
+{//TODO these should disappear: bad things happen when this get destroyed
+ //     after the MM; some global init-finalize strategy is required, with
+ //     the MM being the only static-init artound
     static RenderEngine ui {H3R_DEFAULT_UI_MAX_SPRITES};
     return ui;
 }

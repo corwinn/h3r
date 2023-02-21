@@ -51,13 +51,6 @@ namespace __pointless_verbosity
     _you_shall_not_pass = true; \
     __pointless_verbosity::_bool_finally_invert ____ {_you_shall_not_pass};
 
-struct SDL_Release final
-{
-    Mix_Music * _music;
-    SDL_Release(Mix_Music * m) : _music{m} {}
-    ~SDL_Release() { if (_music) Mix_FreeMusic (_music); SDL_Quit (); }
-};
-
 // Something like this shall be done at the plug-in code.
 static bool global_sdl_init {};
 static bool global_sdl_mix_init {};
@@ -102,11 +95,7 @@ static void Init_SDL()
     // numbers: battle_fx:2, env:4 (the odd being using for the cross-fade);
     // could work - one way to find out.
     // Audio Manager is coming to mind - as the Tex Cache.
-    Mix_Music * music = Mix_LoadMUS ("MP3/MAINMENU.MP3");
-    if (music) Mix_PlayMusic (music, -1);
-    global_sdl_mix_init = true;
-
-    static SDL_Release ____ {music};
+    // Continued at Done at SDLWindow::SDLWindow()
 }// Init_SDL
 
 H3R_NAMESPACE
@@ -115,6 +104,9 @@ SDLWindow::SDLWindow(int, char **, Point && size)
     : OSWindow (0, nullptr), _w{size.X}, _h{size.Y}
 {
     if (! global_sdl_init) Init_SDL ();
+    Mix_Music * music = Mix_LoadMUS ("MP3/MAINMENU.MP3");
+    if (music) Mix_PlayMusic (music, -1);
+    global_sdl_mix_init = true;
 
     // 2.0 should be enough for a proof of concept
     //TODO request this from the abstraction
@@ -169,7 +161,11 @@ SDLWindow::SDLWindow(int, char **, Point && size)
     printf ("  V-sync: %d" EOL, SDL_GL_GetSwapInterval ());
 }// SDLWindow::SDLWindow()
 
-SDLWindow::~SDLWindow() {}
+SDLWindow::~SDLWindow()
+{
+    if (_music) Mix_FreeMusic (_music);
+    SDL_Quit ();
+}
 
 void SDLWindow::Show()
 {
