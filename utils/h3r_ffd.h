@@ -175,6 +175,8 @@ class FFD
         // etc.
     };// Node
 
+    private Node * _data_root {};
+
     public static Node * File2Tree(const String & d, const String & f);
 
 #undef public

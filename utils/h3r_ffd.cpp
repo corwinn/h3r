@@ -431,6 +431,8 @@ FFD::~FFD()
     }
     H3R_ENSURE(nullptr == _tail, "bug: something like an LL")
     _head = _tail;
+    if (_data_root)
+        H3R_DESTROY_NESTED_OBJECT(_data_root, FFD::Node, Node)
 }
 
 //LATER use h3r_resnamehash
@@ -511,7 +513,7 @@ static void resolve_all_types(FFD::SNode * n)
     n->WalkForward ([&](FFD::SNode * nn){ nn->ResolveTypes (); return true; });
 }
 
-/*static*/ FFD::Node * FFD::File2Tree(const String & d, const String &)
+/*static*/ FFD::Node * FFD::File2Tree(const String & d, const String & f)
 {
     OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
     MemoryStream br {&fh, static_cast<int>(fh.Size ())};
@@ -556,13 +558,20 @@ static void resolve_all_types(FFD::SNode * n)
         }
         H3R_ENSURE_FFD(chk < len, "infinite loop")
     }// (int i = 0; i < len;)
-    resolve_all_types (ffd._head);
-    print_tree (ffd._head);
+
     // 2. Fasten DType - only those with "! Expr.Empty ()" shall remain null -
     //    they're being resolved at "runtime".
+    resolve_all_types (ffd._head);
+    print_tree (ffd._head);
 
-    return nullptr;
+    // 3. Apply
+    OS::FileStream fh2 {f, H3R_NS::OS::FileStream::Mode::ReadOnly};
+    Stream * s {};
+    H3R_CREATE_OBJECT(ffd._data_root, FFD::Node) {ffd._root, s};
+    ffd._data_root;
 }// FFD::File2Tree()
+
+// -- FFD::Node --------------------------------------------------------------
 
 #undef H3R_ENSURE_FFD
 
