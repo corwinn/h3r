@@ -54,6 +54,9 @@ H3R_NAMESPACE
 #define FFD_MAX_ENUM_ITEMS 64
 #define FFD_MAX_ARR_EXPR_LEN 32
 
+// [bytes] these are inteded to be small; for larger ones use arrays.
+#define FFD_MAX_MACHTYPE_SIZE 128
+
 // File Format Description parser.
 class FFDParser
 {

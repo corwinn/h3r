@@ -39,6 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_memorystream.h"
 #include "h3r_os.h"
 #include "h3r_dbg.h"
+#include "h3r_log.h"
+#include "h3r_zipinflatestream.h"
 
 #include <new>
 
@@ -376,6 +378,9 @@ bool FFD::SNode::ParseEnum(FFDParser & parser)
     DTypeName = static_cast<String &&>(parser.ReadSymbol ());
     Dbg << "Enum: type: " << DTypeName << EOL;
     DType = NodeByName (DTypeName); // resolve: pass 1
+    H3R_ENSURE_FFD(nullptr != DType, "Enum shall resolve to a machine type")
+    Size = DType->Size;
+    Signed = DType->Signed;
     if (parser.IsEol ())
         parser.SkipEol ();
     else {
@@ -455,17 +460,7 @@ FFD::SNode * FFD::SNode::NodeByName(const String & query)
 // Debug purposes
 static void print_node(FFD::SNode * n)
 {
-    switch (n->Type) {
-        case FFD::SType::MachType: Dbg << "+MachType: "; break;
-        case FFD::SType::Struct: Dbg << "+Struct: "; break;
-        case FFD::SType::Field: Dbg << "+Field: "; break;
-        case FFD::SType::Enum: Dbg << "+Enum: "; break;
-        case FFD::SType::Const: Dbg << "+Const: "; break;
-        case FFD::SType::Format: Dbg << "+Format: "; break;
-        case FFD::SType::Attribute: Dbg << "+Attribute: "; break;
-        default: Dbg << "+Unhandled: "; break;
-    };
-
+    Dbg << "+" << n->TypeToString () << ": ";
     if (nullptr == n) { Dbg << "[null]" << EOL; return; }
     if (n->HashKey) Dbg << "[hk]";
     if (n->Array) Dbg << "[arr]";
@@ -573,17 +568,95 @@ static void resolve_all_types(FFD::SNode * n)
     OS::FileStream fh2 {f, H3R_NS::OS::FileStream::Mode::ReadOnly};
     Stream * s {&fh2};
 
-    // This code is specific to the map parser
+    // This code is specific to the map parser. zlibMapStream is the same
+    // as the ZipInflateStream, but has specific initializaiton.
+    const int H3M_MAX_FILE_SIZE = 1<<21; // 6167 maps: the largest: 375560 bytes
+                                         // unpacked: 1342755 bytes
+    H3R_ENSURE(fh2.Size () < static_cast<off_t>(H3M_MAX_FILE_SIZE),
+        "File too large")
     auto h3m_zstream_attr = ffd._root->GetAttr ("[Stream(type: zlibMapStream)]");
     if (h3m_zstream_attr) {
-
+        int h, usize, size = static_cast<int>(fh2.Size ());
+        Stream::Read (fh2, &h);
+        if (h != 0x88b1f)
+            Log::Info ("Unknown map format. Load could fail.");
+        else {
+            Stream::Read (fh2.End ().Seek (-4), &usize);
+            H3R_ENSURE(usize > size && usize < H3M_MAX_FILE_SIZE,
+                "Map too large")
+            ZipInflateStream * zstr {};
+            bool h3map = true;
+            fh2.Begin ();
+            H3R_CREATE_OBJECT(zstr, ZipInflateStream) {
+                &fh2, size, usize, h3map};
+            s = zstr;
+        }
     }
+    else
+        Log::Info ("zlibMapStream not found. Load could fail.");
 
+    Log::Info (String::Format ("Parsing %s" EOL, f.AsZStr ()));
     H3R_CREATE_OBJECT(ffd._data_root, FFD::Node) {ffd._root, s};
+    if (s != &fh2) H3R_DESTROY_OBJECT(s, Stream)
     return ffd._data_root;
 }// FFD::File2Tree()
 
 // -- FFD::Node --------------------------------------------------------------
+
+FFD::Node::~Node()
+{
+    for (int i = 0; i < _fields.Count (); i++)
+        H3R_DESTROY_NESTED_OBJECT(_fields[i], FFD::Node, Node)
+}
+
+FFD::Node::Node(SNode * n, Stream * br)
+    : _s{br}, _n{n}
+{
+    if (n->IsField ()) FromField ();
+    else if (n->IsStruct ()) FromStruct ();
+    else
+        Dbg << "Can't handle " << n->TypeToString () << EOL;
+}
+
+bool FFD::Node::EvalBoolExpr()
+{
+    Dbg << "FFD::Node::EvalBoolExpr: implement me" << EOL;
+    return false;
+}
+
+void FFD::Node::FromField()
+{
+    Dbg << " field " << _n->Name << EOL;
+    H3R_ENSURE(nullptr != _n->DType, "field->DType can't be null")
+    auto data_type = _n->DType;
+    if (! data_type->IsMachType () && ! data_type->IsEnum ()) {
+        Dbg << "FFD::Node::FromStruct: create another node" << EOL;
+        return;
+    }
+    Dbg << " field, data size: " << data_type->Size << EOL;
+    H3R_ENSURE(data_type->Size >= 0
+            && data_type->Size <= FFD_MAX_MACHTYPE_SIZE, "data_type->Size")
+    _data.Resize (data_type->Size);
+    _signed = data_type->Signed;
+    _s->Read (_data.operator byte * (), data_type->Size);
+    Dbg << " field, data: "; PrintByteSequence ();
+}
+
+void FFD::Node::FromStruct()
+{
+    _enabled = _n->HasExpr () ? EvalBoolExpr () : true;
+    if (! _enabled) return;
+    if (_n->VListItem) {
+        Dbg << "FFD::Node::FromStruct: parse the ValueList" << EOL;
+        return;
+    }
+    Dbg << "struct " << _n->Name << EOL;
+    for (auto n : _n->Fields) {
+        Node * f {};
+        H3R_CREATE_OBJECT(f, FFD::Node) {n, _s};
+        _fields.Add (f);
+    }
+}// FFD::Node::FromStruct()
 
 #undef H3R_ENSURE_FFD
 

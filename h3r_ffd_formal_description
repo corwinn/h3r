@@ -48,11 +48,14 @@ keywords:
   "type" - defines a binding between a {symbol} and machine type; a single EOL
            completes it. Ordering ([] - optional):
              {keyword} {symbol} {size}|{alias} [{expr}] [{comment}]
+           These should be defined prior all else! You can order what follows,
+           however you like, except the machine types.
   "???" - not decided yet - ignored
   "list" - ignored for now
   "table" - ignored for now
   "struct" - defines a {node} of {node}s - sequential data grouped together
-             and bound to a {symbol}
+             and bound to a {symbol}; doesn't have expr support yet - no
+             use-case yet
   "format" - defines the root {node} of your data format - this is where the
              parser starts
   "const" - a {symbol} bound to a {literal}

@@ -56,10 +56,12 @@ class ZipInflateStream : public Stream
     private off_t _pos {}; // how many bytes were decoded so far
     private static uInt constexpr _IN_BUF {1<<12}; // zlib: uInt
     private byte _buf[_IN_BUF] {};
-    public ZipInflateStream(Stream * s, int size, int usize)
+    // The h3map one differs in init. No need to create another class.
+    public ZipInflateStream(Stream * s, int size, int usize, bool h3map = false)
         : Stream {s}, _size{size}, _usize{usize}, _pos_sentinel{s->Tell ()}
     {
-        _zr = inflateInit (&_zs);
+        if (h3map) _zr = inflateInit2 (&_zs, 31);
+        else _zr = inflateInit (&_zs);
         H3R_ENSURE(Z_OK == _zr, "inflateInit() error")
     }
     public ~ZipInflateStream() override { inflateEnd (&_zs); }

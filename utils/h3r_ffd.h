@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_list.h"
 #include "h3r_ffdparser.h"
 #include "h3r_stream.h"
+#include "h3r_dbg.h"
 
 H3R_NAMESPACE
 
@@ -156,7 +157,20 @@ class FFD
                 default: return true;
             };
         }
-        public inline bool IsAttribute() { return SType::Attribute == Type; }
+        public inline bool IsAttribute() const
+        {
+            return SType::Attribute == Type;
+        }
+        public inline bool IsStruct() const
+        {
+            return SType::Struct == Type || SType::Format == Type;
+        }
+        public inline bool IsMachType() const
+        {
+            return SType::MachType == Type;
+        }
+        public inline bool IsEnum() const { return SType::Enum == Type; }
+        public inline bool IsField() const { return SType::Field == Type; }
         // By value. Allow many attributes for custom extensions.
         public SNode * GetAttr(const String & query)
         {
@@ -167,6 +181,20 @@ class FFD
             }
             return nullptr;
         }
+        public inline String TypeToString() const
+        {
+            switch (Type) {
+                case FFD::SType::MachType: return "MachType";
+                case FFD::SType::Struct: return "Struct";
+                case FFD::SType::Field: return "Field";
+                case FFD::SType::Enum: return "Enum";
+                case FFD::SType::Const: return "Const";
+                case FFD::SType::Format: return "Format";
+                case FFD::SType::Attribute: return "Attribute";
+                default: return "Unhandled";
+            };
+        }
+        public inline bool HasExpr() const { return ! Expr.Empty (); }
     };// SNode
 
     private SNode * _root {};
@@ -177,12 +205,29 @@ class FFD
     // Node = f (SNode, Stream)
     public class Node
     {
-        byte * _data {};
-        int _len {};
-        public Node(SNode *, Stream *) {}
-        public ~Node() {}
+        private Array<byte> _data {};
+        private Stream * _s {}; // reference
+        private SNode * _n {}; // reference
+        private bool _enabled {}; // set by bool expr.
+        private bool _signed {}; // signed machine types
+        private List<Node *> _fields {}; // LL ?
+        public Node(SNode *, Stream *);
+        public void FromStruct();
+        public void FromField();
+        public ~Node();
         public String AsString();
         public int AsInt();
+        public inline bool Enabled() const { return _enabled; }
+        private bool EvalBoolExpr();
+        // [dbg]
+        private inline void PrintByteSequence()
+        {
+            if (_data.Length () <= 0) return;
+            Dbg << Dbg.Fmt ("[%002X", _data[0]);
+            for (int i = 1; i < _data.Length (); i++)
+                Dbg << Dbg.Fmt (" %002X", _data[i]);
+            Dbg << "]" << EOL;
+        }
         // etc.
     };// Node
 
