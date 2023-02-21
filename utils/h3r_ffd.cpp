@@ -71,7 +71,7 @@ bool FFD::SNode::Parse(FFDParser & parser)
     // Attribute "correction"
     // Dbg << "column: " << parser.Column () << ", buf[j]:"
     //     << Dbg.Fmt (%2X,*(parser.BufAt (j))) << EOL;
-    if (1 == parser.Column () && parser.AtAttributeStart ())
+    while (1 == parser.Column () && parser.AtAttributeStart ())
         return ParseAttribute (parser);
     //
     parser.ReadNonWhiteSpace ();
@@ -149,6 +149,7 @@ bool FFD::SNode::ParseAttribute(FFDParser & parser)
 
 //np ReadExpression (open: '[', close: ']');
     Attribute = static_cast<String &&>(parser.ReadExpression ('[', ']'));
+    parser.SkipCommentWhitespaceSequence ();
     Dbg << "Attribute: " << Attribute << EOL;
     return true;
 }
@@ -451,6 +452,7 @@ FFD::SNode * FFD::SNode::NodeByName(const String & query)
     return result;
 }
 
+// Debug purposes
 static void print_node(FFD::SNode * n)
 {
     switch (n->Type) {
@@ -471,8 +473,11 @@ static void print_node(FFD::SNode * n)
     if (n->VListItem) Dbg << "[vli]";
     if (n->Composite) Dbg << "[comp]";
     if (n->Signed) Dbg << "[signed]";
-    Dbg << " Name: \"" << n->Name << "\", "
-        << "DType: \"";
+    if (n->IsAttribute ())
+        Dbg << " Value: \"" << n->Attribute << "\"";
+    else
+        Dbg << " Name: \"" << n->Name << "\"";
+    Dbg << ", DType: \"";
     if (nullptr == n->DType) {
         if (! n->NoDType ())
             Dbg << "unresolved:" << n->DTypeName;
@@ -566,9 +571,16 @@ static void resolve_all_types(FFD::SNode * n)
 
     // 3. Apply
     OS::FileStream fh2 {f, H3R_NS::OS::FileStream::Mode::ReadOnly};
-    Stream * s {};
+    Stream * s {&fh2};
+
+    // This code is specific to the map parser
+    auto h3m_zstream_attr = ffd._root->GetAttr ("[Stream(type: zlibMapStream)]");
+    if (h3m_zstream_attr) {
+
+    }
+
     H3R_CREATE_OBJECT(ffd._data_root, FFD::Node) {ffd._root, s};
-    ffd._data_root;
+    return ffd._data_root;
 }// FFD::File2Tree()
 
 // -- FFD::Node --------------------------------------------------------------
