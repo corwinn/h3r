@@ -47,11 +47,13 @@ static struct UnqueuedThreadSafeDebugLog final
     using L = UnqueuedThreadSafeDebugLog;
     template <typename T> inline L & Fmt(const char * f, T & v)
     {
-        return OS::Log_stdout (f, v), *this;
+        if (Enabled) OS::Log_stdout (f, v);
+        return *this;
     }
     template <typename T> inline L & Fmt(const char * f, T && v)
     {
-        return OS::Log_stdout (f, v), *this;
+        if (Enabled) OS::Log_stdout (f, v);
+        return *this;
     }
     inline L & operator<<(const char * v) { return Fmt ("%s", v); }
     inline L & operator<<(int v) { return Fmt ("%d", v); }
@@ -60,6 +62,8 @@ static struct UnqueuedThreadSafeDebugLog final
     inline L & operator<<(const String & v) { return Fmt ("%s", v.AsZStr ()); }
     // Dbg << Dbg.Fmt ("%foo", bar) << "p" << q << EOL;
     inline L & operator<<(L & l) { return l; }
+
+    bool Enabled {true};
 } Dbg;
 
 NAMESPACE_H3R
