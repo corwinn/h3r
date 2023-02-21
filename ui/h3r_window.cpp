@@ -73,7 +73,7 @@ H3R_NAMESPACE
 //     H3R_DESTROY_OBJECT(node, DLL<Window *>)
 // ui_main:
 //   while (! Window::List->Empty ()) Window::List->Data->ProcessMessages ();
-static List<Window *> global_win_list {};
+static List<Window *> global_win_list {};//TODO de-static-ify me
 
 int ui_main(int, char **)
 {
