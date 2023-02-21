@@ -156,6 +156,17 @@ class FFD
                 default: return true;
             };
         }
+        public inline bool IsAttribute() { return SType::Attribute == Type; }
+        // By value. Allow many attributes for custom extensions.
+        public SNode * GetAttr(const String & query)
+        {
+            auto n = Prev;
+            while (n && n->IsAttribute ()) {
+                if (query == n->Attribute) return n;
+                n = n->Prev;
+            }
+            return nullptr;
+        }
     };// SNode
 
     private SNode * _root {};

@@ -42,7 +42,8 @@ symbol  : a name that binds a {node} to its description; you access your parsed
           [0-9A-Za-z_]
 attribute: a list of "[.*]" lines prior a {keyword} line - a hint specific
            to the code that handles the parsed data; the ".*" is passed
-           directly to your code
+           directly to your code. Many are allowed, prior "struct", "enum",
+           "const", "type", ... (level 1 keywords) only, for now.
 keywords:
   "type" - defines a binding between a {symbol} and machine type; a single EOL
            completes it. Ordering ([] - optional):
