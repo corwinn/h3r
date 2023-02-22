@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_dbg.h"
 #include "h3r_log.h"
 #include "h3r_zipinflatestream.h"
+#include "h3r_ffdnode.h"
 
 #include <new>
 
@@ -437,8 +438,6 @@ FFD::~FFD()
     }
     H3R_ENSURE(nullptr == _tail, "bug: something like an LL")
     _head = _tail;
-    if (_data_root)
-        H3R_DESTROY_NESTED_OBJECT(_data_root, FFD::Node, Node)
 }
 
 //LATER use h3r_resnamehash
@@ -513,7 +512,7 @@ static void resolve_all_types(FFD::SNode * n)
     n->WalkForward ([&](FFD::SNode * nn){ nn->ResolveTypes (); return true; });
 }
 
-/*static*/ FFD::Node * FFD::File2Tree(const String & d, const String & f)
+/*static*/ FFDNode * FFD::File2Tree(const String & d, const String & f)
 {
     OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
     MemoryStream br {&fh, static_cast<int>(fh.Size ())};
@@ -595,68 +594,12 @@ static void resolve_all_types(FFD::SNode * n)
     else
         Log::Info ("zlibMapStream not found. Load could fail.");
 
+    FFDNode * data_root {};
     Log::Info (String::Format ("Parsing %s" EOL, f.AsZStr ()));
-    H3R_CREATE_OBJECT(ffd._data_root, FFD::Node) {ffd._root, s};
+    H3R_CREATE_OBJECT(data_root, FFDNode) {ffd._root, s};
     if (s != &fh2) H3R_DESTROY_OBJECT(s, Stream)
-    return ffd._data_root;
+    return data_root;
 }// FFD::File2Tree()
-
-// -- FFD::Node --------------------------------------------------------------
-
-FFD::Node::~Node()
-{
-    for (int i = 0; i < _fields.Count (); i++)
-        H3R_DESTROY_NESTED_OBJECT(_fields[i], FFD::Node, Node)
-}
-
-FFD::Node::Node(SNode * n, Stream * br)
-    : _s{br}, _n{n}
-{
-    if (n->IsField ()) FromField ();
-    else if (n->IsStruct ()) FromStruct ();
-    else
-        Dbg << "Can't handle " << n->TypeToString () << EOL;
-}
-
-bool FFD::Node::EvalBoolExpr()
-{
-    Dbg << "FFD::Node::EvalBoolExpr: implement me" << EOL;
-    return false;
-}
-
-void FFD::Node::FromField()
-{
-    Dbg << " field " << _n->Name << EOL;
-    H3R_ENSURE(nullptr != _n->DType, "field->DType can't be null")
-    auto data_type = _n->DType;
-    if (! data_type->IsMachType () && ! data_type->IsEnum ()) {
-        Dbg << "FFD::Node::FromStruct: create another node" << EOL;
-        return;
-    }
-    Dbg << " field, data size: " << data_type->Size << EOL;
-    H3R_ENSURE(data_type->Size >= 0
-            && data_type->Size <= FFD_MAX_MACHTYPE_SIZE, "data_type->Size")
-    _data.Resize (data_type->Size);
-    _signed = data_type->Signed;
-    _s->Read (_data.operator byte * (), data_type->Size);
-    Dbg << " field, data: "; PrintByteSequence ();
-}
-
-void FFD::Node::FromStruct()
-{
-    _enabled = _n->HasExpr () ? EvalBoolExpr () : true;
-    if (! _enabled) return;
-    if (_n->VListItem) {
-        Dbg << "FFD::Node::FromStruct: parse the ValueList" << EOL;
-        return;
-    }
-    Dbg << "struct " << _n->Name << EOL;
-    for (auto n : _n->Fields) {
-        Node * f {};
-        H3R_CREATE_OBJECT(f, FFD::Node) {n, _s};
-        _fields.Add (f);
-    }
-}// FFD::Node::FromStruct()
 
 #undef H3R_ENSURE_FFD
 

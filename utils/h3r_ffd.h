@@ -44,6 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+class FFDNode;
+
 // File Format Description.
 // Wraps a ffd (a simple text file written using a simple grammar) that can be
 // used to parse different (I hope; its h3m for now) file formats.
@@ -202,38 +204,7 @@ class FFD
     // at its neighbors w/o accessing third party objects.
     private FFD::SNode * _tail {}, * _head {}; // DLL<FFD::SNode>
 
-    // Node = f (SNode, Stream)
-    public class Node
-    {
-        private Array<byte> _data {};
-        private Stream * _s {}; // reference
-        private SNode * _n {}; // reference
-        private bool _enabled {}; // set by bool expr.
-        private bool _signed {}; // signed machine types
-        private List<Node *> _fields {}; // LL ?
-        public Node(SNode *, Stream *);
-        public void FromStruct();
-        public void FromField();
-        public ~Node();
-        public String AsString();
-        public int AsInt();
-        public inline bool Enabled() const { return _enabled; }
-        private bool EvalBoolExpr();
-        // [dbg]
-        private inline void PrintByteSequence()
-        {
-            if (_data.Length () <= 0) return;
-            Dbg << Dbg.Fmt ("[%002X", _data[0]);
-            for (int i = 1; i < _data.Length (); i++)
-                Dbg << Dbg.Fmt (" %002X", _data[i]);
-            Dbg << "]" << EOL;
-        }
-        // etc.
-    };// Node
-
-    private Node * _data_root {};
-
-    public static Node * File2Tree(const String & d, const String & f);
+    public static FFDNode * File2Tree(const String & d, const String & f);
 
 #undef public
 #undef private
