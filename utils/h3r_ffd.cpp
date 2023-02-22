@@ -126,10 +126,9 @@ bool FFD::SNode::ParseMachType(FFDParser & parser)
     if (parser.IsEol ()) return true; // completed
     // There could be an expression
     parser.SkipLineWhitespace ();
-    if (parser.AtExprStart ()) {
-        Expr = static_cast<String &&>(parser.ReadExpression ());
-        Dbg << "MachType: Expr: " << Expr << EOL;
-    }
+    if (parser.AtExprStart ())
+        Expr = static_cast<List<FFDParser::ExprToken> &&>(
+            parser.TokenizeExpression ());
     // There could be a comment. But it is handled elsewhere for now.
     return true;
 }// FFD::SNode::ParseMachType()
@@ -220,10 +219,9 @@ bool FFD::SNode::ParseCompositeField(FFDParser & parser, int j)
     Dbg << "Field: composite. DTypeName: " << DTypeName << EOL;
     if (parser.IsEol ()) return true;
     parser.SkipLineWhitespace ();
-    if (parser.AtExprStart ()) {
-        Expr = static_cast<String &&>(parser.ReadExpression ());
-        Dbg << "Field: composite. Expr: " << Expr << EOL;
-    }
+    if (parser.AtExprStart ())
+        Expr = static_cast<List<FFDParser::ExprToken> &&>(
+            parser.TokenizeExpression ());
     // comment(s) and whitespace are handled by FFD::SNode::ParseField()
     return true;
 }
@@ -305,8 +303,20 @@ bool FFD::SNode::ParseField(FFDParser & parser)
                 H3R_ENSURE_FFD(! parser.IsEol (), "Incomplete array") // [EOL
                 Array = true;
                 for (int arr = 0; arr < 3; arr++) {
-                    Arr[arr] = static_cast<String &&>(parser.ReadArrDim ());
-                    Dbg << "Field: array[" << arr << "]=" << Arr[arr] << EOL;
+                    if (parser.SymbolValid1st ())
+                        Arr[arr].Name =
+                            static_cast<String &&>(parser.ReadArrDim ());
+                    else { // int literal; allow line whitespace around it
+                        if (parser.IsLineWhitespace ()) // trim start
+                            parser.SkipLineWhitespace ();
+                        Arr[arr].Value = parser.ParseIntLiteral ();
+                        if (parser.IsLineWhitespace ()) // trim end
+                            parser.SkipLineWhitespace ();
+                        H3R_ENSURE(parser.AtArrEnd (), "wrong arr dim")
+                        parser.SkipOneByte (); // ']'.Next()
+                    }
+                    Dbg << "Field: array[" << arr << "]= ";
+                    Arr[arr].DbgPrint (); Dbg << EOL;
                     if (! parser.HasMoreData ()) break; // foo[.*]EOF
                     if (! parser.AtArrStart ()) break;
                     else {
@@ -325,10 +335,9 @@ bool FFD::SNode::ParseField(FFDParser & parser)
     if (! parser.HasMoreData ()) return true;
     if (parser.IsEol ()) { parser.SkipEol () ; return true; }
     parser.SkipLineWhitespace ();
-    if (parser.AtExprStart ()) {
-        Expr = static_cast<String &&>(parser.ReadExpression ());
-        Dbg << "Field: expr: " << Expr << EOL;
-    }
+    if (parser.AtExprStart ())
+        Expr = static_cast<List<FFDParser::ExprToken> &&>(
+            parser.TokenizeExpression ());
     parser.SkipCommentWhitespaceSequence ();
     return true;
 }// FFD::SNode::ParseField()
@@ -356,10 +365,9 @@ bool FFD::SNode::ParseConst(FFDParser & parser)
     }
     if (parser.IsEol ()) { parser.SkipEol (); return true; }
     parser.SkipLineWhitespace ();
-    if (parser.AtExprStart ()) {
-        Expr = static_cast<String &&>(parser.ReadExpression ());
-        Dbg << "Const: expr: " << Expr << EOL;
-    }
+    if (parser.AtExprStart ())
+        Expr = static_cast<List<FFDParser::ExprToken> &&>(
+            parser.TokenizeExpression ());
     else
         parser.SkipCommentWhitespaceSequence ();
     return true;
@@ -385,10 +393,9 @@ bool FFD::SNode::ParseEnum(FFDParser & parser)
     if (parser.IsEol ())
         parser.SkipEol ();
     else {
-        if (parser.AtExprStart ()) {
-            Expr = static_cast<String &&>(parser.ReadExpression ());
-            Dbg << "Enum: expr: " << Expr << EOL;
-        }
+        if (parser.AtExprStart ())
+            Expr = static_cast<List<FFDParser::ExprToken> &&>(
+                parser.TokenizeExpression ());
         H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete enum") // foo.*)EOF
         parser.SkipCommentWhitespaceSequence ();
     }
@@ -408,10 +415,9 @@ bool FFD::SNode::ParseEnum(FFDParser & parser)
         if (parser.IsEol ())
             parser.SkipEol ();
         else {
-            if (parser.AtExprStart ()) {
-                itm.Expr = static_cast<String &&>(parser.ReadExpression ());
-                Dbg << "EnumItem: expr: " << itm.Expr << EOL;
-            }
+            if (parser.AtExprStart ())
+                itm.Expr = static_cast<List<FFDParser::ExprToken> &&>(
+                    parser.TokenizeExpression ());
             else
                 parser.SkipCommentWhitespaceSequence ();
         }
@@ -445,38 +451,65 @@ FFD::SNode * FFD::SNode::NodeByName(const String & query)
 {
     FFD::SNode * result = {};
     WalkBackwards([&](FFD::SNode * node) {
-        if (node->Name == query) { result = node; return false; }
+        if (node->Name == query && node->Usable ()) {
+            result = node;
+            return false;
+        }
         return true;
     });
-    if (nullptr == result)
-        WalkForward([&](FFD::SNode * node) {
-            if (node->Name == query) { result = node; return false; }
+    if (nullptr == result && Next)
+        Next->WalkForward([&](FFD::SNode * node) {
+            if (node->Name == query && node->Usable ()) {
+                result = node;
+                return false;
+            }
             return true;
         });
     return result;
 }
 
-// Debug purposes
-static void print_node(FFD::SNode * n)
+FFD::EnumItem * FFD::SNode::FindEnumItem(const String & name)
+{//TODO enum.Expr > 0
+    for (int i = 0; i < EnumItems.Count (); i++)
+        if (EnumItems[i].Name == name) return &(EnumItems[i]);
+    return nullptr;
+}
+
+List<FFD::SNode *> FFD::SNode::NodesByName(const String & query)
 {
-    Dbg << "+" << n->TypeToString () << ": ";
-    if (nullptr == n) { Dbg << "[null]" << EOL; return; }
-    if (n->HashKey) Dbg << "[hk]";
-    if (n->Array) Dbg << "[arr]";
-    if (n->Variadic) Dbg << "[var]";
-    if (n->VListItem) Dbg << "[vli]";
-    if (n->Composite) Dbg << "[comp]";
-    if (n->Signed) Dbg << "[signed]";
-    if (n->IsAttribute ())
-        Dbg << " Value: \"" << n->Attribute << "\"";
+    List<FFD::SNode *> result = {};
+    WalkBackwards([&](FFD::SNode * node) {
+        if (node->Name == query) result.Add (node);
+        return true;
+    });
+    if (Next)
+        Next->WalkForward([&](FFD::SNode * node) {
+            if (node->Name == query) result.Add (node);
+            return true;
+        });
+    return static_cast<List<FFD::SNode *> &&>(result);
+}
+
+// Debug purposes
+void FFD::SNode::DbgPrint()
+{
+    Dbg << "+" << TypeToString () << ": ";
+    if (HashKey) Dbg << "[hk]";
+    if (Array) Dbg << "[arr]";
+    if (Variadic) Dbg << "[var]";
+    if (VListItem) Dbg << "[vli]";
+    if (Composite) Dbg << "[comp]";
+    if (Signed) Dbg << "[signed]";
+    if (IsAttribute ())
+        Dbg << " Value: \"" << Attribute << "\"";
     else
-        Dbg << " Name: \"" << n->Name << "\"";
+        Dbg << " Name: \"" << Name << "\"";
     Dbg << ", DType: \"";
-    if (nullptr == n->DType) {
-        if (! n->NoDType ())
-            Dbg << "unresolved:" << n->DTypeName;
+    if (nullptr == DType) {
+        if (! NoDType ())
+            Dbg << "unresolved:" << DTypeName;
     }
-    else Dbg << n->DType->Name;
+    else Dbg << DType->Name;
     Dbg << "\"" << EOL;
 }
 static void print_tree(FFD::SNode * n)
@@ -487,9 +520,11 @@ static void print_tree(FFD::SNode * n)
     }
     Dbg << "The tree:" << EOL;
     n->WalkForward ([&](FFD::SNode * n) -> bool {
-        print_node (n);
+        if (nullptr == n) { Dbg << "+[null]" << EOL; return true; }
+        n->DbgPrint ();
         for (auto sn : n->Fields) {
-            Dbg << "  "; print_node (sn);
+            if (nullptr == sn) { Dbg << "+[null]" << EOL; continue; }
+            Dbg << "  "; sn->DbgPrint ();
         }
         return true;
     });
@@ -578,7 +613,7 @@ static void resolve_all_types(FFD::SNode * n)
         int h, usize, size = static_cast<int>(fh2.Size ());
         Stream::Read (fh2, &h);
         if (h != 0x88b1f)
-            Log::Info ("Unknown map format. Load could fail.");
+            Dbg << "Unknown map format. Load could fail." << EOL;
         else {
             Stream::Read (fh2.End ().Seek (-4), &usize);
             H3R_ENSURE(usize > size && usize < H3M_MAX_FILE_SIZE,
@@ -592,10 +627,10 @@ static void resolve_all_types(FFD::SNode * n)
         }
     }
     else
-        Log::Info ("zlibMapStream not found. Load could fail.");
+        Dbg << "zlibMapStream not found. Load could fail." << EOL;
 
     FFDNode * data_root {};
-    Log::Info (String::Format ("Parsing %s" EOL, f.AsZStr ()));
+    Dbg << "Parsing " << f << EOL;
     H3R_CREATE_OBJECT(data_root, FFDNode) {ffd._root, s};
     if (s != &fh2) H3R_DESTROY_OBJECT(s, Stream)
     return data_root;

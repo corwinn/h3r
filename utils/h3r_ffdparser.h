@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_string.h"
 #include "h3r_dbg.h"
+#include "h3r_list.h"
 
 H3R_NAMESPACE
 
@@ -119,13 +120,13 @@ class FFDParser
     public void SkipComment();
     public String ReadSymbol(char stop_at = '\0', bool allow_dot = false);
     public int ParseIntLiteral();
-    public String ReadExpression(char open = '(', char close = ')');
+    public String ReadExpression(char open, char close);
     public void SkipCommentWhitespaceSequence();
 
     public bool SymbolValid1st();
     // When "unicode", this shall become "const byte * + len"
-    private bool SymbolValid1st(byte);
-    private bool SymbolValidNth(byte);
+    public static bool SymbolValid1st(byte);
+    public static bool SymbolValidNth(byte);
     public String ReadValueList();
     public inline void SkipOneByte() { _i++; }
 
@@ -137,6 +138,21 @@ class FFDParser
     // _i is at the opening ". Later i shall be after the closing one.
     // The result is between them.
     public String ReadStringLiteral();
+
+    // Part of the expression evaluator. Divide responsibilities: the parser
+    // does the formal spec: all parsing and pre-processing.
+    public enum class ExprTokenType {None, Open, Close, Symbol, Number,
+        opN, opNE, opE, opG, opL, opGE, opLE, opOr, opAnd};
+    public struct ExprToken final
+    {
+        ExprToken(ExprTokenType t) : Type{t} {}
+        String Symbol {};
+        int Value {};
+        ExprTokenType Type;
+    };
+    // LR linear tokenizer: the evaluator shall do the ().
+    public List<ExprToken> TokenizeExpression();
+    private ExprTokenType TokenizeExpressionOp();
 
 #undef public
 #undef private

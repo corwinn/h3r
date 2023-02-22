@@ -70,6 +70,11 @@ template <typename T> class List //LATER Insert() - should the need arise
         _l.Resize (_l.Length () + 1);
         return _l[_l.Length () - 1] = itm;
     }
+    public void Put(T && itm)//TODO testme
+    {
+        _l.Resize (_l.Length () + 1);
+        _l[_l.Length () - 1] = static_cast<T &&>(itm);
+    }
     // Remove all occurrences. Slow. Use rarely. You want fast: use an LL.
     // Returns whether something was removed (found) or not.
     public bool Remove(const T & itm)
@@ -81,6 +86,7 @@ template <typename T> class List //LATER Insert() - should the need arise
     }
     public void RemoveAt(int index) { _l.Remove (index); }
     public T & operator[](int i) { return _l[i]; }
+    public const T & operator[](int i) const { return _l[i]; }
     public bool Empty() const { return _l.Empty (); }
     public int Count() const { return _l.Length (); }
     public void Clear() { _l.Resize (0); }

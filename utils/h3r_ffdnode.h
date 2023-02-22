@@ -52,20 +52,92 @@ class FFDNode
 #define public public:
 #define private private:
 
-    private Array<byte> _data {};
+    private Array<byte> _data {}; // empty for _array == true; _fields has them
     private Stream * _s {}; // reference
-    private FFD::SNode * _n {}; // reference
-    private bool _enabled {}; // set by bool expr.
+    private FFD::SNode * _n {}; // reference ; node
+    private FFD::SNode * _f {}; // reference ; field node
+    private bool _enabled {true}; // set by bool expr.
     private bool _signed {}; // signed machine types
+    private bool _array {}; // array of struct
+    private FFD::SNode * _arr_dim[3] {}; // references; store the dimensions
     private List<FFDNode *> _fields {}; // LL ?
-    public FFDNode(FFD::SNode *, Stream *);
-    public void FromStruct();
+    private int _level {};
+    private FFDNode * _base {};
+    // node, stream, base_node, field_node (has DType and Array: responsible for
+    // "node" processing)
+    public FFDNode(FFD::SNode *, Stream *, FFDNode * base = nullptr,
+        FFD::SNode * = nullptr);
+    public void FromStruct(FFD::SNode * = nullptr);
     public void FromField();
     public ~FFDNode();
     public String AsString();
-    public int AsInt();
+    public inline int AsInt() const
+    {
+        switch (_data.Length ())
+        {
+            case 1: case 2: case 4:
+                return static_cast<int>(*(_data.operator byte * ()));
+            default: H3R_ENSURE(0, "Don't request that AsInt")
+        }
+    }
     public inline bool Enabled() const { return _enabled; }
-    private bool EvalBoolExpr();
+
+    struct ExprCtx final // required to evaluate enum elements in expression.
+    {
+        int v[2] {}; // l r
+        int i {};    // 0 1
+        bool n[2] {};
+        String LSymbol {}; // Version | RoE
+        String RSymbol {}; // RoE     | Version
+        FFDParser::ExprTokenType op {FFDParser::ExprTokenType::None};
+        public inline int Compute()
+        {
+            if (n[0]) v[0] = ! v[0];
+            if (n[1]) v[1] = ! v[1];
+            // Dbg << "Compute " << i << ", l: " << v[0] << ", r: " << v[1]
+            //     << EOL;
+            switch (op) {
+                case FFDParser::ExprTokenType::None: return v[0];
+                case FFDParser::ExprTokenType::opN: return ! v[0];
+                case FFDParser::ExprTokenType::opNE: return v[0] != v[1];
+                case FFDParser::ExprTokenType::opE: return v[0] == v[1];
+                case FFDParser::ExprTokenType::opG: return v[0] > v[1];
+                case FFDParser::ExprTokenType::opL: return v[0] < v[1];
+                case FFDParser::ExprTokenType::opGE: return v[0] >= v[1];
+                case FFDParser::ExprTokenType::opLE: return v[0] <= v[1];
+                case FFDParser::ExprTokenType::opOr: return v[0] || v[1];
+                case FFDParser::ExprTokenType::opAnd: return v[0] && v[1];
+                default: H3R_ENSURE(0, "Unknown op")
+            }
+        }
+        public inline void DbgPrint()
+        {
+            switch (op) {
+                case FFDParser::ExprTokenType::None: Dbg << " "; break;
+                case FFDParser::ExprTokenType::opN: Dbg << "! "; break;
+                case FFDParser::ExprTokenType::opNE: Dbg << "!= "; break;
+                case FFDParser::ExprTokenType::opE: Dbg << "== "; break;
+                case FFDParser::ExprTokenType::opG: Dbg << "> "; break;
+                case FFDParser::ExprTokenType::opL: Dbg << "< "; break;
+                case FFDParser::ExprTokenType::opGE: Dbg << ">= "; break;
+                case FFDParser::ExprTokenType::opLE: Dbg << "<= "; break;
+                case FFDParser::ExprTokenType::opOr: Dbg << "|| "; break;
+                case FFDParser::ExprTokenType::opAnd: Dbg << "&& "; break;
+                default: Dbg << "?? "; break;
+            }
+        }
+    };// ExprCtx
+    // Evaluate machtype|enum Size, or const IntLiteral, based on their Expr.
+    // Cache their Enabled state, based on the evaluated Expr.
+    // Returns the SNode of the symbol that was found.
+    // Use when machtype, enum, or const have Expression on them.
+    private FFD::SNode * ResolveSNode(const String &, int & value,
+        FFD::SNode * sn);
+    private void ResolveSymbols(ExprCtx &, FFD::SNode * sn, FFDNode * base);
+    // sn - expression node, base - current struct node
+    private bool EvalBoolExpr(FFD::SNode * sn, FFDNode * base);
+    private void EvalArray();
+
     // [dbg]
     private inline void PrintByteSequence()
     {
@@ -74,6 +146,24 @@ class FFDNode
         for (int i = 1; i < _data.Length (); i++)
             Dbg << Dbg.Fmt (" %002X", _data[i]);
         Dbg << "]" << EOL;
+    }
+    public inline FFDNode * NodeByName(const String & name)
+    {
+        //LATER
+        // This lookup is not quite ok. Duplicate symbol names might surprise
+        // one. I better think of some way to explicitly mark "public" symbols.
+        if (_array) { // no point looking in it
+            if (_base) return _base->NodeByName (name);
+            return nullptr;
+        }
+        // look locally for now; array of struct not handled
+        for (auto n : _fields) {
+            // Dbg << "  NodeByName: q:" << name << ", vs:" << n->_n->Name
+            //     << EOL;
+            if (n->_enabled && n->_n->Name == name) return n;
+        }
+        if (_base) return _base->NodeByName (name);
+        return nullptr;
     }
 
 #undef public

@@ -374,13 +374,13 @@ struct PlayerCanPlay
     byte AllowedFactions
     bool RandomFaction
     bool HasMainTown
-    bool GenAtMT (HasMainTown && Version != ROE)
-    bool Gen2 (HasMainTown && Version != ROE) // No idea whats this
+    bool GenAtMT (HasMainTown && (Version != ROE))
+    bool Gen2 (HasMainTown && (Version != ROE)) // No idea whats this
     Location MainTown (HasMainTown)
     bool RandomHero
     byte CutomHeroId
     byte CutomHeroPortrait (CutomHeroId != MAP_DEFAULT_HERO_ID)
-    byte CutomHeroName (CutomHeroId != MAP_DEFAULT_HERO_ID)
+    MapString CutomHeroName (CutomHeroId != MAP_DEFAULT_HERO_ID)
     byte NoIdea (Version != ROE)
     AllowedHero AllowedHeroes[int] (Version != ROE)
 
@@ -526,21 +526,21 @@ format h3m
     WinCondition   SpecialWCon
     LooseCondition SpecialLCon
     //
-    byte           Teams
-    byte           Team[MAP_PLAYERS]
+    byte           HasTeams
+    byte           Team[MAP_PLAYERS] (HasTeams)
     //
     byte           AllowedHeroes[16] (Version == ROE)
     byte           AllowedHeroes[20] (Version != ROE)
     byte           AllowedHeroesNoIdea[int] (Version > ROE)
     //
-    NoIdeaHero     MysteriousHeroes[byte]
+    NoIdeaHero     MysteriousHeroes[byte] (Version >= SOD)
     byte           Unk1[31]
     //
     byte           AllowedArtifacts[17] (Version == AB)
     byte           AllowedArtifacts[18] (Version > AB)
     //
-    byte           AllowedSpells[9]
-    byte           AllowedAbilities[4]
+    byte           AllowedSpells[9] (Version >= SOD)
+    byte           AllowedAbilities[4] (Version >= SOD)
     //
     Rumor          Rumors[int]
     //

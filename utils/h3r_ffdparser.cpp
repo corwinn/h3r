@@ -44,6 +44,7 @@ H3R_NAMESPACE
         OS::Exit (1); }}
 
 bool FFDParser::IsWhitespace() { return _buf[_i] <= 32; }
+static bool is_line_whitespace(byte b) { return 32 == b || 9 == b; }
 bool FFDParser::IsLineWhitespace() { return 32 == _buf[_i] || 9 == _buf[_i]; }
 bool FFDParser::IsComment()
 {
@@ -109,19 +110,20 @@ void FFDParser::SkipComment()
 }
 
 bool FFDParser::SymbolValid1st() { return SymbolValid1st (_buf[_i]); }
-bool FFDParser::SymbolValid1st(byte b)
+/*static*/ bool FFDParser::SymbolValid1st(byte b)
 {
     // [A-Za-z_]
     return (b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z') || '_' == b;
 }
-bool FFDParser::SymbolValidNth(byte b)
+/*static*/ bool FFDParser::SymbolValidNth(byte b)
 {
     // [0-9A-Za-z_]
     return (b >= '0' && b <= '9') || SymbolValid1st (b);
 }
 
-// handle variadic list symbols: foo.bar:value-list
+// Handles variadic list symbols: foo.bar:value-list.
 // char stop_at = '\0', bool allow_dot = false
+// Handles expression symbols, like "foo)".
 String FFDParser::ReadSymbol(char stop_at, bool allow_dot)
 {
     H3R_ENSURE_LFFD(SymbolValid1st (), "Wrong symbol name")
@@ -184,9 +186,10 @@ int FFDParser::ParseIntLiteral()
 }// FFDParser::ParseIntLiteral()
 
 // Multi-line not handled.
-// char open = '(', char close = ')'
 String FFDParser::ReadExpression(char open, char close)
 {
+    H3R_ENSURE_LFFD(open != '(' && close != ')',
+        "These are handled by TokenizeExpression()")
     int b = 0;
     H3R_ENSURE_LFFD(open == _buf[_i], "An expression must start with (")
     int j = _i;
@@ -261,6 +264,93 @@ String FFDParser::ReadStringLiteral()
     //LATER fix: yep, it shall read "a"a"a"
     return static_cast<String &&>(ReadExpression ('"', '"'));
 }
+
+// Handle supported operations: > < == >= <= != || && ! .
+// Makes FFDParser::TokenizeExpression wy more read-able.
+FFDParser::ExprTokenType FFDParser::TokenizeExpressionOp()
+{
+    H3R_ENSURE_LFFD(_i < _len-2, "Incomplete expr.")
+    switch (_buf[_i]) {
+        case '!':
+            switch (_buf[_i+1]) {
+                case '=' :
+                    H3R_ENSURE_LFFD(is_line_whitespace (_buf[_i+2]), "Wrong Op")
+                    Dbg << "!= "; return _i+=2, ExprTokenType::opNE;
+                case '(' : Dbg << "! "; return ++_i, ExprTokenType::opN;
+                default:
+                    H3R_ENSURE_LFFD(SymbolValid1st (_buf[_i+1]), "Wrong Op");
+                    Dbg << "! "; return ++_i, ExprTokenType::opN;
+            }
+        case '<':
+            if (is_line_whitespace (_buf[_i+1]))
+                return ++_i, Dbg << "< ", ExprTokenType::opL;
+            H3R_ENSURE_LFFD('=' == _buf[_i+1], "Wrong Op")
+            H3R_ENSURE_LFFD(is_line_whitespace (_buf[_i+2]), "Wrong Op")
+            Dbg << "<= ";
+            return _i+=2, ExprTokenType::opLE;
+        case '>':
+            if (is_line_whitespace (_buf[_i+1]))
+                return ++_i, Dbg << "> ", ExprTokenType::opG;
+            H3R_ENSURE_LFFD('=' == _buf[_i+1], "Wrong Op")
+            H3R_ENSURE_LFFD(is_line_whitespace (_buf[_i+2]), "Wrong Op")
+            Dbg << ">= ";
+            return _i+=2, ExprTokenType::opGE;
+        case '=':
+            H3R_ENSURE_LFFD('=' == _buf[_i+1], "Wrong Op")
+            H3R_ENSURE_LFFD(is_line_whitespace (_buf[_i+2]), "Wrong Op")
+            Dbg << "== ";
+            return _i+=2, ExprTokenType::opE;
+        case '|':
+            H3R_ENSURE_LFFD('|' == _buf[_i+1], "Wrong Op")
+            H3R_ENSURE_LFFD(is_line_whitespace (_buf[_i+2]), "Wrong Op")
+            Dbg << "|| ";
+            return _i+=2, ExprTokenType::opOr;
+        case '&':
+            H3R_ENSURE_LFFD('&' == _buf[_i+1], "Wrong Op")
+            H3R_ENSURE_LFFD(is_line_whitespace (_buf[_i+2]), "Wrong Op")
+            Dbg << "&& ";
+            return _i+=2, ExprTokenType::opAnd;
+        default: H3R_ENSURE_LFFD(1^1, "Unknown Op")
+    }// switch (_buf[_i])
+}// FFDParser::TokenizeExpressionOp()
+
+// Handle (.*)
+List<FFDParser::ExprToken> FFDParser::TokenizeExpression()
+{
+    Dbg << "TokenizeExpression: ";
+    List<FFDParser::ExprToken> result {}; // (, foo, )
+    int depth {};
+    int chk {};
+    do {
+        if ('(' == _buf[_i]) { Dbg << "( ";
+            H3R_ENSURE_LFFD(chk++ < FFD_EXPR_MAX_NESTED_EXPR, "Wrong expr.")
+            depth++; _i++;
+            result.Put (FFDParser::ExprToken {ExprTokenType::Open});
+        }
+        else if (')' == _buf[_i]) { Dbg << ") ";
+            depth--; if (depth) _i++;
+            result.Put (FFDParser::ExprToken {ExprTokenType::Close});
+        }
+        else if (SymbolValid1st (_buf[_i])) {
+            FFDParser::ExprToken t {ExprTokenType::Symbol};
+            t.Symbol = ReadSymbol (')', true); Dbg << "{" << t.Symbol << "} ";
+            result.Put (static_cast<FFDParser::ExprToken &&>(t));
+        }
+        else if (is_decimal_number (_buf[_i])) {
+            FFDParser::ExprToken t {ExprTokenType::Number};
+            t.Value = ParseIntLiteral (); Dbg << t.Value << " ";
+            result.Put (static_cast<FFDParser::ExprToken &&>(t));
+        }
+        else if (IsLineWhitespace ()) { Dbg << "{} "; SkipLineWhitespace (); }
+        else
+            result.Put (FFDParser::ExprToken {TokenizeExpressionOp ()});
+    } while (depth && _i < _len);
+    H3R_ENSURE_LFFD(')' == _buf[_i], "Incomplete expr.")
+    H3R_ENSURE_LFFD(0 == depth, "Bug: incomplete expr.")
+    _i++;
+    Dbg << EOL;
+    return static_cast<List<ExprToken> &&>(result);
+}// FFDParser::TokenizeExpression()
 
 #undef H3R_ENSURE_LFFD
 

@@ -76,7 +76,20 @@ class FFD
     {
         public String Name {};
         public int Value {};
-        public String Expr {};
+        public List<FFDParser::ExprToken> Expr {};
+        public bool Enabled {};
+    };
+    public class ArrDimItem final
+    {
+        public String Name {}; // Empty when Value is used
+        public int Value {}; // 0 when Name is used
+        public inline bool None() { return Name.Empty () && Value <= 0; }
+        public inline void DbgPrint()
+        {
+            if (None ()) return;
+            if (Value > 0) Dbg << "intlit: " << Value;
+                      else Dbg << "symbol: " << Name;
+        }
     };
     // Syntax node - these are created as a result of parsing the description.
     // Its concatenation of SType. It could become class hierarchy.
@@ -95,7 +108,13 @@ class FFD
             if (nullptr == Prev) return;
             Prev->WalkBackwards (on_node);
         }
-        private SNode * NodeByName(const String &);
+
+        // Returns Usable() only! Means the SNode is enabled, and doesn't need
+        // evaluation.
+        public SNode * NodeByName(const String &);
+        // Returns all that match the name, regardless of flags.
+        public List<SNode *> NodesByName(const String &);
+
         // Call after all nodes are parsed. Allows for dependency-independent
         // order of things at the description.
         public void ResolveTypes();
@@ -113,14 +132,14 @@ class FFD
         public SNode * DType {};  // Data/dynamic type (Expr: resolved on parse)
         public String DTypeName {}; // Prior resolve
         public List<SNode *> Fields {};
-        public String Expr {};
+        public List<FFDParser::ExprToken> Expr {};
         public String Comment {};
 
         public bool HashKey {};
         public String HashType {};
 
         public bool Array {};     // Is it an array
-        public String Arr[3];
+        public ArrDimItem Arr[3] {};
 
         public bool Variadic {};  // "..." Type == SType::Field
         public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
@@ -132,12 +151,20 @@ class FFD
         public String StringLiteral {};
         public int IntLiteral {};
 
+        public bool Enabled {}; // true when Expr has evaluated to it
+        public bool Resolved {}; // true when Expr has been evaluated
+        public bool inline Usable() const
+        {
+            return Expr.Count () <= 0 || (Resolved && Enabled);
+        }
+
         // Type == SType::MachType
         public bool Signed {};
         public int Size {};
         // public SNode * Alias {};  // This could become useful later
 
         public List<EnumItem> EnumItems {};
+        public EnumItem * FindEnumItem(const String &);
 
         public bool Parse(FFDParser &);
         public bool ParseMachType(FFDParser &);
@@ -173,6 +200,10 @@ class FFD
         }
         public inline bool IsEnum() const { return SType::Enum == Type; }
         public inline bool IsField() const { return SType::Field == Type; }
+        public inline bool IsIntConst() const
+        {
+            return SType::Const == Type && SConstType::Int == Const;
+        }
         // By value. Allow many attributes for custom extensions.
         public SNode * GetAttr(const String & query)
         {
@@ -196,7 +227,36 @@ class FFD
                 default: return "Unhandled";
             };
         }
-        public inline bool HasExpr() const { return ! Expr.Empty (); }
+        public inline bool HasExpr() const { return Expr.Count () > 0; }
+        public void DbgPrint();
+        // where there are no dynamic arrays and expressions
+        public int PrecomputeSize()
+        {
+            int result {};
+            for (auto f : Fields) {
+                if (! f->DType) return 0;
+                if (! f->Expr.Empty ()) return 0;
+                if (f->DType->IsStruct ()) return 0;
+                if (f->Array) {
+                    int arr_result = 1, i {};
+                    for (; i < 3 && ! Arr[i].None (); i++) {
+                        if (! f->Arr[i].Name.Empty ()) {
+                            H3R_ENSURE(nullptr != Base, "array node w/o Base?")
+                            auto n = Base->NodeByName (f->Arr[i].Name);
+                            if (n && ! n->IsIntConst ()) return 0;
+                            arr_result *= n->IntLiteral;
+                        }
+                        else
+                            arr_result *= f->Arr[i].Value;
+                    }
+                    H3R_ENSURE(i > 0, "array node w/o dimensions?")
+                    result += arr_result;
+                }
+                else
+                    result += f->DType->Size;
+            }
+            return result;
+        }// PrecomputeSize()
     };// SNode
 
     private SNode * _root {};
