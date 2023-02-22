@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_log.h"
 #include "h3r_string.h"
 #include "h3r_sdlrwops.h"
-#include "h3r_renderengine.h"
+#include "h3r_window.h"
 
 H3R_NAMESPACE
 
@@ -86,8 +86,8 @@ Button::Button(const String & res_name, Window * base)
 
 void Button::UploadFrames()
 {
-    auto & RE = RenderEngine::UI ();
-    _rkey = RE.GenKey ();
+    auto RE = Window::UI;
+    _rkey = RE->GenKey ();
     auto & size = Size ();
     auto & pos = Pos ();
     Def sprite {Game::GetResource (_sprite_name)};
@@ -114,7 +114,7 @@ void Button::UploadFrames()
     auto sprite_name = _sprite_name.ToLower ().Replace (".def", "n.pcx");
     if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
         sprite_n = &sprite_name;
-        _on = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+        _on = RE->UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
     }
@@ -122,7 +122,7 @@ void Button::UploadFrames()
     sprite_name = _sprite_name.ToLower ().Replace (".def", "h.pcx");
     if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
         sprite_n = &sprite_name;
-        _oh = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+        _oh = RE->UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
     }
@@ -130,7 +130,7 @@ void Button::UploadFrames()
     sprite_name = _sprite_name.ToLower ().Replace (".def", "s.pcx");
     if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
         sprite_n = &sprite_name;
-        _os = RE.UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+        _os = RE->UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
     }
@@ -160,8 +160,8 @@ void Button::OnMouseMove(const EventArgs & e)
     p.X = e.X;
     p.Y = e.Y;
     _mouse_over = HitTest (p);
-    RenderEngine & re = RenderEngine::UI ();
-    re.ChangeOffset (_rkey,
+    auto re = Window::UI;
+    re->ChangeOffset (_rkey,
         _mouse_down ? _os : _mouse_over ? _oh : _on);
     /*Log::Info (String::Format (
         "Button::OnMouseMove (%d, %d), hover: %d, _bb (%d, %d, %d, %d)" EOL,
@@ -176,8 +176,8 @@ void Button::OnMouseDown(const EventArgs &)
 {
     if (! _mouse_over) return;
     _mouse_down = true;
-    RenderEngine & re = RenderEngine::UI ();
-    re.ChangeOffset (_rkey, _os);
+    auto re = Window::UI;
+    re->ChangeOffset (_rkey, _os);
     Log::Info ("MouseDown" EOL);
     auto stream = Game::GetResource ("BUTTON.wav");
     if (! stream) {
@@ -209,8 +209,8 @@ void Button::OnMouseUp(const EventArgs &)
     //     need the bubbling/tunneling madness of the "WPF" here.
     if (! _mouse_down) return; // It was not me
     _mouse_down = false;
-    RenderEngine & re = RenderEngine::UI ();
-    re.ChangeOffset (_rkey, _mouse_over ? _oh : _on);
+    auto re = Window::UI;
+    re->ChangeOffset (_rkey, _mouse_over ? _oh : _on);
     // If you release the button outside of the of the thing you clicked on
     // there shall be no mouse click event.
     if (! _mouse_over) return;

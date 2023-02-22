@@ -65,6 +65,8 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 #include "h3r_timing.h"
 #include "h3r_renderengine.h"
 
+#include <new>
+
 H3R_NAMESPACE
 
 //TODO DLL<Window *> as Window::static && Node<Window *> * at each Window:
@@ -89,6 +91,7 @@ int ui_main(int, char **)
             i++;
         }
     }
+    printf ("gwl.prior clear: %p\n", global_win_list.end ());
     global_win_list.Clear ();
     return 0;
 }
@@ -96,6 +99,7 @@ int ui_main(int, char **)
 // GC Window::_gc {};
 Window * Window::ActiveWindow {};
 Window * Window::MainWindow {};
+RenderEngine * Window::UI {};
 
 // Code repeats, but I don't intend to re-create ICollection<T>.
 void Window::AddControl(Control * c)
@@ -133,7 +137,11 @@ Window::Window(OSWindow * actual_window, Point && size)
     static bool once {};
     H3R_ENSURE(! once, "One MainWindow please")
     once = true;
-    RenderEngine::Init ();
+    if (nullptr == Window::UI) { // just in case
+        RenderEngine::Init ();
+        H3R_CREATE_OBJECT(Window::UI, RenderEngine) {
+            H3R_DEFAULT_UI_MAX_SPRITES};
+    }
     global_win_list.Add (this);
 }
 
@@ -145,6 +153,8 @@ Window::~Window()
     for (Control * c : _controls)
         H3R_DESTROY_OBJECT(c, Control)
     global_win_list.Remove (this);
+    if (global_win_list.Count () <= 1)
+        H3R_DESTROY_OBJECT(Window::UI, RenderEngine)
 }
 
 // Bridge
@@ -238,7 +248,7 @@ void Window::OnClose(IWindow * sender, bool &)
         for (auto w : global_win_list) w->_closed = true;
     }
 }
-void Window::OnRender() { RenderEngine::UI ().Render (); }
-void Window::OnResize(int w, int h) { RenderEngine::UI ().Resize (w, h); }
+void Window::OnRender() { Window::UI->Render (); }
+void Window::OnResize(int w, int h) { Window::UI->Resize (w, h); }
 
 NAMESPACE_H3R

@@ -33,27 +33,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **** END LICENCE BLOCK ****/
 
 #include "h3r_label.h"
-#include "h3r_window.h"
 
 H3R_NAMESPACE
 
 Label::Label(
     const String & text, const String & font, const Point & pos, Control * base)
-    : Control {base}, _tkey {RenderEngine::UI ().GenTextKey ()}, _font {font},
+    : Control {base}, _tkey {Window::UI->GenTextKey ()}, _font {font},
     _text {text}
 {
     SetPos (pos.X, pos.Y);
-    RenderEngine::UI ().UploadText (_tkey, _font, _text, pos.X, pos.Y,
+    Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y,
         Depth ());
 }
 
 Label::Label(
     const String & text, const String & font, const Point & pos, Window * base)
-    : Control {base}, _tkey {RenderEngine::UI ().GenTextKey ()}, _font {font},
+    : Control {base}, _tkey {Window::UI->GenTextKey ()}, _font {font},
     _text {text}
 {
     SetPos (pos.X, pos.Y);
-    RenderEngine::UI ().UploadText (_tkey, _font, _text, pos.X, pos.Y,
+    Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y,
         Depth ());
 }
 

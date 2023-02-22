@@ -278,14 +278,6 @@ void RenderEngine::UpdateRenderOrder(int key, h3rDepthOrder order)
     H3RGL_Debug
 }
 
-/*static*/ RenderEngine & RenderEngine::UI()
-{//TODO these should disappear: bad things happen when this get destroyed
- //     after the MM; some global init-finalize strategy is required, with
- //     the MM being the only static-init around
-    static RenderEngine ui {H3R_DEFAULT_UI_MAX_SPRITES};
-    return ui;
-}
-
 /*static*/ void RenderEngine::Init()
 {
     glDisable (GL_COLOR_MATERIAL);

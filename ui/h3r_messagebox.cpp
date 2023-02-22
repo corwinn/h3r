@@ -63,7 +63,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     _l = (Window::MainWindow->GetSize ().X - size.X) / 2;
     // printf ("top, left = %d, %d" EOL, _t, _l);
 
-    RenderEngine & re = RenderEngine::UI ();
+    RenderEngine & re = *Window::UI;
 
     //TODO there is a lot to think about:
 
@@ -172,7 +172,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
 
 MessageBox::~MessageBox()
 {
-    RenderEngine::UI ().DeleteShadowRectangle ();
+    Window::UI->DeleteShadowRectangle ();
 }
 
 /*static*/ DialogResult MessageBox::Show(

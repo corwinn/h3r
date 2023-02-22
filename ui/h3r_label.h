@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_string.h"
 #include "h3r_point.h"
 #include "h3r_control.h"
-#include "h3r_renderengine.h"
+#include "h3r_window.h"
 
 H3R_NAMESPACE
 
@@ -54,14 +54,14 @@ class Label: public Control
         const String &, const String &, const Point &, Control *);
     public: Label(
         const String &, const String &, const Point &, Window *);
-    public: ~Label() override { RenderEngine::UI ().DeleteText (_tkey); }
+    public: ~Label() override { Window::UI->DeleteText (_tkey); }
 
     public: inline const String & Text() const { return _text; }
     public: inline const String & Font() const { return _font; }
     public: inline void SetText(const String & value)
     {
         _text = value;
-        RenderEngine::UI ().UpdateText (
+        Window::UI->UpdateText (
             _tkey, _font, _text, Pos ().X, Pos ().Y, Depth ());
     }
 };

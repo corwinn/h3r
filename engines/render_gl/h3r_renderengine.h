@@ -212,7 +212,7 @@ class RenderEngine final
     private RenderEngine();
     public ~RenderEngine();
     // The UI doesn't require that many sprites.
-    private RenderEngine(GLsizeiptr max_sprites);
+    public RenderEngine(GLsizeiptr max_sprites);
 
     public void Render();
     public void Resize(int, int); // The 2D output has been resized.
@@ -264,8 +264,6 @@ class RenderEngine final
     //  You displayed Window2 over Window1, but you need to display Window1
     //  over Window2 - requires updating the z coordinates of both windows.
     public void UpdateRenderOrder(int key, h3rDepthOrder order);
-
-    public static RenderEngine & UI();
 
     public static void Init();
 

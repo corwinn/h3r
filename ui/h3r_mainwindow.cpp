@@ -72,9 +72,9 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
 
     static byte * bmp_data {};
     auto bitmap_data = []() { return bmp_data; };
-    auto key = RenderEngine::UI ().GenKey ();
+    auto key = Window::UI->GenKey ();
     bmp_data = byte_arr_ptr->operator byte * ();
-    RenderEngine::UI ().UploadFrame (key, 0, 0, main_window_background.Width (),
+    Window::UI->UploadFrame (key, 0, 0, main_window_background.Width (),
         main_window_background.Height (), bitmap_data,
         h3rBitmapFormat::RGB, "GamSelBk.pcx", Depth ());
 

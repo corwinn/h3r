@@ -91,7 +91,7 @@ Game::Game(const char * process_path)
         // OS::Thread::Sleep (1);
     OS::Log_stdout ("Scaned: %d files, and %d folders" EOL,
         res_manager_init.Files (), res_manager_init.Directories ());
-}
+}// Game::Game()
 
 Game::~Game()
 {

@@ -48,6 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_list.h"
 // #include "h3r_gc.h"
 #include "h3r_point.h"
+#include "h3r_renderengine.h"
 
 H3R_NAMESPACE
 
@@ -115,6 +116,7 @@ class Window : public IWindow
     // The one that ProcessMessages. Switched by ui_main().
     public static Window * ActiveWindow;
     public static Window * MainWindow; // Used by MessageBox::Show()
+    public static RenderEngine * UI; // Managed by Window
 
     // Use IWindow::Create().
     // This shall be the MainWindow only! It has _wdepth of 0.
