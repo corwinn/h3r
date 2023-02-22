@@ -38,17 +38,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Included at a specific place at h3r_os.h
 //  - using OS::Malloc, OS::Memmove, OS::Mfree, OS::Exit, OS::CriticalSection
 
-static inline OS::CriticalSection & RWGate()
+/* Somehow this was worrying "valgrind" (used below instead of _thread_gate):
+ * "18,720 (520 direct, 18,200 indirect) bytes in 1 blocks are definitely lost"
+ * "h3r::OS::RWGate() (h3r_mm_templates.h:43)" - now 46
+ * static inline OS::CriticalSection & RWGate()
 {
     static OS::CriticalSection thread_gate {};
     return thread_gate;
-}
+}*/
 
 template <typename T> void MM::Add(T * & p, size_t n)
 {
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {
-            RWGate ()};
+            _thread_gate};
 
         //TODO h3r_math.h these computations should be overflow-safe - the
         //                idea is to prevent bad allocation attempts
@@ -85,7 +88,7 @@ template <typename T> void MM::Remove(T * & p)
     if (! p) return;
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {
-            RWGate ()};
+            _thread_gate};
         if (! p) return;
 
         for (int i = _n-1; i >= 0; i--)

@@ -55,6 +55,8 @@ class MM final
     H3R_CANT_COPY(MM)
     H3R_CANT_MOVE(MM)
 
+    private: OS::CriticalSection _thread_gate {};
+
     private: struct Entry { void * p {}; size_t n {}; };
     private: Entry * _e {};
     private: int _n {}, _c {}; // num, capacity

@@ -53,10 +53,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r.h"
 #include "h3r_os_error.h"
+#include "h3r_criticalsection.h"
 #ifdef H3R_MM
 # include "h3r_mm.h"
 #endif
-#include "h3r_criticalsection.h"
 
 //TODO EOL for mac
 #ifndef EOL
