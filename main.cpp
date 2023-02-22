@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-//v valgrind --leak-check=full --suppressions=val.supp ./main
+//v valgrind --leak-check=full --suppressions=h3r_valgrind.supp ./main
 
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED
