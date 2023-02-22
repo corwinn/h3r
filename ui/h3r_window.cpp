@@ -91,7 +91,6 @@ int ui_main(int, char **)
             i++;
         }
     }
-    printf ("gwl.prior clear: %p\n", global_win_list.end ());
     global_win_list.Clear ();
     return 0;
 }
@@ -153,7 +152,7 @@ Window::~Window()
     for (Control * c : _controls)
         H3R_DESTROY_OBJECT(c, Control)
     global_win_list.Remove (this);
-    if (global_win_list.Count () <= 1)
+    if (global_win_list.Count () <= 0)
         H3R_DESTROY_OBJECT(Window::UI, RenderEngine)
 }
 
