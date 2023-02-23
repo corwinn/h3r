@@ -141,6 +141,9 @@ FFD::SNode * FFDNode::ResolveSNode(const String & n, int & value,
 //LATER string literal const
 void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
 {
+    //TODO this needs serious re-factoring
+    //TODO add foo.bar.boo.mar.etc support
+    //TODO match the formal spec. to the letter
     Dbg << "   resolve symbol: ";
     if (1 == ctx.i) Dbg << ctx.LSymbol; else Dbg << ctx.RSymbol;
     Dbg << EOL;
@@ -228,18 +231,10 @@ String FFDNode::AsString()
     return static_cast<String &&>(String {_data, _data.Length ()});
 }
 
-// return 0 when its not machine and or can't be computed
-/*static int GetSize(FFD::SNode * n)
-{
-    if (! n->DType) return 0;
-    auto t = n->DType;
-    if (t->IsMachType () || t->IsEnum ()) return t->Size;
-    return 0;
-}*/
-
 void FFDNode::EvalArray()
 {
     _array = true;
+    // given "Foo bar[]", _f is "bar" and _n is "Foo"; (_n = _f->DType)
     auto n = nullptr != _f ? _f : _n;
     Dbg << " +field, array of " << n->DType->Name << EOL;
     // array size
@@ -248,37 +243,49 @@ void FFDNode::EvalArray()
         if (n->Arr[i].None ()) break;
         Dbg << " ++dim type: "; n->Arr[i].DbgPrint (); Dbg << EOL;
         // Is it an implicit machine type?
-        if (! n->Arr[i].Name.Empty ()) {
-            Dbg << " arr: look for " << n->Arr[i].Name << " at "
-                << n->Base->Name << EOL;
-            auto m = n->Base->NodeByName (n->Arr[i].Name); // n is an LL !
-            Dbg << "n->Prev: " << Dbg.Fmt ("%p, ", n->Prev)
-                << ", n->Next: " << Dbg.Fmt ("%p", n->Next) << EOL;
-            // m = n->NodeByName (n->Arr[i].Name); // look at the current node
+        if (! n->Arr[i].Name.Empty ()) { // [{symbol}]
+            // Look at root; because there are no root arrays - the array is
+            // a field in a struct (n->Base (and n->Base is a node in a DLL)).
+            auto m = n->Base->NodeByName (n->Arr[i].Name);
             if (! m) {
-                Dbg << " arr: not found?! " << n->Arr[i].Name << " at "
-                    << n->Base->Name << EOL;
                 int value {};
-                // evaluate whatever might need evaluating
+                // Look for conditional things at root (evaluate whatever could
+                // be evaluated; these are: "type", "enum" or "const" with bool.
+                // expressions - depending on runtime data values)
                 m = ResolveSNode (n->Arr[i].Name, value, n);
             }
-            if (m && m->IsIntConst ()) {
+            if (m && m->IsIntConst ()) { // [FOO_CONST]
                 _arr_dim[i] = m;
                 Dbg << " ++dim value (intconst): " << m->IntLiteral << " items"
                     << EOL;
                 arr_size = m->IntLiteral;
             }
             else if (m && ! m->IsMachType () && ! m->IsEnum ()) {
-                Dbg << " implement me: FFDNode array dim" << EOL;
+                Dbg << " implement me: root SNode array dim; jagged arr for "
+                    "example" << EOL;
                 return;
             }
-            else if (m) {
+            else if (m) {// a "type" found at root; [int] or [byte] ...
                 _arr_dim[i] = m;
                 Dbg << " ++dim size (implicit): " << m->Size << " bytes" << EOL;
                 H3R_ENSURE(m->Size >= 0 && m->Size <= 4, "array dim overflow")
                 _s->Read (&arr_size, m->Size);
                 Dbg << " ++dim value (implicit): " << arr_size << " bytes"
                     << EOL;
+            }
+            else { // not a root SNode; no point searching at Fields
+                auto node = NodeByName (n->Arr[i].Name);
+                H3R_ENSURE(nullptr != node, "Arr. dim. not found")
+                if (node->_array) {
+                    Dbg << "Implement me: jagged arrays" << EOL;
+                    return;
+                }
+                H3R_ENSURE(node->_n->IsField (), "Unsupported arr. dim.")
+                m = node->_n->DType;
+                H3R_ENSURE(m->IsValidArrDim (), "Unsupported arr. dim.")
+                H3R_ENSURE(m->Size >= 0 && m->Size <= 4, "Arr. dim. overflow")
+                arr_size = node->AsInt ();
+                Dbg << " ++dim size (ffdnode): " << arr_size << " items" << EOL;
             }
         }// ! n->Arr[i].Name.Empty ()
         else {
@@ -290,7 +297,7 @@ void FFDNode::EvalArray()
         final_size *= arr_size;
     }
     Dbg << " ++array size: " << final_size << EOL;
-    if (0 == final_size) {
+    if (0 == final_size) {// An actual use-case: "Atlantis_1029662174.h3m".
         Dbg << "Warning: array final_size of 0: nothing to read" << EOL;
         return;
     }
@@ -310,7 +317,7 @@ void FFDNode::EvalArray()
     }
     else {
         int psize = n->DType->PrecomputeSize ();
-        if (psize > 0) {
+        if (psize > 0) { // 41472 TTile for example
             Dbg << " ++item pre-computed size: " << psize << " bytes" << EOL;
             final_size *= psize;
             H3R_ENSURE(final_size >= 0 && final_size <= 1<<21,
@@ -323,6 +330,8 @@ void FFDNode::EvalArray()
         else {
             for (int i = 0 ; i < final_size; i++) {
                 Dbg << " +++item [" << i << "] (dynamic)" << EOL;
+                // These are unconditional because there is no per-array item,
+                // boolean evaluation. A.k.a. - the entire array is present.
                 FFDNode * f {};
                 H3R_CREATE_OBJECT(f, FFDNode) {_n, _s, this};
                 _fields.Add (f);
@@ -357,16 +366,14 @@ void FFDNode::FromField()
 
 void FFDNode::FromStruct(FFD::SNode * sn)
 {
-    /*_enabled = _n->HasExpr () ? EvalBoolExpr () : true;
-    if (! _enabled) return;*/
-    if (! sn) sn = _n;
+    if (! sn) sn = _n; // temporary: allows for the recursive detour below
 
     if (sn->VListItem) {
         Dbg << "FFD::Node::FromStruct: parse the ValueList" << EOL;
         return;
     }
     Dbg << "struct lvl " << _level << ": "  << sn->Name << EOL;
-    if (_f && _f->Array) {
+    if (_f && _f->Array) { // "Foo bar[]" that has already passed the eval below
         EvalArray ();
         return;
     }

@@ -204,6 +204,10 @@ class FFD
         {
             return SType::Const == Type && SConstType::Int == Const;
         }
+        public inline bool IsValidArrDim() const
+        {
+            return IsMachType () || IsEnum ();
+        }
         // By value. Allow many attributes for custom extensions.
         public SNode * GetAttr(const String & query)
         {

@@ -55,7 +55,7 @@ class FFDNode
     private Array<byte> _data {}; // empty for _array == true; _fields has them
     private Stream * _s {}; // reference
     private FFD::SNode * _n {}; // reference ; node
-    private FFD::SNode * _f {}; // reference ; field node
+    private FFD::SNode * _f {}; // reference ; field node (Foo _f[])
     private bool _enabled {true}; // set by bool expr.
     private bool _signed {}; // signed machine types
     private bool _array {}; // array of struct
