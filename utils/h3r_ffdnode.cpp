@@ -372,6 +372,8 @@ void FFDNode::FromStruct(FFD::SNode * sn)
         if (n->DType && n->DType->IsStruct ()) {
             if (n->Composite) {
                 Dbg << "Composite struct: " << n->DType->Name << EOL;
+                //TODO de-recursion-me when the DLL is in place:
+                //     sn->Insert (n->DType->Fields)
                 FromStruct (n->DType);
             }
             else

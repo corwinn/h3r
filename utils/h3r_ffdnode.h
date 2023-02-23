@@ -60,7 +60,7 @@ class FFDNode
     private bool _signed {}; // signed machine types
     private bool _array {}; // array of struct
     private FFD::SNode * _arr_dim[3] {}; // references; store the dimensions
-    private List<FFDNode *> _fields {}; // LL ?
+    private List<FFDNode *> _fields {}; //TODO DL-list-me
     private int _level {};
     private FFDNode * _base {};
     // node, stream, base_node, field_node (has DType and Array: responsible for
@@ -86,10 +86,10 @@ class FFDNode
     {
         int v[2] {}; // l r
         int i {};    // 0 1
-        bool n[2] {};
+        bool n[2] {}; // negate for l r
         String LSymbol {}; // Version | RoE
         String RSymbol {}; // RoE     | Version
-        FFDParser::ExprTokenType op {FFDParser::ExprTokenType::None};
+        FFDParser::ExprTokenType op {FFDParser::ExprTokenType::None}; // Binary
         public inline int Compute()
         {
             if (n[0]) v[0] = ! v[0];
