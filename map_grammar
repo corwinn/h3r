@@ -515,7 +515,7 @@ format h3m
     MapVersion     Version
     bool           HasPlayers // What do if not?
     int            Size       // 36, 72, 108, 144
-    byte           Levels     // 1 or 2
+    bool           TwoLevels  // 0:1 or 1:2
     MapString      Name
     MapString      Description
     byte           Difficulty
@@ -546,7 +546,8 @@ format h3m
     //
     CHero          CustomizedHeroes[MAP_HEROES] (Version >= SOD)
     //
-    TTile          Terrain[Levels][Size][Size]
+    TTile          Terrain[1][Size][Size] (!TwoLevels)
+    TTile          Terrain[2][Size][Size] (TwoLevels)
     //
     MapObj         Obj[int]
     ObjRef         Ref[int]
