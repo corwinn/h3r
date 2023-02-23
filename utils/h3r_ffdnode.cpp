@@ -249,11 +249,18 @@ void FFDNode::EvalArray()
         Dbg << " ++dim type: "; n->Arr[i].DbgPrint (); Dbg << EOL;
         // Is it an implicit machine type?
         if (! n->Arr[i].Name.Empty ()) {
-            auto m = n->Base->NodeByName (n->Arr[i].Name);
+            Dbg << " arr: look for " << n->Arr[i].Name << " at "
+                << n->Base->Name << EOL;
+            auto m = n->Base->NodeByName (n->Arr[i].Name); // n is an LL !
+            Dbg << "n->Prev: " << Dbg.Fmt ("%p, ", n->Prev)
+                << ", n->Next: " << Dbg.Fmt ("%p", n->Next) << EOL;
+            // m = n->NodeByName (n->Arr[i].Name); // look at the current node
             if (! m) {
+                Dbg << " arr: not found?! " << n->Arr[i].Name << " at "
+                    << n->Base->Name << EOL;
                 int value {};
                 // evaluate whatever might need evaluating
-                m = ResolveSNode (n->Arr[i].Name, value, _n);
+                m = ResolveSNode (n->Arr[i].Name, value, n);
             }
             if (m && m->IsIntConst ()) {
                 _arr_dim[i] = m;

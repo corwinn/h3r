@@ -153,13 +153,14 @@ class FFDNode
         // This lookup is not quite ok. Duplicate symbol names might surprise
         // one. I better think of some way to explicitly mark "public" symbols.
         if (_array) { // no point looking in it
+            // Dbg << " NodeByName: no _array lookup" << EOL;
             if (_base) return _base->NodeByName (name);
             return nullptr;
         }
         // look locally for now; array of struct not handled
         for (auto n : _fields) {
             // Dbg << "  NodeByName: q:" << name << ", vs:" << n->_n->Name
-            //     << EOL;
+            //    << EOL;
             if (n->_enabled && n->_n->Name == name) return n;
         }
         if (_base) return _base->NodeByName (name);

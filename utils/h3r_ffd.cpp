@@ -451,6 +451,7 @@ FFD::SNode * FFD::SNode::NodeByName(const String & query)
 {
     FFD::SNode * result = {};
     WalkBackwards([&](FFD::SNode * node) {
+        // Dbg << "ba n: " << node->Name << "vs. " << query << EOL;
         if (node->Name == query && node->Usable ()) {
             result = node;
             return false;
@@ -459,6 +460,7 @@ FFD::SNode * FFD::SNode::NodeByName(const String & query)
     });
     if (nullptr == result && Next)
         Next->WalkForward([&](FFD::SNode * node) {
+            // Dbg << "fo n: " << node->Name << "vs. " << query << EOL;
             if (node->Name == query && node->Usable ()) {
                 result = node;
                 return false;
