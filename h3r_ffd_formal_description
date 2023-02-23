@@ -38,8 +38,8 @@ object  : starts with a {keyword} (and the preceding {comment}s and
           {attribute}s) - no empty lines; an empty line (or a {keyword} -
           "type" only) completes current {node} and starts a new one;
 symbol  : a name that binds a {node} to its description; you access your parsed
-          data through the description {symbol}s; 1st char: [A-Za-z_], next chars:
-          [0-9A-Za-z_]
+          data through the description {symbol}s; 1st char: [A-Za-z_], next
+          chars: [0-9A-Za-z_]
 attribute: a list of "[.*]" lines prior a {keyword} line - a hint specific
            to the code that handles the parsed data; the ".*" is passed
            directly to your code. Many are allowed, prior "struct", "enum",
@@ -54,8 +54,11 @@ keywords:
   "list" - ignored for now
   "table" - ignored for now
   "struct" - defines a {node} of {node}s - sequential data grouped together
-             and bound to a {symbol}; doesn't have expr support yet - no
-             use-case yet
+             and bound to a {symbol}; it does not have expr support yet <=> no
+             use-case yet; the word "sequential" here is kind of misplaced -
+             perhaps the five desriptions will change its meaning to sequential
+             description;
+             The initial empty space for the {node} list is mandatory.
   "format" - defines the root {node} of your data format - this is where the
              parser starts
   "const" - a {symbol} bound to a {literal}
@@ -64,27 +67,27 @@ keywords:
 
 literal : a value directly encoded in the FFD:
   - integer: 32-bit; decimal or hexadecimal
-  - string : character ASCII sequence
+  - string : character ASCII sequence enclosed in "
 
 expression: a script being evaluated when needed (always enclosed in ()):
             Important: {symbols} used by a script are resolved:
-              1. globals
-              2. parameters
-              3. backwards from the current node
+              1. globals - all root nodes of the description
+              2. parameters - not needed yet
+              3. backwards from the current data node up to root.node0
             Expressions:
               - boolean - evaluates to true or false - {node} presence depends
                 on it; supported ops: > < == >= <= != || && ! implicit_symbol;
-              - arithmetic - not implemented yet; not needed yet;
+              - arithmetic - not implemented yet <=> not needed yet;
 
 {struct} sub-nodes: {symbol} [{symbol}] [boolean {expression}] [{comment}]
                     The [] denote: optional.
                     Important: if there is exactly one {symbol}, its sub-nodes
-                    shall be inserted in its place.
-                    {symbol}s have extras:
+                    shall be inserted in its place - a {composite} node.
+                    {symbol}s have extras (the [] are syntax):
                       - {symbol}[integer {literal}] - defines an array;
                         up-to 3 dimensions are supported; implicit/explicit
-                        length is supported via {symbols}[{symbol}] - for now
-                        the {expression} {symbol} lookup rules apply;
+                        length is supported via [{symbol}] - for now the
+                        {expression} {symbol} lookup rules apply;
 
                     "..." {symbol} - implies variadic {node}s: are not pre-
                     defined, but based on a {value} coming from a {symbol}; a
