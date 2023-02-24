@@ -250,7 +250,7 @@ class FFDNode
         }
         Dbg << EOL;
         for (int i = 0; i < _fields.Count (); i++) {
-            if (! _fields[i]) Dbg << "{null field} ???" << EOL;
+            if (! _fields[i]) Dbg << "{null field " << i << "} ???" << EOL;
             else _fields[i]->PrintTree (i);
         }
     }

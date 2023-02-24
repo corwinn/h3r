@@ -457,6 +457,7 @@ void FFDNode::FromStruct(FFD::SNode * sn)
                 //TODO de-recursion-me when the DLL is in place:
                 //     sn->Insert (n->DType->Fields)
                 FromStruct (n->DType);
+                continue;
             }
             else
                 H3R_CREATE_OBJECT(f, FFDNode) {n->DType, _s, this, n};
@@ -496,6 +497,7 @@ void FFDNode::FromStruct(FFD::SNode * sn)
                         composite->PrintValueList ();
                     FromStruct (composite);
                 }
+                continue;
             }// (n->Variadic)
             else
                 H3R_CREATE_OBJECT(f, FFDNode) {n, _s, this};
