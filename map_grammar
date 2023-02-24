@@ -161,12 +161,12 @@ struct MapHero
     byte         SubId
     MapString    Name (bool)
     bool         HasExp (Version > AB)
-    int          Exp (HasExp || Version <= AB)
+    int          Exp (HasExp || (Version <= AB))
     byte         PortraitId (bool)
     short        SecondarySkills[int] (bool) // 8:first, 8:second
     MapCreatures Creatures[7] (bool)
     byte         Formation
-    HeroArts     Artifacts
+    HeroArts     Artifacts (bool)
     byte         PatrolRadius
     bool         HasBio (Version > ROE)
     MapString    Bio (HasBio)
@@ -202,11 +202,11 @@ struct Obj.EdId:59,91 // "Ocean Bottle", "Sign"
 struct MapQuest
     byte      T // Mission Type
     byte      m2stats[4]      (T == 2) // ?
-    int       Todo            (T == 1 || T == 3 || T == 4) // ?
+    int       Todo            ((T == 1) || (T == 3) || (T == 4)) // ?
     short     Artifacts[byte] (T == 5)
     int       Creatures[byte] (T == 6) // 16:type, 16:quantity
     int       Resources[7]    (T == 7)
-    byte      Todo2           (T == 8 || T == 9)
+    byte      Todo2           ((T == 8) || (T == 9))
     int       Limit           (T != 0)
     MapString Intro           (T != 0)
     MapString Meanwhile       (T != 0)
@@ -229,12 +229,12 @@ struct Obj.EdId:83 // "Seer's Hut"
     byte              ArtifactId (Version == ROE)
     MapQuest          Quest (Version != ROE)
     MapSeerRewardType R (Quest.T > 0)
-    int   Count      (R == EXPERIENCE || R == MANA_POINTS)
-    byte  Count      (R == MORALE_BONUS || R == LUCK_BONUS)
+    int   Count      ((R == EXPERIENCE) || (R == MANA_POINTS))
+    byte  Count      ((R == MORALE_BONUS) || (R == LUCK_BONUS))
     byte  ResId      (R == RESOURCES)
     int   ResCnt     (R == RESOURCES)
-    byte  SkillId    (R == PRIMARY_SKILL || R == SECONDARY_SKILL)
-    byte  SkillCnt   (R == PRIMARY_SKILL || R == SECONDARY_SKILL)
+    byte  SkillId    ((R == PRIMARY_SKILL) || (R == SECONDARY_SKILL))
+    byte  SkillCnt   ((R == PRIMARY_SKILL) || (R == SECONDARY_SKILL))
     short ArtifactId (R == ARTIFACT)
     byte  SpellId    (R == SPELL)
     short MonId      (R == CREATURE)
@@ -252,6 +252,7 @@ struct Obj.EdId:81 // "Scholar"
 
 struct Obj.EdId:33,219 // "Garrison", "Garrison"
     PlayerColor  Color
+    byte         Unk1[3]
     MapCreatures Creatures[7]
     bool         Removable (Version > ROE)
     byte         Unk1[8]
@@ -351,7 +352,7 @@ enum Behavior byte
 const MAP_PLAYERS          8
 const MAP_HEROES         156
 const MAP_PRIMARY_SKILLS   4
-const MAP_RESOURCES        8
+const MAP_RESOURCES        7
 
 const MAP_FACTIONS  9 (Version > ROE)
 const MAP_FACTIONS  8 (Version == ROE)
@@ -436,12 +437,12 @@ struct VCondition
     bool AppliesToAI
     // no AllowNoneAsWell []
     VConditionArt (VCon == ACQUIRE_ARTIFACT)
-    VConditionQObj (VCon == CREATURES || VCon == RESOURCES)
+    VConditionQObj ((VCon == CREATURES) || (VCon == RESOURCES))
     // no AppliesToAI []
     VConditionUpgTown (VCon == UPGRADE_TOWN)
     // No AppliesToAI checkbox for DEFEAT_MONSTER
     // No check-boxes at all for DEFEAT_HERO and GRAIL
-    VLConditionAtPos (VCon >= GRAIL && VCon <= DEFEAT_MONSTER)
+    VLConditionAtPos ((VCon >= GRAIL) && (VCon <= DEFEAT_MONSTER))
     //TODO There is no AllowNoneAsWell check-box at the editor
     VConditionObjAtPos (VCon == TRANSPORT_ARTIFACT)
 
@@ -450,7 +451,7 @@ struct WinCondition
     VCondition (VCon != NONE)
 
 struct LCondition
-    VLConditionAtPos (LCon == TOWN || LCon == HERO)
+    VLConditionAtPos ((LCon == TOWN) || (LCon == HERO))
     int Quantity (LCon == TIME)
 
 struct LooseCondition
@@ -469,7 +470,7 @@ struct Rumor
 
 struct HeroArts
     ArtId Arts[16]
-    // ArtId Mach4
+    ArtId Mach4 (Version > AB) // Why have I commented this out?
     ArtId SpellB
     ArtId Misc5 (Version > ROE)
     byte  Unk1 (Version == ROE)

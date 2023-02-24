@@ -72,15 +72,51 @@ class FFDNode
     public void FromStruct(FFD::SNode * = nullptr);
     public void FromField();
     public ~FFDNode();
+
+    //PERHAPS all of these As.* must handle the _hk flag
     public String AsString();
-    public inline int AsInt() const
+    public inline FFDNode * Hash(const FFDNode * key) const
     {
+        // auto sn = key->FieldNode ();
+        if (_data.Length () > 0) {
+            //LATER either construct a new FFDNode to just use its AsInt() -
+            //      doesn't sound too bright to me; or use distinct functions:
+            //      IntHash for example
+            /*auto ofs = sn->DType->Size * key->AsInt ();
+            auto buf = _data.operator byte * () + ofs;
+            switch (sn->DType->Size) {
+                case 1: return static_cast<byte>(*buf);
+                case 2: return static_cast<short>(*buf);
+                case 4: return static_cast<int>(*buf);
+                default: H3R_ENSURE(0, "Unknown hash key size")
+            }*/
+            H3R_ENSURE(0, "Implement me: int hash(key)")
+        }
+        else if (_fields.Count () > 0)
+            return _fields[key->AsInt (key->_ht)];
+        else
+            H3R_ENSURE(0, "Empty HashTable")
+    }
+    public inline int AsInt(FFDNode * ht = nullptr) const
+    {
+        int result {};
         switch (_data.Length ())
         {
-            case 1: case 2: case 4:
-                return static_cast<int>(*(_data.operator byte * ()));
+            case 1:
+                result = static_cast<int>(*(_data.operator byte * ())); break;
+            case 2: result = static_cast<int>(
+                *(reinterpret_cast<short *>(_data.operator byte * ()))); break;
+            case 4: result = static_cast<int>(
+                *(reinterpret_cast<int *>(_data.operator byte * ()))); break;
             default: H3R_ENSURE(0, "Don't request that AsInt")
         }
+        if ((_hk && ! ht) || (ht && ht != _ht)) {//TODO test-me
+            H3R_ENSURE(nullptr != _ht, "HashKey without a HashTable")
+            auto sn = _ht->FieldNode ();
+            H3R_ENSURE(sn->DType->IsIntType (), "HashTable<not int>")
+            result = _ht->Hash (this)->AsInt ();
+        }
+        return result;
     }
     public inline bool Enabled() const { return _enabled; }
 
@@ -133,8 +169,12 @@ class FFDNode
     // Cache their Enabled state, based on the evaluated Expr.
     // Returns the SNode of the symbol that was found.
     // Use when machtype, enum, or const have Expression on them.
+    // "resolve_only" is true when you don't need a value from the stream.
+    // "resolve_only" is false for implicit "bool" for example: "(bool)", where
+    // bool is a machine type, and true for some machine type whose size depends
+    // on runtime bool evaluation.
     private FFD::SNode * ResolveSNode(const String &, int & value,
-        FFD::SNode * sn);
+        FFD::SNode * sn, bool resolve_only = false);
     private void ResolveSymbols(ExprCtx &, FFD::SNode * sn, FFDNode * base);
     // sn - expression node, base - current struct node
     private bool EvalBoolExpr(FFD::SNode * sn, FFDNode * base);
@@ -160,13 +200,16 @@ class FFDNode
             if (_base) return _base->NodeByName (name);
             return nullptr;
         }
+
         for (auto n : _fields) {
             auto sn = n->FieldNode ();
             // Dbg << "  NodeByName: q:" << name << ", vs:" << sn->Name
             //     << EOL;
             if (n->_enabled && sn->Name == name) return n;
         }
+
         if (_base) return _base->NodeByName (name);
+
         return nullptr;
     }
     public inline FFDNode * FindHashTable(const String & type_name)
@@ -177,9 +220,9 @@ class FFDNode
         }
         for (auto n : _fields) {
             auto sn = n->FieldNode ();
-            Dbg << " field: " << sn->Name << ", type: "
+            /*Dbg << " field: " << sn->Name << ", type: "
                 << (sn->DType ? sn->DType->Name : "none")
-                << ", arr. dims: " << sn->ArrDims () << EOL;
+                << ", arr. dims: " << sn->ArrDims () << EOL;*/
             if (n->_enabled && 1 == sn->ArrDims ()
                 && sn->DType && sn->DType->Name == type_name) return n;
         }

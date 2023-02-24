@@ -167,4 +167,23 @@ String String::Replace(const char * what, const char * with)
     else return *this;
 }
 
+List<String> String::Split(char token)
+{
+    List<String> list {};
+    auto buf = AsByteArray ();
+    auto a = buf;
+    auto b = buf + Length ();
+    for (int i = 0; i < Length (); i++) {
+        if (token == buf[i]) {
+            list.Add (String {a, i});
+            while (i < Length () && token == buf[i]) i++; // skip .
+            a = buf + i; // i points right after a .
+                         // i++ will move it to the next symbol
+        }
+    }
+    if (b-a > 0)
+        list.Add (String {a, (int)(b-a)});
+    return static_cast<List<String> &&>(list);
+}
+
 NAMESPACE_H3R

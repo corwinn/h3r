@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r.h"
 #include "h3r_array.h"
+#include "h3r_list.h"
 
 H3R_NAMESPACE
 
@@ -145,6 +146,9 @@ class String final
     }
 
     public String Replace(const char *, const char *);
+
+    // One char token, for now.
+    public List<String> Split(char token);//TODO testme
 
     public bool Empty() const { return ! (Length () > 0); }
 };// String

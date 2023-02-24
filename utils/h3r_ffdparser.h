@@ -128,7 +128,18 @@ class FFDParser
     // When "unicode", this shall become "const byte * + len"
     public static bool SymbolValid1st(byte);
     public static bool SymbolValidNth(byte);
-    public String ReadValueList();
+
+    public struct VLItem final // ValueList Item
+    {
+        public int A {};
+        public int B {};
+        public inline bool Contains(int value) const
+        {
+            return value >= A && value <= B;
+        }
+    };
+    public List<VLItem> ReadValueList();
+
     public inline void SkipOneByte() { _i++; }
 
     public inline bool HasMoreData() { return _i < _len; }

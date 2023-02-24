@@ -60,6 +60,8 @@ FFDNode::FFDNode(FFD::SNode * n, Stream * br, FFDNode * base,
 // example 1: open, symbol, op, symbol, close
 // example 2: open, symbol, op, open, symbol, op, symbol, close, close
 // example 3: open, symbol, close
+// ( ( {T} == 1 ) || ( {T} == 3   ) ||  ( {T} ==  4  ) )
+// 0 1  2  3  4 5  6 7  8  9  10 11 12 13  14 15 16 17 18
 template <typename F> bool eval_expr(
     const List<FFDParser::ExprToken> & e, F resolve_symbols, int & id)
 {
@@ -70,7 +72,7 @@ template <typename F> bool eval_expr(
         switch (e[id].Type) {
             case FFDParser::ExprTokenType::Open: {
                 Dbg << "( ";
-                H3R_ENSURE(ctx.i < 2, "Wrong number of arguments")
+                H3R_ENSURE(ctx.i < 2, "opn: Wrong number of arguments")
                 ctx.v[ctx.i++] = eval_expr (e, resolve_symbols, ++id);
             } break;
             case FFDParser::ExprTokenType::Close: {
@@ -79,7 +81,7 @@ template <typename F> bool eval_expr(
             }
             case FFDParser::ExprTokenType::Symbol: {
                 Dbg << "{" << e[id].Symbol << "} ";
-                H3R_ENSURE(ctx.i < 2, "Wrong number of arguments")
+                H3R_ENSURE(ctx.i < 2, "sym: Wrong number of arguments")
                 if (0 == ctx.i) ctx.LSymbol = e[id].Symbol;
                 else if (1 == ctx.i) ctx.RSymbol = e[id].Symbol;
                 ctx.i++;
@@ -87,14 +89,23 @@ template <typename F> bool eval_expr(
             } break;
             case FFDParser::ExprTokenType::Number: {
                 Dbg << e[id].Value << " ";
-                H3R_ENSURE(ctx.i < 2, "Wrong number of arguments")
+                H3R_ENSURE(ctx.i < 2, "num: Wrong number of arguments")
                 ctx.v[ctx.i++] = e[id].Value;
             } break;
             default: {
                 if (FFDParser::ExprTokenType::opN == e[id].Type)
                     ctx.n[ctx.i] = true;
-                else
-                    { ctx.op = e[id].Type; ctx.DbgPrint (); }
+                else {
+                    ctx.op = e[id].Type; ctx.DbgPrint ();
+                    if (2 == ctx.i) { // LR binary eval: a>b < c
+                        Dbg << "Ready to compute at id " << id;
+                        ctx.v[0] = ctx.Compute ();
+                        Dbg << ", evaluted to " << ctx.v[0] << EOL;
+                        ctx.i = 1;
+                        ctx.op = e[id].Type;
+                        ctx.n[0] = ctx.n[1] = false;
+                    }
+                }
                 break;
             }
         }
@@ -105,7 +116,7 @@ template <typename F> bool eval_expr(
 }// eval_expr
 
 FFD::SNode * FFDNode::ResolveSNode(const String & n, int & value,
-    FFD::SNode * sn)
+    FFD::SNode * sn, bool resolve_only)
 {//TODO cache me
     Dbg << "  ResolveSNode: requested symbol: " << n << EOL;
     H3R_ENSURE(sn->IsField (), "Field SNodes only!")
@@ -123,7 +134,7 @@ FFD::SNode * FFDNode::ResolveSNode(const String & n, int & value,
                     int ptr {};
                     sym->Enabled = eval_expr (sym->Expr,
                         [&](ExprCtx & ctx) {
-                            ResolveSymbols (ctx, sn, nullptr);
+                            ResolveSymbols (ctx, sn, this);
                         }, ptr);
                     sym_name = String {};
                 }
@@ -133,11 +144,20 @@ FFD::SNode * FFDNode::ResolveSNode(const String & n, int & value,
             }
             else
                 Dbg << "  ResolveSNode: resolved already" << EOL;
+            if (resolve_only) {//LATER evaluate all and report ambiguities
+                if (! sym->Enabled) continue;
+                else return sym; // return the 1st enabled one
+            }
             if (sym->Enabled) {//LATER detect conflicts (more than 1 enabled)
                 if (sym->IsIntConst ())
                     return value = sym->IntLiteral, sym;
-                else
-                    return value = sym->Size, sym;
+                else { // implicit symbol - like (bool); TODO complicates store
+                    H3R_ENSURE(sym->Size >= 1 && sym->Size <= 4,
+                        "Can't handle that size")
+                    int avalue {};
+                    _s->Read (&avalue, sym->Size);//TODO create FFDNode for it
+                    return value = avalue, sym;
+                }
             }
         }// sym->IsConst () || sym->IsMachType () || sym->IsEnum ()
     }// for (auto sym : sn->Base->NodesByName (n))
@@ -149,7 +169,6 @@ FFD::SNode * FFDNode::ResolveSNode(const String & n, int & value,
 void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
 {
     //TODO this needs serious re-factoring
-    //TODO add foo.bar.boo.mar.etc support
     //TODO match the formal spec. to the letter
     Dbg << "   resolve symbol: ";
     if (1 == ctx.i) Dbg << ctx.LSymbol; else Dbg << ctx.RSymbol;
@@ -175,9 +194,18 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
        //TODO already set? (on duplicate symbol name for example)
     }
     if (base) { // FFDNode
-        FFDNode * lsym {}, * rsym {};
-        if (! ctx.LSymbol.Empty ())
-            lsym = base->NodeByName (ctx.LSymbol);
+        FFDNode * lsym {base}, * rsym {};
+        if (! ctx.LSymbol.Empty ()) {
+            auto arr = static_cast<List<String> &&>(ctx.LSymbol.Split ('.'));
+            /*if (arr.Count () <= 1)
+                lsym = base->NodeByName (ctx.LSymbol);*/
+            for (int i = 0; i < arr.Count (); i++) {
+                Dbg << "NodeByName() Looking for " << arr[i] << EOL;
+                lsym = lsym->NodeByName (arr[i]);
+                H3R_ENSURE(nullptr != lsym, "NodeByName() field not found.")
+                Dbg << "NodeByName() found " << arr[i] << EOL;
+            }
+        }
         if (! ctx.RSymbol.Empty ())
             rsym = base->NodeByName (ctx.RSymbol);
         if (lsym && rsym) {
@@ -253,13 +281,16 @@ void FFDNode::EvalArray()
         if (! n->Arr[i].Name.Empty ()) { // [{symbol}]
             // Look at root; because there are no root arrays - the array is
             // a field in a struct (n->Base (and n->Base is a node in a DLL)).
+            // Dbg << " ++dim Looking for " << n->Arr[i].Name << EOL;
             auto m = n->Base->NodeByName (n->Arr[i].Name);
+            // Dbg << " ++dim still Looking for " << n->Arr[i].Name << EOL;
             if (! m) {
                 int value {};
                 // Look for conditional things at root (evaluate whatever could
                 // be evaluated; these are: "type", "enum" or "const" with bool.
                 // expressions - depending on runtime data values)
                 m = ResolveSNode (n->Arr[i].Name, value, n);
+                // Dbg << " ++dim still2 Looking for " << n->Arr[i].Name << EOL;
             }
             if (m && m->IsIntConst ()) { // [FOO_CONST]
                 _arr_dim[i] = m;
@@ -322,7 +353,7 @@ void FFDNode::EvalArray()
         if ("MapString" == n->Base->Name) //LATER by attribute: [Text]
             Dbg << " ++text: " << AsString () << EOL;
     }
-    else {
+    else {// array item
         int psize = n->DType->PrecomputeSize ();
         if (psize > 0) { // 41472 TTile for example
             Dbg << " ++item pre-computed size: " << psize << " bytes" << EOL;
@@ -338,12 +369,14 @@ void FFDNode::EvalArray()
             //       - it has to keep psize and all arr. dim. sizes; that would
             //         be simple, save for jagged arrays
         }
-        else {
+        else {// array struct item
             for (int i = 0 ; i < final_size; i++) {
                 Dbg << " +++item [" << i << "] (dynamic)" << EOL;
                 // These are unconditional because there is no per-array item,
                 // boolean evaluation. A.k.a. - the entire array is present.
                 FFDNode * f {};
+                Dbg << "ArrayField of " << _n->Name
+                    << " named " << _f->Name << EOL;
                 H3R_CREATE_OBJECT(f, FFDNode) {_n, _s, this};
                 _fields.Add (f);
             }
@@ -354,6 +387,12 @@ void FFDNode::EvalArray()
 void FFDNode::FromField()
 {
     Dbg << " field " << _n->Name << EOL;
+    if (! _n->DType) {
+        int unused {};
+        bool resolve_only {true};
+        Dbg << " Resolving " << _n->DTypeName << EOL;
+        _n->DType = ResolveSNode (_n->DTypeName, unused, _n, resolve_only);
+    }
     H3R_ENSURE(nullptr != _n->DType, "field->DType can't be null")
 
     /*_enabled = _n->HasExpr () ? EvalBoolExpr () : true;
@@ -388,18 +427,24 @@ void FFDNode::FromField()
 
 void FFDNode::FromStruct(FFD::SNode * sn)
 {
+    bool don_use_f = sn != nullptr;
     if (! sn) sn = _n; // temporary: allows for the recursive detour below
 
-    if (sn->VListItem) {
+    // handled below at for (auto n : sn->Fields) {
+    /*if (sn->VListItem) {
         Dbg << "FFD::Node::FromStruct: parse the ValueList" << EOL;
         return;
-    }
+    }*/
+
+    //TODO really, remove that recursive nice-mountain-view
     if (_f) Dbg << " field " << _f->Name << " ";
     Dbg << "struct lvl " << _level << ": "  << sn->Name << EOL;
-    if (_f && _f->Array) { // "Foo bar[]" that has already passed the eval below
+    if (! don_use_f && _f && _f->Array) {
+        // "Foo bar[]" that has already passed the eval below
         EvalArray ();
         return;
     }
+
     for (auto n : sn->Fields) {
         FFDNode * f {};
         if (n->HasExpr () && ! EvalBoolExpr (n, this)) {
@@ -416,8 +461,45 @@ void FFDNode::FromStruct(FFD::SNode * sn)
             else
                 H3R_CREATE_OBJECT(f, FFDNode) {n->DType, _s, this, n};
         }
-        else
-            H3R_CREATE_OBJECT(f, FFDNode) {n, _s, this};
+        else {
+            if (n->Variadic) {
+                Dbg << "Variadic field; - a dynamic composite field" << EOL;
+                Dbg << "  ++var Dynamic Name: " << n->Name << EOL;
+                List<String> names =
+                    static_cast<List<String> &&> (n->Name.Split ('.'));
+                for (int i = 0; i < names.Count (); i++)
+                    Dbg << "  ++var: name[" << i << "]: " << names[i] << EOL;
+                // end of String::Split ('.');
+                FFDNode * fn {this}; //TODO this code repeats at Resolve above
+                for (int i = 0; i < names.Count (); i++) {
+                    fn = fn->NodeByName (names[i]);
+                    H3R_ENSURE(nullptr != fn, "  ++var: unk. field.")
+                    // FFDNode * obj {};
+                    if (fn->_hk) {
+                        Dbg << "  ++var: Hash(" << fn->AsInt (fn->_ht) << ")"
+                            << EOL;
+                        fn = fn->_ht->Hash (fn);
+                        H3R_ENSURE(nullptr != fn, "  ++var: unk. obj.")
+                        H3R_ENSURE(fn->_base->_array, "  ++var: not-arr. obj.")
+                        Dbg << "  ++var: obj[" << i << "]: ."
+                            << fn->_base->FieldNode ()->Name << EOL;
+                    }
+                    else
+                        Dbg << "  ++var: obj[" << i << "]: ."
+                            << fn->FieldNode ()->Name << EOL;
+                }
+                Dbg << "  ++var: value-list value: " << fn->AsInt () << EOL;
+                auto composite = sn->FindVListItem (n->Name, fn->AsInt ());
+                // It is allowed to be not found: no more fields.
+                if (composite) {
+                    Dbg << "composite: " << composite->Name;
+                        composite->PrintValueList ();
+                    FromStruct (composite);
+                }
+            }// (n->Variadic)
+            else
+                H3R_CREATE_OBJECT(f, FFDNode) {n, _s, this};
+        }
         _fields.Add (f);
     }
 }// FFD::Node::FromStruct()

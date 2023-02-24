@@ -179,8 +179,9 @@ bool FFD::SNode::ParseStruct(FFDParser & parser)
         VListItem = true;
         parser.SkipOneByte ();
         H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete value-list")
-        ValueList = static_cast<String &&>(parser.ReadValueList ());
-        Dbg << "Struct: ValueList: " << ValueList << EOL;
+        ValueList =
+            static_cast<List<FFDParser::VLItem > &&>(parser.ReadValueList ());
+        // Dbg << "Struct: ValueList: " << ValueList << EOL;
     }
     // skip remaining white-space(s) and comment(s)
     H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete struct")// struct .*EOF
@@ -366,6 +367,8 @@ bool FFD::SNode::ParseConst(FFDParser & parser)
     else {
         Const = FFD::SConstType::Int;
         IntLiteral = parser.ParseIntLiteral ();
+        Size = 4;
+        if (IntLiteral < 0) Signed = true;
         Dbg << "Const: integer: " << IntLiteral << EOL;
     }
     if (parser.IsEol ()) { parser.SkipEol (); return true; }
@@ -639,6 +642,7 @@ static void resolve_all_types(FFD::SNode * n)
     FFDNode * data_root {};
     Dbg << "Parsing " << f << EOL;
     H3R_CREATE_OBJECT(data_root, FFDNode) {ffd._root, s};
+    Dbg << "Parsed " << f << EOL;
     if (s != &fh2) H3R_DESTROY_OBJECT(s, Stream)
     return data_root;
 }// FFD::File2Tree()

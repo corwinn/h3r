@@ -231,12 +231,33 @@ void FFDParser::SkipCommentWhitespaceSequence()
     }
 }
 
-String FFDParser::ReadValueList()
+// String FFDParser::ReadValueList()
+List<FFDParser::VLItem> FFDParser::ReadValueList()
 {
-    int j = _i;
-    ReadWhile ("val-list", [&](){ return
-        is_decimal_number (_buf[_i]) || '-' == _buf[_i] || ',' == _buf[_i]; });
-    return static_cast<String &&>(String {_buf+j, _i-j});
+    List<FFDParser::VLItem> result {};
+    Dbg << "val-list: ";
+    bool a {};
+    for (;; a = true) {
+        FFDParser::VLItem itm {};
+        itm.A = ParseIntLiteral ();
+        if (a) Dbg << ", ";
+        if ('-' == _buf[_i]) {
+            _i++;
+            H3R_ENSURE_LFFD(HasMoreData (), "Incomplete val-list") // -EOF
+            itm.B = ParseIntLiteral (); Dbg << itm.A << "-" << itm.B;
+        }
+        else {
+            itm.B = itm.A; Dbg << itm.A;
+        }
+        H3R_ENSURE_LFFD(itm.A <= itm.B, "Wrong val-list: a can't be > b")
+        result.Add (itm);
+        if (',' != _buf[_i]) break; else {
+            _i++;
+            H3R_ENSURE_LFFD(HasMoreData (), "Incomplete val-list") // ,EOF
+        }
+    }
+    Dbg << EOL;
+    return static_cast<List<FFDParser::VLItem> &&>(result);
 }
 
 void FFDParser::ReadVariadicField()

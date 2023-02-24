@@ -149,7 +149,51 @@ class FFD
 
         public bool Variadic {};  // "..." Type == SType::Field
         public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
-        public String ValueList {};   // Variadic: value list :n,m,p-q,...
+        // public String ValueList {};   // Variadic: value list :n,m,p-q,...
+        // Variadic: value list :n,m,p-q,...
+        public List<FFDParser::VLItem> ValueList {};
+        public inline void PrintValueList() const
+        {
+            for (auto & itm : ValueList)
+                Dbg << " itm[" << itm.A << ";" << itm.B << "]";
+            Dbg << EOL;
+        }
+        public inline bool InValueList(int value) const
+        {
+            for (auto & itm : ValueList) {
+                // Dbg << "InValueList( " << value << ", a: " << itm.A
+                //     << ", b: " << itm.B << EOL;
+                if (itm.Contains (value)) return true;
+            }
+            return false;
+        }
+        public inline SNode * FindVListItem(const String & dname, int value)
+        {//TODO this is the same as NodeByName, NodesByName, etc. unify them
+         //TODO more than one is an error: report it
+            FFD::SNode * result = {};
+            WalkBackwards([&](FFD::SNode * node) {
+                // Dbg << "FindVListItem(" << dname << " vs " << node->Name
+                //     << EOL;
+                if (node->VListItem && node->Usable () && node->Name == dname
+                    && node->InValueList (value)) {
+                    result = node;
+                    return false;
+                }
+                return true;
+            });
+            if (nullptr == result && Next)
+                Next->WalkForward([&](FFD::SNode * node) {
+                    // Dbg << "FindVListItem(" << dname << " vs " << node->Name
+                    //    << EOL;
+                    if (node->VListItem && node->Usable ()
+                        && node->Name == dname && node->InValueList (value)) {
+                        result = node;
+                        return false;
+                    }
+                    return true;
+                });
+            return result;
+        }
 
         public bool Composite {}; // replace it with FindDType (Name)
 
@@ -160,7 +204,7 @@ class FFD
         public bool Enabled {}; // true when Expr has evaluated to it
         public bool Resolved {}; // true when Expr has been evaluated
         public bool inline Usable() const
-        {
+        {//TODO report ! Resolved
             return Expr.Count () <= 0 || (Resolved && Enabled);
         }
 
@@ -214,6 +258,13 @@ class FFD
         public inline bool IsValidArrDim() const
         {
             return IsMachType () || IsEnum ();
+        }
+        // 32 bit int, mind you; also include the ! Fp, when floating-point
+        // types come around
+        public inline bool IsIntType() const
+        {
+            return (IsMachType () || IsEnum () || IsIntConst ())
+                && (Size >= 1 && Size <= 4);
         }
         // By value. Allow many attributes for custom extensions.
         public SNode * GetAttr(const String & query)
