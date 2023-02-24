@@ -370,8 +370,8 @@ struct PlayerCantPlay
 struct PlayerCanPlay
     Behavior AITactics
     byte Unk2 (Version >= SOD) // 16-bit ?
-    byte Unk3 (Version != ROE) // 16-bit ? AllowedFactions
-    byte AllowedFactions
+    byte AllowedFactions (Version == ROE) // 16-bit ? AllowedFactions
+    short AllowedFactions (Version != ROE)
     bool RandomFaction
     bool HasMainTown
     bool GenAtMT (HasMainTown && (Version != ROE))
