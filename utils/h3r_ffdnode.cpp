@@ -499,7 +499,7 @@ void FFDNode::FromStruct(FFD::SNode * sn)
             }// (n->Variadic)
             else
                 H3R_CREATE_OBJECT(f, FFDNode) {n, _s, this};
-        }
+        }// ! (n->DType && n->DType->IsStruct ())
         _fields.Add (f);
     }
 }// FFD::Node::FromStruct()

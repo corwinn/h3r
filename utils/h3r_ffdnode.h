@@ -230,6 +230,31 @@ class FFDNode
         return nullptr;
     }
 
+    public inline void PrintTree(int f_id = -1)
+    {
+        for (int i = 0; i < _level; i++) {
+            if (_level-1 == i) {
+                if (_base && _base->_fields.Count () - 1 == f_id) Dbg << "'-";
+                else Dbg << "|-";
+            }
+            else if (! (i % 2)) Dbg << "| ";
+            else Dbg << "  ";
+        }
+        Dbg << "Node";
+        if (f_id >= 0) Dbg << Dbg.Fmt ("[%5d]", f_id);
+        Dbg << " level " << _level << ": ";
+        auto fn = FieldNode ();
+        if (fn) {
+            if (fn->Name.Empty ()) Dbg << "{empty name} ???";
+            else Dbg << fn->Name;
+        }
+        Dbg << EOL;
+        for (int i = 0; i < _fields.Count (); i++) {
+            if (! _fields[i]) Dbg << "{null field} ???" << EOL;
+            else _fields[i]->PrintTree (i);
+        }
+    }
+
 #undef public
 #undef private
 };// FFDNode
