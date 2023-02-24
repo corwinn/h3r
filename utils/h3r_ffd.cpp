@@ -255,10 +255,13 @@ bool FFD::SNode::ParseField(FFDParser & parser)
             String hash_key_type = static_cast<String &&>(
                 parser.StringAt (j, parser.Tell ()-1-j));
             Dbg << "Field: hash. Key type: " << hash_key_type << EOL;
-            DType = Base->NodeByName (hash_key_type);
+            DType = Base->NodeByName (hash_key_type); // could be conditional
             parser.SkipOneByte (); // move after "<>"
             H3R_ENSURE_FFD(parser.HasMoreData (), "wrong hash field") // .*<>EOF
             // Type - array Type; look for a field of said array type.
+            // Right now single key is supported only e.g. the type is
+            // implicitly Foo[] so no reason to store and query the [] as well;
+            // composite keys might become available much, much, ..., later.
             //LATER why matching by type only?
             HashType = static_cast<String &&>(parser.ReadSymbol ('['));
             H3R_ENSURE_FFD(parser.HasMoreData (), "wrong hash field") // .*[EOF
@@ -270,6 +273,7 @@ bool FFD::SNode::ParseField(FFDParser & parser)
             Dbg << "Field: hash. HashType: " << HashType << EOL;
             // Name - required; hash fields can't be nameless
             parser.SkipLineWhitespace ();
+            // Can't be an array.
             Name = static_cast<String &&>(parser.ReadSymbol ());
             Dbg << "Field: hash. Name: " << Name << EOL;
             break;
@@ -302,7 +306,7 @@ bool FFD::SNode::ParseField(FFDParser & parser)
                 H3R_ENSURE_FFD(parser.HasMoreData (), "Incomplete array")// [EOF
                 H3R_ENSURE_FFD(! parser.IsEol (), "Incomplete array") // [EOL
                 Array = true;
-                for (int arr = 0; arr < 3; arr++) {
+                for (int arr = 0; arr < FFD_MAX_ARR_DIMS; arr++) {
                     if (parser.SymbolValid1st ())
                         Arr[arr].Name =
                             static_cast<String &&>(parser.ReadArrDim ());
@@ -321,7 +325,8 @@ bool FFD::SNode::ParseField(FFDParser & parser)
                     if (! parser.AtArrStart ()) break;
                     else {
                         parser.SkipOneByte ();
-                        H3R_ENSURE_FFD(arr != 2, "array: too many dimensions")
+                        H3R_ENSURE_FFD(arr != (FFD_MAX_ARR_DIMS-1),
+                            "array: too many dimensions")
                     }
                     H3R_ENSURE_FFD(parser.HasMoreData (),
                         "incomplete array") // [EOF
@@ -496,7 +501,7 @@ List<FFD::SNode *> FFD::SNode::NodesByName(const String & query)
 void FFD::SNode::DbgPrint()
 {
     Dbg << "+" << TypeToString () << ": ";
-    if (HashKey) Dbg << "[hk]";
+    if (HashKey) Dbg << "[hk;HashType:" << HashType << "]";
     if (Array) Dbg << "[arr]";
     if (Variadic) Dbg << "[var]";
     if (VListItem) Dbg << "[vli]";

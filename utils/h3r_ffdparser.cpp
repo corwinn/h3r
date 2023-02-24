@@ -261,7 +261,7 @@ String FFDParser::ReadArrDim()
 String FFDParser::ReadStringLiteral()
 {
     H3R_ENSURE_LFFD(_i < _len-1, "Incomplete string literal") // "EOF
-    //LATER fix: yep, it shall read "a"a"a"
+    //LATER fix: yep, it shall read "a"a"a"; also, add \-ing
     return static_cast<String &&>(ReadExpression ('"', '"'));
 }
 

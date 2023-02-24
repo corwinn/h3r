@@ -108,13 +108,17 @@ FFD::SNode * FFDNode::ResolveSNode(const String & n, int & value,
     FFD::SNode * sn)
 {//TODO cache me
     Dbg << "  ResolveSNode: requested symbol: " << n << EOL;
+    H3R_ENSURE(sn->IsField (), "Field SNodes only!")
     static String sym_name {};
     for (auto sym : sn->Base->NodesByName (n)) {
-        if (sym->IsIntConst () || sym->IsMachType () || sym->IsEnum ()) {
+        Dbg << "  ResolveSNode: symbol: " << sym->Name << EOL;
+        if (sym->IsConst () || sym->IsMachType () || sym->IsEnum ()) {
             H3R_ENSURE(sym_name != sym->Name, "Don't do that")
             if (! sym->Resolved) {
+                Dbg << "  ResolveSNode: resolving ..." << EOL;
                 sym->Resolved = true;
                 if (sym->Expr.Count () > 0) {
+                    Dbg << "  ResolveSNode: has an expr. evaluating ..." << EOL;
                     sym_name = sym->Name;
                     int ptr {};
                     sym->Enabled = eval_expr (sym->Expr,
@@ -125,15 +129,18 @@ FFD::SNode * FFDNode::ResolveSNode(const String & n, int & value,
                 }
                 else
                     sym->Enabled = true;
+                Dbg << "  ResolveSNode: enabled: " << sym->Enabled << EOL;
             }
+            else
+                Dbg << "  ResolveSNode: resolved already" << EOL;
             if (sym->Enabled) {//LATER detect conflicts (more than 1 enabled)
                 if (sym->IsIntConst ())
                     return value = sym->IntLiteral, sym;
                 else
                     return value = sym->Size, sym;
             }
-        }
-    }
+        }// sym->IsConst () || sym->IsMachType () || sym->IsEnum ()
+    }// for (auto sym : sn->Base->NodesByName (n))
     Dbg << "  not found at _n->Base" << EOL;
     return nullptr;
 }// FFDNode::ResolveSNode()
@@ -239,7 +246,7 @@ void FFDNode::EvalArray()
     Dbg << " +field, array of " << n->DType->Name << EOL;
     // array size
     int arr_size {}, final_size {1};
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < FFD_MAX_ARR_DIMS; i++) {
         if (n->Arr[i].None ()) break;
         Dbg << " ++dim type: "; n->Arr[i].DbgPrint (); Dbg << EOL;
         // Is it an implicit machine type?
@@ -270,7 +277,7 @@ void FFDNode::EvalArray()
                 Dbg << " ++dim size (implicit): " << m->Size << " bytes" << EOL;
                 H3R_ENSURE(m->Size >= 0 && m->Size <= 4, "array dim overflow")
                 _s->Read (&arr_size, m->Size);
-                Dbg << " ++dim value (implicit): " << arr_size << " bytes"
+                Dbg << " ++dim value (implicit): " << arr_size << " items"
                     << EOL;
             }
             else { // not a root SNode; no point searching at Fields
@@ -325,7 +332,11 @@ void FFDNode::EvalArray()
             // read once
             _data.Resize (final_size);
             _s->Read (_data.operator byte * (), final_size);
-            //LATER accessing those is complicated
+            //LATER accessing those is complicated:
+            //       - I have to provide n-dim access
+            //       - it has to know it is at _data, not at _fields
+            //       - it has to keep psize and all arr. dim. sizes; that would
+            //         be simple, save for jagged arrays
         }
         else {
             for (int i = 0 ; i < final_size; i++) {
@@ -361,6 +372,17 @@ void FFDNode::FromField()
         _signed = data_type->Signed;
         _s->Read (_data.operator byte * (), data_type->Size);
         Dbg << " field, data: "; PrintByteSequence ();
+        // HashKey
+        if (_n->HashKey) {
+            _hk = true;
+            Dbg << " field, hk; looking for ttype: " << _n->HashType << EOL;
+            _ht = FindHashTable (_n->HashType);
+            H3R_ENSURE(nullptr != _ht, "Hash table not found")
+            auto ht_fn = _ht->FieldNode ();
+            auto ht_base_fn = _ht->_base->FieldNode ();
+            Dbg << " field, hk, table: " << ht_base_fn->Name << "."
+                << ht_fn->Name << EOL;
+        }
     }
 }// FFDNode::FromField()
 
@@ -372,6 +394,7 @@ void FFDNode::FromStruct(FFD::SNode * sn)
         Dbg << "FFD::Node::FromStruct: parse the ValueList" << EOL;
         return;
     }
+    if (_f) Dbg << " field " << _f->Name << " ";
     Dbg << "struct lvl " << _level << ": "  << sn->Name << EOL;
     if (_f && _f->Array) { // "Foo bar[]" that has already passed the eval below
         EvalArray ();

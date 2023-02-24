@@ -59,10 +59,12 @@ class FFDNode
     private bool _enabled {true}; // set by bool expr.
     private bool _signed {}; // signed machine types
     private bool _array {}; // array of struct
+    private bool _hk {}; // hash key
     private FFD::SNode * _arr_dim[3] {}; // references; store the dimensions
     private List<FFDNode *> _fields {}; //TODO DL-list-me
     private int _level {};
     private FFDNode * _base {};
+    private FFDNode * _ht {}; // hash table - referred by a hash key node
     // node, stream, base_node, field_node (has DType and Array: responsible for
     // "node" processing)
     public FFDNode(FFD::SNode *, Stream *, FFDNode * base = nullptr,
@@ -147,6 +149,7 @@ class FFDNode
             Dbg << Dbg.Fmt (" %002X", _data[i]);
         Dbg << "]" << EOL;
     }
+    public inline FFD::SNode * FieldNode() const { return _f ? _f : _n; }
     public inline FFDNode * NodeByName(const String & name)
     {
         //LATER
@@ -157,13 +160,30 @@ class FFDNode
             if (_base) return _base->NodeByName (name);
             return nullptr;
         }
-        // look locally for now; array of struct not handled
         for (auto n : _fields) {
-            // Dbg << "  NodeByName: q:" << name << ", vs:" << n->_n->Name
-            //    << EOL;
-            if (n->_enabled && n->_n->Name == name) return n;
+            auto sn = n->FieldNode ();
+            // Dbg << "  NodeByName: q:" << name << ", vs:" << sn->Name
+            //     << EOL;
+            if (n->_enabled && sn->Name == name) return n;
         }
         if (_base) return _base->NodeByName (name);
+        return nullptr;
+    }
+    public inline FFDNode * FindHashTable(const String & type_name)
+    {
+        if (_array) { // no point looking in it
+            if (_base) return _base->FindHashTable (type_name);
+            return nullptr;
+        }
+        for (auto n : _fields) {
+            auto sn = n->FieldNode ();
+            Dbg << " field: " << sn->Name << ", type: "
+                << (sn->DType ? sn->DType->Name : "none")
+                << ", arr. dims: " << sn->ArrDims () << EOL;
+            if (n->_enabled && 1 == sn->ArrDims ()
+                && sn->DType && sn->DType->Name == type_name) return n;
+        }
+        if (_base) return _base->FindHashTable (type_name);
         return nullptr;
     }
 

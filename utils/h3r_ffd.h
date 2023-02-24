@@ -83,7 +83,7 @@ class FFD
     {
         public String Name {}; // Empty when Value is used
         public int Value {}; // 0 when Name is used
-        public inline bool None() { return Name.Empty () && Value <= 0; }
+        public inline bool None() const { return Name.Empty () && Value <= 0; }
         public inline void DbgPrint()
         {
             if (None ()) return;
@@ -139,7 +139,13 @@ class FFD
         public String HashType {};
 
         public bool Array {};     // Is it an array
-        public ArrDimItem Arr[3] {};
+        public ArrDimItem Arr[FFD_MAX_ARR_DIMS] {};
+        public inline int ArrDims() const
+        {
+            for (int i = 0; i < FFD_MAX_ARR_DIMS; i++)
+                if (Arr[i].None ()) return i;
+            return FFD_MAX_ARR_DIMS;
+        }
 
         public bool Variadic {};  // "..." Type == SType::Field
         public bool VListItem {}; // Struct foo:value-list ; "foo" is at "Name"
@@ -204,6 +210,7 @@ class FFD
         {
             return SType::Const == Type && SConstType::Int == Const;
         }
+        public inline bool IsConst() const { return SType::Const == Type; }
         public inline bool IsValidArrDim() const
         {
             return IsMachType () || IsEnum ();
