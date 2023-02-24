@@ -80,7 +80,7 @@ expression: a script being evaluated when needed (always enclosed in ()):
               - arithmetic - not implemented yet <=> not needed yet;
 
 {struct} sub-nodes: {symbol} [{symbol}] [boolean {expression}] [{comment}]
-                    The [] denote: optional.
+                    The [] denotes optional.
                     Important: if there is exactly one {symbol}, its sub-nodes
                     shall be inserted in its place - a {composite} node.
                     {symbol}s have extras (the [] are syntax):
@@ -98,6 +98,19 @@ expression: a script being evaluated when needed (always enclosed in ()):
                     "foo.bar" will get the node named "foo" and then get its
                     sub-node named "bar".
                     The initial empty space is mandatory.
+
+                    {symbol}1<>{symbol}2 - marks symbol1 to be a key at a field
+                    of type symbol2; symbol resolution applies in order to find
+                    symbol2 (should this happen to lead to too much confision a
+                    lookup by struct.field_name shall be used instead); these
+                    lookup (hash) tables are almost always 1, rarely 2 - at the
+                    file formats I have dealt with, so this "type" lookup should
+                    be ok for starters - just make sure to use distinct name for
+                    the table type.
+                    The <> implies two data flow directions: 1 - the key value
+                    is read from the stream at the current offset; 2 - fields
+                    refering the key will not get its value, but the table value
+                    this keys is refering to.
 
 char-set: ASCII; bytes that shall reward you with an exception:
   [0;10), [11;13), [14;31], [127;255]
