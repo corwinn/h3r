@@ -38,16 +38,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+static int _mleak_track {};
+static int _mleak_track_c {};
+
 FFDNode::~FFDNode()
 {
+    _mleak_track++;
     for (int i = 0; i < _fields.Count (); i++)
         H3R_DESTROY_OBJECT(_fields[i], FFDNode)
+    Dbg << "destroyed nodes: " << _mleak_track << "/" << _mleak_track_c << EOL;
 }
 
 FFDNode::FFDNode(FFD::SNode * n, Stream * br, FFDNode * base,
     FFD::SNode * field_node)
     : _s{br}, _n{n}, _f{field_node}, _base{base}
 {
+    _mleak_track_c++;
     if (base) _level = base->_level + 1;
 
     if (n->IsField ()) FromField ();
