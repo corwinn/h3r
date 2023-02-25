@@ -644,6 +644,8 @@ static void resolve_all_types(FFD::SNode * n)
     H3R_CREATE_OBJECT(data_root, FFDNode) {ffd._root, s};
     Dbg << "Parsed " << f << EOL;
     // data_root->PrintTree ();
+    Dbg << "stream s: " << s->Tell () << "/" << s->Size () << EOL;
+    Dbg << "file   s: " << fh2.Tell () << "/" << fh2.Size () << EOL;
     if (s != &fh2) H3R_DESTROY_OBJECT(s, Stream)
     return data_root;
 }// FFD::File2Tree()
