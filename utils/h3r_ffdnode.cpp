@@ -377,11 +377,6 @@ void FFDNode::EvalArray()
             //         be simple, save for jagged arrays
         }
         else {// array struct item
-            //TODO there are 2 odd memory leaks regarding variadic struct array;
-            //     these are exactly twice: 2 x 10459:
-            //      - "Direct leak of 83672 byte(s) in 10459 object(s)"
-            //      - "Direct leak of 73213 byte(s) in 10459 object(s)"
-            // the above are masked away by the MM i.e. visible at -UH3R_MM
             for (int i = 0 ; i < final_size; i++) {
                 Dbg << " +++item [" << i << "] (dynamic)" << EOL;
                 // These are unconditional because there is no per-array item,
