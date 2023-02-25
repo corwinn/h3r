@@ -66,7 +66,9 @@ class GameArchives final
     // Something overrode the main background, so disable all but expected,
     // until overriding is setup.
     public GameArchives()
-        : _ba {List<Entry> {}
+        : _ba {}
+    {
+        _ba
             /*<< Entry {String {"H3ab_ahd.snd"}.ToLower ()}
             << Entry {String {"H3ab_bmp.lod"}.ToLower ()}
             << Entry {String {"H3ab_ahd.vid"}.ToLower ()}
@@ -75,8 +77,7 @@ class GameArchives final
             << Entry {String {"Heroes3.vid" }.ToLower ()}
             << Entry {String {"H3bitmap.lod"}.ToLower ()}
             << Entry {String {"VIDEO.VID"   }.ToLower ()}
-            << Entry {String {"H3sprite.lod"}.ToLower ()}}
-    {
+            << Entry {String {"H3sprite.lod"}.ToLower ()};
     }
 
     // [MOD] public void Add(String archive); //LATER
