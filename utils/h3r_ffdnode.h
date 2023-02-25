@@ -61,7 +61,13 @@ class FFDNode
     private bool _array {}; // array of struct
     private bool _hk {}; // hash key
     private FFD::SNode * _arr_dim[3] {}; // references; store the dimensions
-    private List<FFDNode *> _fields {}; //TODO DL-list-me
+    // No point making it an LL:
+    //  - twice the number of objects created
+    //  - considerable slow down of the Hash() access below
+    //  - doesn't resolve the recursive situation at FromStruct()
+    //  - doesn't resolve the odd (for me) mem. leaks; one thing is sure: it
+    //    ain't caused by the List<T>
+    private List<FFDNode *> _fields {};
     private int _level {};
     private FFDNode * _base {};
     private FFDNode * _ht {}; // hash table - referred by a hash key node

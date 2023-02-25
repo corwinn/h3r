@@ -46,7 +46,8 @@ FFDNode::~FFDNode()
     _mleak_track++;
     for (int i = 0; i < _fields.Count (); i++)
         H3R_DESTROY_OBJECT(_fields[i], FFDNode)
-    Dbg << "destroyed nodes: " << _mleak_track << "/" << _mleak_track_c << EOL;
+    // Dbg << "destroyed nodes: " << _mleak_track << "/" << _mleak_track_c
+    //     << EOL;
 }
 
 FFDNode::FFDNode(FFD::SNode * n, Stream * br, FFDNode * base,
@@ -376,6 +377,11 @@ void FFDNode::EvalArray()
             //         be simple, save for jagged arrays
         }
         else {// array struct item
+            //TODO there are 2 odd memory leaks regarding variadic struct array;
+            //     these are exactly twice: 2 x 10459:
+            //      - "Direct leak of 83672 byte(s) in 10459 object(s)"
+            //      - "Direct leak of 73213 byte(s) in 10459 object(s)"
+            // the above are masked away by the MM i.e. visible at -UH3R_MM
             for (int i = 0 ; i < final_size; i++) {
                 Dbg << " +++item [" << i << "] (dynamic)" << EOL;
                 // These are unconditional because there is no per-array item,
@@ -460,8 +466,8 @@ void FFDNode::FromStruct(FFD::SNode * sn)
         if (n->DType && n->DType->IsStruct ()) {
             if (n->Composite) {
                 Dbg << "Composite struct: " << n->DType->Name << EOL;
-                //TODO de-recursion-me when the DLL is in place:
-                //     sn->Insert (n->DType->Fields)
+                //TODO do this at the FFDParser, otherwise one and the same
+                //     syntax node could get modified more than once - not ok
                 FromStruct (n->DType);
                 continue;
             }
@@ -501,6 +507,10 @@ void FFDNode::FromStruct(FFD::SNode * sn)
                 if (composite) {
                     Dbg << "composite: " << composite->Name;
                         composite->PrintValueList ();
+                    //TODO Emit new Syntax node here: sn->Name + n->Name
+                    //     + fn->AsInt (fn->_ht); or sn->Name.Autoinc;
+                    //     some distinct name to avoid modifying one and the
+                    //     same thing
                     FromStruct (composite);
                 }
                 continue;
