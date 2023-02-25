@@ -38,7 +38,7 @@ PLATFORM=${PLATFORM:-posix}
 STD="-std=c++11"
 W="-Wall -Wextra -Wshadow -Wvariadic-macros"
 O="-O0 -g -fno-omit-frame-pointer -fexceptions"
-RTC="-fsanitize=address,undefined,integer"
+RTC="-fsanitize=address,undefined,integer,leak"
 C="-fprofile-instr-generate -fcoverage-mapping"
 I="-DH3R_DEBUG -UH3R_MM -I. -Ios -Iutils -Iui -Igame -Istream -Iasync \
  -Ios/${PLATFORM}"
