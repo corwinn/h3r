@@ -42,6 +42,8 @@ H3R_NAMESPACE
 
 // Couple an array with its length. Testing: throws ArgumentException.
 //LATER pool(A,F); 1Mb initial
+// A catch: when T is an object, ~T() won't get called by free_and_nil() with
+//          the default A and F.
 template <typename T,
           void (*A)(T * &, size_t) = OS::Alloc,    // This is not OOP.
           void (*F)(T * &) = OS::Free> class Array //
