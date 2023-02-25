@@ -43,6 +43,9 @@ H3R_NAMESPACE
 #define public public:
 #define private private:
 
+template <typename T> struct LD { void operator()(T & t) { t.~T (); } };
+template <typename T> struct LD<T *> { void operator()(T *&) {} };
+
 // List of T. You can Add(), Remove(), Count(), Clear(), "for (a:n)", ...
 // It won't warn you for duplicates. Again: T * - you're the manager; T
 // should get ~T()-ed.
@@ -50,6 +53,17 @@ H3R_NAMESPACE
 template <typename T> class List //LATER Insert() - should the need arise
 {
     private Array<T> _l; // list
+
+    public List(List<T> && a) { a._l.MoveTo (_l); }
+    public List<T> & operator=(List<T> && a)
+    {
+        return a._l.MoveTo (_l), *this;
+    }
+    public List(const List<T> & a) { a._l.CopyTo (_l); }
+    public List<T> & operator=(const List<T> & a)
+    {
+        return a._l.CopyTo (_l), *this;
+    }
 
     public List(int capacity = 0) : _l{capacity} {}
     public List(const T * a, int n) : _l{} { _l.Append (a, n); }
@@ -60,6 +74,10 @@ template <typename T> class List //LATER Insert() - should the need arise
         for (const auto & i : _l) if (i == itm) return true;
         return false;
     }*/
+    public ~List()
+    {
+        for (int i = 0; i < Count (); i++) LD<T>{} (_l[i]);
+    }
     public bool Contains(const T & itm) const
     {
         for (const auto & i : _l) if (i == itm) return true;
