@@ -56,6 +56,7 @@ static struct UnqueuedThreadSafeDebugLog final
         return *this;
     }
     inline L & operator<<(const char * v) { return Fmt ("%s", v); }
+    inline L & operator<<(long v) { return Fmt ("%ld", v); }
     inline L & operator<<(int v) { return Fmt ("%d", v); }
     inline L & operator<<(short v) { return Fmt ("%d", v); }
     inline L & operator<<(byte v) { return Fmt ("%d", v); }
