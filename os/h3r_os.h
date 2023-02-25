@@ -172,7 +172,7 @@ template <typename T> void Malloc(T *& p, size_t n = 1)
     byte r = 1; // "number of retries" = "number of bits" - 1
                 // Infinite loop protection.
     do
-        p = (T *)calloc (n, sizeof(T));
+        p = reinterpret_cast<T *>(calloc (n, sizeof(T)));
     while (! p && Error::Memory.Handled () && (r = r << 1));
     if (! p)
         Exit (EXIT_OUT_OF_MEMORY);
