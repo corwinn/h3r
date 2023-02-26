@@ -83,6 +83,7 @@ class FFDNode
     public String AsString();
     public inline FFDNode * Hash(const FFDNode * key) const
     {
+        H3R_ARG_EXC_IF(nullptr == key, "Hash(): key can't be null")
         // auto sn = key->FieldNode ();
         if (_data.Length () > 0) {
             //LATER either construct a new FFDNode to just use its AsInt() -
@@ -98,8 +99,11 @@ class FFDNode
             }*/
             H3R_ENSURE(0, "Implement me: int hash(key)")
         }
-        else if (_fields.Count () > 0)
+        else if (_fields.Count () > 0) {
+            Dbg << "key->AsInt: " << key->AsInt (key->_ht) << "/"
+                << _fields.Count () << EOL;
             return _fields[key->AsInt (key->_ht)];
+        }
         else
             H3R_ENSURE(0, "Empty HashTable")
     }
@@ -134,8 +138,10 @@ class FFDNode
         String LSymbol {}; // Version | RoE
         String RSymbol {}; // RoE     | Version
         FFDParser::ExprTokenType op {FFDParser::ExprTokenType::None}; // Binary
+        bool NoSymbol {};
         public inline int Compute()
         {
+            if (NoSymbol) return 0;
             if (n[0]) v[0] = ! v[0];
             if (n[1]) v[1] = ! v[1];
             // Dbg << "Compute " << i << ", l: " << v[0] << ", r: " << v[1]

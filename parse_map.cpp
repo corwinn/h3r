@@ -896,9 +896,6 @@ int main(int argc, char ** argv)
             case MAP_VICTORY_CONDITION_GATHERRESOURCE: {
                 byte objectType;
                 if (! Read (br, objectType)) return 1;
-                //TODO int16 perhaps
-                if (map_version != MAP_ROE)
-                    if (! ReadSkip (br,  1)) return 1;
                 printf ("  Resource : %d" EOL, objectType);
                 int quantity;
                 if (! Read (br, quantity)) return 1;

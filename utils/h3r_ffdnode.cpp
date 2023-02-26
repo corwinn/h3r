@@ -209,15 +209,16 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
                 Dbg << "NodeByName() Looking for " << arr[i] << EOL;
                 lsym = lsym->NodeByName (arr[i]);
                 // H3R_ENSURE(nullptr != lsym, "NodeByName() field not found.")
-                Dbg << "NodeByName() found " << arr[i] << EOL;
+                if (lsym)
+                    Dbg << "NodeByName() found " << arr[i] << EOL;
             }
         }
         if (! ctx.RSymbol.Empty ())//TODO do the same as for the lsym above
             rsym = base->NodeByName (ctx.RSymbol);
         if (! ctx.LSymbol.Empty () && ! lsym) // not found
-            ctx.v[0] = 0; // false;
+            ctx.NoSymbol = true; // evaluate to false ; (nf != 1) evals to true
         if (! ctx.RSymbol.Empty () && ! rsym) // not found
-            ctx.v[1] = 0; // false;
+            ctx.NoSymbol = true; // evaluate to false
         if (lsym && rsym) {
             Dbg << "    lsym && rsym " << EOL;
             H3R_ENSURE(lsym->_enabled, "NodeByName() contract failed")
@@ -243,13 +244,14 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
                     if (enum_entry) {//TODO handle the not found part
                     ctx.v[0] = lsym->AsInt (); // already set at (1 == ctx.i)
                     ctx.v[1] = enum_entry->Value;
+                    ctx.NoSymbol = false;
                     Dbg << "   L: " << ctx.v[0] << ", R: " << ctx.v[1] << EOL;
                     return;
                     }
                     else
                         H3R_ENSURE(0, "l: Enum symbol not found")
                 }
-                ctx.v[0] = lsym->AsInt ();
+                ctx.v[0] = lsym->AsInt (); ctx.NoSymbol = false;
                 return;
             }//TODO handle the reverse: if (! lsym && rsym)
             else {//LATER swapping requires index swapping at ctx.v as well
@@ -263,13 +265,14 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
                     if (enum_entry) {//TODO handle the not found part
                     ctx.v[0] = enum_entry->Value;
                     ctx.v[1] = rsym->AsInt (); // already set at (1 == ctx.i)
+                    ctx.NoSymbol = false;
                     Dbg << "   L: " << ctx.v[0] << ", R: " << ctx.v[1] << EOL;
                     return;
                     }
                     else
                         H3R_ENSURE(0, "r: Enum symbol not found")
                 }
-                ctx.v[1] = rsym->AsInt ();
+                ctx.v[1] = rsym->AsInt (); ctx.NoSymbol = false;
                 return;
             }
         }
@@ -280,6 +283,7 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
                 H3R_ENSURE(lsym->_enabled, "l: NodeByName() contract failed")
                 ctx.v[0] = lsym->AsInt ();
                 Dbg << ctx.v[0] << EOL;
+                ctx.NoSymbol = false;
                 return;
             }
             if (rsym) {
@@ -287,6 +291,7 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
                 H3R_ENSURE(rsym->_enabled, "r: NodeByName() contract failed")
                 ctx.v[1] = rsym->AsInt ();
                 Dbg << ctx.v[1] << EOL;
+                ctx.NoSymbol = false;
                 return;
             }
             H3R_ENSURE(0, "1 == ctx.i && ! l && ! r ?!")
