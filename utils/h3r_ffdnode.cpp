@@ -209,12 +209,16 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
             for (int i = 0; i < arr.Count (); i++) {
                 Dbg << "NodeByName() Looking for " << arr[i] << EOL;
                 lsym = lsym->NodeByName (arr[i]);
-                H3R_ENSURE(nullptr != lsym, "NodeByName() field not found.")
+                // H3R_ENSURE(nullptr != lsym, "NodeByName() field not found.")
                 Dbg << "NodeByName() found " << arr[i] << EOL;
             }
         }
-        if (! ctx.RSymbol.Empty ())
+        if (! ctx.RSymbol.Empty ())//TODO do the same as for the lsym above
             rsym = base->NodeByName (ctx.RSymbol);
+        if (! ctx.LSymbol.Empty () && ! lsym) // not found
+            ctx.v[0] = 0; // false;
+        if (! ctx.RSymbol.Empty () && ! rsym) // not found
+            ctx.v[1] = 0; // false;
         if (lsym && rsym) {
             H3R_ENSURE(lsym->_enabled, "NodeByName() contract failed")
             H3R_ENSURE(rsym->_enabled, "NodeByName() contract failed")
@@ -222,8 +226,9 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
             ctx.v[1] = rsym->AsInt ();
             return;
         }
-        else if (! lsym && ! rsym) {
-            H3R_ENSURE(0, "Symbols not found")
+        else if (! lsym && ! rsym) { // they could be not found
+            return;
+            // H3R_ENSURE(0, "Symbols not found")
         }
         else if (2 == ctx.i) { // requested both
             if (lsym && ! rsym) {
