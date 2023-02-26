@@ -433,7 +433,7 @@ struct VConditionObjAtPos
     Location Pos
 
 struct VCondition
-    bool AllowNoneAsWell
+    bool AllowNormalAsWell // allow default (defeat all) as well
     bool AppliesToAI
     // no AllowNoneAsWell []
     VConditionArt (VCon == ACQUIRE_ARTIFACT)
@@ -452,7 +452,7 @@ struct WinCondition
 
 struct LCondition
     VLConditionAtPos ((LCon == TOWN) || (LCon == HERO))
-    int Quantity (LCon == TIME)
+    short Quantity (LCon == TIME)
 
 struct LooseCondition
     MapLCon LCon
