@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // run:
 //  #01 - ~40 min.; tons of errors; parsed: 3137/6167 maps; good
 //  #02 - ~50 min.; ...           ; parsed: 4758/6167 ... ; ...
+//  #03 - ~44 min.; ...           ; parsed: shame on me/6167 ... ; regression
+//  #04 - ~57 min.; ...           ; parsed: 6167/6167 ... ; done
 
 #include "h3r_os_error.h"
 H3R_ERR_DEFINE_UNHANDLED

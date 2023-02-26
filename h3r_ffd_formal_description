@@ -32,6 +32,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
+  Why?
+  Because, now I could write a tool (a parser-generator) that can write the
+.h3m, .foo, .bar, ... parsers, in C, C++, C#, ..., instead of me.
+
 node    : generalization: each token of the description
 comment : "//" & "/**/"
 object  : starts with a {keyword} (and the preceding {comment}s and
@@ -56,7 +60,7 @@ keywords:
   "struct" - defines a {node} of {node}s - sequential data grouped together
              and bound to a {symbol}; it does not have expr support yet <=> no
              use-case yet; the word "sequential" here is kind of misplaced -
-             perhaps the five desriptions will change its meaning to sequential
+             perhaps the five descriptions will change its meaning to sequential
              description;
              The initial empty space for the {node} list is mandatory.
   "format" - defines the root {node} of your data format - this is where the
@@ -101,7 +105,7 @@ expression: a script being evaluated when needed (always enclosed in ()):
 
                     {symbol}1<>{symbol}2 - marks symbol1 to be a key at a field
                     of type symbol2; symbol resolution applies in order to find
-                    symbol2 (should this happen to lead to too much confision a
+                    symbol2 (should this happen to lead to too much confusion a
                     lookup by struct.field_name shall be used instead); these
                     lookup (hash) tables are almost always 1, rarely 2 - at the
                     file formats I have dealt with, so this "type" lookup should
@@ -109,8 +113,8 @@ expression: a script being evaluated when needed (always enclosed in ()):
                     the table type.
                     The <> implies two data flow directions: 1 - the key value
                     is read from the stream at the current offset; 2 - fields
-                    refering the key will not get its value, but the table value
-                    this keys is refering to.
+                    referring the key will not get its value, but the table
+                    value this keys is referring to.
 
 char-set: ASCII; bytes that shall reward you with an exception:
   [0;10), [11;13), [14;31], [127;255]
