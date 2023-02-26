@@ -107,7 +107,7 @@ struct MapObj
     byte Unk2[16] // Reserved?
 
 struct Location
-    byte X
+    byte X //TODO validate: X >= 0 && X < Size, ...
     byte Y
     byte Z
 
@@ -415,9 +415,13 @@ struct VConditionArt
     byte Type
     byte Unk1 (Version != ROE) // 16-bit?
 
-struct VConditionQObj
+struct VConditionCreObj
     byte Type
     byte Unk1 (Version != ROE) // 16-bit?
+    int Quantity
+
+struct VConditionResObj
+    byte Type
     int Quantity
 
 struct VConditionUpgTown
@@ -437,7 +441,8 @@ struct VCondition
     bool AppliesToAI
     // no AllowNoneAsWell []
     VConditionArt (VCon == ACQUIRE_ARTIFACT)
-    VConditionQObj ((VCon == CREATURES) || (VCon == RESOURCES))
+    VConditionCreObj (VCon == CREATURES)
+    VConditionResObj (VCon == RESOURCES)
     // no AppliesToAI []
     VConditionUpgTown (VCon == UPGRADE_TOWN)
     // No AppliesToAI checkbox for DEFEAT_MONSTER
