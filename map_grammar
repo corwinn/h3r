@@ -161,7 +161,8 @@ struct MapHero
     byte         SubId
     MapString    Name (bool)
     bool         HasExp (Version > AB)
-    int          Exp (HasExp || (Version <= AB))
+    int          Exp ((Version > AB) && HasExp)
+    int          Exp (Version <= AB)
     byte         PortraitId (bool)
     short        SecondarySkills[int] (bool) // 8:first, 8:second
     MapCreatures Creatures[7] (bool)
@@ -235,9 +236,10 @@ struct Obj.EdId:83 // "Seer's Hut"
     int   ResCnt     (R == RESOURCES)
     byte  SkillId    ((R == PRIMARY_SKILL) || (R == SECONDARY_SKILL))
     byte  SkillCnt   ((R == PRIMARY_SKILL) || (R == SECONDARY_SKILL))
-    short ArtifactId (R == ARTIFACT)
+    ArtId ArtifactId (R == ARTIFACT)
     byte  SpellId    (R == SPELL)
-    short MonId      (R == CREATURE)
+    byte  MonId      ((R == CREATURE) && (Version == ROE))
+    short MonId      ((R == CREATURE) && (Version != ROE))
     short MonCnt     (R == CREATURE)
     byte  Unk1[2]    ((Quest.T > 0) || (ArtifactId != 255))
     byte  Unk1[3]    ((Quest.T == 0) || (ArtifactId == 255))

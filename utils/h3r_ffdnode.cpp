@@ -211,6 +211,7 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
                 // H3R_ENSURE(nullptr != lsym, "NodeByName() field not found.")
                 if (lsym)
                     Dbg << "NodeByName() found " << arr[i] << EOL;
+                else break;
             }
         }
         if (! ctx.RSymbol.Empty ())//TODO do the same as for the lsym above
