@@ -228,7 +228,7 @@ enum MapSeerRewardType byte
 struct Obj.EdId:83 // "Seer's Hut"
     byte              ArtifactId (Version == ROE)
     MapQuest          Quest (Version != ROE)
-    MapSeerRewardType R (Quest.T > 0)
+    MapSeerRewardType R ((Quest.T > 0) || (ArtifactId != 255))
     int   Count      ((R == EXPERIENCE) || (R == MANA_POINTS))
     byte  Count      ((R == MORALE_BONUS) || (R == LUCK_BONUS))
     byte  ResId      (R == RESOURCES)
@@ -239,8 +239,8 @@ struct Obj.EdId:83 // "Seer's Hut"
     byte  SpellId    (R == SPELL)
     short MonId      (R == CREATURE)
     short MonCnt     (R == CREATURE)
-    byte  Unk1[2]    (R != NOTHING)
-    byte  Unk1[3]    (R == NOTHING)
+    byte  Unk1[2]    ((Quest.T > 0) || (ArtifactId != 255))
+    byte  Unk1[3]    ((Quest.T == 0) || (ArtifactId == 255))
 
 struct Obj.EdId:113 // "Witch Hut"
     byte PotentialSKillsMask[4] (Version > ROE)
