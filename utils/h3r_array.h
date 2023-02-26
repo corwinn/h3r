@@ -160,6 +160,13 @@ template <typename T,
         return _data[i];
     }
 
+    public: const T & operator[](int i) const
+    {
+        H3R_ARG_EXC_IF(0 == _len, "_len is 0; - no [] acceess")
+        H3R_ARG_EXC_IF(i < 0 || i >= _len, "Your favorite message [i]")
+        return _data[i];
+    }
+
     // Implicit contract with the compiler: short and simple for loop.
     // Nothing simple about it however. Be very careful when using this: RTFM
     // a.k.a. "The C++ programming Language" - 6.3.6. Specify "auto &"

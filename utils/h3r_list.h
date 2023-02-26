@@ -103,8 +103,8 @@ template <typename T> class List //LATER Insert() - should the need arise
         return false;
     }
     public void RemoveAt(int index) { _l.Remove (index); }
-    public T & operator[](int i) { return _l[i]; }
-    public const T & operator[](int i) const { return _l[i]; }
+    public T & operator[](int i) { return _l.operator[] (i); }
+    public const T & operator[](int i) const { return _l.operator[] (i); }
     public bool Empty() const { return _l.Empty (); }
     public int Count() const { return _l.Length (); }
     public void Clear() { _l.Resize (0); }
