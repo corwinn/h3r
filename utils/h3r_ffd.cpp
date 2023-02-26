@@ -574,7 +574,7 @@ static void resolve_all_types(FFD::SNode * n)
     Dbg << "TB LR parsing " << len << " bytes ffd" << EOL;
     FFD ffd {};
     FFDParser parser {buf, len};
-    Dbg.Enabled = false;
+    // Dbg.Enabled = false;
     for (int chk = 0; parser.HasMoreData (); chk++) {
         if (parser.IsWhitespace ()) parser.SkipWhitespace ();
         // Skipped, for now
@@ -596,7 +596,7 @@ static void resolve_all_types(FFD::SNode * n)
                 H3R_ENSURE_FFD(nullptr == ffd._root, "Multiple formats in a "
                     "single description aren't supported yet")
                 ffd._root = node;
-                Dbg.Enabled = true;
+                // Dbg.Enabled = false;
                 Dbg << "Ready to parse: " << node->Name << EOL;
             }
         }
@@ -640,12 +640,18 @@ static void resolve_all_types(FFD::SNode * n)
         Dbg << "zlibMapStream not found. Load could fail." << EOL;
 
     FFDNode * data_root {};
-    Dbg << "Parsing " << f << EOL;
+    auto sentinel = Dbg.Enabled;
+        Dbg.Enabled = true;
+        Dbg << "Parsing " << f << EOL;
+    Dbg.Enabled = sentinel;
     H3R_CREATE_OBJECT(data_root, FFDNode) {ffd._root, s};
     Dbg << "Parsed " << f << EOL;
     // data_root->PrintTree ();
-    Dbg << "stream s: " << s->Tell () << "/" << s->Size () << EOL;
-    Dbg << "file   s: " << fh2.Tell () << "/" << fh2.Size () << EOL;
+    sentinel = Dbg.Enabled;
+        Dbg.Enabled = true;
+        Dbg << "stream s: " << s->Tell () << "/" << s->Size () << EOL;
+        Dbg << "file   s: " << fh2.Tell () << "/" << fh2.Size () << EOL;
+    Dbg.Enabled = sentinel;
     if (s != &fh2) H3R_DESTROY_OBJECT(s, Stream)
     return data_root;
 }// FFD::File2Tree()
