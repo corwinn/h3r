@@ -261,6 +261,13 @@ class FFDNode
         }
     }
 
+    public inline int NodeCount() const
+    {
+        int cnt {_fields.Count ()};
+        for (auto node : _fields) cnt += node->NodeCount ();
+        return cnt;
+    }
+
 #undef public
 #undef private
 };// FFDNode
