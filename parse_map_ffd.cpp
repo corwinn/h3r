@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-//c clang++ -std=c++11 -Wall -Wextra -Wshadow -O0 -g -gdwarf-4 -fsanitize=address,undefined,integer,leak -fvisibility=hidden -I. -Ios -Ios/posix -Iutils -Istream -O0 -g -DH3R_DEBUG -UH3R_MM -fno-exceptions -fno-threadsafe-statics main.a parse_map_ffd.cpp -o parse_map_ffd -lz
+//c clang++ -std=c++11 -Wall -Wextra -Wshadow -O0 -g -gdwarf-4 -fsanitize=address,undefined,integer,leak -fvisibility=hidden -I. -Ios -Ios/posix -Iutils -Istream -Iffd -O0 -g -DH3R_DEBUG -UH3R_MM -fno-exceptions -fno-threadsafe-statics main.a parse_map_ffd.cpp -o parse_map_ffd -lz
 
 // run:
 //  #01 - ~40 min.; tons of errors; parsed: 3137/6167 maps; good
@@ -49,11 +49,11 @@ H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
 
 int main(int argc, char ** argv)
 {
-    if (2 != argc)
-        return printf ("usage: parse_map_ffd lodfile\n");
+    if (3 != argc)
+        return printf ("usage: parse_map_ffd descritpion_file h3m_file\n");
 
     Dbg.Enabled = false;
-    auto test = H3R_NS::FFD::File2Tree ("map_grammar", argv[1]);
+    auto test = H3R_NS::FFD::File2Tree (argv[1], argv[2]);
     Dbg.Enabled = true;
     Dbg << "nodes: " << test->NodeCount ()
         << ", bytes: " << test->NodeCount () * sizeof(*test) << EOL;

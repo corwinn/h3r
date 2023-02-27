@@ -51,7 +51,7 @@ _F = -fsanitize=address,undefined,integer,leak -fvisibility=hidden
 _L = -Wl,--as-needed -lpthread -lz -lSDL2 -lSDL2_mixer -lGL
 _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
  -Iengines -Iengines/$(RENDER_ENGINE) \
- -Ios/ui -Ios/ui/$(WIN_SYSTEM) `pkg-config --cflags sdl2`
+ -Ios/ui -Ios/ui/$(WIN_SYSTEM) -Iffd `pkg-config --cflags sdl2`
 
 CXXFLAGS = $(_I) -std=c++11 $(_O) $(_F) $(_W)
 SRC = $(wildcard ./*/*.cpp)
