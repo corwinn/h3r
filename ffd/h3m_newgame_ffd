@@ -1,0 +1,188 @@
+/**** BEGIN LICENSE BLOCK ****
+
+BSD 3-Clause License
+
+Copyright (c) 2021-2023, the wind.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+**** END LICENCE BLOCK ****/
+
+// Get just the info needed for the "new game" window
+
+// Machine types
+type int -4
+type short -2
+type byte 1
+type bool byte
+
+struct MapString
+    byte Chars[int] // implicit "int Length" accessible via Chars.Length
+
+struct Location
+    byte X //TODO validate: X >= 0 && X < Size, ...
+    byte Y
+    byte Z
+
+enum MapVersion int
+    ROE 0x0e
+    AB  0x15
+    SOD 0x1c
+    WOG 0x33
+
+enum Behavior byte
+    RANDOM   0
+    WARRIOR  1
+    BUILDER  2
+    EXPLORER 3
+
+const MAP_PLAYERS          8
+
+const MAP_DEFAULT_HERO_ID 0xff
+
+struct AllowedHero
+    byte Id
+    MapString Name
+
+struct PlayerCantPlay
+    byte Unk1[13] (Version >= SOD)
+    byte Unk1[12] (Version == AB)
+    byte Unk1[ 6] (Version == ROE)
+
+struct PlayerCanPlay
+    Behavior AITactics
+    byte Unk2 (Version >= SOD) // 16-bit ?
+    byte AllowedFactions (Version == ROE) // 16-bit ? AllowedFactions
+    short AllowedFactions (Version != ROE)
+    bool RandomFaction
+    bool HasMainTown
+    bool GenAtMT (HasMainTown && (Version != ROE))
+    bool Gen2 (HasMainTown && (Version != ROE)) // No idea whats this
+    Location MainTown (HasMainTown)
+    bool RandomHero
+    byte CutomHeroId
+    byte CutomHeroPortrait (CutomHeroId != MAP_DEFAULT_HERO_ID)
+    MapString CutomHeroName (CutomHeroId != MAP_DEFAULT_HERO_ID)
+    byte NoIdea (Version != ROE)
+    AllowedHero AllowedHeroes[int] (Version != ROE)
+
+struct Player
+    bool Human
+    bool Computer
+    PlayerCantPlay (!Human && !Computer) // implicit name - merge
+    PlayerCanPlay (Human || Computer)    // implicit name - merge
+
+enum MapVCon byte
+    ACQUIRE_ARTIFACT     0
+    CREATURES            1
+    RESOURCES            2
+    UPGRADE_TOWN         3
+    GRAIL                4
+    DEFEAT_HERO          5
+    CAPTURE_TOWN         6
+    DEFEAT_MONSTER       7
+    FLAG_DWELLINGS       8
+    FLAG_MINES           9
+    TRANSPORT_ARTIFACT  10
+    NONE               255
+
+enum MapLCon byte
+    TOWN   0
+    HERO   1
+    TIME   2
+    NONE 255
+
+struct VConditionArt
+    byte Type
+    byte Unk1 (Version != ROE) // 16-bit?
+
+struct VConditionCreObj
+    byte Type
+    byte Unk1 (Version != ROE) // 16-bit?
+    int Quantity
+
+struct VConditionResObj
+    byte Type
+    int Quantity
+
+struct VConditionUpgTown
+    Location Pos
+    byte HallLevel
+    byte CastleLevel
+
+struct VLConditionAtPos
+    Location Pos
+
+struct VConditionObjAtPos
+    byte Type
+    Location Pos
+
+struct VCondition
+    bool AllowNormalAsWell // allow default (defeat all) as well
+    bool AppliesToAI
+    // no AllowNoneAsWell []
+    VConditionArt (VCon == ACQUIRE_ARTIFACT)
+    VConditionCreObj (VCon == CREATURES)
+    VConditionResObj (VCon == RESOURCES)
+    // no AppliesToAI []
+    VConditionUpgTown (VCon == UPGRADE_TOWN)
+    // No AppliesToAI checkbox for DEFEAT_MONSTER
+    // No check-boxes at all for DEFEAT_HERO and GRAIL
+    VLConditionAtPos ((VCon >= GRAIL) && (VCon <= DEFEAT_MONSTER))
+    //TODO There is no AllowNoneAsWell check-box at the editor
+    VConditionObjAtPos (VCon == TRANSPORT_ARTIFACT)
+
+struct WinCondition
+    MapVCon VCon
+    VCondition (VCon != NONE)
+
+struct LCondition
+    VLConditionAtPos ((LCon == TOWN) || (LCon == HERO))
+    short Quantity (LCon == TIME)
+
+struct LooseCondition
+    MapLCon LCon
+    LCondition (LCon != NONE)
+
+[Stream(type: zlibMapStream)] // specify that it requires a specific stream
+format h3m
+    MapVersion     Version
+    bool           HasPlayers // What to do if not?
+    int            Size       // 36, 72, 108, 144
+    bool           TwoLevels  // 0:1 or 1:2
+    MapString      Name
+    MapString      Description
+    byte           Difficulty
+    byte           LevelLimit (Version != ROE)
+    //
+    Player         Players[MAP_PLAYERS]
+    //
+    WinCondition   SpecialWCon
+    LooseCondition SpecialLCon
+    //
+    byte           HasTeams
+    byte           Team[MAP_PLAYERS] (HasTeams)
