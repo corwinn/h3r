@@ -557,7 +557,7 @@ static void resolve_all_types(FFD::SNode * n)
     n->WalkForward ([&](FFD::SNode * nn){ nn->ResolveTypes (); return true; });
 }
 
-/*static*/ FFDNode * FFD::File2Tree(const String & d, const String & f)
+FFDNode * FFD::File2Tree(const String & d, const String & f)
 {
     OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
     MemoryStream br {&fh, static_cast<int>(fh.Size ())};
@@ -572,7 +572,6 @@ static void resolve_all_types(FFD::SNode * n)
     }
 
     Dbg << "TB LR parsing " << len << " bytes ffd" << EOL;
-    FFD ffd {};
     FFDParser parser {buf, len};
     // Dbg.Enabled = false;
     for (int chk = 0; parser.HasMoreData (); chk++) {
@@ -582,20 +581,20 @@ static void resolve_all_types(FFD::SNode * n)
         else {
             FFD::SNode * node;
             H3R_CREATE_OBJECT(node, FFD::SNode) {};
-            if (nullptr == ffd._tail)
-                ffd._tail = ffd._head = node;
+            if (nullptr == _tail)
+                _tail = _head = node;
             else {
-                node->Prev = ffd._tail;
-                node->Next = ffd._tail->Next;
-                if (ffd._tail->Next) ffd._tail->Next->Prev = node;
-                ffd._tail->Next = node;
-                ffd._tail = node;
+                node->Prev = _tail;
+                node->Next = _tail->Next;
+                if (_tail->Next) _tail->Next->Prev = node;
+                _tail->Next = node;
+                _tail = node;
             }
             node->Parse (parser);
             if (node->IsRoot ()) {
-                H3R_ENSURE_FFD(nullptr == ffd._root, "Multiple formats in a "
+                H3R_ENSURE_FFD(nullptr == _root, "Multiple formats in a "
                     "single description aren't supported yet")
-                ffd._root = node;
+                _root = node;
                 // Dbg.Enabled = false;
                 Dbg << "Ready to parse: " << node->Name << EOL;
             }
@@ -605,8 +604,8 @@ static void resolve_all_types(FFD::SNode * n)
 
     // 2. Fasten DType - only those with "! Expr.Empty ()" shall remain null -
     //    they're being resolved at "runtime".
-    resolve_all_types (ffd._head);
-    print_tree (ffd._head);
+    resolve_all_types (_head);
+    print_tree (_head);
 
     // 3. Apply
     OS::FileStream fh2 {f, H3R_NS::OS::FileStream::Mode::ReadOnly};
@@ -618,7 +617,7 @@ static void resolve_all_types(FFD::SNode * n)
                                          // unpacked: 1342755 bytes
     H3R_ENSURE(fh2.Size () < static_cast<off_t>(H3M_MAX_FILE_SIZE),
         "File too large")
-    auto h3m_zstream_attr = ffd._root->GetAttr ("[Stream(type: zlibMapStream)]");
+    auto h3m_zstream_attr = _root->GetAttr ("[Stream(type: zlibMapStream)]");
     if (h3m_zstream_attr) {
         int h, usize, size = static_cast<int>(fh2.Size ());
         Stream::Read (fh2, &h);
@@ -644,7 +643,7 @@ static void resolve_all_types(FFD::SNode * n)
         Dbg.Enabled = true;
         Dbg << "Parsing " << f << EOL;
     Dbg.Enabled = sentinel;
-    H3R_CREATE_OBJECT(data_root, FFDNode) {ffd._root, s};
+    H3R_CREATE_OBJECT(data_root, FFDNode) {_root, s};
     Dbg << "Parsed " << f << EOL;
     // data_root->PrintTree ();
     sentinel = Dbg.Enabled;

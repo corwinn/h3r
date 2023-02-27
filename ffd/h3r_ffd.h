@@ -326,7 +326,7 @@ class FFD
     // at its neighbors w/o accessing third party objects.
     private FFD::SNode * _tail {}, * _head {}; // DLL<FFD::SNode>
 
-    public static FFDNode * File2Tree(const String & d, const String & f);
+    public FFDNode * File2Tree(const String & d, const String & f);
 
 #undef public
 #undef private
