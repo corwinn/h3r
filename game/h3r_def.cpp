@@ -58,7 +58,7 @@ static void read_sprite_224(Stream & s, int w, int h, H3R_NS::byte * p)
 static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh,
     off_t reset_offset)
 {
-    Stream::Read (s, &sh);
+    // Stream::Read (s, &sh);
 
     // Data_H3sprite_lod/SGTWMTA.def && Data_H3sprite_lod/SGTWMTB.def
     // See "parse_def.cpp" for more info.
@@ -140,7 +140,7 @@ void Def::Init()
 
 Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
 {
-    static SubSpriteHeader sh {};
+    // static SubSpriteHeader sh {};
     H3R_ENSURE(3 == u8_num || 4 == u8_num, "Can't help you")
     if (nullptr == _s) return &buf;
     if (! *_s) return  &buf;
@@ -155,17 +155,19 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
         // Unfortunately I can't do that with zipstreams yet.
         // _s->Seek(_request.Offset - _s->Tell ())
         // but I can do this:
-        { _s->Reset (); _s->Seek (_request->Offset); }
+        { _s->Reset (); _s->Seek (_request->Offset+sizeof(SubSpriteHeader)); }
         Array<byte> indexed_bitmap {};
-        read_sprite (*_s, indexed_bitmap, sh, _request->Offset);
-        H3R_ENSURE(sh.AnimWidth == _w, "leaf.w != tree.w")
-        H3R_ENSURE(sh.AnimHeight == _h, "leaf.h != tree.h")
+        read_sprite (*_s, indexed_bitmap, _request->H,
+            _request->Offset+sizeof(SubSpriteHeader));
+        H3R_ENSURE(_request->H.AnimWidth == _w, "leaf.w != tree.w")
+        H3R_ENSURE(_request->H.AnimHeight == _h, "leaf.h != tree.h")
         printf ("DEF: %s: W:%d, H:%d, S: " EOL,
             _request->Name.AsZStr (), _w, _h);
         printf (
-            "DEF.sh: %s: Type:%d, AW:%d, AH:%d W:%d, H:%d, T:%d, L:%d" EOL,
-            _request->Name.AsZStr (), sh.Type, sh.AnimWidth, sh.AnimHeight,
-            sh.Width, sh.Height, sh.Top, sh.Left);
+            "DEF.H: %s: Type:%d, AW:%d, AH:%d W:%d, H:%d, T:%d, L:%d" EOL,
+            _request->Name.AsZStr (), _request->H.Type, _request->H.AnimWidth,
+            _request->H.AnimHeight, _request->H.Width, _request->H.Height,
+            _request->H.Top, _request->H.Left);
         /*store_as_bmp (const_cast<char *>(_request->Name.AsZStr ()),
             static_cast<const byte *>(indexed_bitmap),
             sh.Width, sh.Height, 8, static_cast<const byte *>(_palette));*/
@@ -173,13 +175,13 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
         // A, if present, is 0; also, pal[0]={255, 255, 0} = A = 0.
         if (buf.Empty ()) buf.Resize (pitch*_h);
         byte * buf_ptr = buf;
-        for (int y = 0; y < sh.Height; y++) {
-            for (int x = 0; x < sh.Width; x++) {
-                int i = indexed_bitmap[y*sh.Width + x];
+        for (int y = 0; y < _request->H.Height; y++) {
+            for (int x = 0; x < _request->H.Width; x++) {
+                int i = indexed_bitmap[y*(_request->H.Width) + x];
                 // encode palette[TRANSPARENT_COLOR_INDEX] with A=0
                 if (4 == u8_num && 0 == i) continue; // RGBA output only
-                int dy = y + sh.Top;
-                int dx = x + sh.Left;
+                int dy = y + _request->H.Top;
+                int dx = x + _request->H.Left;
                 byte * p = buf_ptr + dy*pitch + dx*u8_num;
                 *(p+0) = *((byte *)_palette+3*i+0); // 2 BMP wants these swapped
                 *(p+1) = *((byte *)_palette+3*i+1); // |

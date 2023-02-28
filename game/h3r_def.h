@@ -44,6 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_os.h"
 #include "h3r_pal.h"
 
+#define H3R_DEF_MAX_SPRITE_NUM (1<<8)
+
 H3R_NAMESPACE
 
 namespace {
@@ -108,16 +110,28 @@ class Def final : public ResDecoder
         if (! _rgb.Empty ()) return &_rgb;
         return Decode (_rgb, 3);
     }
-    public: int Width () override { return _w; }
-    public: int Height () override { return _h; }
+
+    // Common for all sub-sprites.
+    public: inline int Width() override { return _w; }
+    public: inline int Height() override { return _h; }
+
+    // For the last decoded one only.
+    public: inline int Left() const { return _request ? _request->H.Left : 0; }
+    public: inline int Top() const { return _request ? _request->H.Top : 0; }
 
     private: struct SubSprite final
     {
-        String Name;
-        int Offset; // 0-based
+        String Name {};
+        int Offset {}; // 0-based
+        SubSpriteHeader H {};
         void Read(Stream & s)
-        {
+        {//LATER - optimize; pre-read the entire thing in a local buffer;
+         //        the file format is ...
             Stream::Read (s, &Offset);
+            auto sentinel = s.Tell ();
+            { s.Reset (); s.Seek (Offset); }
+            Stream::Read (s, &H);
+            { s.Reset (); s.Seek (sentinel); }
         }
     };
     private: struct Sprite final
@@ -127,7 +141,8 @@ class Def final : public ResDecoder
         {
             s.Seek (+4); // unknown1;
             int cnt;
-            Stream::Read (s, &cnt); //TODO Why - you trust your input
+            Stream::Read (s, &cnt);
+            H3R_ENSURE(cnt > 0 && cnt < H3R_DEF_MAX_SPRITE_NUM, "Bad .def")
             s.Seek (+4); // unknown2
             s.Seek (+4); // unknown3
             Entries.Resize (cnt);
