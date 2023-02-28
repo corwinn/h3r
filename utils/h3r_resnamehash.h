@@ -40,9 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
 // A hash for the resource names. T is the value.
 // T has to has a copy constructor. The copies are managed by the map! - be very
 // careful at T::~T().
@@ -135,9 +132,6 @@ template <typename T> class ResNameHash final
     {
         return _tbl.operator KeyValue<T> ** () + _tbl.Length ();
     }
-
-#undef public
-#undef private
 };// ResNameHash
 
 NAMESPACE_H3R

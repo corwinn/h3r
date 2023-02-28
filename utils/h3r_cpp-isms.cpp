@@ -42,7 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // "delete" was requested by C++ virtual ~base(), just because they can.
 // If you have a duplicate, just comment this one out.
-//void operator delete(void *) IES { H3R_ENSURE (false, "It was used!") }
+// void operator delete(void *) IES { H3R_ENSURE (false, "It was used!") }
 
 // Why is all of this being done? The above one, no abstract methods,
 // no exceptions, no STL, etc. ?

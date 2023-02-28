@@ -55,29 +55,29 @@ class MM final
     H3R_CANT_COPY(MM)
     H3R_CANT_MOVE(MM)
 
-    private: OS::CriticalSection _thread_gate {};
+    private OS::CriticalSection _thread_gate {};
 
-    private: struct Entry { void * p {}; size_t n {}; };
-    private: Entry * _e {};
-    private: int _n {}, _c {}; // num, capacity
+    private struct Entry { void * p {}; size_t n {}; };
+    private Entry * _e {};
+    private int _n {}, _c {}; // num, capacity
     // While allocating this much at once isn't happening, cumulative numbers
     // can easily overflow an "int".
-    private: size_t _user_bytes {}, _a {}, _f {}; // stats
-    private: size_t _current_bytes {}; // currently allocated bytes
-    private: MM();
+    private size_t _user_bytes {}, _a {}, _f {}; // stats
+    private size_t _current_bytes {}; // currently allocated bytes
+    private MM();
     // friend class H3R_NS::Game;
 
-    private: template <typename T> void Add(T * &, size_t n = 1);
-    private: template <typename T> void Remove(T * &);
-    private: ~MM();
+    private template <typename T> void Add(T * &, size_t n = 1);
+    private template <typename T> void Remove(T * &);
+    private ~MM();
 
     // private: static MM * _one;
-    private: static MM & One();
-    public: template <typename T> static void Alloc(T * & p, size_t n = 1)
+    private static MM & One();
+    public template <typename T> static void Alloc(T * & p, size_t n = 1)
     {
         MM::One ().Add (p, n);
     }
-    public: template <typename T> static void Free(T * & p)
+    public template <typename T> static void Free(T * & p)
     {
         MM::One ().Remove (p);
     }

@@ -45,17 +45,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 //DONE at the prev commit. CAMPNOSC.PCX (238x143) looks fine.
+#undef public
 class Pcx final : public ResDecoder
+#define public public:
 {
-    private: Stream * _s;
-    private: Array<byte> _rgba {};
-    private: Array<byte> _rgb {};
-    private: int _w {};
-    private: int _h {};
-    private: off_t _bitmap_ofs {}; // 0-based
-    private: int _size {}; // bytes
-    private: int _fmt {}; // 1 (8-bit palette) or 3 (24-bit RGB, no palette)
-    public: Pcx(Stream * stream)
+    private Stream * _s;
+    private Array<byte> _rgba {};
+    private Array<byte> _rgb {};
+    private int _w {};
+    private int _h {};
+    private off_t _bitmap_ofs {}; // 0-based
+    private int _size {}; // bytes
+    private int _fmt {}; // 1 (8-bit palette) or 3 (24-bit RGB, no palette)
+    public Pcx(Stream * stream)
         : ResDecoder {}, _s{stream}
     {
         if (nullptr == stream)
@@ -68,22 +70,22 @@ class Pcx final : public ResDecoder
             _rgb.Resize (0);
         }
     }
-    public: ~Pcx() override {}
+    public ~Pcx() override {}
     // Encodes A=0 for fmt1 index=0, and A=255 for fmt1 index!=0.
-    public: inline Array<byte> * ToRGBA() override
+    public inline Array<byte> * ToRGBA() override
     {
         if (! _rgba.Empty ()) return &_rgba;
         return Decode (_rgba, 4);
     }
-    public: inline Array<byte> * ToRGB() override
+    public inline Array<byte> * ToRGB() override
     {
         if (! _rgb.Empty ()) return &_rgb;
         return Decode (_rgb, 3);
     }
-    public: int Width () override { return _w; }
-    public: int Height () override { return _h; }
+    public int Width () override { return _w; }
+    public int Height () override { return _h; }
     // Init size and format info.
-    private: bool Init()
+    private bool Init()
     {
         if (nullptr == _s) return false;
         if (! *_s) return false;
@@ -117,7 +119,7 @@ class Pcx final : public ResDecoder
         // printf ("w:%d, h:%d, f:%d, p:%zu" EOL, _w, _h, _fmt, _bitmap_ofs);
         return true;
     }// Init
-    private: inline Array<byte> * Decode(Array<byte> & buf, int u8_num)
+    private inline Array<byte> * Decode(Array<byte> & buf, int u8_num)
     {
         if (nullptr == _s) return nullptr;
         H3R_ENSURE(3 == u8_num || 4 == u8_num, "Can't help you")

@@ -44,14 +44,14 @@ H3R_NAMESPACE
 // for this game to have task queues.
 class IAsyncTask
 {
-    public: virtual void Do() {}
+    public virtual void Do() {}
     // When your thread starts an async task, it needs some way to query its
     // state: is it complete; is it not; etc. This is it.
     // Do not forget: "the thread that Do()" != "the thread that Whatsup()".
-    public: virtual TaskState Whatsup() { return TaskState::Unknown; }
+    public virtual TaskState Whatsup() { return TaskState::Unknown; }
 
     friend class TaskThread;            // Caution: not OOP, for less code.
-    private: class TaskThread * _TT {}; // 1<->1 sentinel - just in case
+    private class TaskThread * _TT {}; // 1<->1 sentinel - just in case
 };
 
 NAMESPACE_H3R

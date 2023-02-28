@@ -45,12 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // Its size is stored at the resource it is created from.
+#undef public
 class Button: public Control
-{
 #define public public:
-#define private private:
-#define protected protected:
-
+{
     private int _rkey {};
     private int _on {}; // up
     private int _oh {}; // hover
@@ -74,10 +72,6 @@ class Button: public Control
 
     // Usage: Click.Subscribe (this, &descendant_of_IHandleEvents::handler)
     public Event Click {};
-
-#undef public
-#undef private
-#undef protected
 };// Button
 
 NAMESPACE_H3R

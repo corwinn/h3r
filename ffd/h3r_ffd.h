@@ -56,9 +56,6 @@ class FFDNode;
 //   data = FFD::File2Tree ("description", "file").
 class FFD
 {
-#define public public:
-#define private private:
-
     public FFD();
     public ~FFD();
 
@@ -327,9 +324,6 @@ class FFD
     private FFD::SNode * _tail {}, * _head {}; // DLL<FFD::SNode>
 
     public FFDNode * File2Tree(const String & d, const String & f);
-
-#undef public
-#undef private
 };// FFD
 
 NAMESPACE_H3R

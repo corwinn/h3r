@@ -49,17 +49,17 @@ H3R_NAMESPACE
 // If the returned buffer is empty, see the log for errors.
 class ResDecoder
 {
-    public: ResDecoder() {}
-    public: virtual ~ResDecoder() {}
+    public ResDecoder() {}
+    public virtual ~ResDecoder() {}
     // This is my slow convert function, where I need to set alpha=f(rgb).
-    public: virtual Array<byte> * ToRGBA() { return nullptr; }
+    public virtual Array<byte> * ToRGBA() { return nullptr; }
     // "wingdi.h" didn't like my "RGB" symbol.
     // This is the game native format, better left for Open GL to convert to.
-    public: virtual Array<byte> * ToRGB() { return nullptr; }
-    public: static int const MAX_SIZE {16384};
+    public virtual Array<byte> * ToRGB() { return nullptr; }
+    public static int const MAX_SIZE {16384};
 
-    public: virtual int Width () { return 0; }
-    public: virtual int Height () { return 0; }
+    public virtual int Width () { return 0; }
+    public virtual int Height () { return 0; }
 };
 
 NAMESPACE_H3R

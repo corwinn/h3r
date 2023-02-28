@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define H3R_TEST_UNIT(X) static Test_Unit test_unit_instance {#X};
 #define H3R_TEST_RUN H3R_NS::test_unit_instance.Run ();
 
-#define H3R_TEST_(X) static struct Test_##X final : public Test_Proc { \
+#define H3R_TEST_(X) static struct Test_##X final : Test_Proc { \
     Test_##X() { test_unit_instance.Add (this); } \
     void operator ()() override { \
         OS::Log_stdout ("%s: " #X EOL, test_unit_instance.Name ());

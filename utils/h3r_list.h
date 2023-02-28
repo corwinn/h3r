@@ -40,9 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
 template <typename T> struct LD { void operator()(T & t) { t.~T (); } };
 template <typename T> struct LD<T *> { void operator()(T *&) {} };
 
@@ -119,9 +116,6 @@ template <typename T> class List //LATER Insert() - should the need arise
 
     public void Resize(int len) { _l.Resize (len); }
 };// List
-
-#undef public
-#undef private
 
 NAMESPACE_H3R
 

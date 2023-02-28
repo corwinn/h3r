@@ -45,9 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
 // Recursive (directory) asynchronous FS enumerator.
 // T - observer;
 // bool (T::*)(const EnumItem &) - event handler called in async thread context;
@@ -126,9 +123,6 @@ template <typename T> class AsyncFsEnum final
     } _task;
     public bool Complete() const { return _thread.Done (); }
 };// AsyncFsEnum
-
-#undef private
-#undef public
 
 NAMESPACE_H3R
 #endif

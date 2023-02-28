@@ -40,9 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
 // LIFO. Primary use: avoid recursive calls. Primary reason: dir enum.
 // You free T *; T should get ~T() called
 template <typename T> class Stack final
@@ -68,9 +65,6 @@ template <typename T> class Stack final
     public const T * begin() const { return _b.begin (); }
     public const T * end  () const { return _b.end (); }
 };
-
-#undef public
-#undef private
 
 NAMESPACE_H3R
 

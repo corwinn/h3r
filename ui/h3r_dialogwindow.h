@@ -86,12 +86,10 @@ enum class DialogResult {OK, Cancel, Yes, No};
 // Alt+F4 displays the quit dialog over the 1st one), where text is partially
 // visible; means the z-ordering becomes mandatory: the RenderEngine - not that
 // simple.
+#undef public
 class DialogWindow : public Window
-{
 #define public public:
-#define private private:
-#define protected protected:
-
+{
     private Window * _w;
     private Point _size;
     // These are not resizeable.
@@ -112,10 +110,6 @@ class DialogWindow : public Window
         Window::OnClose (s, allow);
     }
 };
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 

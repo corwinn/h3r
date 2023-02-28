@@ -58,17 +58,17 @@ class Game final
     H3R_CANT_MOVE(Game)
 
                               // These names matter not - their order does.
-    private: Log_Stdout _2nd; // You're using OS::Alloc (), OS::Free (), and
+    private Log_Stdout _2nd; // You're using OS::Alloc (), OS::Free (), and
 #if LOG_FILE
-    private: Log_File   _3rd; //
+    private Log_File   _3rd; //
 #endif
-    private: Log        _4th; // Log::Info ()
+    private Log        _4th; // Log::Info ()
 
-    public: static IWindow * MainWindow;
+    public static IWindow * MainWindow;
 
-    public: Game(const char * process_path);
-    public: ~Game();
-    public: void SilentLog(bool);
+    public Game(const char * process_path);
+    public ~Game();
+    public void SilentLog(bool);
     // Main Thread.
     // This is the thing to call periodically while waiting for some async
     // task to complete. The thing to call from the async task.
@@ -78,7 +78,7 @@ class Game final
     // device on its own while communicating with the main thread with simple
     // messages like start/stop/etc.; it can log w/o the main thread because
     // the log service is threaded.
-    public: static void ProcessThings();
+    public static void ProcessThings();
     // Another design if ProcessThings() code becomes too repetitious.
     // Example:
     //  _vfs {argv[1]};
@@ -115,21 +115,21 @@ class Game final
     //
     // This is not and it will never be a server, or handle-it-all framework,
     // or R&D on parallelism, or whatever; because: short and simple.
-    public: static TaskThread IOThread;
+    public static TaskThread IOThread;
 
-    public: static ResManager * RM;//PERHAPS this doesn't need to be public
+    public static ResManager * RM;//PERHAPS this doesn't need to be public
 
-    public: static Stream * GetResource(const String & name);
+    public static Stream * GetResource(const String & name);
 
-    public: static h3rPlayerColor CurrentPlayerColor;
+    public static h3rPlayerColor CurrentPlayerColor;
 
-    private: class ResManagerInit final
+    private class ResManagerInit final
     {
-        private: H3R_NS::GameArchives GA {};
-        private: H3R_NS::ResManager & RM;
-        private: H3R_NS::AsyncFsEnum<ResManagerInit> _subject;
-        private: int _files {}, _dirs {};
-        private: bool HandleItem(
+        private H3R_NS::GameArchives GA {};
+        private H3R_NS::ResManager & RM;
+        private H3R_NS::AsyncFsEnum<ResManagerInit> _subject;
+        private int _files {}, _dirs {};
+        private bool HandleItem(
             const H3R_NS::AsyncFsEnum<ResManagerInit>::EnumItem & itm)
         {
             if (! itm.IsDirectory) {
@@ -154,16 +154,16 @@ class Game final
             } else _dirs++;
             return true;
         }
-        public: ResManagerInit(H3R_NS::String path, H3R_NS::ResManager& rm)
+        public ResManagerInit(H3R_NS::String path, H3R_NS::ResManager& rm)
             : GA {}, RM{rm}, _subject{
 //np base_path: path, observer: this, handle_on_item: &ResManagerInit::HandleItem
                 path, this, &ResManagerInit::HandleItem} {}
-        public: bool Complete() const { return _subject.Complete (); }
-        public: int Files() const { return _files; }
-        public: int Directories() const { return _dirs; }
+        public bool Complete() const { return _subject.Complete (); }
+        public int Files() const { return _files; }
+        public int Directories() const { return _dirs; }
     }; // ResManagerInit
 
-    public: int Run(int, char **);
+    public int Run(int, char **);
 };// Game
 
 NAMESPACE_H3R

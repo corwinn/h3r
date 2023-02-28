@@ -24,3 +24,4 @@ Coding Convention
  - new code shall be short, simple, and independent as much as possible
  - threads shall be polling threads - no sleeping on sync objects
  - avoid static init - use the Game singleton instead
+ - all class/struct "members" start with access specifier, w/o the ":"

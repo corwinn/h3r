@@ -61,9 +61,9 @@ H3R_NAMESPACE
 // There is no color state here. Everything is pre-encoded at the game data.
 class GC
 {
-    public: static GC * Current;
+    public static GC * Current;
 
-    public: inline void RenderBox(const Box & b)
+    public inline void RenderBox(const Box & b)
     {
         glBegin (GL_LINE_LOOP);
             glVertex2d (b.Pos.X         , b.Pos.Y         );

@@ -44,23 +44,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+#undef public
 class Fnt final : public ResDecoder
+#define public public:
 {
-    private: Stream * _s;
+    private Stream * _s;
 #pragma pack(push, 1)
-    private: struct Entry
+    private struct Entry
     {
         int XOffset1;
         int Width;
         int XOffset2;
     };
 #pragma pack(pop)
-    private: Array<Fnt::Entry> _entries {256}; // read as one block
-    private: Array<byte> _data {}; // bitmaps read as one block
-    private: int _ww {}; // widest width
-    private: int _h {};  // highest height
-    private: bool _ok {false};
-    public: Fnt(Stream * stream)
+    private Array<Fnt::Entry> _entries {256}; // read as one block
+    private Array<byte> _data {}; // bitmaps read as one block
+    private int _ww {}; // widest width
+    private int _h {};  // highest height
+    private bool _ok {false};
+    public Fnt(Stream * stream)
         : ResDecoder {}, _s{stream}
     {
         if (nullptr == stream)
@@ -73,12 +75,14 @@ class Fnt final : public ResDecoder
             _glyphs.Clear ();
         }
     }
-    public: ~Fnt() override {}
+    public ~Fnt() override {}
     // widest width
-    public: int Width () override { return _ww; }
+    public int Width () override { return _ww; }
     // highest height
-    public: int Height () override { return _h; }
+    public int Height () override { return _h; }
+#undef public
     public: struct Glyph : public Entry
+#define public public:
     {
         byte * Bitmap; // refers _data
         Glyph(const Entry & c)
@@ -87,7 +91,7 @@ class Fnt final : public ResDecoder
         }
     };
     // Init size and format info.
-    private: bool Init()
+    private bool Init()
     {
         if (nullptr == _s) return false;
         if (! *_s) return false;
@@ -119,23 +123,23 @@ class Fnt final : public ResDecoder
         }
         return true;
     }// Init
-    private: Array<Fnt::Glyph> _glyphs {256}; // cache
-    public: operator bool() { return _ok; }//TODO at the base class
-    public: inline int HorisontalAdvance(byte char_index)
+    private Array<Fnt::Glyph> _glyphs {256}; // cache
+    public operator bool() { return _ok; }//TODO at the base class
+    public inline int HorisontalAdvance(byte char_index)
     {
         const Fnt::Glyph & g = _glyphs[char_index];
         return g.XOffset1 + g.Width + g.XOffset2;
     }
-    public: inline int GlyphWidth(byte char_index)
+    public inline int GlyphWidth(byte char_index)
     {
         return _glyphs[char_index].Width;
     }
-    public: inline byte * GlyphBitmap(byte char_index)
+    public inline byte * GlyphBitmap(byte char_index)
     {
         return _glyphs[char_index].Bitmap;
     }
     // For line start
-    public: inline int GlyphXOffset1(byte char_index)
+    public inline int GlyphXOffset1(byte char_index)
     {
         return _glyphs[char_index].XOffset1;
     }

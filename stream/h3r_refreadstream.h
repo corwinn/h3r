@@ -48,13 +48,13 @@ H3R_NAMESPACE
 //      RefReadStream {ThreadSafeReadStream {base_one}, ...}
 // Why: because you might want to not cache everything in RAM.
 //LATER If you want everything cached, use MemoryStream instead of this one.
+#undef public
 class RefReadStream final : public Stream
+#define public public:
 {
     H3R_CANT_COPY(RefReadStream)
     H3R_CANT_MOVE(RefReadStream)
 
-#define public public:
-#define private private:
     private bool _ok {false};
     private off_t _start, _size, _pos {};
     public RefReadStream(Stream * s, off_t start, off_t size);
@@ -69,8 +69,6 @@ class RefReadStream final : public Stream
     // same meaning as constructor parameters; can't modify the _f thought
     public Stream & ResetTo(off_t start, off_t size);
     public Stream & Reset() override;
-#undef public
-#undef private
 };
 
 NAMESPACE_H3R

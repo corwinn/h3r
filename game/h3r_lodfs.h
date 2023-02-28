@@ -46,9 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_memorystream.h"
 #include "h3r_resnamehash.h"
 
-// placement new
-#include <new>
-
 //TODO ensure all caching is optional
 #define IMPROVISED_CACHE
 #undef IMPROVISED_CACHE_UNZIP
@@ -62,12 +59,10 @@ H3R_NAMESPACE
 //
 // On 2nd thought this shouldn't be final, should one decide to use own,
 // extended format (better compression for one, and or hashed names, etc.).
+#undef public
 class LodFS : public VFS
-{
 #define public public:
-#define private private:
-#define protected protected:
-
+{
 #ifdef IMPROVISED_CACHE
     // Improvised cache
     private struct CacheEntry final
@@ -116,10 +111,6 @@ class LodFS : public VFS
         H3R_DESTROY_OBJECT(result, LodFS)
         return nullptr;
     }
-
-#undef public
-#undef private
-#undef protected
 };// LodFS
 
 NAMESPACE_H3R

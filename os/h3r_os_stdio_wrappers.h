@@ -89,14 +89,16 @@ namespace OS {
 // retry after you freed some RAM - you're in for a reboot. This can be avoided
 // by using CreateFile(FILE_FLAG_NO_BUFFERING) instead of fopen() - so perhaps
 //TODO there will be a command line option addressing it.
+#undef public
 class FileError: public Error
+#define public public:
 {
-    protected: bool Handled(Error * e = nullptr) override final;
-    public: enum class Op {Read, Write, Seek, Open, Close, Replace} Op;
-    public: enum class Code {NoPermission, NoSpace, Physical, NoDev,
+    protected bool Handled(Error * e = nullptr) override final;
+    public enum class Op {Read, Write, Seek, Open, Close, Replace} Op;
+    public enum class Code {NoPermission, NoSpace, Physical, NoDev,
         Loop, NameTooLong, NoMem} Code;
-    public: FileError(enum Op o, enum Code c) : Op {o}, Code {c} {}
-    public: bool Replace {false};
+    public FileError(enum Op o, enum Code c) : Op {o}, Code {c} {}
+    public bool Replace {false};
 };
 
 // These functions are designed to not fail. They will

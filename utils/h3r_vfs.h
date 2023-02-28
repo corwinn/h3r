@@ -45,8 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_taskstate.h"
 
 H3R_NAMESPACE
-#define public public:
-#define private private:
 
 //TODO unicode support
 // Consider ASCII to be the safe choice for your filenames.
@@ -113,9 +111,7 @@ class VFS
         public inline bool PercentageProgress() const override { return _pp; }
     };
 
-#undef public
-    public: class VFSEvent
-#define public public:
+    public class VFSEvent
     {
         private VFSEvent * _next;
         public virtual void Do(VFSInfo * a) { if (_next) _next->Do (a); }
@@ -134,8 +130,6 @@ class VFS
     public VFSEvent OnProgress;
 };// VFS
 
-#undef public
-#undef private
 NAMESPACE_H3R
 
 #endif

@@ -44,11 +44,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+#undef public
 class Pal final : public ResDecoder
-{
 #define public public:
-#define private private:
-
+{
     private Stream * _s;
     private Array<byte> _rgb {};
     private short _pal_entry_num {};
@@ -140,9 +139,6 @@ class Pal final : public ResDecoder
         }
     }
 };// Pal
-
-#undef public
-#undef private
 
 NAMESPACE_H3R
 

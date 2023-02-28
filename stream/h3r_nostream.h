@@ -40,9 +40,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // A stream that does nothing, including not decorating anything.
+#undef public
 class NoStream final : public Stream
-{
 #define public public:
+{
     public NoStream() : Stream {} {}
     public NoStream(Stream * s) : Stream {s} {}
     public ~NoStream() override {}
@@ -56,7 +57,6 @@ class NoStream final : public Stream
         return *this;
     }
     public inline Stream & Reset() override { return *this; }
-#undef public
 };
 
 NAMESPACE_H3R

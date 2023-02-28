@@ -138,12 +138,10 @@ H3R_NAMESPACE
 //
 // I do think all these objects can be scripted entirely.
 // OK let me script them in C++ 1st - see what falls out.
+#undef public
 class Object : public ISerializable
-{
 #define public public:
-#define private private:
-#define protected protected:
-
+{
     // Game engine. See "game.dia".
     public virtual void Visit(Object *) {}
 
@@ -185,11 +183,11 @@ class Object : public ISerializable
 
     public virtual ~Object(){}
 
-#undef public
     // allow to change the type of X, Y, Z, should the need arise, w/o an issue
+#undef public
     public: struct Pos final : public ISerializable
-    {
 #define public public:
+    {
         h3rCoord X, Y, Z;
         public Pos() {}
         public Pos(Stream & s)
@@ -220,10 +218,6 @@ class Object : public ISerializable
 static struct _h3r_r_object_##O { \
     _h3r_r_object_##O () { Object::Register<O> (V, T); } \
 };
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 #endif

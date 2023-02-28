@@ -37,8 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_log.h"
 #include "h3r_textrenderingengine.h"
 
-#include <new>
-
 H3R_NAMESPACE
 
 TextRenderingEngine::TextRenderingEngine()

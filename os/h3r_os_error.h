@@ -48,16 +48,17 @@ H3R_NAMESPACE
 #define H3R_THROW(E, M) throw E {__FILE__, __LINE__, M};
 class Exception
 {
-    private: const char * _file;
-    private: int _line;
-    private: const char * _msg;
-    public: Exception(const char * file, int line, const char * msg)
+    private const char * _file;
+    private int _line;
+    private const char * _msg;
+    public Exception(const char * file, int line, const char * msg)
         : _file {file}, _line {line}, _msg {msg} {}
-    public: inline const char * File() const { return _file; }
-    public: inline int Line() const { return _line; }
-    public: inline const char * Msg() const { return _msg; }
+    public inline const char * File() const { return _file; }
+    public inline int Line() const { return _line; }
+    public inline const char * Msg() const { return _msg; }
 };
 // Show when things get called with invalid arguments.
+#undef public
 class ArgumentException : public Exception
 {
     public: using Exception::Exception;
@@ -73,6 +74,7 @@ class NotImplementedException : public Exception
 {
     public: using Exception::Exception;
 };
+#define public public:
 
 // H3R_TEST
 #else
@@ -93,11 +95,11 @@ class Error
     // e is optional specific error: ErrorFileNoSpace for example:
     //   if (Error::File.Handled (file_no_space)) ...
     // If e != nullptr, it returns e->Handled (nullptr); false otherwise.
-    public: virtual bool Handled(Error * e = nullptr);
-    public: static Error Unhandled;
-    public: static Error & Memory;
-    public: static Error & File;
-    public: static Error & Log;
+    public virtual bool Handled(Error * e = nullptr);
+    public static Error Unhandled;
+    public static Error & Memory;
+    public static Error & File;
+    public static Error & Log;
 };
 
 } // namespace OS

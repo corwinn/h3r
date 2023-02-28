@@ -49,9 +49,6 @@ H3R_NAMESPACE
 // FFDNode = f (SNode, Stream)
 class FFDNode
 {
-#define public public:
-#define private private:
-
     private Array<byte> _data {}; // empty for _array == true; _fields has them
     private Stream * _s {}; // reference
     private FFD::SNode * _n {}; // reference ; node
@@ -273,9 +270,6 @@ class FFDNode
         for (auto node : _fields) cnt += node->NodeCount ();
         return cnt;
     }
-
-#undef public
-#undef private
 };// FFDNode
 
 NAMESPACE_H3R

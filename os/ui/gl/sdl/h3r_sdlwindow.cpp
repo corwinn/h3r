@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **** END LICENCE BLOCK ****/
 
 #include "h3r_sdlwindow.h"
-#include <SDL2/SDL_mixer.h>
 
 namespace __pointless_verbosity
 {

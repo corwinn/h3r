@@ -44,21 +44,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // A very simple control for positioning text on screen.
+#undef public
 class Label: public Control
+#define public public:
 {
-    private: RenderEngine::TextKey _tkey;
-    private: String _font;
-    private: String _text;
+    private RenderEngine::TextKey _tkey;
+    private String _font;
+    private String _text;
 
-    public: Label(
+    public Label(
         const String &, const String &, const Point &, Control *);
-    public: Label(
+    public Label(
         const String &, const String &, const Point &, Window *);
-    public: ~Label() override { Window::UI->DeleteText (_tkey); }
+    public ~Label() override { Window::UI->DeleteText (_tkey); }
 
-    public: inline const String & Text() const { return _text; }
-    public: inline const String & Font() const { return _font; }
-    public: inline void SetText(const String & value)
+    public inline const String & Text() const { return _text; }
+    public inline const String & Font() const { return _font; }
+    public inline void SetText(const String & value)
     {
         _text = value;
         Window::UI->UpdateText (

@@ -48,42 +48,42 @@ H3R_NAMESPACE
 // Singleton.
 class TextRenderingEngine final
 {
-    private: struct FontInfo final
+    private struct FontInfo final
     {
         FontInfo(Font * f, const String & name)
             : F{f}, Name{name} {}
         Font * F {};
         String Name {};
     };
-    private: List<FontInfo> _fonts;
-    private: bool _ft2 {};
-    private: TextRenderingEngine();
-    public: ~TextRenderingEngine();
+    private List<FontInfo> _fonts;
+    private bool _ft2 {};
+    private TextRenderingEngine();
+    public ~TextRenderingEngine();
 
     // increases on demand; lowers alloc() calls
-    private: byte * _text_buffer {};
-    private: int _text_width {};
-    private: int _text_height {};
-    public: inline int TexBufferPitch() { return _text_width * 2; }
+    private byte * _text_buffer {};
+    private int _text_width {};
+    private int _text_height {};
+    public inline int TexBufferPitch() { return _text_width * 2; }
     // Layout and render the text into 2-channel LUMINANCE_ALPHA buffer.
     // The "box" could increase in size. Do not manage the returned buffer.
     //LATER Alignment
-    public: byte * RenderText(const String & font_name, const String & txt,
+    public byte * RenderText(const String & font_name, const String & txt,
         int & w, int & h);
 
-    public: String LayoutText(const String & font_name, const String & txt,
+    public String LayoutText(const String & font_name, const String & txt,
         const Box & box, Box & actualbox);
 
-    public: Point MeasureText(const String & font_name, const String & txt);
+    public Point MeasureText(const String & font_name, const String & txt);
 
     // Helper for font loading + memory management + handle duplicates.
     // Returns nullptr on failure. The "! nullptr" one is managed by the engine.
     // The Font object can be used at RenderText().
     // Feel free to create and manage font objects outside the
     // TextRenderingEngine.
-    private: Font * TryLoadFont(const String & name);
+    private Font * TryLoadFont(const String & name);
 
-    public: static TextRenderingEngine & One();
+    public static TextRenderingEngine & One();
 };// TextRenderingEngine
 
 NAMESPACE_H3R

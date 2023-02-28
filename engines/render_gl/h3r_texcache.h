@@ -41,9 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
 // Use-case:
 //   var e = tc->Cache (w, h, bug, 3)
 //   vertices.uv = e.uv;
@@ -88,9 +85,6 @@ class TexCache final
 
     public static TexCache * One ();
 };
-
-#undef public
-#undef private
 
 NAMESPACE_H3R
 

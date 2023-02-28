@@ -40,10 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-#define protected protected:
-
 // These things should be set/get as one. Because threads. Thread A creates an
 // immutable task state object. Thread B reads it, or not. Acquire/Release at
 // one place - not for each field.
@@ -113,10 +109,6 @@ class TaskState
     public: inline const TaskState * ParentTaskState() const { return _tp; }*/
     public static TaskState Unknown;
 };// TaskState
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 

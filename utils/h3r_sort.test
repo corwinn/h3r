@@ -59,7 +59,7 @@ struct Node final
     int Index;
 };
 //TODO get SortableArray out of here
-template <typename T> struct SortableArray final : public ISortable<Node>
+template <typename T> struct SortableArray final : ISortable<Node>
 {
     Array<T> & _a;
     SortableArray(Array<T> & a) : _a{a}

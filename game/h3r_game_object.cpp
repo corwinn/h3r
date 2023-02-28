@@ -36,8 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_game_object.h"
 #include "h3r_list.h"
 
-#include <new>
-
 H3R_NAMESPACE
 
 // The MM could be off yet, so its off-limits <=> random static init.
@@ -46,10 +44,10 @@ H3R_NAMESPACE
 
 namespace { struct ObjectFactory
 {
-    private: List<h3rMapVersion> _map_version_hash {};
-    private: List<List<Object *> *> _obj_factories {};
-    private: ObjectFactory() {}
-    public: ~ObjectFactory()
+    private List<h3rMapVersion> _map_version_hash {};
+    private List<List<Object *> *> _obj_factories {};
+    private ObjectFactory() {}
+    public ~ObjectFactory()
     {
         for (int i = 0; i < _obj_factories.Count (); i++) {
             if (nullptr == _obj_factories[i]) continue;
@@ -61,16 +59,16 @@ namespace { struct ObjectFactory
             OS::Mfree (_obj_factories[i]);
         }
     }
-    private: int const _distinct_types {255};
-    private: int const _distinct_versions {6};
-    private: int MapVersionHash(const h3rMapVersion v)
+    private int const _distinct_types {255};
+    private int const _distinct_versions {6};
+    private int MapVersionHash(const h3rMapVersion v)
     {
         // They are 3; double that; you don't need a map still.
         for (int i = 0; i < _map_version_hash.Count (); i++)
             if (v == _map_version_hash[i]) return i;
         return -1;
     }
-    private: Object * GetObj(h3rMapVersion v, h3rObjRef r)
+    private Object * GetObj(h3rMapVersion v, h3rObjRef r)
     {
         int map_version = One ().MapVersionHash (v);
         if (-1 == map_version)
@@ -81,7 +79,7 @@ namespace { struct ObjectFactory
             return nullptr;
         return (*_obj_factories[map_version])[r];
     }
-    private: void BindObj(Object * obj, h3rMapVersion v, h3rObjType t)
+    private void BindObj(Object * obj, h3rMapVersion v, h3rObjType t)
     {
         int map_version = MapVersionHash (v);
         if (-1 == map_version) {
@@ -102,16 +100,16 @@ namespace { struct ObjectFactory
             "bug: ObjectFactory::Bind() something fishy is going on")
         (*_obj_factories[map_version])[t] = obj;
     }
-    private: static inline ObjectFactory & One()
+    private static inline ObjectFactory & One()
     {
         static ObjectFactory m;
         return m;
     }
-    public: static inline Object * Get(h3rMapVersion v, h3rObjRef r)
+    public static inline Object * Get(h3rMapVersion v, h3rObjRef r)
     {
         return One ().GetObj (v, r);
     }
-    public: static inline void Bind(Object * obj, h3rMapVersion v, h3rObjType t)
+    public static inline void Bind(Object * obj, h3rMapVersion v, h3rObjType t)
     {
         One ().BindObj (obj, v, t);
     }

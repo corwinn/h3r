@@ -62,11 +62,10 @@ H3R_NAMESPACE
 //
 // It shall process messages while hidden.
 // It takes care of ~OSWindow().
+#undef public
 class Window : public IWindow
-{
 #define public public:
-#define private private:
-#define protected protected:
+{
 #define IW
 
     //TODO static
@@ -149,9 +148,6 @@ class Window : public IWindow
     // Forget to call this one, and you shall see nothing or a mess.
     IW protected virtual void OnResize(int, int) override;
 
-#undef public
-#undef private
-#undef protected
 #undef IW
 };// Window
 

@@ -41,9 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
 // Game data archives state.
 // Also, because case sensitive FS requires specific handling.
 class GameArchives final
@@ -82,9 +79,6 @@ class GameArchives final
 
     // [MOD] public void Add(String archive); //LATER
 };// GameArchives
-
-#undef private
-#undef public
 
 NAMESPACE_H3R
 #endif

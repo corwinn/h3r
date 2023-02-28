@@ -47,8 +47,6 @@ H3R_LOG_STATIC_INIT
 
 #include "h3r_mainwindow.h"
 
-#include <new>
-
 H3R_NAMESPACE
 
 TaskThread Game::IOThread {};

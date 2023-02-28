@@ -41,11 +41,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+#undef public
 class Log_File final : public ILog
+#define public public:
 {
-    private: OS::FileStream _s;
-    public: void Log(String &) override;
-    public: Log_File(String);
+    private OS::FileStream _s;
+    public void Log(String &) override;
+    public Log_File(String);
 };
 
 NAMESPACE_H3R

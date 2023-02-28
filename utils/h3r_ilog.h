@@ -46,7 +46,7 @@ H3R_NAMESPACE
 //  - class FileLog: public ILog
 class ILog
 {
-    public: virtual void Log(String &) {}
+    public virtual void Log(String &) {}
 };
 
 NAMESPACE_H3R

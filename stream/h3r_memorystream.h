@@ -41,11 +41,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // A stream wrapped buffer.
+#undef public
 class MemoryStream final : public Stream
-{
 #define public public:
-#define private private:
-
+{
     private Array<byte> _buf {};
     private bool _ok {false};
     private off_t _pos {}; // rw pointer
@@ -89,10 +88,7 @@ class MemoryStream final : public Stream
 
     // Direct buffer access.
     public const byte * Buffer() const { return _buf.operator byte * (); }
-
-#undef public
-#undef private
-};
+};// MemoryStream
 
 NAMESPACE_H3R
 

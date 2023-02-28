@@ -42,7 +42,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_list.h"
 #include "h3r_criticalsection.h"
 #include "h3r_timing.h"
+
+#undef public
+#undef private
+#undef protected
 #include <cmath>
+// Undef for the "extends" lines only
+#define public public:
+#define private private:
+#define protected protected:
 
 H3R_NAMESPACE
 
@@ -58,14 +66,12 @@ H3R_NAMESPACE
 //      * Advantage(s) of IOThread being at Game, besides init?
 //      * Remember the plug-in aspect.
 //LATER Register(ResManager)? pros and cons; right now doing so is a bad idea
+#undef protected
 class ResManager : protected VFS
+#define protected protected:
 {
     H3R_CANT_COPY(ResManager)
     H3R_CANT_MOVE(ResManager)
-
-#define public public:
-#define private private:
-#define protected protected:
 
     // Hide the VFS constructor because the ResManager doesn't deal with paths;
     // it deals with VFS.
@@ -267,9 +273,6 @@ class ResManager : protected VFS
     public virtual bool TaskComplete();
 };// ResManager
 
-#undef public
-#undef private
-#undef protected
 NAMESPACE_H3R
 
 #endif

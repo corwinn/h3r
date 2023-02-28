@@ -43,8 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_zipinflatestream.h"
 #include "h3r_ffdnode.h"
 
-#include <new>
-
 H3R_NAMESPACE
 
 // 1000 classes? No thanks.

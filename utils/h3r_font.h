@@ -44,19 +44,19 @@ H3R_NAMESPACE
 
 class Font
 {
-    private: String _name;
-    protected: Font(const String & name) : _name {name} {}
-    public: virtual ~Font() {}
-    public: inline bool operator==(const Font & b) const
+    private String _name;
+    protected Font(const String & name) : _name {name} {}
+    public virtual ~Font() {}
+    public inline bool operator==(const Font & b) const
     {
         return b._name == _name;
     }
-    public: inline bool operator!=(const Font & b) const
+    public inline bool operator!=(const Font & b) const
     {
         return ! operator== (b);
     }
 
-    public: virtual Point MeasureText(const String &) { return Point {}; }
+    public virtual Point MeasureText(const String &) { return Point {}; }
 
     // Render a byte sequence into "buf" of size w*h*2 bytes.
     // Each pixel: byte[0] - has luminance value; byte[1] has alpha value; e.g.
@@ -64,10 +64,10 @@ class Font
     // transparency at byte[1].
     // The contract: GL_LUMINANCE_ALPHA. Use Font::AllocateBuffer(w, h).
     // What was MeasureText() above, shall be give here.
-    public: virtual void RenderText(const String &, byte *, int, int) {}
+    public virtual void RenderText(const String &, byte *, int, int) {}
 
     // This buffer is not mine to handle!
-    public: static inline byte * AllocateBuffer(int w, int h)
+    public static inline byte * AllocateBuffer(int w, int h)
     {
         byte * buf {};
         OS::Alloc (buf, w*h*2); // GL_LUMINANCE_ALPHA
@@ -76,7 +76,7 @@ class Font
 
     // Complement to the above function.
     // copy width*height from "src" at left,top at "dst"; "dw" is dst width;
-    public: static inline void CopyRectangle (
+    public static inline void CopyRectangle (
         byte * dst, int dw, int l, int t, const byte * src, int w, int h,
          int src_pitch)
     {

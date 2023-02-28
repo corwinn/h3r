@@ -84,8 +84,8 @@ H3R_NAMESPACE
 // Abbreviations: "eh" - event handler; "s" - stream; "r" - result;
 template <typename T> class AsyncAdapter final
 {
-    public: enum class StreamOp {Read, Write, Seek, Tell, Size, OK};
-    public: struct Result
+    public enum class StreamOp {Read, Write, Seek, Tell, Size, OK};
+    public struct Result
     {
         enum StreamOp Op;
         off_t Pos, Size;
@@ -93,8 +93,8 @@ template <typename T> class AsyncAdapter final
     };
     using EventHandler = void (T::*)(const Result);
 
-    private: TaskThread & _async;
-    public: AsyncAdapter(TaskThread & thread, T * observer,
+    private TaskThread & _async;
+    public AsyncAdapter(TaskThread & thread, T * observer,
         EventHandler on_complete, EventHandler on_canceled)
         : _async {thread}, _eh_obj {observer}, _eh_complete {on_complete},
         _eh_canceled {on_canceled}, Stream {*this}, _task {*this}
@@ -103,18 +103,18 @@ template <typename T> class AsyncAdapter final
         H3R_ENSURE(nullptr != on_complete, "on_complete can't be null")
         H3R_ENSURE(nullptr != on_canceled, "on_canceled can't be null")
     }
-    private: OS::CriticalSection _s_in_use_lock {};
-    private: bool _s_in_use {};
-    private: Stream * _s {};
-    private: T * _eh_obj {};
-    private: EventHandler _eh_complete {};
-    private: EventHandler _eh_canceled {};
+    private OS::CriticalSection _s_in_use_lock {};
+    private bool _s_in_use {};
+    private Stream * _s {};
+    private T * _eh_obj {};
+    private EventHandler _eh_complete {};
+    private EventHandler _eh_canceled {};
 
-    public: class StreamProperty { // public Stream Stream { set {} }
-        private: AsyncAdapter<T> & _a;
-        private: StreamProperty(AsyncAdapter<T> & a) : _a {a} {}
+    public class StreamProperty { // public Stream Stream { set {} }
+        private AsyncAdapter<T> & _a;
+        private StreamProperty(AsyncAdapter<T> & a) : _a {a} {}
         friend class AsyncAdapter<T>;
-        public: inline Stream & operator=(const Stream & s)
+        public inline Stream & operator=(const Stream & s)
         {
             __pointless_verbosity::CriticalSection_Acquire_finally_release
                 ____ {_a._s_in_use_lock};
@@ -126,45 +126,47 @@ template <typename T> class AsyncAdapter final
     } Stream;
 
     // The prefix "Thr" marks the methods TaskThread context.
-    private: void ThrNotify(bool canceled)
+    private void ThrNotify(bool canceled)
     {
         if (canceled) (_eh_obj->*_eh_canceled) (_task._r);
         else          (_eh_obj->*_eh_complete) (_task._r);
     }
-    private: inline bool ThrOK() { return _s->operator bool(); }
-    private: inline void ThrSeek(off_t pos) { _s->Seek (pos); }
-    private: inline off_t ThrTell() { return _s->Tell (); }
-    private: inline off_t ThrSize() { return _s->Size (); }
-    private: inline void ThrRead(void * b, size_t bytes = 1)
+    private inline bool ThrOK() { return _s->operator bool(); }
+    private inline void ThrSeek(off_t pos) { _s->Seek (pos); }
+    private inline off_t ThrTell() { return _s->Tell (); }
+    private inline off_t ThrSize() { return _s->Size (); }
+    private inline void ThrRead(void * b, size_t bytes = 1)
     {
         _s->Read (b, bytes);
     }
-    private: inline void ThrWrite(const void * b, size_t bytes = 1)
+    private inline void ThrWrite(const void * b, size_t bytes = 1)
     {
         _s->Write (b, bytes);
     }
-    private: inline void Do() { _async.Task = _task; }
+    private inline void Do() { _async.Task = _task; }
 
-    private: class StreamTask final : public IAsyncTask
+#undef public
+    private class StreamTask final : public IAsyncTask
+#define public public:
     {
-        private: AsyncAdapter<T> & _a;
-        private: StreamTask(AsyncAdapter<T> & a) : _a {a} {}
+        private AsyncAdapter<T> & _a;
+        private StreamTask(AsyncAdapter<T> & a) : _a {a} {}
         friend class AsyncAdapter<T>;
-        private: Result _r;
-        private: off_t _pos {};         // param: Seek()
-        private: void * _buf {};        // param: Read()
-        private: const void * _cbuf {}; // param: Write()
-        private: size_t _bytes {};      // param: Read(), Write()
-        private: bool _cancel {}, // param: ThrNotify()
+        private Result _r;
+        private off_t _pos {};         // param: Seek()
+        private void * _buf {};        // param: Read()
+        private const void * _cbuf {}; // param: Write()
+        private size_t _bytes {};      // param: Read(), Write()
+        private bool _cancel {}, // param: ThrNotify()
                       _dirty {}; // sentinel: 1 task at a time
-        private: OS::CriticalSection _op_lock {};
-        private: struct try_finally_trig final
+        private OS::CriticalSection _op_lock {};
+        private struct try_finally_trig final
         {// c++ try {} finally {}
             bool & _v;
             try_finally_trig(bool & v) : _v {v} {}
             ~try_finally_trig() { _v = !_v; }
         };
-        public: inline void Do() override // TaskThread context
+        public inline void Do() override // TaskThread context
         {
             try_finally_trig ____ {_dirty};
             switch (_r.Op) {
@@ -179,7 +181,7 @@ template <typename T> class AsyncAdapter final
             _a.ThrNotify (_cancel);
         }
         // setup part
-        public: inline void Do(StreamOp op)
+        public inline void Do(StreamOp op)
         {
             __pointless_verbosity::CriticalSection_Acquire_finally_release
                 ____ {_op_lock};
@@ -188,38 +190,42 @@ template <typename T> class AsyncAdapter final
             _r.Op = op;
             _a.Do (); // notifies the TaskThread to invoke the above Do()
         }
-        inline void DoOK() { Do (StreamOp::OK); }
-        inline void DoSeek(off_t pos) { _pos = pos; Do (StreamOp::Seek); }
-        inline void DoTell() { Do (StreamOp::Tell); }
-        inline void DoSize() { Do (StreamOp::Size); }
-        inline void DoRead(void * b, size_t bytes = 1)
+        public inline void DoOK() { Do (StreamOp::OK); }
+        public inline void DoSeek(off_t pos)
+        {
+            _pos = pos;
+            Do (StreamOp::Seek);
+        }
+        public inline void DoTell() { Do (StreamOp::Tell); }
+        public inline void DoSize() { Do (StreamOp::Size); }
+        public inline void DoRead(void * b, size_t bytes = 1)
         {
             _buf = b; _bytes = bytes; Do (StreamOp::Read);
         }
-        inline void DoWrite(const void * b, size_t bytes = 1)
+        public inline void DoWrite(const void * b, size_t bytes = 1)
         {
             _cbuf = b; _bytes = bytes; Do (StreamOp::Write);
         }
         // Bridge part - TaskThread context
-        inline void OK() { _r.OK = _a.ThrOK (); }
-        inline void Seek() { _a.ThrSeek (_pos); }
-        inline void Tell() { _r.Pos = _a.ThrTell (); }
-        inline void Size() { _r.Size = _a.ThrSize (); }
-        inline void Read() { _a.ThrRead (_buf, _bytes); }
-        inline void Write() { _a.ThrWrite (_cbuf, _bytes); }
+        public inline void OK() { _r.OK = _a.ThrOK (); }
+        public inline void Seek() { _a.ThrSeek (_pos); }
+        public inline void Tell() { _r.Pos = _a.ThrTell (); }
+        public inline void Size() { _r.Size = _a.ThrSize (); }
+        public inline void Read() { _a.ThrRead (_buf, _bytes); }
+        public inline void Write() { _a.ThrWrite (_cbuf, _bytes); }
     } _task;
 
-    public: inline void Cancel() { _task.cancel = true; }
+    public inline void Cancel() { _task.cancel = true; }
 
-    public: inline void OK() { _task.DoOK (); }
-    public: inline void Seek(off_t pos) { _task.DoSeek (pos); }
-    public: inline void Tell() { _task.DoTell (); }
-    public: inline void Size() { _task.DoSize (); }
-    public: inline void Read(void * b, size_t bytes = 1)
+    public inline void OK() { _task.DoOK (); }
+    public inline void Seek(off_t pos) { _task.DoSeek (pos); }
+    public inline void Tell() { _task.DoTell (); }
+    public inline void Size() { _task.DoSize (); }
+    public inline void Read(void * b, size_t bytes = 1)
     {
         _task.DoRead (b, bytes);
     }
-    public: inline void Write(const void * b, size_t bytes = 1)
+    public inline void Write(const void * b, size_t bytes = 1)
     {
         _task.DoWrite (b, bytes);
     }

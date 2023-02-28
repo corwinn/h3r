@@ -65,8 +65,6 @@ button click     : Data_Heroes3_snd/BUTTON.wav
 #include "h3r_timing.h"
 #include "h3r_renderengine.h"
 
-#include <new>
-
 H3R_NAMESPACE
 
 //TODO DLL<Window *> as Window::static && Node<Window *> * at each Window:

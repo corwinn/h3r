@@ -43,12 +43,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // MainWindow
+#undef public
 class MainWindow final : public Window, public IHandleEvents
-{
 #define public public:
-#define private private:
-#define protected protected:
-
+{
     private List<Label *> _time_labels {};
 
     public MainWindow(OSWindow *, Point &&);
@@ -67,10 +65,6 @@ class MainWindow final : public Window, public IHandleEvents
     private int _mm_a, _mm_b; // main menu buttons [a;b] (at Controls ())
     private int _ng_a, _ng_b; // new game buttons [a;b] (at Controls ())
 };
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 

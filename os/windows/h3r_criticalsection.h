@@ -51,18 +51,18 @@ class CriticalSection final
     H3R_CANT_COPY(CriticalSection)
     H3R_CANT_MOVE(CriticalSection)
 
-    private: CRITICAL_SECTION _m; // No point using mutex or semaphore.
+    private CRITICAL_SECTION _m; // No point using mutex or semaphore.
 
     //  POSIX,
     // there is something for you to learn here.
     // ~thank_you.
-    public: CriticalSection();
+    public CriticalSection();
 
-    public: CriticalSection & Acquire();
+    public CriticalSection & Acquire();
 
-    public: void Release();
+    public void Release();
 
-    public: ~CriticalSection();
+    public ~CriticalSection();
 };
 
 } // namespace OS

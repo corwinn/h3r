@@ -39,10 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-#define protected protected:
-
 class Stream
 {
     // The book states the decorator shall differ the component, but it fails
@@ -102,10 +98,6 @@ class Stream
     //LATER Stream.Read (Stream &)
     //LATER bool Readable(); bool Writeable(); bool Seekable(); bool Sizeless();
 };
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 

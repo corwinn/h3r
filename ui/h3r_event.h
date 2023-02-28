@@ -42,8 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_log.h"
 
 H3R_NAMESPACE
-#define public public:
-#define private private:
 
 struct EventArgs;
 
@@ -133,8 +131,6 @@ using Event = McastD<IHandleEvents>;
 // The book responsible for code like the above one:
 // "Design Patterns: Elements of Reusable Object-Oriented Software"
 
-#undef public
-#undef private
 NAMESPACE_H3R
 
 #endif

@@ -48,41 +48,41 @@ template <typename T,
           void (*A)(T * &, size_t) = OS::Alloc,    // This is not OOP.
           void (*F)(T * &) = OS::Free> class Array //
 {
-    private: T * _data {};
-    private: int _len {}; // [T]
+    private T * _data {};
+    private int _len {}; // [T]
 
-    private: void free_and_nil() { if (_data) F (_data), _len = 0; }
+    private void free_and_nil() { if (_data) F (_data), _len = 0; }
 
-    public: inline const T * Data() const { return _data; }
-    public: inline const int & Length() const { return _len; }
+    public inline const T * Data() const { return _data; }
+    public inline const int & Length() const { return _len; }
 
-    public: Array() {}
-    public: Array(const T * a, int n) { Append (a, n); }
-    public: Array(Array<T> && a) { a.MoveTo (*this); }
-    public: Array<T> & operator=(Array<T> && a)
+    public Array() {}
+    public Array(const T * a, int n) { Append (a, n); }
+    public Array(Array<T> && a) { a.MoveTo (*this); }
+    public Array<T> & operator=(Array<T> && a)
     {
         return a.MoveTo (*this), *this;
     }
-    public: Array(const Array<T> & a) { a.CopyTo (*this); }
-    public: Array<T> & operator=(const Array<T> & a)
+    public Array(const Array<T> & a) { a.CopyTo (*this); }
+    public Array<T> & operator=(const Array<T> & a)
     {
         return a.CopyTo (*this), *this;
     }
-    public: bool operator==(const Array<T> & a)
+    public bool operator==(const Array<T> & a)
     {
         return _len != a._len ? false
             : 0 == OS::Memcmp (_data, a._data, sizeof(T)*_len);
     }
-    public: bool operator!=(const Array<T> & a)
+    public bool operator!=(const Array<T> & a)
     {
         return ! (operator== (a));
     }
-    public: Array(int len) { Resize (len); }
-    public: ~Array() { this->free_and_nil (); }
+    public Array(int len) { Resize (len); }
+    public ~Array() { this->free_and_nil (); }
 
-    public: operator T*() const { return _data; }
+    public operator T*() const { return _data; }
 
-    public: void MoveTo(Array<T> & a)
+    public void MoveTo(Array<T> & a)
     {
         if (this == &a) return;
         a.free_and_nil ();
@@ -90,14 +90,14 @@ template <typename T,
         a._len = _len, _len = 0;
     }
 
-    public: void CopyTo(Array<T> & a) const
+    public void CopyTo(Array<T> & a) const
     {
         if (this == &a) return;
         a.free_and_nil ();
         if (_data && _len > 0) a.Append (_data, _len);
     }
 
-    public: void Resize(int len)
+    public void Resize(int len)
     {
         H3R_ARG_EXC_IF(len < 0, "len < 0")
 
@@ -114,7 +114,7 @@ template <typename T,
         _data = n, _len = len;
     }
 
-    public: template <typename Q> void Append(const Q * data, int num)
+    public template <typename Q> void Append(const Q * data, int num)
     {
         H3R_ARG_EXC_IF(sizeof(Q) != sizeof(T), "sizeof(Q) != sizeof(T)")
         H3R_ARG_EXC_IF(num < 1, "num < 1")
@@ -133,7 +133,7 @@ template <typename T,
     // The above one caught a lot of errors, so the tradition continues.
     // "index" is sizeof(Q)-based.
     // Insert num Q at index. Insert at [Length()] is supported.
-    public: template <typename Q> void Insert(
+    public template <typename Q> void Insert(
         int index, const Q * data, int num)
     {
         H3R_ARG_EXC_IF(sizeof(Q) != sizeof(T), "sizeof(Q) != sizeof(T)")
@@ -151,16 +151,16 @@ template <typename T,
         }
     }
 
-    public: bool Empty() const { return 0 == _len && nullptr == _data; }
+    public bool Empty() const { return 0 == _len && nullptr == _data; }
 
-    public: T & operator[](int i)
+    public T & operator[](int i)
     {
         H3R_ARG_EXC_IF(0 == _len, "_len is 0; - no [] acceess")
         H3R_ARG_EXC_IF(i < 0 || i >= _len, "Your favorite message [i]")
         return _data[i];
     }
 
-    public: const T & operator[](int i) const
+    public const T & operator[](int i) const
     {
         H3R_ARG_EXC_IF(0 == _len, "_len is 0; - no [] acceess")
         H3R_ARG_EXC_IF(i < 0 || i >= _len, "Your favorite message [i]")
@@ -172,20 +172,20 @@ template <typename T,
     // a.k.a. "The C++ programming Language" - 6.3.6. Specify "auto &"
     // explicitly or end up with a lot of copies, because 7.7. of the same book.
     // Also, see "range_for" at the .test
-    public: const T * begin() const { return _data +    0; }
-    public: const T * end  () const { return _data + _len; }
+    public const T * begin() const { return _data +    0; }
+    public const T * end  () const { return _data + _len; }
     // public: T * begin() { return _data +    0; }
     // public: T * end  () { return _data + _len; }
 
     // Set everything to 0 - clear all bits.
-    public: void Clear()
+    public void Clear()
     {
         if (_data && _len > 0)
             OS::Memset (_data, 0, _len * sizeof(T));
     }
 
     // This doesn't release the memory in use.
-    public: void Remove(int idx)
+    public void Remove(int idx)
     {
         H3R_ARG_EXC_IF(_len <= 0, "Bug: delete from an empty array")
         H3R_ARG_EXC_IF(idx < 0 || idx >= _len, "Your favorite message [i]")

@@ -34,8 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "h3r_ffdnode.h"
 
-#include <new>
-
 H3R_NAMESPACE
 
 static int _mleak_track {};

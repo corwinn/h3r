@@ -43,13 +43,13 @@ H3R_NAMESPACE
 // Base for all 2D rectangular areas. I like the short name.
 class Box final
 {
-    public: inline bool Contains(Point & p)
+    public inline bool Contains(Point & p)
     {
         return p.X >= Pos.X && p.X < (Pos.X + Size.X)
             && p.Y >= Pos.Y && p.Y < (Pos.Y + Size.Y);
     }
-    public: Point Pos;
-    public: Point Size;
+    public Point Pos;
+    public Point Size;
 };
 
 NAMESPACE_H3R

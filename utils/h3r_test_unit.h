@@ -45,25 +45,25 @@ H3R_NAMESPACE
 
 class Test_Unit
 {
-    private: static const int _MAX_PROCS {100};
-    private: Test_Proc * _procs[_MAX_PROCS];
-    private: const char * _name;
-    private: int _ok {}, _all {};
-    public: const char * Name () { return _name; }
-    public: Test_Unit(const char * name) : _name {name} {}
-    public: ~Test_Unit()
+    private static const int _MAX_PROCS {100};
+    private Test_Proc * _procs[_MAX_PROCS];
+    private const char * _name;
+    private int _ok {}, _all {};
+    public const char * Name () { return _name; }
+    public Test_Unit(const char * name) : _name {name} {}
+    public ~Test_Unit()
     {
         OS::Log_stdout ("================" EOL "Tests: %4d/%4d" EOL,
             _ok, _all);
         H3R_ENSURE(_ok == _all, "Some test(s) failed")
     }
-    public: void Add(Test_Proc * proc)
+    public void Add(Test_Proc * proc)
     {
         H3R_ENSURE(_all >= 0, "Index out of range.")
         H3R_ENSURE(_all < _MAX_PROCS-1, "Please, create another test unit.")
         _procs[_all++] = proc;
     }
-    public: void Run()
+    public void Run()
     {
         for (int p = 0; p < _all; p++) {
             H3R_ENSURE(nullptr != _procs[p], "null test proc pointer")

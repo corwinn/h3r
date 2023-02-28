@@ -48,8 +48,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         printf ("%s:%d glGetError() error: %d" EOL, __FILE__, __LINE__, _a_); \
 }
 
-#include <new>
-
 H3R_NAMESPACE
 
 static const GLsizeiptr H3R_MAX_SPRITE_NUM {1<<17};

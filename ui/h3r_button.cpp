@@ -114,7 +114,6 @@ void Button::UploadFrames()
     auto sprite_name = _sprite_name.ToLower ().Replace (".def", "n.pcx");
     if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
         sprite_n = &sprite_name;
-        printf ("_on: L: %d, T: %d\n", sprite.Left (), sprite.Top ());
         _on = RE->UploadFrame (_rkey, pos.X - sprite.Left (),
             pos.Y - sprite.Top (), size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,

@@ -65,9 +65,25 @@ static_assert(sizeof(int) >= 4, "This program expects 32-bit int at least");
     { if (nullptr != P) { P->~T (); H3R_NS::OS::Free (P); } }
 // Nothing is simple, nor unified, with these people.
 // N - nested type; T - nested type; :) Say: you have foo { bar {}}
-// How to call foo::bar::~bar()? Read the qestion.
+// How to call foo::bar::~bar()? Read the question.
 #define H3R_DESTROY_NESTED_OBJECT(P,N,T) \
     { if (nullptr != P) { P->N::~T (); H3R_NS::OS::Free (P); } }
+
+//TODO move "include <new>" to where its needed only
+#undef public
+#undef private
+#undef protected
+// placement new
+#  include <new>
+// Each symbol is prefixed by one of these: because no need to scroll around to
+// find out the last access specifier.
+// 1 - I know immediately, how accessible the current symbols is
+// 2 - no tons of ":"
+// 3 - I can spot inheritance from miles away (wrapped in undef-def)
+// 4 - I can spot STL ties from miles away (big bad error messages)
+#define public public:
+#define private private:
+#define protected protected:
 
 H3R_NAMESPACE
 

@@ -48,19 +48,21 @@ namespace OS {
 // in which case handling FileError::Op::Replace becomes very simple.
 // Not checking when the user have said "no" will get you an exit() from the
 // 1st stdio wrapper.
+#undef public
 class FileStream final: public Stream
+#define public public:
 {
-    private: FILE * _f {};
-    private: off_t _size_on_open {};
-    private: String _name;
-    private: inline off_t online_size() const
+    private FILE * _f {};
+    private off_t _size_on_open {};
+    private String _name;
+    private inline off_t online_size() const
     {
         return FileSize (_name);
     }
-    private: off_t tell() const;
-    private: Stream & seek(off_t offset);
+    private off_t tell() const;
+    private Stream & seek(off_t offset);
 
-    public: enum class Mode
+    public enum class Mode
     {
         ReadOnly,  // resources, save games, hi-scores
         WriteOnly, // save games, hi-scores ; the stream will be unusable should
@@ -70,23 +72,23 @@ class FileStream final: public Stream
     } _mode;
 
     // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fopen.html
-    private: enum class Op {None, Read, Write} _last_op {Op::None};
+    private enum class Op {None, Read, Write} _last_op {Op::None};
 
-    public: FileStream(const String & name, Mode mode);
-    public: ~FileStream() override;
+    public FileStream(const String & name, Mode mode);
+    public ~FileStream() override;
 
-    public: inline operator bool() override { return nullptr != _f; }
+    public inline operator bool() override { return nullptr != _f; }
 
-    public: inline Stream & Seek(off_t pos) override { return seek (pos); }
-    public: inline off_t Tell() const override { return tell (); }
-    public: off_t Size() const override;
-    public: Stream & Read(void * b, size_t bytes = 1) override;
-    public: Stream & Write(const void * b, size_t bytes = 1) override;
-    public: Stream & Reset() override;
+    public inline Stream & Seek(off_t pos) override { return seek (pos); }
+    public inline off_t Tell() const override { return tell (); }
+    public off_t Size() const override;
+    public Stream & Read(void * b, size_t bytes = 1) override;
+    public Stream & Write(const void * b, size_t bytes = 1) override;
+    public Stream & Reset() override;
 
-    public: inline const String & Name() const { return _name; }
+    public inline const String & Name() const { return _name; }
 
-    public: static bool Exists(String & name);
+    public static bool Exists(String & name);
 };
 
 } // namespace OS

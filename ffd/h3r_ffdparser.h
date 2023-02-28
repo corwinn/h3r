@@ -62,9 +62,6 @@ H3R_NAMESPACE
 // File Format Description parser.
 class FFDParser
 {
-#define public public:
-#define private private:
-
     private const byte * _buf;
     private int _len;
     private int _i {0};
@@ -165,9 +162,6 @@ class FFDParser
     // LR linear tokenizer: the evaluator shall do the ().
     public List<ExprToken> TokenizeExpression();
     private ExprTokenType TokenizeExpressionOp();
-
-#undef public
-#undef private
 };// FFDParser
 
 NAMESPACE_H3R

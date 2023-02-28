@@ -44,27 +44,27 @@ namespace OS {
 class Thread final
 {
     // Extend this with thread-specific state.
-    public: struct Proc
+    public struct Proc
     {
         bool stop {false};
         virtual Proc * Run() { return this; }
     };
-    private: Proc & _p;
-    private: pthread_t _thr {};
+    private Proc & _p;
+    private pthread_t _thr {};
     // public: static Thread & Create(Proc &);
-    public: static void Sleep(int); // [milliseconds] : [1;1000]
-    public: static void NanoSleep(long); // [nanoseconds]
-    public: static void SleepForAWhile(); // 0.1 [millisecond]
-    public: Thread(Proc &);
-    public: ~Thread();
+    public static void Sleep(int); // [milliseconds] : [1;1000]
+    public static void NanoSleep(long); // [nanoseconds]
+    public static void SleepForAWhile(); // 0.1 [millisecond]
+    public Thread(Proc &);
+    public ~Thread();
     // Wait for the thread to stop.
-    public: void Join();
+    public void Join();
     // Set Proc.stop to true and wait for the thread to stop.
-    public: void Stop();
+    public void Stop();
 
-    private: static Thread * Threads[];
+    private static Thread * Threads[];
     // Signal all threads to stop and wait for them to stop.
-    public: static void StopAll();
+    public static void StopAll();
 }; // class Thread
 
 } // namespace OS

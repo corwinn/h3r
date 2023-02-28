@@ -57,11 +57,11 @@ class Log final
     H3R_CANT_COPY(Log)
     H3R_CANT_MOVE(Log)
 
-    private: class
+    private class
     {
-        private: Array<String> _buf {256}; // ring
-        private: int _p {}, _g {}, _c {};  // put ptr, get ptr, count
-        public: inline void Enqueue(String && s)
+        private Array<String> _buf {256}; // ring
+        private int _p {}, _g {}, _c {};  // put ptr, get ptr, count
+        public inline void Enqueue(String && s)
         {//TODO a file log can cause your program to terminate - should the
 // IO take too much time, this buffer overflow probability skyrockets;
 // so make sure that your ILog is fast. Perhaps a timeout is ok here as well?
@@ -74,38 +74,40 @@ class Log final
             _buf[_p] = s; _c++;
             _p = (_p + 1) % _buf.Length ();
         }
-        public: inline String Dequeue()
+        public inline String Dequeue()
         {
             H3R_ENSURE(! Empty (), "Nothing to dequeue.")
             auto d = _g;
             return _g = (_g + 1) % _buf.Length (), _c--, (String &&)_buf[d];
         }
-        public: inline bool Empty() { return 0 == _c; }
+        public inline bool Empty() { return 0 == _c; }
     } _q1, _q2, * _pq, * _gq; // dual FIFO: put queue, get queue
-    private: OS::CriticalSection _lock; // dual FIFO lock
-    private: OS::CriticalSection _ll_lock; // log listeners lock
-    private: void Swap(); // _pq and _gq
-    private: struct Proc final : public OS::Thread::Proc
+    private OS::CriticalSection _lock; // dual FIFO lock
+    private OS::CriticalSection _ll_lock; // log listeners lock
+    private void Swap(); // _pq and _gq
+#undef public
+    private struct Proc final : public OS::Thread::Proc
+#define public public:
     {
         Log & _log;
         Proc(Log & l) : _log {l} {}
         inline Proc * Run() override { return _log.Run (); } // just forward
         bool silent {};
     } _thread_proc;
-    private: OS::Thread _thr; // thread obj
-    private: Log();
+    private OS::Thread _thr; // thread obj
+    private Log();
     friend class H3R_NS::Game;
     //TODO find out what a bad block write error, for example, can cause to
     // pthread_join, for example; will it get interrupted? - the thread -
     // stopped? - etc.
-    private: ~Log(); // will Flush() - be wary
-    private: Array<ILog *> _listeners;
+    private ~Log(); // will Flush() - be wary
+    private Array<ILog *> _listeners;
 
-    private: void Flush();
-    private: Proc * Run();
+    private void Flush();
+    private Proc * Run();
 
     //TODO if (_thread_proc.stop) ?!
-    private: inline void log(String && s)
+    private inline void log(String && s)
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ___
             {_lock};
@@ -116,17 +118,17 @@ class Log final
     // thread had stopped.
     //TODONT optimize _listeners duplicate search; this function is
     //       supposed to be called ~5 times at program start
-    public: void Subscribe(ILog * log_listener);
-    public: void Silent(bool);
+    public void Subscribe(ILog * log_listener);
+    public void Silent(bool);
 
-    private: void info(String message);
-    private: void err(String message);
+    private void info(String message);
+    private void err(String message);
 
     //DONE class Game - static storage duration: inside it: order MM, Log, etc.
-    private: static Log * _one;
-    private: static Log_Stdout _fall_back;
-    public: static void Info(String message);
-    public: static void Err(String message);
+    private static Log * _one;
+    private static Log_Stdout _fall_back;
+    public static void Info(String message);
+    public static void Err(String message);
 }; // class Log final
 
 #define H3R_LOG_STATIC_INIT H3R_NS::Log_Stdout H3R_NS::Log::_fall_back; \

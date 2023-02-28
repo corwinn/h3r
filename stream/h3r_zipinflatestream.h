@@ -43,13 +43,13 @@ H3R_NAMESPACE
 // A stream for reading zip-encoded data. You get NotSupportedException on
 // Write() and Seek().
 // It allocates _IN_BUF bytes buffer (4k) so be wary.
+#undef public
 class ZipInflateStream : public Stream
+#define public public:
 {
     H3R_CANT_COPY(ZipInflateStream)
     H3R_CANT_MOVE(ZipInflateStream)
 
-#define public public:
-#define private private:
     private z_stream _zs {};
     private int _zr {~Z_OK}, _size, _usize;
     private const off_t _pos_sentinel; // for ResetTo()
@@ -79,8 +79,6 @@ class ZipInflateStream : public Stream
     {
         return ResetTo (_size, _usize);
     }
-#undef public
-#undef private
 };
 
 NAMESPACE_H3R

@@ -38,10 +38,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  //LATER external file, parser, etc; yes XML provides scalability; so does my
          file format, w/o external dependencies
 */
-#define UI_MAIN_BG "Data/H3bitmap.lod GamSelBk.pcx"
+// #define UI_MAIN_BG "Data/H3bitmap.lod GamSelBk.pcx"
 // #define UI_MAIN_BG 104
 class ResMap final
 {
-    public: static String operator[](String uid) { return (String &&)uid; }
+    public static String operator[](String uid) { return (String &&)uid; }
     // public: static String operator[](int uid) { }
 };

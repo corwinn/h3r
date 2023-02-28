@@ -41,9 +41,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+#undef public
 class Log_Stdout final : public ILog
+#define public public:
 {
-    public: void Log(String &) override;
+    public void Log(String &) override;
 };
 
 NAMESPACE_H3R

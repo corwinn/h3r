@@ -64,10 +64,6 @@ H3R_NAMESPACE
 // necessity, is -Pos();
 class Control
 {
-#define public public:
-#define private private:
-#define protected protected:
-
     protected using Window = class Window;
     friend Window;
 
@@ -75,7 +71,7 @@ class Control
     private bool _enabled {true}; // whether the user can interact with it
     private bool _hidden {false}; // whether the user can interact with it
     // The difference: _enabled represents whether a control is "grayed out";
-    // _hidden controls wheter a control is rendered at all.
+    // _hidden controls whether a control is rendered at all.
 
     protected Window * _window;
     protected h3rDepthOrder _depth;
@@ -137,10 +133,6 @@ class Control
     //     Control.RMB += (Event & ShowHint) => Root().OnEvent (ShowHint);
     //     After merging CoR back into the mcast delegate.
     // public: virtual void OnEvent(Event &);
-
-#undef public
-#undef private
-#undef protected
 };
 
 NAMESPACE_H3R

@@ -38,9 +38,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r.h"
 #include "h3r_log.h"
 #include "h3r_oswindow.h"
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <SDL2/SDL_mixer.h>
+
+#undef public
+#undef private
+#undef protected
+#  include <SDL.h>
+#  include <SDL_opengl.h>
+#  include <SDL2/SDL_mixer.h>
+#define public public:
+#define private private:
+#define protected protected:
 
 H3R_NAMESPACE
 
@@ -48,12 +55,10 @@ H3R_NAMESPACE
 // yet.
 // Its this deep in the directory tree on purpose.
 //LATER plug-in; an SDL window shouldn't concern itself with h3r at all.
+#undef public
 class SDLWindow : public OSWindow
-{
 #define public public:
-#define private private:
-#define protected protected:
-
+{
     private SDL_Event _e;
     private SDL_Window * _window {};
     private SDL_GLContext _gc {};
@@ -76,10 +81,6 @@ class SDLWindow : public OSWindow
     public SDLWindow(int, char **, Point &&);
     public ~SDLWindow();
 };
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 

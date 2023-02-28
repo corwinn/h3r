@@ -41,12 +41,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // Bridge: Implementation
+#undef public
 class OSWindow : public IWindow
-{
 #define public public:
-#define private private:
-#define protected protected:
-
+{
     public virtual void Show () override {}
     public virtual void Hide () override {}
     public virtual void Close () override {}
@@ -127,10 +125,6 @@ class OSWindow : public IWindow
         _eh->OnResize (w, h);
     }
 };// OSWindow
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 

@@ -46,9 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_pcx.h"
 #include "h3r_resnamehash.h"
 
-// Used by the ResNameHash
-#include <new>
-
 H3R_NAMESPACE
 
 GLuint TexCache::_bound {}; // currently bound texture

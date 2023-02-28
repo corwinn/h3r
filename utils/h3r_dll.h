@@ -39,19 +39,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
 // Doubly-linked list of T. T shall have default constructor; use T * otherwise.
 //TODO this isn't a re-usable linked list, its a linked list of T; get the T out
 //     of it.
 template <typename T> class LList
 {
     public using Node = LList<T>;
-#ifdef H3R_TEST
-#undef private
-#define private public
-#endif
     private Node * _next {};
     private Node * _prev {};
     public Node * Next() { return _next; }
@@ -102,9 +95,6 @@ template <typename T> class LList
         return this;
     }
 };// LList
-
-#undef public
-#undef private
 
 NAMESPACE_H3R
 

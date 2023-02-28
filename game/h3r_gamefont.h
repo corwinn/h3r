@@ -44,14 +44,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // Adapts Fnt to the TextRenderingEngine
+#undef public
 class GameFont final: public Font
+#define public public:
 {
-    private: Fnt _fnt;
-    public: Point MeasureText(const String &) override;
-    public: void RenderText(const String &, byte * buf, int w, int h) override;
-    public: GameFont(const String & name);
-    public: ~GameFont() override {}
-    public: inline operator bool() { return _fnt; }
+    private Fnt _fnt;
+    public Point MeasureText(const String &) override;
+    public void RenderText(const String &, byte * buf, int w, int h) override;
+    public GameFont(const String & name);
+    public ~GameFont() override {}
+    public inline operator bool() { return _fnt; }
 };
 
 NAMESPACE_H3R

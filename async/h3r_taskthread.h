@@ -59,29 +59,32 @@ class TaskThread final
     H3R_CANT_COPY(TaskThread)
     H3R_CANT_MOVE(TaskThread)
 
-    public: TaskThread() : _tproc {*this}, _thr {_tproc}, Task {*this} {}
-    public: ~TaskThread() { _thr.Stop (); };
+    public TaskThread() : _tproc {*this}, _thr {_tproc}, Task {*this} {}
+    public ~TaskThread() { _thr.Stop (); };
 
-    private: struct Proc final : public OS::Thread::Proc
+#undef public
+    private struct Proc final : public OS::Thread::Proc
+#define public public:
     {
         inline Proc * Run() override { return _a.Run (); }
         TaskThread & _a;
         Proc(TaskThread & a) : _a {a}, _dirty {*this}  {}
         IAsyncTask * _p {};
         OS::CriticalSection _d_lock {}, _op_lock {};
-        public: class BoolProperty final {// bool foo { get {} set {} }
-            private: bool _v {};
-            private: Proc & _p;
-            private: BoolProperty(Proc & p) : _p {p} {}
+        public class BoolProperty final // bool foo { get {} set {} }
+        {
+            private bool _v {};
+            private Proc & _p;
+            private BoolProperty(Proc & p) : _p {p} {}
             friend struct Proc;
-            public: inline bool & operator=(const bool & v)
+            public inline bool & operator=(const bool & v)
             {
                 __pointless_verbosity::CriticalSection_Acquire_finally_release
                     ____ {_p._d_lock};
                 return _v = v;
             }
-            public: operator bool() const { return _v; }
-            public: bool operator !() const { return !_v; }
+            public operator bool() const { return _v; }
+            public bool operator !() const { return !_v; }
         } _dirty;
         // setup part
         inline IAsyncTask & Do(IAsyncTask * p)
@@ -97,20 +100,20 @@ class TaskThread final
         // Bridge part
         inline void Do() { _p->Do (); }
     } _tproc;
-    private: OS::Thread _thr;
-    private: template <typename TF> struct try_finally_trig
+    private OS::Thread _thr;
+    private template <typename TF> struct try_finally_trig
     {// instead of try {} finally {}
         TF & _v;
         try_finally_trig(TF & v) : _v {v} {}
         ~try_finally_trig() { _v = !_v; }
     };
-    private: struct try_finally_null
+    private struct try_finally_null
     {// instead of try {} finally {}
         TaskThread * & _v;
         try_finally_null(TaskThread * & v) : _v {v} {}
         ~try_finally_null() { _v = nullptr; }
     };
-    private: inline void Do() // part of Run() below
+    private inline void Do() // part of Run() below
     {
         try_finally_trig<typename Proc::BoolProperty> ____ {_tproc._dirty};
         try_finally_null ___ {_tproc._p->_TT = this};//TODO de-mishmash-ise
@@ -118,7 +121,7 @@ class TaskThread final
         // without the pointless verbosity above:
         //  try { _tproc.Do (); } finally { _tproc._dirty = ! _tproc._dirty; }
     }
-    private: inline Proc * Run() // the thread
+    private inline Proc * Run() // the thread
     {
         while (! _tproc.stop) {
             // OS::Log_stdout ("p:%p, _tproc.dirty:%d" EOL,
@@ -129,20 +132,21 @@ class TaskThread final
         return &_tproc;
     }
 
-    private: inline IAsyncTask & Do(IAsyncTask * it) { return _tproc.Do (it); }
+    private inline IAsyncTask & Do(IAsyncTask * it) { return _tproc.Do (it); }
 
-    public: class TaskProperty final { // IAsyncTask foo { set {} }
-        private: TaskThread & _a;
-        private: TaskProperty(TaskThread & a) : _a {a} {}
+    public class TaskProperty final // IAsyncTask foo { set {} }
+    {
+        private TaskThread & _a;
+        private TaskProperty(TaskThread & a) : _a {a} {}
         friend class TaskThread;
-        public: inline IAsyncTask & operator=(const IAsyncTask & t)
+        public inline IAsyncTask & operator=(const IAsyncTask & t)
         {
             H3R_ENSURE(nullptr == t._TT, "1 thread per task please")
             return _a.Do (const_cast<class IAsyncTask *>(&t));
         }
     } Task;
 
-    public: inline bool Done() const { return ! _tproc._dirty; }
+    public inline bool Done() const { return ! _tproc._dirty; }
 };// TaskThread
 
 NAMESPACE_H3R

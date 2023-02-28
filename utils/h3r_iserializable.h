@@ -44,7 +44,7 @@ H3R_NAMESPACE
 /*template <typename T>*/struct ISerializable
 {
     // public: T(Stream &) {} // De-serialize
-    public: virtual void Serialize(Stream &) {}
+    public virtual void Serialize(Stream &) {}
 };
 
 NAMESPACE_H3R

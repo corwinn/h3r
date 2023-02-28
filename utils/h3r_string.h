@@ -41,9 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-#define public public:
-#define private private:
-
 // Lesson(s) learned:
 //
 //   * The use-cases proved that it shall manage 0-es at its end. The "const
@@ -159,9 +156,6 @@ inline bool operator==(const char * c, const String & s)
 }
 
 String operator+(const char *, const String &);
-
-#undef private
-#undef public
 
 NAMESPACE_H3R
 

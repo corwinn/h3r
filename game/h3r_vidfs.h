@@ -43,19 +43,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_array.h"
 #include "h3r_refreadstream.h"
 
-#include <new>
-
 H3R_NAMESPACE
 
 // Get() will return the same pointer on each invocation! Means: each Get()
 // invalidates the contents of the previous one, unless you requested the same
 // resource with the same content. If you need your data for later use, you
 // better copy it, because the next call to Get() could invalidate it.
+#undef public
 class VidFS final : public VFS
-{
 #define public public:
-#define private private:
-
+{
     private OS::FileStream * _s {};
     private bool _usable {false};
     // 1 stream for now
@@ -90,8 +87,6 @@ class VidFS final : public VFS
     }
 };// VidFS
 
-#undef public
-#undef private
 NAMESPACE_H3R
 
 #endif

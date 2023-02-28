@@ -37,12 +37,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Describe a map in a simple grammar. Way more readable this one.
 
 // Machine types
-type int -4
+type int   -4
 type short -2
-type byte 1
-type bool byte
-type EDID int
-type ArtId byte (Version == ROE)
+type byte   1
+type bool  byte
+type EDID  int
+type ArtId byte  (Version == ROE)
 type ArtId short (Version != ROE)
 type PlayerColor byte // fast identify
 
@@ -96,15 +96,15 @@ struct MapObj
        001 | 100    100 | 001
        These masks do match the ones at "Objects.txt" so why are they duplicated
        at each map is beyond me. */
-    byte PassMask[6] // big-endian ; 1 - passable
-    byte TrigMask[6] // big-endian ; 1 - visit-able (trigger)
-    byte Unk1[2] // Maps to "Objects.txt".Unk1
+    byte  PassMask[6] // big-endian ; 1 - passable
+    byte  TrigMask[6] // big-endian ; 1 - visit-able (trigger)
+    byte  Unk1[2] // Maps to "Objects.txt".Unk1
     short TerrainMask // Maps to "Objects.txt".Unk2
-    int EdId // Editor Id; line number (0-based) at "ObjNames.txt"
-    int SubId // Maps to "Objects.txt".Unk3
-    byte Type // Maps to "Objects.txt".Unk4
-    byte RenderOrder // Maps to "Objects.txt".Unk5 ; 0 - 1st; n - last
-    byte Unk2[16] // Reserved?
+    int   EdId // Editor Id; line number (0-based) at "ObjNames.txt"
+    int   SubId // Maps to "Objects.txt".Unk3
+    byte  Type // Maps to "Objects.txt".Unk4
+    byte  RenderOrder // Maps to "Objects.txt".Unk5 ; 0 - 1st; n - last
+    byte  Unk2[16] // Reserved?
 
 struct Location
     byte X //TODO validate: X >= 0 && X < Size, ...
@@ -136,17 +136,17 @@ struct MessageAndGuards
 
 struct GuardedReward
     MessageAndGuards MsgAndGuards
-    int   Exp
-    int   Mana
-    byte  Morale
-    byte  Luck
-    int   Resources[MAP_RESOURCES]
-    byte  PSkills[MAP_PRIMARY_SKILLS]
-    short Abilities[byte] // 8:id, 8:level
-    ArtId Artifacts[byte]
-    byte  SpellId[byte]
+    int          Exp
+    int          Mana
+    byte         Morale
+    byte         Luck
+    int          Resources[MAP_RESOURCES]
+    byte         PSkills[MAP_PRIMARY_SKILLS]
+    short        Abilities[byte] // 8:id, 8:level
+    ArtId        Artifacts[byte]
+    byte         SpellId[byte]
     MapCreatures Creatures[byte]
-    byte  Unk1[8]
+    byte         Unk1[8]
 
 struct Obj.EdId:26 // "Event" <=> grep -n ^ ObjNames.txt | grep ^$((n+1))
     GuardedReward
@@ -198,7 +198,7 @@ struct Obj.EdId:54,71-75,162-164 // "Monster", "Random Monster "1-7
 
 struct Obj.EdId:59,91 // "Ocean Bottle", "Sign"
     MapString Text
-    byte Unk1[4]
+    byte      Unk1[4]
 
 struct MapQuest
     byte      T // Mission Type
@@ -362,7 +362,7 @@ const MAP_FACTIONS  8 (Version == ROE)
 const MAP_DEFAULT_HERO_ID 0xff
 
 struct AllowedHero
-    byte Id
+    byte      Id
     MapString Name
 
 struct PlayerCantPlay
@@ -371,27 +371,27 @@ struct PlayerCantPlay
     byte Unk1[ 6] (Version == ROE)
 
 struct PlayerCanPlay
-    Behavior AITactics
-    byte Unk2 (Version >= SOD) // 16-bit ?
-    byte AllowedFactions (Version == ROE) // 16-bit ? AllowedFactions
-    short AllowedFactions (Version != ROE)
-    bool RandomFaction
-    bool HasMainTown
-    bool GenAtMT (HasMainTown && (Version != ROE))
-    bool Gen2 (HasMainTown && (Version != ROE)) // No idea whats this
-    Location MainTown (HasMainTown)
-    bool RandomHero
-    byte CutomHeroId
-    byte CutomHeroPortrait (CutomHeroId != MAP_DEFAULT_HERO_ID)
-    MapString CutomHeroName (CutomHeroId != MAP_DEFAULT_HERO_ID)
-    byte NoIdea (Version != ROE)
+    Behavior    AITactics
+    byte        Unk2            (Version >= SOD) // 16-bit ?
+    byte        AllowedFactions (Version == ROE) // 16-bit ? AllowedFactions
+    short       AllowedFactions (Version != ROE)
+    bool        RandomFaction
+    bool        HasMainTown
+    bool        GenAtMT  (HasMainTown && (Version != ROE))
+    bool        Gen2     (HasMainTown && (Version != ROE)) // No idea whats this
+    Location    MainTown (HasMainTown)
+    bool        RandomHero
+    byte        CutomHeroId
+    byte        CutomHeroPortrait  (CutomHeroId != MAP_DEFAULT_HERO_ID)
+    MapString   CutomHeroName      (CutomHeroId != MAP_DEFAULT_HERO_ID)
+    byte        NoIdea             (Version != ROE)
     AllowedHero AllowedHeroes[int] (Version != ROE)
 
 struct Player
     bool Human
     bool Computer
-    PlayerCantPlay (!Human && !Computer) // implicit name - merge
-    PlayerCanPlay (Human || Computer)    // implicit name - merge
+    PlayerCantPlay (!Human && !Computer)
+    PlayerCanPlay  (Human || Computer)
 
 enum MapVCon byte
     ACQUIRE_ARTIFACT     0
@@ -420,36 +420,36 @@ struct VConditionArt
 struct VConditionCreObj
     byte Type
     byte Unk1 (Version != ROE) // 16-bit?
-    int Quantity
+    int  Quantity
 
 struct VConditionResObj
     byte Type
-    int Quantity
+    int  Quantity
 
 struct VConditionUpgTown
     Location Pos
-    byte HallLevel
-    byte CastleLevel
+    byte     HallLevel
+    byte     CastleLevel
 
 struct VLConditionAtPos
     Location Pos
 
 struct VConditionObjAtPos
-    byte Type
+    byte     Type
     Location Pos
 
 struct VCondition
     bool AllowNormalAsWell // allow default (defeat all) as well
     bool AppliesToAI
     // no AllowNoneAsWell []
-    VConditionArt (VCon == ACQUIRE_ARTIFACT)
-    VConditionCreObj (VCon == CREATURES)
-    VConditionResObj (VCon == RESOURCES)
+    VConditionArt      (VCon == ACQUIRE_ARTIFACT)
+    VConditionCreObj   (VCon == CREATURES)
+    VConditionResObj   (VCon == RESOURCES)
     // no AppliesToAI []
-    VConditionUpgTown (VCon == UPGRADE_TOWN)
+    VConditionUpgTown  (VCon == UPGRADE_TOWN)
     // No AppliesToAI checkbox for DEFEAT_MONSTER
     // No check-boxes at all for DEFEAT_HERO and GRAIL
-    VLConditionAtPos ((VCon >= GRAIL) && (VCon <= DEFEAT_MONSTER))
+    VLConditionAtPos   ((VCon >= GRAIL) && (VCon <= DEFEAT_MONSTER))
     //TODO There is no AllowNoneAsWell check-box at the editor
     VConditionObjAtPos (VCon == TRANSPORT_ARTIFACT)
 
@@ -508,17 +508,15 @@ struct TTile
 struct MapEvent
     MapString Name
     MapString Message
-    int Resources[MAP_RESOURCES]
-    byte Players // Mask ?
-    byte HumanPlayers (Version > AB)
-    byte ComputerPlayers
-    short FirstDay
-    byte Repeats // Every n days
-    byte Unk1[17]
+    int       Resources[MAP_RESOURCES]
+    byte      Players // Mask ?
+    byte      HumanPlayers (Version > AB)
+    byte      ComputerPlayers
+    short     FirstDay
+    byte      Repeats // Every n days
+    byte      Unk1[17]
 
-[]
 [Stream(type: zlibMapStream)] // specify that it requires a specific stream
-[test2]
 format h3m
     MapVersion     Version
     bool           HasPlayers // What do if not?

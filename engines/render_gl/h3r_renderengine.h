@@ -57,9 +57,6 @@ H3R_NAMESPACE
 // This shall match the Open GL API expectations.
 using H3Rfloat = GLfloat;
 
-#define public public:
-#define private private:
-
 // Use case:
 //  1. UI - those are things that don't move; the scrollbars just modify the 1st
 //          visible cell (model) - the cells themselves do not move;
@@ -321,9 +318,6 @@ class RenderEngine final
     public void DeleteShadowRectangle();
 
 };// RenderEngine
-
-#undef public
-#undef private
 
 NAMESPACE_H3R
 

@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_os.h"
 #include "h3r_pal.h"
 
-#define H3R_DEF_MAX_SPRITE_NUM (1<<8)
+#define H3R_DEF_MAX_SPRITE_NUM (1<<10)
 
 H3R_NAMESPACE
 
@@ -72,23 +72,25 @@ struct SubSpriteHeader final
 //   auto sprite_handler = def.Query ("foo.pcx");
 //   if (sprite_handler) bitmap = sprite_handler->RGBA ();
 //   if (sprite_handler) the_same_bitmap = sprite_handler->RGBA ();
+#undef public
 class Def final : public ResDecoder
+#define public public:
 {
-    private: Stream * _s;
-    private: Array<byte> _rgba {};
-    private: Array<byte> _rgb {};
-    private: int _w {};
-    private: int _h {};
-    private: int _n {};
-    private: Array<byte> _palette {}; // RGB
+    private Stream * _s;
+    private Array<byte> _rgba {};
+    private Array<byte> _rgb {};
+    private int _w {};
+    private int _h {};
+    private int _n {};
+    private Array<byte> _palette {}; // RGB
 
-    public: Def(Stream * stream) : ResDecoder {}, _s{stream}
+    public Def(Stream * stream) : ResDecoder {}, _s{stream}
     {
         if (nullptr == stream)
             Log::Info ("DEF: no stream " EOL);
         Init ();
     }
-    public: ~Def() override
+    public ~Def() override
     {
         // A test unit signalled memory leaks here.
         // The game however did not. It looks like the leak sanitizer isn't ok.
@@ -99,34 +101,35 @@ class Def final : public ResDecoder
             _sprites[i].~Sprite ();
         }
    }
-    public: int Num() const { return _n; }
-    public: inline Array<byte> * ToRGBA() override
+    public int Num() const { return _n; }
+    public inline Array<byte> * ToRGBA() override
     {
         if (! _rgba.Empty ()) return &_rgba;
         return Decode (_rgba, 4);
     }
-    public: inline Array<byte> * ToRGB() override
+    public inline Array<byte> * ToRGB() override
     {
         if (! _rgb.Empty ()) return &_rgb;
         return Decode (_rgb, 3);
     }
 
     // Common for all sub-sprites.
-    public: inline int Width() override { return _w; }
-    public: inline int Height() override { return _h; }
+    public inline int Width() override { return _w; }
+    public inline int Height() override { return _h; }
 
     // For the last queried one only.
-    public: inline int Left() const { return _request ? _request->H.Left : 0; }
-    public: inline int Top() const { return _request ? _request->H.Top : 0; }
+    public inline int Left() const { return _request ? _request->H.Left : 0; }
+    public inline int Top() const { return _request ? _request->H.Top : 0; }
 
-    private: struct SubSprite final
+    private struct SubSprite final
     {
         String Name {};
         int Offset {}; // 0-based
         SubSpriteHeader H {};
         void Read(Stream & s)
-        {//LATER - optimize; pre-read the entire thing in a local buffer;
-         //        the file format is ...
+        {//TODO - optimize; pre-read the entire thing in a local buffer;
+         //       the file format is ...
+         // Significant slow down - can't wait for later -> h3r_dll.test
             Stream::Read (s, &Offset);
             auto sentinel = s.Tell ();
             { s.Reset (); s.Seek (Offset); }
@@ -134,7 +137,7 @@ class Def final : public ResDecoder
             { s.Reset (); s.Seek (sentinel); }
         }
     };
-    private: struct Sprite final
+    private struct Sprite final
     {
         Array<SubSprite> Entries;
         void Read(Stream & s)
@@ -168,10 +171,10 @@ class Def final : public ResDecoder
             return nullptr;
         }
     };
-    private: Array<Sprite> _sprites {};
-    private: SubSprite * _request {};
-    private: int _request_id {-1};
-    private: inline void SetRequest(SubSprite * value)
+    private Array<Sprite> _sprites {};
+    private SubSprite * _request {};
+    private int _request_id {-1};
+    private inline void SetRequest(SubSprite * value)
     {
         if (value != _request) {
             _rgba.Resize (0);
@@ -180,13 +183,13 @@ class Def final : public ResDecoder
         }
     }
 
-    public: class SpriteNameIterator final
+    public class SpriteNameIterator final
     {
-        private: Def * _src;
-        private: int _idx {-1}, _subidx {0};
-        private: String * _result {};
-        public: SpriteNameIterator(Def * src) : _src{src} { MoveNext (); }
-        public: inline void MoveNext()
+        private Def * _src;
+        private int _idx {-1}, _subidx {0};
+        private String * _result {};
+        public SpriteNameIterator(Def * src) : _src{src} { MoveNext (); }
+        public inline void MoveNext()
         {
             if (_src->_sprites.Length () <= 0) return;
             if (_idx >= 0
@@ -199,17 +202,17 @@ class Def final : public ResDecoder
             }
             _result = &(_src->_sprites[_idx].Entries[_subidx].Name);
         }
-        public: inline const String * Current() { return _result; }
+        public inline const String * Current() { return _result; }
     };
     friend class Def::SpriteNameIterator;
-    public: inline SpriteNameIterator GetIterator()
+    public inline SpriteNameIterator GetIterator()
     {
         return SpriteNameIterator {this};
     }
 
     // Set what RGBA() and RGB() shall return. Null means it wasn't found.
     //TODO are there duplicate names? Yes there are.
-    public: inline Def * Query(const String & sprite_name)
+    public inline Def * Query(const String & sprite_name)
     {
         _request = nullptr; _request_id = -1;
         for (int i = 0; i < _sprites.Length (); i++) {
@@ -221,7 +224,7 @@ class Def final : public ResDecoder
         }
         return QueryCI (sprite_name);
     }
-    private: inline Def * QueryCI(const String & sprite_name)
+    private inline Def * QueryCI(const String & sprite_name)
     {
         _request = nullptr; _request_id = -1;
         for (int i = 0; i < _sprites.Length (); i++) {
@@ -235,16 +238,16 @@ class Def final : public ResDecoder
     }
     //TODO to Decoder as a virtual one
     // Use Query() first.
-    public: inline String GetUniqueKey(const String & suffix)
+    public inline String GetUniqueKey(const String & suffix)
     {
         H3R_ENSURE(_request != nullptr, "Use Query() first.")
         return String::Format ("%s%d%s",
             _request->Name.AsZStr (), _request_id, suffix.AsZStr ());
     }
 
-    private: void Init();
+    private void Init();
 
-    private: Array<byte> * Decode(Array<byte> & buf, int u8_num);
+    private Array<byte> * Decode(Array<byte> & buf, int u8_num);
 
     //TODO think about a way to automatically set this based on description,
     //     e.g. a property; for example:
@@ -252,7 +255,7 @@ class Def final : public ResDecoder
     //       flags PLAYER_COLOR
     //TODO check the unknown bytes at the sprite - perhaps something within it
     //     hints about the above
-    public: inline void SetPlayerColor(h3rPlayerColor pc, const Pal & pal)
+    public inline void SetPlayerColor(h3rPlayerColor pc, const Pal & pal)
     {
         H3R_ENSURE(H3R_VALID_PLAYER_COLOR(pc), "pc shall be [0;7]")
         // "dialgbox.def" is using the last 32 for PlayerColor - I hope they all

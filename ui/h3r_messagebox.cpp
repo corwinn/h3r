@@ -43,8 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_label.h"
 #include "h3r_button.h"
 
-#include <new>
-
 H3R_NAMESPACE
 
 static int Align(int value, int boundary)

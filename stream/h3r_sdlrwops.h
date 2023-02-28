@@ -57,10 +57,10 @@ H3R_NAMESPACE
 //      observe and learn how to design things.
 //TODO be careful; this shall not work if the input stream does not support
 //     seek
+#undef public
 class SdlRWopsStream final : public Stream
-{
 #define public public:
-#define private private:
+{
     public struct RWops final
     {
         // Sint64 (*)(SDL_RWops *) size - Size()
@@ -112,9 +112,6 @@ class SdlRWopsStream final : public Stream
         return reinterpret_cast<SDL_RWops *>(&_ops);
     }
 };
-
-#undef public
-#undef private
 
 NAMESPACE_H3R
 

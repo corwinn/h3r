@@ -60,17 +60,17 @@ class CriticalSection final
     // All these API functions return error codes. Bonus: C++ destructors are
     // denying their right to return said codes.
 
-    private: pthread_mutex_t _m {};
+    private pthread_mutex_t _m {};
 
-    public: CriticalSection();
+    public CriticalSection();
 
     // EDEADLK - you already locked this; no it won't detect the "big fun"
     // deadlocks (when thread A waits for thread B and thread B waits for
     // thread A simultaneously); yes threading is complexity; and finesse.
-    public: CriticalSection & Acquire();
+    public CriticalSection & Acquire();
 
     // EPERM - this ain't yours to unlock
-    public: void Release();
+    public void Release();
 
     // On error: it will try to report the error, then call exit().
     //DONE Careful! main-thread :Acquire->Destroy ain't causing an error:
@@ -79,7 +79,7 @@ class CriticalSection final
     // "Attempting to destroy a locked mutex results in undefined behaviour.",
     // "pthread_mutex_destroy() function may fail".
     // So there "may" be an error notifying you of bad threading on your side.
-    public: ~CriticalSection();
+    public ~CriticalSection();
 }; // class CriticalSection
 
 } // namespace OS

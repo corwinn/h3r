@@ -68,12 +68,10 @@ H3R_NAMESPACE
 //
 //TODO all these names must go to some central place.
 //
+#undef public
 class MessageBox : public DialogWindow, public IHandleEvents
-{
 #define public public:
-#define private private:
-#define protected protected:
-
+{
     private List<int> _re_keys {};
     private bool _has_dr {};
     private DialogResult _dr {};
@@ -94,10 +92,6 @@ class MessageBox : public DialogWindow, public IHandleEvents
     private void HandleOKClick(EventArgs *);
     private void HandleCancelClick(EventArgs *);
 };
-
-#undef public
-#undef private
-#undef protected
 
 NAMESPACE_H3R
 
