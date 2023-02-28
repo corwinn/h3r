@@ -60,6 +60,12 @@ class MainWindow final : public Window, public IHandleEvents
     private void OnResize(int w, int h) override;
 
     private void Quit(EventArgs *);
+    private void NewGame(EventArgs *);
+    private void NewGameBack(EventArgs *);
+    private void NewGameSignleScenario(EventArgs *);
+
+    private int _mm_a, _mm_b; // main menu buttons [a;b] (at Controls ())
+    private int _ng_a, _ng_b; // new game buttons [a;b] (at Controls ())
 };
 
 #undef public

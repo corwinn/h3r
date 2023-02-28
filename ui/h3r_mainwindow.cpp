@@ -80,30 +80,72 @@ MainWindow::MainWindow(OSWindow * actual_window, Point && size)
 
     // -- Controls ---------------------------------------------------------
 
-    int y = 10 /*measured*/, x = 524 /*measured*/, spacing = 0;
+    // They're hcentered against a right-aligned: "MainMenu.pcx" (340x600)?
+    // No.
+
+    int y = 10, x = 525, spacing = 0; // measured, measured, guessed
     List<String> mm {};
     mm  << "MMENUNG.def" << "MMENULG.def" << "MMENUHS.def" << "MMENUCR.def"
         << "MMENUQT.def";
+    _mm_a = 0, _mm_b = 4;
 
     // Centered at x=525
     // 1. Measure
     int ww = 0;
-    Button * btn_quit {};
+    Button * btn_quit {}, * btn_ng {};
     for (const auto & b : mm) {
         Button * btn;
         H3R_CREATE_OBJECT(btn, Button) {b, this};
         ww = btn->Size ().X > ww ? btn->Size ().X : ww;
         btn->SetPos (x, y);
         y += btn->Size ().Y + spacing;
-        btn_quit = btn;
     }
+    btn_ng = static_cast<Button *>(Controls ()[_mm_a]);
+    btn_ng->Click.Subscribe (this, &MainWindow::NewGame);
+    btn_quit = static_cast<Button *>(Controls ()[_mm_b]);
     btn_quit->Click.Subscribe (this, &MainWindow::Quit);
     // 2. Layout
-    for (Control * btn : Controls ())
+    for (int i = _mm_a; i <= _mm_b; i++) {
+        auto btn = Controls ()[i];
+        btn->SetPos (
+            // no: (800-340)+((340-btn->Size ().X)/2)
+            btn->Pos ().X + ((ww - btn->Size ().X) / 2), btn->Pos ().Y);
+    }
+    // 3. Upload
+    for (int i = _mm_a; i <= _mm_b; i++) Controls()[i]->UploadFrames ();
+
+    // New Game buttons
+    List<String> ng {};
+    ng  << "GTSINGL.def" << "GTMULTI.def" << "GTCAMPN.def" << "GTTUTOR.def"
+        << "GTBACK.def";
+    _ng_a = _mm_b+1, _ng_b = _ng_a+4;
+
+    // Centered at x=545
+    // 1. Measure
+    ww = 0, y = 4, x = 545, spacing =-5; // measured, measured, measured
+    Button * btn_single {}, * btn_back {};
+    for (const auto & b : ng) {
+        Button * btn;
+        H3R_CREATE_OBJECT(btn, Button) {b, this};
+        ww = btn->Size ().X > ww ? btn->Size ().X : ww;
+        btn->SetPos (x, y);
+        y += btn->Size ().Y + spacing;
+    }
+    btn_single = static_cast<Button *>(Controls ()[_ng_a]);
+    btn_single->Click.Subscribe (this, &MainWindow::NewGameSignleScenario);
+    btn_back = static_cast<Button *>(Controls ()[_ng_b]);
+    btn_back->Click.Subscribe (this, &MainWindow::NewGameBack);
+    // 2. Layout
+    for (int i = _ng_a; i <= _ng_b; i++) {
+        auto btn = Controls ()[i];
         btn->SetPos (
             btn->Pos ().X + ((ww - btn->Size ().X) / 2), btn->Pos ().Y);
+    }
     // 3. Upload
-    for (Control * btn : Controls ()) btn->UploadFrames ();
+    for (int i = _ng_a; i <= _ng_b; i++) {
+        Controls()[i]->UploadFrames ();
+        Controls()[i]->SetHidden (true);
+    }
 
     // Preview all fonts as real-time clocks. These should be at depth: 1.
     // Here you go: partially visible text. Freeze on MessageBox, because
@@ -171,6 +213,22 @@ void MainWindow::Quit(EventArgs *)
         "MedFont.fnt", MessageBox::Buttons::OKCancel);
     if (DialogResult::OK == dr)
         Close ();
+}
+
+void MainWindow::NewGame(EventArgs *)
+{
+    for (int i = _mm_a; i <= _mm_b; i++) Controls ()[i]->SetHidden (true);
+    for (int i = _ng_a; i <= _ng_b; i++) Controls ()[i]->SetHidden (false);
+}
+
+void MainWindow::NewGameBack(EventArgs *)
+{
+    for (int i = _mm_a; i <= _mm_b; i++) Controls ()[i]->SetHidden (false);
+    for (int i = _ng_a; i <= _ng_b; i++) Controls ()[i]->SetHidden (true);
+}
+
+void MainWindow::NewGameSignleScenario(EventArgs *)
+{
 }
 
 NAMESPACE_H3R
