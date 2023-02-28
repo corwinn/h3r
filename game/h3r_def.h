@@ -43,8 +43,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_string.h"
 #include "h3r_os.h"
 #include "h3r_pal.h"
+#include "h3r_memorystream.h"
 
 #define H3R_DEF_MAX_SPRITE_NUM (1<<10)
+#define H3R_DEF_MAX_FILE_SZIE  (1<<22)
 
 H3R_NAMESPACE
 
@@ -65,7 +67,10 @@ struct SubSpriteHeader final
 }
 
 // Not thread-safe.
-// A sprite collection. All sprites share the same palette.
+//
+// Local stream: you can load it at place 1 and re-use it at place(s) != 1.
+//
+// A sprite collection. All sub-sprites share the same palette.
 // Some sprites in the collection are sprite collection themselves. I'm
 // referring to them as sprite groups; but its just animated sprites I suppose.
 // Usage:
@@ -76,7 +81,7 @@ struct SubSpriteHeader final
 class Def final : public ResDecoder
 #define public public:
 {
-    private Stream * _s;
+    // private Stream * _s;
     private Array<byte> _rgba {};
     private Array<byte> _rgb {};
     private int _w {};
@@ -84,17 +89,11 @@ class Def final : public ResDecoder
     private int _n {};
     private Array<byte> _palette {}; // RGB
 
-    public Def(Stream * stream) : ResDecoder {}, _s{stream}
-    {
-        if (nullptr == stream)
-            Log::Info ("DEF: no stream " EOL);
-        Init ();
-    }
+    private MemoryStream _s;
+
+    public Def(Stream *);
     public ~Def() override
     {
-        // A test unit signalled memory leaks here.
-        // The game however did not. It looks like the leak sanitizer isn't ok.
-        //TODO "valgrind" the truth.
         for (int i = 0; i < _sprites.Length (); i++) {
             for (int j = 0; j < _sprites[i].Entries.Length (); j++)
                 _sprites[i].Entries[j].~SubSprite ();
@@ -127,9 +126,7 @@ class Def final : public ResDecoder
         int Offset {}; // 0-based
         SubSpriteHeader H {};
         void Read(Stream & s)
-        {//TODO - optimize; pre-read the entire thing in a local buffer;
-         //       the file format is ...
-         // Significant slow down - can't wait for later -> h3r_dll.test
+        {
             Stream::Read (s, &Offset);
             auto sentinel = s.Tell ();
             { s.Reset (); s.Seek (Offset); }

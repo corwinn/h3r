@@ -40,6 +40,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+Def::Def(Stream * stream)
+    : ResDecoder {}, _s {&(stream->Reset ()), static_cast<int>(stream->Size ())}
+{
+    if (nullptr == stream) // _s shall remain in !_s state
+        Log::Info ("DEF: no stream " EOL);
+    Init ();
+}
+
 // #include "store_as_bmp.cpp"
 
 static void read_sprite_224(Stream & s, int w, int h, H3R_NS::byte * p)
@@ -112,9 +120,9 @@ static void read_sprite(Stream & s, Array<byte> & buf, SubSpriteHeader & sh,
 
 void Def::Init()
 {
-    if (nullptr == _s) return;
-    if (! *_s) return;
-    auto & s = _s->Reset ();
+    // if (nullptr == _s) return;
+    if (! _s) return;
+    auto & s = _s.Reset ();
 
     int type, cnt; // type, width, height, count
     Stream::Read (s, &type).Read (s, &_w).Read (s, &_h).Read (s, &cnt);
@@ -142,8 +150,8 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
 {
     // static SubSpriteHeader sh {};
     H3R_ENSURE(3 == u8_num || 4 == u8_num, "Can't help you")
-    if (nullptr == _s) return &buf;
-    if (! *_s) return  &buf;
+    // if (nullptr == _s) return &buf;
+    if (! _s) return  &buf;
 
     // Unfortunately Open GL isn't happy with these random widths.
     // Trying (4 - (bpl % 4)) & 3 ...
@@ -155,9 +163,9 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
         // Unfortunately I can't do that with zipstreams yet.
         // _s->Seek(_request.Offset - _s->Tell ())
         // but I can do this:
-        { _s->Reset (); _s->Seek (_request->Offset+sizeof(SubSpriteHeader)); }
+        { _s.Reset (); _s.Seek (_request->Offset+sizeof(SubSpriteHeader)); }
         Array<byte> indexed_bitmap {};
-        read_sprite (*_s, indexed_bitmap, _request->H,
+        read_sprite (_s, indexed_bitmap, _request->H,
             _request->Offset+sizeof(SubSpriteHeader));
         H3R_ENSURE(_request->H.AnimWidth == _w, "leaf.w != tree.w")
         H3R_ENSURE(_request->H.AnimHeight == _h, "leaf.h != tree.h")
