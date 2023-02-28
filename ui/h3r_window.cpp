@@ -218,26 +218,39 @@ void Window::ProcessMessages()//TODO static
 // Observer
 void Window::OnKeyDown(const EventArgs & e)
 {
-    for (Control * c : _controls) c->OnKeyDown (e);
+    for (Control * c : _controls) if (! c->Hidden ()) c->OnKeyDown (e);
 }
 void Window::OnKeyUp(const EventArgs & e)
 {
-    for (Control * c : _controls) c->OnKeyUp (e);
+    for (Control * c : _controls) if (! c->Hidden ()) c->OnKeyUp (e);
 }
 void Window::OnMouseMove(const EventArgs & e)
 {
-    for (Control * c : _controls) c->OnMouseMove (e);
+    for (Control * c : _controls) if (! c->Hidden ()) c->OnMouseMove (e);
 }
 void Window::OnMouseDown(const EventArgs & e)
 {
-    for (Control * c : _controls) c->OnMouseDown (e);
+    for (Control * c : _controls) if (! c->Hidden ()) c->OnMouseDown (e);
 }
 void Window::OnMouseUp(const EventArgs &e)
 {
-    for (Control * c : _controls) c->OnMouseUp (e);
+    for (Control * c : _controls) if (! c->Hidden ()) c->OnMouseUp (e);
 }
-void Window::OnShow() { _visible = true; }  //TODO forward these?
-void Window::OnHide() { _visible = false; } //
+void Window::OnShow()
+{
+    _visible = true;
+    for (Control * c : _shown) c->SetHidden (false);
+}
+void Window::OnHide()
+{
+    _shown.Clear ();
+    for (Control * c : _controls)
+        if (! c->Hidden ()) {
+            _shown.Add (c);
+            c->SetHidden (true);
+        }
+    _visible = false;
+}
 // Close by default; the base window has no idea how to ask, yet.
 void Window::OnClose(IWindow * sender, bool &)
 {

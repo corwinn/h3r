@@ -82,6 +82,7 @@ class Window : public IWindow
     // It looks like a list, but it isn't. Its a tree. Each Control has the
     // same list.
     private List<Control *> _controls {};
+    private List<Control *> _shown {}; // used by OnShow / OnHide
     //LATER IContainer<T>
     public void AddControl(Control *);
     protected inline List<Control *> & Controls() { return _controls; }
