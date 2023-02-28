@@ -114,7 +114,9 @@ void Button::UploadFrames()
     auto sprite_name = _sprite_name.ToLower ().Replace (".def", "n.pcx");
     if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
         sprite_n = &sprite_name;
-        _on = RE->UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+        printf ("_on: L: %d, T: %d\n", sprite.Left (), sprite.Top ());
+        _on = RE->UploadFrame (_rkey, pos.X - sprite.Left (),
+            pos.Y - sprite.Top (), size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
     }
@@ -122,7 +124,8 @@ void Button::UploadFrames()
     sprite_name = _sprite_name.ToLower ().Replace (".def", "h.pcx");
     if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
         sprite_n = &sprite_name;
-        _oh = RE->UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+        _oh = RE->UploadFrame (_rkey, pos.X - sprite.Left (),
+            pos.Y - sprite.Top (), size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
     }
@@ -130,7 +133,8 @@ void Button::UploadFrames()
     sprite_name = _sprite_name.ToLower ().Replace (".def", "s.pcx");
     if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
         sprite_n = &sprite_name;
-        _os = RE->UploadFrame (_rkey, pos.X, pos.Y, size.X, size.Y, bitmap_data,
+        _os = RE->UploadFrame (_rkey, pos.X - sprite.Left (),
+            pos.Y - sprite.Top (), size.X, size.Y, bitmap_data,
             h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey (_sprite_name), Depth ());
     }
@@ -216,6 +220,15 @@ void Button::OnMouseUp(const EventArgs &)
     if (! _mouse_over) return;
     // Log::Info ("MouseUp" EOL);
     Click (nullptr);
+}
+
+void Button::OnVisibilityChanged()
+{
+    if (Hidden ()) {
+        Window::UI->ChangeOffset (_rkey, _on);
+        _mouse_over = _mouse_down = false;
+    }
+    Window::UI->ChangeVisibility (_rkey, ! Hidden ());
 }
 
 NAMESPACE_H3R

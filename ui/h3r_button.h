@@ -47,29 +47,38 @@ H3R_NAMESPACE
 // Its size is stored at the resource it is created from.
 class Button: public Control
 {
-    private: int _rkey {};
-    private: int _on {}; // up
-    private: int _oh {}; // hover
-    private: int _os {}; // down
-    private: String _sprite_name {};
+#define public public:
+#define private private:
+#define protected protected:
 
-    public: Button(const String &, Control *);
-    public: Button(const String &, Window *);
-    public: virtual ~Button() override;
+    private int _rkey {};
+    private int _on {}; // up
+    private int _oh {}; // hover
+    private int _os {}; // down
+    private String _sprite_name {};
 
-    public: virtual Control * SetPos(int, int) override;
-    public: void UploadFrames() override;
+    public Button(const String &, Control *);
+    public Button(const String &, Window *);
+    public virtual ~Button() override;
 
-    public: virtual void OnMouseMove(const EventArgs &) override;
-    public: virtual void OnMouseDown(const EventArgs &) override;
-    public: virtual void OnMouseUp(const EventArgs &) override;
+    public virtual Control * SetPos(int, int) override;
+    public void UploadFrames() override;
 
-    private: bool _mouse_over {};
-    private: bool _mouse_down {};
+    protected virtual void OnMouseMove(const EventArgs &) override;
+    protected virtual void OnMouseDown(const EventArgs &) override;
+    protected virtual void OnMouseUp(const EventArgs &) override;
+    protected virtual void OnVisibilityChanged() override;
+
+    private bool _mouse_over {};
+    private bool _mouse_down {};
 
     // Usage: Click.Subscribe (this, &descendant_of_IHandleEvents::handler)
-    public: Event Click {};
-};
+    public Event Click {};
+
+#undef public
+#undef private
+#undef protected
+};// Button
 
 NAMESPACE_H3R
 
