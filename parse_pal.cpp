@@ -46,7 +46,7 @@ H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
 
 H3R_NAMESPACE
 namespace OS {
-
+#undef public
 class FileErrReplace final : public Error
 {
     public: bool Handled(Error * e = nullptr) override
