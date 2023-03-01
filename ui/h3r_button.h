@@ -42,6 +42,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_eventargs.h"
 #include "h3r_event.h"
 
+//  The code here did depend on the role of the Def parser. Wrong design.
+// To decouple them: Button shall store copies of the bitmaps it is using.
+
 H3R_NAMESPACE
 
 // Its size is stored at the resource it is created from.
@@ -49,14 +52,31 @@ H3R_NAMESPACE
 class Button: public Control
 #define public public:
 {
+    public enum {
+        H3R_UI_BTN_UP      = 1,
+        H3R_UI_BTN_DOWN    = 2,
+        H3R_UI_BTN_HOVER   = 4,
+        H3R_UI_BTN_GRAYOUT = 8,
+        H3R_UI_BTN_DEFAULT = 7,
+        H3R_UI_BTN_UPDN    = 3};
     private int _rkey {};
     private int _on {}; // up
     private int _oh {}; // hover
     private int _os {}; // down
-    private String _sprite_name {};
+    private int _od {}; // grayed out
+    private int _flags {}; // H3R_UI_BTN_.*
+    public struct TempSpriteData final // from Button() to UploadFrames()
+    {
+        Array<byte> Bitmap {};
+        Point TopLeft {};
+        String UniqueKey {};
+    };
+    private TempSpriteData * _tsdn{}, * _tsdh{}, * _tsds{}, * _tsdd{};
+    private void Init(const String &, int flags);
+    // private String _sprite_name {};
 
-    public Button(const String &, Control *);
-    public Button(const String &, Window *);
+    public Button(const String &, Control *, int = H3R_UI_BTN_DEFAULT);
+    public Button(const String &, Window *, int = H3R_UI_BTN_DEFAULT);
     public virtual ~Button() override;
 
     public virtual Control * SetPos(int, int) override;

@@ -158,11 +158,13 @@ MessageBox::MessageBox(Window * base_window, Point && size,
         pcx_bitmap, h3rBitmapFormat::RGBA, "Box64x30.pcx", depth);
     Button * btn_ok {}, * btn_cancel {};
     // managed by the Window destructor via Add()
-    H3R_CREATE_OBJECT(btn_ok, Button) {"iOKAY.def", this};
+    H3R_CREATE_OBJECT(btn_ok, Button) {
+        "iOKAY.def", this, Button::H3R_UI_BTN_UPDN};
     btn_ok->SetPos (327, 335);
     btn_ok->UploadFrames ();
     btn_ok->Click.Subscribe (this, &MessageBox::HandleOKClick);
-    H3R_CREATE_OBJECT(btn_cancel, Button) {"iCANCEL.def", this};
+    H3R_CREATE_OBJECT(btn_cancel, Button) {
+        "iCANCEL.def", this, Button::H3R_UI_BTN_UPDN};
     btn_cancel->SetPos (410, 335);
     btn_cancel->UploadFrames ();
     btn_cancel->Click.Subscribe (this, &MessageBox::HandleCancelClick);

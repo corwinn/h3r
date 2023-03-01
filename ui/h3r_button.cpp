@@ -42,46 +42,60 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-static bool QuerySpriteFrame(Def & def,
-    const String & def_name, const String & frame_name)
+static bool InitBitmap(Button::TempSpriteData *& tsd, Def & sprite,
+    const String & sprite_name, String && frame_name)
 {
-    auto frame = def.Query (frame_name);
+    H3R_CREATE_OBJECT(tsd, Button::TempSpriteData);
+    auto frame = sprite.Query (frame_name);
     if (! frame) {
-        H3R_NS::Log::Err (String::Format (
-            "Can't find %s[%s]" EOL, def_name.AsZStr (), frame_name.AsZStr ()));
+        H3R_NS::Log::Err (String::Format ("Can't find %s[%s]" EOL,
+            sprite_name.AsZStr (), frame_name.AsZStr ()));
         return false;
     }
+    tsd->TopLeft.Left = sprite.Left ();
+    tsd->TopLeft.Top = sprite.Top ();
+    tsd->UniqueKey = sprite.GetUniqueKey (sprite_name);
+    auto byte_arr = sprite.ToRGBA ();
+    if (! byte_arr || byte_arr->Empty ()) {
+        H3R_NS::Log::Err (String::Format ("Can't load %s[%s]" EOL,
+            sprite_name.AsZStr (), frame_name.AsZStr ()));
+        return false;
+    }
+    tsd->Bitmap = *byte_arr;
     return true;
 }
 
-Button::Button(const String & res_name, Control * base)
-    : Control {base}
+void Button::Init(const String & res_name, int flags)
 {
-    // Its needed here just to initialize *this size
-    //TODO
     Def sprite {Game::GetResource (res_name)};
     Resize (sprite.Width (), sprite.Height ());
-    _sprite_name = res_name;
-    /*printf ("Sprite: %s: %d x %d" EOL,
-         _sprite_name.AsZStr (), sprite.Width (), sprite.Height ());*/
+    H3R_ENSURE(flags > 0 && flags < 16, "Odd flags")
+    if (flags & H3R_UI_BTN_UP)
+        H3R_ENSURE (InitBitmap (_tsdn, sprite, res_name,
+            res_name.ToLower ().Replace (".def", "n.pcx")), "no n.pcx")
+    if (flags & H3R_UI_BTN_DOWN)
+        H3R_ENSURE (InitBitmap (_tsds, sprite, res_name,
+            res_name.ToLower ().Replace (".def", "s.pcx")), "no s.pcx")
+    if (flags & H3R_UI_BTN_HOVER)
+        H3R_ENSURE (InitBitmap (_tsdh, sprite, res_name,
+            res_name.ToLower ().Replace (".def", "h.pcx")), "no h.pcx")
+    if (flags & H3R_UI_BTN_GRAYOUT)
+        H3R_ENSURE (InitBitmap (_tsdd, sprite, res_name,
+            res_name.ToLower ().Replace (".def", "d.pcx")), "no d.pcx")
 }
 
-Button::~Button()
+Button::Button(const String & res_name, Control * base, int flags)
+    : Control {base}, _flags {flags}
 {
-    // This is base Window job now:
-    // RenderEngine::UI ().ChangeVisibility (_rkey, false);
+    Init (res_name, flags);
 }
 
-Button::Button(const String & res_name, Window * base)
-    : Control {base}
+Button::~Button() {}
+
+Button::Button(const String & res_name, Window * base,  int flags)
+    : Control {base}, _flags {flags}
 {
-    // Its needed here just to initialize *this size
-    //TODO
-    Def sprite {Game::GetResource (res_name)};
-    Resize (sprite.Width (), sprite.Height ());
-    _sprite_name = res_name;
-    /*printf ("Sprite: %s: %d x %d" EOL,
-         _sprite_name.AsZStr (), sprite.Width (), sprite.Height ());*/
+    Init (res_name, flags);
 }
 
 void Button::UploadFrames()
@@ -90,54 +104,22 @@ void Button::UploadFrames()
     _rkey = RE->GenKey ();
     auto & size = Size ();
     auto & pos = Pos ();
-    Def sprite {Game::GetResource (_sprite_name)};
 
-    // printf ("[%2d] frame: %s %d %d %d %d, ",
-    //    _rkey, _sprite_name.AsZStr (), pos.X, pos.Y, size.X, size.Y);
+    static Array<byte> * bitmap {};
+    auto bitmap_data = []() { return bitmap->operator byte * (); };
 
-    static Def * sprite_p {};
-    static String * def_n {};
-    static String * sprite_n {};
-    sprite_p = &sprite;
-    def_n = &_sprite_name;
-    auto bitmap_data = []() -> byte *
-    {
-        auto byte_arr = sprite_p->ToRGBA ();
-        if (! byte_arr || byte_arr->Empty ()) {
-            H3R_NS::Log::Err (String::Format (
-            "Can't load %s[%s]" EOL, def_n->AsZStr (), sprite_n->AsZStr ()));
-            return nullptr;
+    Button::TempSpriteData * f[4] = {_tsdn, _tsdh, _tsds, _tsdd};
+    int *                    g[4] = { &_on,  &_oh,  &_os,  &_od};
+
+    for (int i = 0; i < 4; i++)
+        if (f[i]) {
+            bitmap = &(f[i]->Bitmap);
+            *(g[i]) = RE->UploadFrame (_rkey, pos.X - f[i]->TopLeft.Left,
+                pos.Y - f[i]->TopLeft.Top, size.X, size.Y, bitmap_data,
+                h3rBitmapFormat::RGBA, f[i]->UniqueKey, Depth ());
+            H3R_DESTROY_NESTED_OBJECT(
+                f[i], Button::TempSpriteData, TempSpriteData)
         }
-        return byte_arr->operator byte * ();
-    };
-
-    auto sprite_name = _sprite_name.ToLower ().Replace (".def", "n.pcx");
-    if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
-        sprite_n = &sprite_name;
-        _on = RE->UploadFrame (_rkey, pos.X - sprite.Left (),
-            pos.Y - sprite.Top (), size.X, size.Y, bitmap_data,
-            h3rBitmapFormat::RGBA,
-            sprite.GetUniqueKey (_sprite_name), Depth ());
-    }
-
-    sprite_name = _sprite_name.ToLower ().Replace (".def", "h.pcx");
-    if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
-        sprite_n = &sprite_name;
-        _oh = RE->UploadFrame (_rkey, pos.X - sprite.Left (),
-            pos.Y - sprite.Top (), size.X, size.Y, bitmap_data,
-            h3rBitmapFormat::RGBA,
-            sprite.GetUniqueKey (_sprite_name), Depth ());
-    }
-
-    sprite_name = _sprite_name.ToLower ().Replace (".def", "s.pcx");
-    if (QuerySpriteFrame (sprite, _sprite_name, sprite_name)) {
-        sprite_n = &sprite_name;
-        _os = RE->UploadFrame (_rkey, pos.X - sprite.Left (),
-            pos.Y - sprite.Top (), size.X, size.Y, bitmap_data,
-            h3rBitmapFormat::RGBA,
-            sprite.GetUniqueKey (_sprite_name), Depth ());
-    }
-    // printf ("ofs: %d %d %d" EOL, _on, _oh, _os);
 }
 
 Control * Button::SetPos(int x, int y)
@@ -164,6 +146,7 @@ void Button::OnMouseMove(const EventArgs & e)
     p.Y = e.Y;
     _mouse_over = HitTest (p);
     auto re = Window::UI;
+    // Why is there no _flags check? - see the explanation at OnMouseDown().
     re->ChangeOffset (_rkey,
         _mouse_down ? _os : _mouse_over ? _oh : _on);
     /*Log::Info (String::Format (
@@ -180,6 +163,8 @@ void Button::OnMouseDown(const EventArgs &)
     if (! _mouse_over) return;
     _mouse_down = true;
     auto re = Window::UI;
+    // By default all offsets are "_on", and H3R_ENSURE ensures it exists.
+    // So even if "_os" wasn't uploaded, "_on" shall be rendered.
     re->ChangeOffset (_rkey, _os);
     Log::Info ("MouseDown" EOL);
     auto stream = Game::GetResource ("BUTTON.wav");
