@@ -85,7 +85,7 @@ void Button::Init(const String & res_name, int flags)
 }
 
 Button::Button(const String & res_name, Control * base, int flags)
-    : Control {base}, _flags {flags}
+    : Control {base}
 {
     Init (res_name, flags);
 }
@@ -93,7 +93,7 @@ Button::Button(const String & res_name, Control * base, int flags)
 Button::~Button() {}
 
 Button::Button(const String & res_name, Window * base,  int flags)
-    : Control {base}, _flags {flags}
+    : Control {base}
 {
     Init (res_name, flags);
 }

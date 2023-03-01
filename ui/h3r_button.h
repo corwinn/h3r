@@ -64,7 +64,6 @@ class Button: public Control
     private int _oh {}; // hover
     private int _os {}; // down
     private int _od {}; // grayed out
-    private int _flags {}; // H3R_UI_BTN_.*
     public struct TempSpriteData final // from Button() to UploadFrames()
     {
         Array<byte> Bitmap {};
@@ -73,7 +72,6 @@ class Button: public Control
     };
     private TempSpriteData * _tsdn{}, * _tsdh{}, * _tsds{}, * _tsdd{};
     private void Init(const String &, int flags);
-    // private String _sprite_name {};
 
     public Button(const String &, Control *, int = H3R_UI_BTN_DEFAULT);
     public Button(const String &, Window *, int = H3R_UI_BTN_DEFAULT);
