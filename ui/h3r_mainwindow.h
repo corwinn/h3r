@@ -43,6 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // MainWindow
+//TODO mouse pointers: adventure map: CRADVNTR.def; combat: CRCOMBAT.def;
+//     defaults?: crdeflt.def
 #undef public
 class MainWindow final : public Window, public IHandleEvents
 #define public public:
