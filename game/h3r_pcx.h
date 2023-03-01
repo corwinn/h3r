@@ -77,13 +77,17 @@ class Pcx final : public ResDecoder
         if (! _rgba.Empty ()) return &_rgba;
         return Decode (_rgba, 4);
     }
+    // Bug-artwork: when Width % 4 != 0:
+    // glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+   // www.khronos.org/opengl/wiki/Common_Mistakes#Texture_upload_and_pixel_reads
     public inline Array<byte> * ToRGB() override
     {
         if (! _rgb.Empty ()) return &_rgb;
         return Decode (_rgb, 3);
     }
-    public int Width () override { return _w; }
-    public int Height () override { return _h; }
+    public inline int Width() override { return _w; }
+    public inline int Height() override { return _h; }
+    public inline int Fmt() const { return _fmt; }
     // Init size and format info.
     private bool Init()
     {
@@ -128,21 +132,17 @@ class Pcx final : public ResDecoder
         buf.Resize (u8_num*_w*_h); // A, if present, is 0
         byte * b = buf, * e = b + buf.Length ();
         if (1 == _fmt) {
+            Array<byte> src_buf {_w*_h};
+            byte * src = src_buf;
             Array<byte> pal {3*256};
             byte * p = pal;
-            // ZipInflateStream can seek forwards only.
-            // auto bitmap_sentinel = _s->Tell (); avoid until proven otherwise
-            // Use local offsets instead
-            _s->Seek (_size); // skip the bitmap
+            Stream::Read (*_s, src, _w*_h);
             Stream::Read (*_s, p, pal.Length ());
-            { _s->Reset (); _s->Seek (_bitmap_ofs); }
-            byte i;
             while (b != e) {
-                Stream::Read (*_s, &i, 1);
-                OS::Memmove (b, p+3*i, 3);
-                if (u8_num == 4)//TODO is it always color 0?
-                    *(b+3) = 0 == i ? 0 : 255; // A = 0 for input color 0
-                b += u8_num;
+                byte i = *src++;
+                *b++ = *(p+3*i), *b++ = *(p+3*i+1), *b++ = *(p+3*i+2);
+                if (4 == u8_num)//TODO is it always color 0?
+                    *b++ = 0 == i ? 0 : 255; // A = 0 for input color 0
             }
         }
         else
