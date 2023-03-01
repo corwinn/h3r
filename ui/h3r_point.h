@@ -44,8 +44,8 @@ class Point
 {
     public Point() : X{}, Y{} {}
     public Point(int x, int y) : X{x}, Y{y} {}
-    public int X;
-    public int Y;
+    public union { int X; int Left; int Width; };
+    public union { int Y; int Top; int Height; };
 };
 
 NAMESPACE_H3R
