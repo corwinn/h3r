@@ -70,7 +70,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     auto dlg_back_arr = dlg_back.ToRGB ();
     re.ShadowRectangle (_l, _t, size.X, size.Y,
         dlg_back_arr->operator byte * (), h3rBitmapFormat::RGB,
-        dlg_back.Width (), dlg_back.Height (), Depth());
+        dlg_back.Width (), dlg_back.Height (), Depth ());
 
     static Def * sprite_p {};
     auto bitmap_data = [](){ return sprite_p->ToRGBA ()->operator byte * (); };
@@ -92,48 +92,48 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     tile_y = Align (tile_y, dh) / dh;
     sprite.Query ("DiBoxT.pcx");
     for (int i = 0; i < tile_x; i++) {
-        key = _re_keys.Add (re.GenKey ());
+        key = re.GenKey ();
         re.UploadFrame (key, _l+dw+i*dw, _t, dw,
             dh, bitmap_data, h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey ("dialgbox.def"), depth);
     }
     sprite.Query ("DiBoxB.pcx");
     for (int i = 0; i < tile_x; i++) {
-        key = _re_keys.Add (re.GenKey ());
+        key = re.GenKey ();
         re.UploadFrame (key, _l+dw+i*dw, _t+size.Y-dh, dw,
             dh, bitmap_data, h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey ("dialgbox.def"), depth);
     }
     sprite.Query ("DiBoxL.pcx");
     for (int i = 0; i < tile_y; i++) {
-        key = _re_keys.Add (re.GenKey ());
+        key = re.GenKey ();
         re.UploadFrame (key, _l, _t+dh, dw,
             dh, bitmap_data, h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey ("dialgbox.def"), depth);
     }
     sprite.Query ("DiBoxR.pcx");
     for (int i = 0; i < tile_y; i++) {
-        key = _re_keys.Add (re.GenKey ());
+        key = re.GenKey ();
         re.UploadFrame (key, _l+size.X-dw, _t+dh, dw,
             dh, bitmap_data, h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey ("dialgbox.def"), depth);
     }
     sprite.Query ("DiBoxTL.pcx");
-    key = _re_keys.Add (re.GenKey ());
+    key = re.GenKey ();
     re.UploadFrame (key, _l, _t, dw, dh, bitmap_data, h3rBitmapFormat::RGBA,
         sprite.GetUniqueKey ("dialgbox.def"), depth);
     sprite.Query ("DiBoxBL.pcx");
-    key = _re_keys.Add (re.GenKey ());
+    key = re.GenKey ();
     re.UploadFrame (key, _l, _t+size.Y-dh, dw, dh,
         bitmap_data, h3rBitmapFormat::RGBA,
         sprite.GetUniqueKey ("dialgbox.def"), depth);
     sprite.Query ("DiBoxTR.pcx");
-    key = _re_keys.Add (re.GenKey ());
+    key = re.GenKey ();
     re.UploadFrame (key, _l+size.X-dw, _t, dw, dh,
         bitmap_data, h3rBitmapFormat::RGBA,
         sprite.GetUniqueKey ("dialgbox.def"), depth);
     sprite.Query ("DiBoxBR.pcx");
-    key = _re_keys.Add (re.GenKey ());
+    key = re.GenKey ();
     re.UploadFrame (key, _l+size.X-dw, _t+size.Y-dh, dw, dh,
         bitmap_data, h3rBitmapFormat::RGBA,
         sprite.GetUniqueKey ("dialgbox.def"), depth);
@@ -150,10 +150,10 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     Pcx pcx_bmp {Game::GetResource ("Box64x30.pcx")};
     pcx = &pcx_bmp;
     auto pcx_bitmap = []() { return pcx->ToRGBA ()->operator byte * (); };
-    key = _re_keys.Add (re.GenKey ());
+    key = re.GenKey ();
     re.UploadFrame (key, 326, 334, pcx_bmp.Width (), pcx_bmp.Height (),
         pcx_bitmap, h3rBitmapFormat::RGBA, "Box64x30.pcx", depth);
-    key = _re_keys.Add (re.GenKey ());
+    key = re.GenKey ();
     re.UploadFrame (key, 409, 334, pcx_bmp.Width (), pcx_bmp.Height (),
         pcx_bitmap, h3rBitmapFormat::RGBA, "Box64x30.pcx", depth);
     Button * btn_ok {}, * btn_cancel {};

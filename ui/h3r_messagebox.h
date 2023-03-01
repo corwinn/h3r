@@ -72,7 +72,6 @@ H3R_NAMESPACE
 class MessageBox : public DialogWindow, public IHandleEvents
 #define public public:
 {
-    private List<int> _re_keys {};
     private bool _has_dr {};
     private DialogResult _dr {};
     private int _t {}, _l {};
