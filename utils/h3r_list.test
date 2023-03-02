@@ -63,7 +63,7 @@ H3R_TEST_(add)
     H3R_TEST_ARE_EQUAL(2, l.Count ())
 H3R_TEST_END
 
-struct foo { int a; foo(int v) : a{v} {} };
+struct foo { int a; foo(int v) : a{v} {} foo() {} };
 
 H3R_TEST_(add_ref)
     H3R_NS::List<foo> l;
@@ -168,6 +168,28 @@ H3R_TEST_(remove_at)
     for (auto & t : l) H3R_TEST_ARE_EQUAL(++i, t);
     l.RemoveAt (0);
     H3R_TEST_ARE_EQUAL(0, l.Count ());
+H3R_TEST_END
+
+struct dfoo final
+{
+    int * bar {};
+    dfoo() { OS::Malloc (bar, 1); }
+    ~dfoo() { OS::Mfree (bar); }
+    dfoo(dfoo && v) { bar = v.bar; v.bar = nullptr; }
+    dfoo & operator=(const dfoo & v)
+    {
+        bar[0] = v.bar[0];
+        return *this;
+    }
+};
+
+H3R_TEST_(mem_leak)
+    H3R_NS::List<dfoo> list {2};
+H3R_TEST_END
+
+H3R_TEST_(mem_leak_on_add)
+    H3R_NS::List<dfoo> list {2};
+    list.Add (dfoo {});
 H3R_TEST_END
 
 NAMESPACE_H3R

@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_LIST_H_
 
 #include "h3r.h"
-#include "h3r_array.h"
+#include "h3r_os.h"
 
 H3R_NAMESPACE
 
@@ -44,26 +44,99 @@ template <typename T> struct LD { void operator()(T & t) { t.~T (); } };
 template <typename T> struct LD<T *> { void operator()(T *&) {} };
 
 // List of T. You can Add(), Remove(), Count(), Clear(), "for (a:n)", ...
-// It won't warn you for duplicates. Again: T * - you're the manager; T
-// should get ~T()-ed.
+//
+//  - T * - you're the manager;
+//  - T     should get ~T()-ed;
+//  - T shall be copyable
+//  - T shall be moveable
+//  - T shall default-constructable
+//
+// Do not use this for simple types - it is slow. Use the Array instead.
+// Consider this a List of T where T is non-trivial object.
+//
 // Why not final: because I might need to extend it for specific T.
-template <typename T> class List //LATER Insert() - should the need arise
+template <typename T,
+          void (*A)(T * &, size_t) = OS::Alloc,
+          void (*F)(T * &) = OS::Free> class List //LATER Insert()
 {
-    private Array<T> _l; // list
+    // it can not be an array; private Array<T> _l; // list
+    private T * _list {};
+    private int _cnt {}, _cap {};
 
-    public List(List<T> && a) { a._l.MoveTo (_l); }
+    private void FreeObjects(T * list, int n)
+    {
+        for (int i = 0; i < n; i++) LD<T>{} (list[i]);
+    }
+    private void FreeObjects()
+    {
+        if (_list) FreeObjects (_list, _cap), F (_list), _cnt = _cap = 0;
+    }
+
+    private void CopyObjects(T * dst, const T * src, int n) const
+    {
+        if (dst == src) return;
+        for (int i = 0; i < n; i++) dst[i] = src[i];
+    }
+
+    private void Grow(int cap = 0)
+    {
+        if (_cnt == _cap) {
+            if (cap && cap > _cap) _cap = cap; else _cap += 4;
+            T * list {};
+            A (list, _cap);
+            OS::Memcpy (list, _list, _cnt*sizeof(T));
+            F (_list);
+            _list = list;
+            for (int i = _cnt; i < _cap; i++) new (_list+i) T{};
+        }
+    }
+
+    public void CopyTo(List<T> & dst) const//TODO testme
+    {
+        if (this == &dst) return;
+        dst.FreeObjects ();
+        dst._cnt = _cnt;
+        dst._cap = _cap;
+        if (_cap <= 0) return;
+        A (dst._list, _cap);
+        CopyObjects (dst._list, _list, _cap);
+    }
+
+    public void MoveTo(List<T> & dst)//TODO testme
+    {
+        if (this == &dst) return;
+        dst.FreeObjects ();
+        dst._list = _list, _list = nullptr;
+        dst._cnt = _cnt, _cnt = 0;
+        dst._cap = _cap, _cap = 0;
+    }
+
+    public List(List<T> && a) { a.MoveTo (*this); }
     public List<T> & operator=(List<T> && a)
     {
-        return a._l.MoveTo (_l), *this;
+        return a.MoveTo (*this), *this;
     }
-    public List(const List<T> & a) { a._l.CopyTo (_l); }
+    public List(const List<T> & a) { a.CopyTo (*this); }
     public List<T> & operator=(const List<T> & a)
     {
-        return a._l.CopyTo (_l), *this;
+        return a.CopyTo (*this), *this;
     }
 
-    public List(int capacity = 0) : _l{capacity} {}
-    public List(const T * a, int n) : _l{} { _l.Append (a, n); }
+    public List(int capacity = 0)
+        : _cap{capacity}
+    {
+        H3R_ARG_EXC_IF(capacity < 0, "capacity out of range")
+        if (! _cap) return;
+        A (_list, _cap*sizeof(T));
+        for (int i = 0; i < _cap; i++) new (_list+i) T{};
+    }
+    public List(const T * a, int n)
+        : _cnt{n}, _cap{n}
+    {
+        H3R_ARG_EXC_IF(n <= 0, "n out of range")
+        A (_list, _cap*sizeof(T));
+        CopyObjects (_list, a, n);
+    }
     /* Because you could compare to something that is implicitly cast-able to T
      * thus calling pointless initialization. Don't do:
      * public template <typename R> bool Contains(R itm)
@@ -71,42 +144,59 @@ template <typename T> class List //LATER Insert() - should the need arise
         for (const auto & i : _l) if (i == itm) return true;
         return false;
     }*/
-    public ~List()
-    {
-        for (int i = 0; i < Count (); i++) LD<T>{} (_l[i]);
-    }
+
+    public ~List() { FreeObjects (); }
     public bool Contains(const T & itm) const
     {
-        for (const auto & i : _l) if (i == itm) return true;
+        for (int i = 0; i < _cnt; i++) if (_list[i] == itm) return true;
         return false;
     }
     public T & Add(const T & itm)
     {
-        _l.Resize (_l.Length () + 1);
-        return _l[_l.Length () - 1] = itm;
+        Grow ();
+        return _list[_cnt++] = itm;
     }
     public void Put(T && itm)//TODO testme
     {
-        _l.Resize (_l.Length () + 1);
-        _l[_l.Length () - 1] = static_cast<T &&>(itm);
+        Grow ();
+        _list[_cnt++] = static_cast<T &&>(itm);
     }
     // Remove all occurrences. Slow. Use rarely. You want fast: use an LL.
     // Returns whether something was removed (found) or not.
     public bool Remove(const T & itm)
     {
-        int idx {0};
-        for (const auto & i : _l) if (i != itm) _l[idx++] = i;
-        if (idx < _l.Length ()) { _l.Resize (idx); return true; }
-        return false;
+        int idx {0}, i {0}, cnt {_cnt};
+        for (; i < _cnt; i++)
+            if (_list[i] != itm) {
+                LD<T>{} (_list[idx]);
+                _list[idx++] = static_cast<T &&>(_list[i]);
+            }
+            else
+                cnt--;
+        return _cnt = cnt, idx < i;
     }
-    public void RemoveAt(int index) { _l.Remove (index); }
-    public T & operator[](int i) { return _l.operator[] (i); }
-    public const T & operator[](int i) const { return _l.operator[] (i); }
-    public bool Empty() const { return _l.Empty (); }
-    public int Count() const { return _l.Length (); }
-    public void Clear() { _l.Resize (0); }
-    public const T * begin() const { return _l.begin (); }
-    public const T * end  () const { return _l.end (); }
+    public void RemoveAt(int i)
+    {
+        H3R_ARG_EXC_IF(i < 0 || i >= _cnt, "Out of range exception")
+        LD<T>{} (_list[i]);
+        _cnt--;
+        if (i != _cnt) OS::Memmove (_list+i, _list+i+1, (_cnt-i)*sizeof(T));
+    }
+    public T & operator[](int i)
+    {
+        H3R_ARG_EXC_IF(i < 0 || i >= _cnt, "Out of range exception")
+        return _list[i];
+    }
+    public const T & operator[](int i) const
+    {
+        H3R_ARG_EXC_IF(i < 0 || i >= _cnt, "Out of range exception")
+        return _list[i];
+    }
+    public bool Empty() const { return _cnt <= 0; }
+    public int Count() const { return _cnt; }
+    public void Clear() { FreeObjects (); }
+    public const T * begin() const { return _list; }
+    public const T * end  () const { return _list + _cnt; }
 
     // Another init. path; lets see...
     public List<T> & operator<<(const T & r)
@@ -114,7 +204,14 @@ template <typename T> class List //LATER Insert() - should the need arise
         return Add (r), *this;
     }
 
-    public void Resize(int len) { _l.Resize (len); }
+    public void Resize(int len)
+    {
+        H3R_ARG_EXC_IF(0 < len, "len can't be <0")
+        if (len == _cnt) return;
+        if (0 == len) FreeObjects ();
+        else if (len > _cnt) Grow (len);
+        else while (--_cnt != len) LD<T>{} (_list[_cnt]);
+    }
 };// List
 
 NAMESPACE_H3R
