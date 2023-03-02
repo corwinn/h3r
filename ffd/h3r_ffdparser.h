@@ -155,9 +155,10 @@ class FFDParser
     public struct ExprToken final
     {
         ExprToken(ExprTokenType t) : Type{t} {}
+        ExprToken() {} // List<T> constructor
         String Symbol {};
         int Value {};
-        ExprTokenType Type;
+        ExprTokenType Type {};
     };
     // LR linear tokenizer: the evaluator shall do the ().
     public List<ExprToken> TokenizeExpression();

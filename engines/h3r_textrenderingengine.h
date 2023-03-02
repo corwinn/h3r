@@ -50,6 +50,7 @@ class TextRenderingEngine final
 {
     private struct FontInfo final
     {
+        FontInfo() {} // List<T> constructor
         FontInfo(Font * f, const String & name)
             : F{f}, Name{name} {}
         Font * F {};

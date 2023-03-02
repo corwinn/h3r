@@ -48,9 +48,10 @@ class GameArchives final
     public class Entry final
     {
         private bool _found {};
-        public List<String> Locations;
-        public String Name;
+        public List<String> Locations {};
+        public String Name {};
         public explicit Entry(String && name) : Name{name} {}
+        public Entry() {} // List<T> constructor
         public void Found() { _found = true; }
         public bool operator==(const Entry & s) const { return s.Name == Name; }
     };

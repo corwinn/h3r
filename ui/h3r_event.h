@@ -57,11 +57,12 @@ template <typename Obj> class McastD final
     public using EventHandler = void (Obj::*)(EventArgs * args);
     private struct Delegate final
     {
+        Delegate() {} // List<T> constructor
         Delegate(EventHandler eh, Obj * object)
             : EH{eh}, Object{object} {}
         ~Delegate() { Object = {}; EH = {}; }
-        EventHandler EH;
-        Obj * Object;
+        EventHandler EH {};
+        Obj * Object {};
         bool operator==(const Delegate & b) const
         {
             return EH == b.EH && Object == b.Object;
