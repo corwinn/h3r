@@ -41,9 +41,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 // Couple an array with its length. Testing: throws ArgumentException.
+//
 //LATER pool(A,F); 1Mb initial
+//
 // A catch: when T is an object, ~T() won't get called by free_and_nil() with
 //          the default A and F.
+//
+// Another catch: copying via mem.* could copy pointers w/o them notifying; so
+// in order to avoid re-creating the STL here: an invariant:
+//  - use this for simple types only: no T() and ~T()
+//  - do not store things that have pointers on them
 template <typename T,
           void (*A)(T * &, size_t) = OS::Alloc,    // This is not OOP.
           void (*F)(T * &) = OS::Free> class Array //
@@ -51,7 +58,10 @@ template <typename T,
     private T * _data {};
     private int _len {}; // [T]
 
-    private void free_and_nil() { if (_data) F (_data), _len = 0; }
+    private void free_and_nil()
+    {
+        if (_data) F (_data), _data = nullptr, _len = 0;
+    }
 
     public inline const T * Data() const { return _data; }
     public inline const int & Length() const { return _len; }
