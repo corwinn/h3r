@@ -114,7 +114,7 @@ class RenderEngine final
         e.TexListCounts.Resize (_tex2_list.Count ());
         for (int i = 0; i < _tex2_list.Count (); i++) {
             H3R_ENSURE (
-                _tex2_list[i]._index.Count () ==_tex2_list[i]._count.Count (),
+                _tex2_list[i]._index.Count () == _tex2_list[i]._count.Count (),
                 "Bug: out of sync. TexList")
             e.TexListCounts[i] = _tex2_list[i]._index.Count ();
         }
