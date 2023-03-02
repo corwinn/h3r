@@ -192,6 +192,52 @@ H3R_TEST_(mem_leak_on_add)
     list.Add (dfoo {});
 H3R_TEST_END
 
+H3R_TEST_(resize)
+    H3R_NS::List<int> list {2};
+    H3R_TEST_ARE_EQUAL(0, list.Count ())
+    list << 1 << 2;
+    H3R_TEST_ARE_EQUAL(2, list.Count ())
+    H3R_TEST_ARE_EQUAL(1, list[0])
+    H3R_TEST_ARE_EQUAL(2, list[1])
+    list.Resize (3);
+    H3R_TEST_ARE_EQUAL(2, list.Count ())
+    H3R_TEST_ARE_EQUAL(1, list[0])
+    H3R_TEST_ARE_EQUAL(2, list[1])
+    list << 3;
+    H3R_TEST_ARE_EQUAL(3, list.Count ())
+    H3R_TEST_ARE_EQUAL(3, list[2])
+
+    list.Resize (2);
+    H3R_TEST_ARE_EQUAL(2, list.Count ())
+    H3R_TEST_ARE_EQUAL(1, list[0])
+    H3R_TEST_ARE_EQUAL(2, list[1])
+
+    list.Resize (2);
+    H3R_TEST_ARE_EQUAL(2, list.Count ())
+    H3R_TEST_ARE_EQUAL(1, list[0])
+    H3R_TEST_ARE_EQUAL(2, list[1])
+
+    list.Resize (0);
+    H3R_TEST_ARE_EQUAL(0, list.Count ())
+    H3R_TEST_IS_TRUE(list.Empty ())
+
+    auto wrong_length = [&]() { list.Resize (-1); };
+    H3R_TEST_EXCEPTION(ArgumentException, wrong_length)
+H3R_TEST_END
+
+H3R_TEST_(subscript)
+    List<int> list;
+    auto empty_access = [&]() { list[8]; };
+    H3R_TEST_EXCEPTION(ArgumentException, empty_access);
+    List<int> list1 {1};
+    auto capacity_aint_count_access = [&]() { list1[0]; };
+    H3R_TEST_EXCEPTION(ArgumentException, capacity_aint_count_access);
+    list1.Add (7);
+    H3R_TEST_ARE_EQUAL (7, list1[0])
+    list1[0] = 8;
+    H3R_TEST_ARE_EQUAL (8, list1[0])
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()
