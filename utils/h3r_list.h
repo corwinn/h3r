@@ -206,7 +206,7 @@ template <typename T,
 
     public void Resize(int len)
     {
-        H3R_ARG_EXC_IF(0 < len, "len can't be <0")
+        H3R_ARG_EXC_IF(len < 0, "len can't be < 0")
         if (len == _cnt) return;
         if (0 == len) FreeObjects ();
         else if (len > _cnt) Grow (len);
