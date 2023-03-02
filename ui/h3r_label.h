@@ -64,7 +64,7 @@ class Label: public Control
     {
         _text = value;
         Window::UI->UpdateText (_tkey, _font, _text, Pos ().X, Pos ().Y,
-            H3R_TEXT_COLOR_WHITE, Depth ());
+            H3R_TEXT_COLOR_GOLD, Depth ());
     }
 };
 

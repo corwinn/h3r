@@ -106,7 +106,8 @@ using h3rBitmapCallback = byte* (*)();
 static int const H3R_MEMORY_LIMIT {1<<29}; // [bytes] of RAM.
 
 unsigned int const H3R_TEXT_COLOR_WHITE {0xffffffffu};
-unsigned int const H3R_TEXT_COLOR_GOLD {0xff7b6deeu};
+//                                         A B G R
+unsigned int const H3R_TEXT_COLOR_GOLD {0xff7bd6eeu};
 
 NAMESPACE_H3R
 

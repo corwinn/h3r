@@ -43,7 +43,7 @@ Label::Label(
 {
     SetPos (pos.X, pos.Y);
     Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y,
-        H3R_TEXT_COLOR_WHITE, Depth ());
+        H3R_TEXT_COLOR_GOLD, Depth ());
 }
 
 Label::Label(
@@ -53,7 +53,7 @@ Label::Label(
 {
     SetPos (pos.X, pos.Y);
     Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y,
-        H3R_TEXT_COLOR_WHITE, Depth ());
+        H3R_TEXT_COLOR_GOLD, Depth ());
 }
 
 NAMESPACE_H3R

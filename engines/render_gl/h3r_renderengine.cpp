@@ -378,7 +378,8 @@ void RenderEngine::UploadText(TextKey & key,
     GLfloat z = Depht2z (order);
     // printf ("Text: Order: %3d, z: %.5f" EOL, order, z);
     union {unsigned int c; byte rgba[4]; };
-    c = color; GLfloat i = rgba[0], g = rgba[1], j = rgba[2], a = rgba[3];
+    c = color; GLfloat i = rgba[0]/255.f, g = rgba[1]/255.f, j = rgba[2]/255.f,
+        a = rgba[3]/255.f;
     GLfloat verts[36] {l,t,z,0,0,i,g,j,a, l,b,z,0,v,i,g,j,a,
         r,t,z,u,0,i,g,j,a, r,b,z,u,v,i,g,j,a};
     glGenBuffers (1, &(e.Vbo));
