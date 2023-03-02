@@ -105,6 +105,9 @@ using h3rBitmapCallback = byte* (*)();
 // This remake is expected to use no more than:
 static int const H3R_MEMORY_LIMIT {1<<29}; // [bytes] of RAM.
 
+unsigned int const H3R_TEXT_COLOR_WHITE {0xffffffffu};
+unsigned int const H3R_TEXT_COLOR_GOLD {0xff7b6deeu};
+
 NAMESPACE_H3R
 
 namespace __pointless_verbosity {

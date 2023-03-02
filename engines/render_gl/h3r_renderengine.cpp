@@ -137,15 +137,16 @@ void RenderEngine::Render()
         WinVBOClientState ();
         glDrawArrays (GL_TRIANGLE_STRIP, 0, 12);
     }
-    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    // glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
     // stage3: text
     for (auto * n = _texts.Prev (); n != nullptr; n = n->Prev ()) {
         glBindTexture (GL_TEXTURE_2D, n->Data.Texture);
         glBindBuffer (GL_ARRAY_BUFFER, n->Data.Vbo);
-        VBOClientState ();
+        WinVBOClientState ();
         glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
     }
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }// RenderEngine::Render()
 
 void RenderEngine::Resize(int w, int h)
@@ -338,7 +339,7 @@ RenderEngine::TextKey RenderEngine::GenTextKey()
 // is proof of concept code - wasting too much time with it is pointless.
 void RenderEngine::UploadText(TextKey & key,
     const String & font_name, const String & txt, int left, int top,
-    h3rDepthOrder order)
+    unsigned int color, h3rDepthOrder order)
 {
     int w, h;
     byte * tb = TextRenderingEngine::One ().RenderText (font_name, txt, w, h);
@@ -376,18 +377,21 @@ void RenderEngine::UploadText(TextKey & key,
     // same ordering and components as the big VBO
     GLfloat z = Depht2z (order);
     // printf ("Text: Order: %3d, z: %.5f" EOL, order, z);
-    GLfloat vertices[20] {l,t,z,0,0, l,b,z,0,v, r,t,z,u,0, r,b,z,u,v};
+    union {unsigned int c; byte rgba[4]; };
+    c = color; GLfloat i = rgba[0], g = rgba[1], j = rgba[2], a = rgba[3];
+    GLfloat verts[36] {l,t,z,0,0,i,g,j,a, l,b,z,0,v,i,g,j,a,
+        r,t,z,u,0,i,g,j,a, r,b,z,u,v,i,g,j,a};
     glGenBuffers (1, &(e.Vbo));
     glBindBuffer (GL_ARRAY_BUFFER, e.Vbo);
-    glBufferData (GL_ARRAY_BUFFER, 80, vertices, GL_STATIC_DRAW);
+    glBufferData (GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
 }
 
 //TODO refactor me
 void RenderEngine::UpdateText(TextKey & key,
     const String & font_name, const String & txt, int left, int top,
-    h3rDepthOrder order)
+    unsigned int color, h3rDepthOrder order)
 {
-    UploadText (key, font_name, txt, left, top, order);
+    UploadText (key, font_name, txt, left, top, color, order);
 }
 
 void RenderEngine::ChangeTextVisibility(TextKey & key, bool state)

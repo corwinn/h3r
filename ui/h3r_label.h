@@ -63,8 +63,8 @@ class Label: public Control
     public inline void SetText(const String & value)
     {
         _text = value;
-        Window::UI->UpdateText (
-            _tkey, _font, _text, Pos ().X, Pos ().Y, Depth ());
+        Window::UI->UpdateText (_tkey, _font, _text, Pos ().X, Pos ().Y,
+            H3R_TEXT_COLOR_WHITE, Depth ());
     }
 };
 
