@@ -109,6 +109,11 @@ unsigned int const H3R_TEXT_COLOR_WHITE {0xffffffffu};
 //                                         A B G R
 unsigned int const H3R_TEXT_COLOR_GOLD {0xff7bd6eeu};
 
+// While doing dynamic UI, computations can go wild; this here prevents odd
+// issues like: "where did my rendering go", and "why am I getting that odd sys.
+// error message".
+int const H3R_UI_MAX_VALUE {1<<14}; // Should cover a lot of setups.
+
 NAMESPACE_H3R
 
 namespace __pointless_verbosity {
