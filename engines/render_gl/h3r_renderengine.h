@@ -278,8 +278,9 @@ class RenderEngine final
     private LList<RenderEngine::TextEntry> _texts {};
     public class TextKey final
     {
-        private LList<RenderEngine::TextEntry> * _node;
+        private LList<RenderEngine::TextEntry> * _node {};
         public TextKey(LList<RenderEngine::TextEntry> &);
+        public TextKey() {} // List<T>
         public void Delete();
         public inline void ChangeTextVisibility(bool state)
         {
