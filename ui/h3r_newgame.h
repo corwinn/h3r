@@ -41,9 +41,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_string.h"
 #include "h3r_list.h"
 #include "h3r_event.h"
+#include "h3r_scrollbar.h"
 
 H3R_NAMESPACE
 
+// This one doesn't get drop shadow?!
+// And it isn't even centered?! How many thing one didn't usually notice :)
+//
 // New game dialog:
 //
 //  - tab: "Show Advanced Options" (left): ADVOPTBK.PCX
@@ -56,7 +60,7 @@ H3R_NAMESPACE
 //    - castle icons (for the Starting Town column): ITPA.def
 //    - Starting Hero: can't select: hpsrand6.pcx; other variations:
 //      2 dies with "?": HPSRAND4.PCX ?; heroes with "?": hpsrand.pcx ?
-//  - main: GSelPop1.pcx
+//  - main: GSelPop1.pcx (370x585)
 //    - background: gamselb(0|1).pcx (w: 800, h: 600) - randomly chosen
 //    - button "begin": GSPBGIN.DEF  (w: 166, h:  40)
 //      - another one: ScnrBeg.def   (w: 166, h:  40) ?!
@@ -99,17 +103,19 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
 #define public public:
 {
     // private List<int> _re_keys {};
-    // private bool _has_dr {};
-    // private DialogResult _dr {};
-    // private int _t {}, _l {};
+    private bool _has_dr {};
+    private DialogResult _dr {};
+    private int _t {}, _l {};
+    private List<RenderEngine::TextKey> _tkeys {};
 
     public NewGameDialog(Window * base_window);
     public ~NewGameDialog() override;
+    public DialogResult ShowDialog();//TODO virtual at dialogwindow
 
     protected void OnKeyUp(const EventArgs &) override;
 
-    // private void HandleOKClick(EventArgs *);
-    // private void HandleCancelClick(EventArgs *);
+    // private void HandleBeginClick(EventArgs *);
+    // private void HandleBackClick(EventArgs *);
 };
 
 NAMESPACE_H3R

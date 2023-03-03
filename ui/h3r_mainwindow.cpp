@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_label.h"
 #include "h3r_timing.h"
 #include "h3r_messagebox.h"
+#include "h3r_newgame.h"
 
 H3R_NAMESPACE
 
@@ -227,6 +228,8 @@ void MainWindow::NewGameBack(EventArgs *)
 
 void MainWindow::NewGameSignleScenario(EventArgs *)
 {
+    NewGameDialog ngd {this};
+    ngd.ShowDialog ();
 }
 
 NAMESPACE_H3R
