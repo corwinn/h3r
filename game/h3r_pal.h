@@ -131,6 +131,7 @@ class Pal final : public ResDecoder
         /*TRACE printf (
             "Pal::Replace: dst:%p, dst_idx: %d, num:%d, src:%p, src_idx: %d" EOL,
             dst, index, num, static_cast<byte *>(_rgb), src_index);*/
+        H3R_ENSURE(! _rgb.Empty (), "Pal load failed")
         for (int i = 0; i < num; i++) {
             /*printf ("Put: %d, Get: %d", 3*(index+i), 3*(src_index+i));*/
             OS::Memmove (
