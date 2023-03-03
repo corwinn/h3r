@@ -67,13 +67,19 @@ MessageBox::MessageBox(Window * base_window, Point && size,
 
     // The better message box.
     Pcx dlg_back {Game::GetResource ("DiBoxBck.pcx")};
-    auto dlg_back_arr = dlg_back.ToRGB ();
+    auto dlg_back_arr = dlg_back.ToRGBA (); // Ensure GL_UNPACK_ALIGNMENT
+    H3R_ENSURE(dlg_back_arr, "Bitmap not found")
     re.ShadowRectangle (_l, _t, size.X, size.Y,
-        dlg_back_arr->operator byte * (), h3rBitmapFormat::RGB,
+        dlg_back_arr->operator byte * (), h3rBitmapFormat::RGBA,
         dlg_back.Width (), dlg_back.Height (), Depth ());
 
     static Def * sprite_p {};
-    auto bitmap_data = [](){ return sprite_p->ToRGBA ()->operator byte * (); };
+    auto bitmap_data = []()
+    {
+        auto result = sprite_p->ToRGBA ();
+        H3R_ENSURE(result, "Sprite not found")
+        return result->operator byte * ();
+    };
 
     // Decoration
     int key;
@@ -90,49 +96,49 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     H3R_ENSURE(tile_x > 0 && tile_y > 0, "Can't decorate")
     tile_x = Align (tile_x, dw) / dw;
     tile_y = Align (tile_y, dh) / dh;
-    sprite.Query ("DiBoxT.pcx");
+    H3R_ENSURE(sprite.Query ("DiBoxT.pcx"), "Sprite not found")
     for (int i = 0; i < tile_x; i++) {
         key = re.GenKey ();
         re.UploadFrame (key, _l+dw+i*dw, _t, dw,
             dh, bitmap_data, h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey ("dialgbox.def"), depth);
     }
-    sprite.Query ("DiBoxB.pcx");
+    H3R_ENSURE(sprite.Query ("DiBoxB.pcx"), "Sprite not found")
     for (int i = 0; i < tile_x; i++) {
         key = re.GenKey ();
         re.UploadFrame (key, _l+dw+i*dw, _t+size.Y-dh, dw,
             dh, bitmap_data, h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey ("dialgbox.def"), depth);
     }
-    sprite.Query ("DiBoxL.pcx");
+    H3R_ENSURE(sprite.Query ("DiBoxL.pcx"), "Sprite not found")
     for (int i = 0; i < tile_y; i++) {
         key = re.GenKey ();
         re.UploadFrame (key, _l, _t+dh, dw,
             dh, bitmap_data, h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey ("dialgbox.def"), depth);
     }
-    sprite.Query ("DiBoxR.pcx");
+    H3R_ENSURE(sprite.Query ("DiBoxR.pcx"), "Sprite not found")
     for (int i = 0; i < tile_y; i++) {
         key = re.GenKey ();
         re.UploadFrame (key, _l+size.X-dw, _t+dh, dw,
             dh, bitmap_data, h3rBitmapFormat::RGBA,
             sprite.GetUniqueKey ("dialgbox.def"), depth);
     }
-    sprite.Query ("DiBoxTL.pcx");
+    H3R_ENSURE(sprite.Query ("DiBoxTL.pcx"), "Sprite not found")
     key = re.GenKey ();
     re.UploadFrame (key, _l, _t, dw, dh, bitmap_data, h3rBitmapFormat::RGBA,
         sprite.GetUniqueKey ("dialgbox.def"), depth);
-    sprite.Query ("DiBoxBL.pcx");
+    H3R_ENSURE(sprite.Query ("DiBoxBL.pcx"), "Sprite not found")
     key = re.GenKey ();
     re.UploadFrame (key, _l, _t+size.Y-dh, dw, dh,
         bitmap_data, h3rBitmapFormat::RGBA,
         sprite.GetUniqueKey ("dialgbox.def"), depth);
-    sprite.Query ("DiBoxTR.pcx");
+    H3R_ENSURE(sprite.Query ("DiBoxTR.pcx"), "Sprite not found")
     key = re.GenKey ();
     re.UploadFrame (key, _l+size.X-dw, _t, dw, dh,
         bitmap_data, h3rBitmapFormat::RGBA,
         sprite.GetUniqueKey ("dialgbox.def"), depth);
-    sprite.Query ("DiBoxBR.pcx");
+    H3R_ENSURE(sprite.Query ("DiBoxBR.pcx"), "Sprite not found")
     key = re.GenKey ();
     re.UploadFrame (key, _l+size.X-dw, _t+size.Y-dh, dw, dh,
         bitmap_data, h3rBitmapFormat::RGBA,
@@ -141,7 +147,7 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     // Text
     Label * lbl;
     // managed by the Window destructor via Add()
-    H3R_CREATE_OBJECT(lbl, Label) {msg, fnt, Point {277,267}, this};
+    H3R_CREATE_OBJECT(lbl, Label) {msg, fnt, Point {277, 267}, this};
 
     // Buttons: "box66x32.pcx", iCANCEL.def, iOKAY.def
     // ok the above one is 68x34
@@ -149,7 +155,12 @@ MessageBox::MessageBox(Window * base_window, Point && size,
     static Pcx * pcx {};
     Pcx pcx_bmp {Game::GetResource ("Box64x30.pcx")};
     pcx = &pcx_bmp;
-    auto pcx_bitmap = []() { return pcx->ToRGBA ()->operator byte * (); };
+    auto pcx_bitmap = []()
+    {
+        auto result = pcx->ToRGBA ();
+        H3R_ENSURE(result, "Bitmap not found")
+        return result->operator byte * ();
+    };
     key = re.GenKey ();
     re.UploadFrame (key, 326, 334, pcx_bmp.Width (), pcx_bmp.Height (),
         pcx_bitmap, h3rBitmapFormat::RGBA, "Box64x30.pcx", depth);
