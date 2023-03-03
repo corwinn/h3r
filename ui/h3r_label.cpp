@@ -37,23 +37,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 Label::Label(
-    const String & text, const String & font, const Point & pos, Control * base)
+    const String & text, const String & font, const Point & pos, Control * base,
+    unsigned int color)
     : Control {base}, _tkey {Window::UI->GenTextKey ()}, _font {font},
-    _text {text}
+    _text {text}, _color{color}
 {
     SetPos (pos.X, pos.Y);
-    Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y,
-        H3R_TEXT_COLOR_GOLD, Depth ());
+    Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y, _color,
+        Depth ());
 }
 
 Label::Label(
-    const String & text, const String & font, const Point & pos, Window * base)
+    const String & text, const String & font, const Point & pos, Window * base,
+    unsigned int color)
     : Control {base}, _tkey {Window::UI->GenTextKey ()}, _font {font},
-    _text {text}
+    _text {text}, _color{color}
 {
     SetPos (pos.X, pos.Y);
-    Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y,
-        H3R_TEXT_COLOR_GOLD, Depth ());
+    Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y, _color,
+        Depth ());
 }
 
 NAMESPACE_H3R

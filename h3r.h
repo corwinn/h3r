@@ -108,6 +108,7 @@ static int const H3R_MEMORY_LIMIT {1<<29}; // [bytes] of RAM.
 unsigned int const H3R_TEXT_COLOR_WHITE {0xffffffffu};
 //                                         A B G R
 unsigned int const H3R_TEXT_COLOR_GOLD {0xff7bd6eeu};
+unsigned int const H3R_TEXT_COLOR_MSGB {0xffdef3ffu};
 
 // While doing dynamic UI, computations can go wild; this here prevents odd
 // issues like: "where did my rendering go", and "why am I getting that odd sys.

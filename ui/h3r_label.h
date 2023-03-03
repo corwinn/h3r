@@ -51,11 +51,14 @@ class Label: public Control
     private RenderEngine::TextKey _tkey;
     private String _font;
     private String _text;
+    private unsigned int _color {H3R_TEXT_COLOR_MSGB};
 
     public Label(
-        const String &, const String &, const Point &, Control *);
+        const String &, const String &, const Point &, Control *,
+        unsigned int = H3R_TEXT_COLOR_MSGB);
     public Label(
-        const String &, const String &, const Point &, Window *);
+        const String &, const String &, const Point &, Window *,
+        unsigned int = H3R_TEXT_COLOR_MSGB);
     public ~Label() override { Window::UI->DeleteText (_tkey); }
 
     public inline const String & Text() const { return _text; }
@@ -64,7 +67,7 @@ class Label: public Control
     {
         _text = value;
         Window::UI->UpdateText (_tkey, _font, _text, Pos ().X, Pos ().Y,
-            H3R_TEXT_COLOR_GOLD, Depth ());
+            _color, Depth ());
     }
 };
 
