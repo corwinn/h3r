@@ -89,10 +89,15 @@ class Control
     // Controls placed directly on a window have the same depth (window+1);
     // their rendering order is the order of placement.
     public Control(Window *);  // sets _depth
-    public virtual ~Control() {}
+    public virtual ~Control()
+    {
+        for (auto p : _n) H3R_DESTROY_OBJECT(p, Control)
+    }
 
     public const Point & Pos() { return _bb.Pos; }
     public const Point & Size() { return _bb.Size; }
+    public inline int Width() const { return _bb.Size.Width; }
+    public inline int Height() const { return _bb.Size.Height; }
     // Let controls know, their position has been changed.
     public virtual Control * SetPos(int, int);
 
@@ -122,9 +127,18 @@ class Control
     protected virtual bool HitTest(Point & p);
 
     protected virtual void OnRender(/*GC &*/) {} //TODO useless?
-    protected virtual void OnMouseMove(const EventArgs &) {}
-    protected virtual void OnMouseUp(const EventArgs &) {}
-    protected virtual void OnMouseDown(const EventArgs &) {}
+    protected virtual void OnMouseMove(const EventArgs &e)
+    {
+        for (auto p : _n) p->OnMouseMove (e);
+    }
+    protected virtual void OnMouseUp(const EventArgs & e)
+    {
+        for (auto p : _n) p->OnMouseUp (e);
+    }
+    protected virtual void OnMouseDown(const EventArgs & e)
+    {
+        for (auto p : _n) p->OnMouseDown (e);
+    }
     protected virtual void OnKeyDown(const EventArgs &) {}
     protected virtual void OnKeyUp(const EventArgs &) {}
     protected virtual void OnVisibilityChanged() {}
