@@ -83,6 +83,13 @@ static GLint TexSize()
     return i < H3R_MAX_TEX_SIZE ? i : H3R_MAX_TEX_SIZE;
 }
 
+static GLint TexUnpackAlignment()
+{
+    GLint i;
+    glGetIntegerv (GL_UNPACK_ALIGNMENT, &i);
+    return i;
+}
+
 TexCache::TexCache()
     : _tsize{TexSize ()}
 {
@@ -165,6 +172,10 @@ TexCache::TexCache()
     // 1GB RGBA; way too much bytes for this remake.
     // I'll start with a 4k one, see what happens
     Log::Info (String::Format (" H3R TSize : %d" EOL, _tsize));
+
+    Log::Info (String::Format (" HW GL_UNPACK_ALIGNMENT : %d" EOL,
+        TexUnpackAlignment ()));
+    H3R_ENSURE(4 == TexUnpackAlignment (), "GL: Unhandled GL_UNPACK_ALIGNMENT")
 
 }// TexCache::TexCache()
 
