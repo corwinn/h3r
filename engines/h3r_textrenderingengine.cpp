@@ -111,8 +111,8 @@ static void TextService__ToLines(const String & txt, T & s,
         on_line (String {l, (int)((buf + tlen) - l)}, s);
 }
 
-const int H3R_MAX_TEXT_WIDTH {640}; // TODO measure the at the game
-const int H3R_MAX_TEXT_HEIGHT {480}; // TODO measure the at the game
+// const int H3R_MAX_TEXT_WIDTH {640}; // TODO measure the at the game
+// const int H3R_MAX_TEXT_HEIGHT {480}; // TODO measure the at the game
 
 // The game handles very long words by wrapping them.
 // The game handles \r\n.
@@ -146,7 +146,7 @@ static inline void handle_token(List<String> & rows, String & line,
         int a = 0;
         auto buf = token.AsByteArray ();
         for (auto i : idx) {
-            printf ("<> TooLong ends at: %d\n", i - 1);
+            // printf ("<> TooLong ends at: %d\n", i - 1);
             if (i-a > 0) {
                 String p {buf + a, i - a};
                 rows.Put (static_cast<String &&>(p));
@@ -179,14 +179,14 @@ List<String> TextRenderingEngine::LayoutText(const String & font_name,
     H3R_ENSURE(fnt != nullptr, "Font not found")
 
     List<String> txt_rows {};
-    int line_spacing = 0; // so far the spacing is built-in into the font
+    // int line_spacing = 0; // so far the spacing is built-in into the font
     const byte * l = txt.AsByteArray (), * i = l, * e = l + txt.Length ();
-    int tw = w, eol_len {};
+    int tw = w;
     String line {""};
     for (;i < e;) {
         // handle new line(s)
         while (i < e && is_eol (i, e)) {
-            printf ("<> EOL\n");
+            // printf ("<> EOL\n");
             txt_rows.Put (static_cast<String &&>(line));
             line += "";
         }
@@ -194,9 +194,9 @@ List<String> TextRenderingEngine::LayoutText(const String & font_name,
         l = i;
         if (! is_ws (i)) {
             while (i < e && is_sym (i)) i++;
-            printf ("<> Word: ");
+            /*printf ("<> Word: ");
                 for (auto c = l; c < i; c++) printf ("%c", *c);
-            printf ("\n");
+            printf ("\n");*/
             String word {l, (int)(i-l)};
             handle_token (txt_rows, line, word, w, tw, fnt);
             l = i;
@@ -204,7 +204,7 @@ List<String> TextRenderingEngine::LayoutText(const String & font_name,
         else {
             skip_ws (l, e);
             if (l > i) { // whitespace
-                printf ("<> Whitespace of size %ld\n", l-i);
+                // printf ("<> Whitespace of size %ld\n", l-i);
                 String t {i, (int)(l-i)};
                 handle_token (txt_rows, line, t, w, tw, fnt);
             }
@@ -212,16 +212,16 @@ List<String> TextRenderingEngine::LayoutText(const String & font_name,
         }
     }// (;i < e;)
     if (! line.Empty ()) {
-        if (! txt_rows.Count () <= 0)
+        if (txt_rows.Count () <= 0)
             txt_rows.Put (static_cast<String &&>(line));
         else if (txt_rows[txt_rows.Count ()-1] != line)
             txt_rows.Put (static_cast<String &&>(line));
     }
-    for (int i = 0; i < txt_rows.Count (); i++) {
-        if (txt_rows[i].Empty ())
-             printf ("<> [%2d]: \"\"\n", i);
-        else printf ("<> [%2d]: \"%s\"\n", i, txt_rows[i].AsZStr ());
-    }
+    /*for (int j = 0; j < txt_rows.Count (); j++) {
+        if (txt_rows[j].Empty ())
+             printf ("<> [%2d]: \"\"\n", j);
+        else printf ("<> [%2d]: \"%s\"\n", j, txt_rows[j].AsZStr ());
+    }*/
     return static_cast<List<String> &&>(txt_rows);
 }// TextRenderingEngine::LayoutText()
 
