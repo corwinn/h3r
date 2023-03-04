@@ -125,6 +125,8 @@ class ScrollBar final : public Control, public IHandleEvents
 
     private void HandleScrollDown(EventArgs *);
     private void HandleScrollUp(EventArgs *);
+
+    public inline int Width() const { return _a; }
 };// ScrollBar
 
 NAMESPACE_H3R
