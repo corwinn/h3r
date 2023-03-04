@@ -50,6 +50,7 @@ class GameFont final: public Font
 {
     private Fnt _fnt;
     public Point MeasureText(const String &) override;
+    public Point MeasureText(const String &, int, void (*)(int)) override;
     public void RenderText(const String &, byte * buf, int w, int h) override;
     public GameFont(const String & name);
     public ~GameFont() override {}

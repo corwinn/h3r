@@ -57,6 +57,11 @@ class Font
     }
 
     public virtual Point MeasureText(const String &) { return Point {}; }
+    // A special version used to partition a string to a given width.
+    public virtual Point MeasureText(const String &, int, void (*)(int))
+    {
+        return Point {};
+    }
 
     // Render a byte sequence into "buf" of size w*h*2 bytes.
     // Each pixel: byte[0] - has luminance value; byte[1] has alpha value; e.g.

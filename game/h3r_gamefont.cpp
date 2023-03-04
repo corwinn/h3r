@@ -56,6 +56,22 @@ Point GameFont::MeasureText(const String & text)
     return result;
 }
 
+Point GameFont::MeasureText(const String & text, int width,
+    void (*on_width)(int index))
+{
+    if (! _fnt) return Point {};
+    Point result {};
+    result.Y = _fnt.Height ();
+    const byte * buf = text.AsByteArray ();
+    int w {};
+    for (int i = 0; i < text.Length (); i++) {
+        int delta = _fnt.HorisontalAdvance (buf[i]);
+        result.X += delta;
+        if ((w += delta) > width) { w = delta; if (on_width) on_width (i); }
+    }
+    return result;
+}
+
 // Convert 1 byte .fnt to 2 bytes GL_LUMINANCE_ALPHA
 static void CopyGlyph(byte * dst, int w, int px, byte * src, int gw, int gh)
 {
