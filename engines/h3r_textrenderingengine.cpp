@@ -114,44 +114,116 @@ static void TextService__ToLines(const String & txt, T & s,
 const int H3R_MAX_TEXT_WIDTH {640}; // TODO measure the at the game
 const int H3R_MAX_TEXT_HEIGHT {480}; // TODO measure the at the game
 
-String TextRenderingEngine::LayoutText(const String & font_name,
-    const String & txt, const Box & box, Box & actualbox)
+// The game handles very long words by wrapping them.
+// The game handles \r\n.
+static inline bool is_ws(const byte * i)
 {
-    H3R_NOT_IMPLEMENTED_EXC
+    return *i <= 32 && '\r' != *i && '\n' != *i;
+}
+static inline bool is_sym(const byte * i) { return *i > 32; }
+static inline bool is_eol(const byte * & i, const byte * m)
+{
+    if (i > m) return false;
+    if (m-1 == i) return i++, '\n' == *i;
+    if ('\r' == *i && '\n' == *(i+1)) return i += 2, true;
+    return false;
+}
+static inline void skip_ws(const byte * & i, const byte * m)
+{
+    while (i < m && is_ws (i)) i++;
+}
+static inline void handle_token(List<String> & rows, String & line,
+    const String & token, int w, int & tw, Font * fnt)
+{
+    static List<int> idx {};
+    idx.Clear ();
+    Point ts = fnt->MeasureText (token);
+    if (ts.Width > w) { // a token is wider than the allowed width
+        // This requires a special MeasureText() in order to avoid creating
+        // too many Strings.
+        //TODO there is at least one bug here; testme
+        fnt->MeasureText (token, w, [](int i) { idx.Add (i); });
+        int a = 0;
+        auto buf = token.AsByteArray ();
+        for (auto i : idx) {
+            printf ("<> TooLong ends at: %d\n", i - 1);
+            if (i-a > 0) {
+                String p {buf + a, i - a};
+                rows.Put (static_cast<String &&>(p));
+            }
+            a = i;
+        }
+        if (a < token.Length ()) { // put the last one if any
+            String p {buf + a, token.Length () - a};
+            rows.Put (static_cast<String &&>(p));
+        }
+    }
+    else {
+        tw -= ts.Width;
+        if (tw < 0) {
+            if (! line.Empty ()) rows.Put (static_cast<String &&>(line));
+            line += token; tw = w - ts.Width;
+            H3R_ENSURE(tw >= 0, "Unhandled width overflow")
+        }
+        else
+            line += token;
+    }
+}// handle_token()
 
+// VScrollBar & text layout: the lay-outing is done without the vscrollbar. If a
+// vscrollbar is needed, the lay-outing is re-done against the adjusted width.
+List<String> TextRenderingEngine::LayoutText(const String & font_name,
+    const String & txt, int w/*, Box & actualbox*/)
+{
     Font * fnt = TryLoadFont (font_name);
     H3R_ENSURE(fnt != nullptr, "Font not found")
-    if (H3R_MAX_TEXT_HEIGHT) return txt;
 
     List<String> txt_rows {};
-    int line_spacing = 0;
-    int tw = 0, th = 0; // TODO MeasureMultilineText - see
-                        // TextRenderingEngine::RenderText() below
-    int bw = box.Size.X - box.Pos.X, bh = box.Size.Y - box.Pos.Y; // box w,h
-    if (tw > bw || th > bh) {// doesn't fit
-        actualbox = box;
-        if (tw > H3R_MAX_TEXT_WIDTH) {
-            bw = H3R_MAX_TEXT_WIDTH;
-            //TODO wrap the lines; 1st compute without scrollbar; if it fits
-            //     H3R_MAX_TEXT_HEIGHT you're done; if it doesn't, re-compute
-            //     with -scrollbar.width (because showing a scrollbar shrinks
-            //     the render area; if its too slow, consider scrollbar.width
-            //     prior calling this function
-            H3R_ENSURE(false, "Line wrapping not implemented yet")
-            // hh shouldn't change; tw should be updated while wrapping
-            th += line_spacing * txt_rows.Count () - 1;
+    int line_spacing = 0; // so far the spacing is built-in into the font
+    const byte * l = txt.AsByteArray (), * i = l, * e = l + txt.Length ();
+    int tw = w, eol_len {};
+    String line {""};
+    for (;i < e;) {
+        // handle new line(s)
+        while (i < e && is_eol (i, e)) {
+            printf ("<> EOL\n");
+            txt_rows.Put (static_cast<String &&>(line));
+            line += "";
         }
-        else // just resize to fit the text
-            bw = tw;
-        actualbox.Size.X = bw - box.Pos.X;
-
-        if (th > bh) // just resize to fit the text; the caller should apply
-                     // a scrollbar
-            bh = th;
-        actualbox.Size.Y = bh - box.Pos.Y;
+        if (i >= e) break;
+        l = i;
+        if (! is_ws (i)) {
+            while (i < e && is_sym (i)) i++;
+            printf ("<> Word: ");
+                for (auto c = l; c < i; c++) printf ("%c", *c);
+            printf ("\n");
+            String word {l, (int)(i-l)};
+            handle_token (txt_rows, line, word, w, tw, fnt);
+            l = i;
+        }
+        else {
+            skip_ws (l, e);
+            if (l > i) { // whitespace
+                printf ("<> Whitespace of size %ld\n", l-i);
+                String t {i, (int)(l-i)};
+                handle_token (txt_rows, line, t, w, tw, fnt);
+            }
+            i = l;
+        }
+    }// (;i < e;)
+    if (! line.Empty ()) {
+        if (! txt_rows.Count () <= 0)
+            txt_rows.Put (static_cast<String &&>(line));
+        else if (txt_rows[txt_rows.Count ()-1] != line)
+            txt_rows.Put (static_cast<String &&>(line));
     }
-    return txt;
-}
+    for (int i = 0; i < txt_rows.Count (); i++) {
+        if (txt_rows[i].Empty ())
+             printf ("<> [%2d]: \"\"\n", i);
+        else printf ("<> [%2d]: \"%s\"\n", i, txt_rows[i].AsZStr ());
+    }
+    return static_cast<List<String> &&>(txt_rows);
+}// TextRenderingEngine::LayoutText()
 
 byte * TextRenderingEngine::RenderText(
     const String & font_name, const String & txt, int & tw, int & th)

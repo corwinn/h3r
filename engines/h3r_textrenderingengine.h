@@ -72,8 +72,13 @@ class TextRenderingEngine final
     public byte * RenderText(const String & font_name, const String & txt,
         int & w, int & h);
 
-    public String LayoutText(const String & font_name, const String & txt,
-        const Box & box, Box & actualbox);
+    // Word-wrap "txt" to fit "box". "actualbox" is not used so far - it shall
+    // be used if and when I find out "how" the game does auto-size of its
+    // message boxes. There is probably some max size and some grow steps ...
+    // Returns a list of rows to render.
+    //LATER Unicode requires stream processing of "txt".
+    public List<String> LayoutText(const String & font_name, const String & txt,
+        int w/*, Box & actualbox*/);
 
     public Point MeasureText(const String & font_name, const String & txt);
 
