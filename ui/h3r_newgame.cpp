@@ -53,7 +53,7 @@ NewGameDialog::NewGameDialog(Window * base_window)
     _t = 6;
     _l = 396;
 
-    RenderEngine & re = *Window::UI;
+    auto RE = Window::UI;
 
     Pcx new_game_background {Game::GetResource ("gamselb1.pcx")};
     auto byte_arr_ptr = new_game_background.ToRGB ();
@@ -63,9 +63,9 @@ NewGameDialog::NewGameDialog(Window * base_window)
     }
     static byte * bmp_data {};
     auto bitmap_data = []() { return bmp_data; };
-    auto key = re.GenKey ();
+    auto key = RE->GenKey ();
     bmp_data = byte_arr_ptr->operator byte * ();
-    re.UploadFrame (key, 0, 0, new_game_background.Width (),
+    RE->UploadFrame (key, 0, 0, new_game_background.Width (),
         new_game_background.Height (), bitmap_data,
         h3rBitmapFormat::RGB, "gamselb1.pcx", Depth ());
 
@@ -76,8 +76,8 @@ NewGameDialog::NewGameDialog(Window * base_window)
         return;
     }
     bmp_data = byte_arr_ptr->operator byte * ();
-    key = re.GenKey ();
-    re.UploadFrame (key, _l, _t, dlg_main.Width (),
+    key = RE->GenKey ();
+    RE->UploadFrame (key, _l, _t, dlg_main.Width (),
         dlg_main.Height (), bitmap_data,
         h3rBitmapFormat::RGBA, "GSelPop1.pcx", Depth ());
 
@@ -90,18 +90,54 @@ NewGameDialog::NewGameDialog(Window * base_window)
     // Set text color.
     // Gold: 238,214,123; White: 255,255,255
     // "Scenario Name:" smallfont.fnt, Gold, 422,31
-    Window::UI->UploadText (_tkeys.Add (Window::UI->GenTextKey ()),
+    RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
         "smalfont.fnt", "Scenario Name:", 422, 28, H3R_TEXT_COLOR_GOLD,
         Depth ());
-    // Scenario Name: bigfont.fnt, Gold,     422,50
-    Window::UI->UploadText (_tkeys.Add (Window::UI->GenTextKey ()),
-        "bigfont.fnt", "Adventures", 422, 45, H3R_TEXT_COLOR_GOLD,
+
+    //TODO property; Scenario Name: bigfont.fnt, Gold,     422,50
+    RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
+        "bigfont.fnt", "H3R", 422, 45, H3R_TEXT_COLOR_GOLD,
         Depth ());
-    // "Show Available Scenarios": smallfont.fnt, White, 440,85(up), 441,86(dn)
-    // "Random Map": smallfont.fnt, White, 475,109(up), 476,110(dn)
-    // "Scenario Description:": smallfont.fnt, Gold, 422,141
-    // Scenario Description: smallfont.fnt, White, 422,158; layout word-wrap
-    // at x=739; after y=265 - show a scrollbar (word-wrap at 716):
+
+    //TODO property; Map Size Icon
+    static Array<byte> * bitmap {};
+    Def sprite {Game::GetResource ("ScnrMpSz.def")};
+    auto s1 = sprite.Query ("Scnr144z.pcx");
+    H3R_ENSURE(s1, "Sprite not found")
+    bitmap = s1->ToRGBA ();
+    H3R_ENSURE(bitmap, "Sprite->ToRGBA() failed")
+    bmp_data = bitmap->operator byte * ();
+    RE->UploadFrame (RE->GenKey (), 714, 28, sprite.Width (), sprite.Height (),
+        bitmap_data,
+        h3rBitmapFormat::RGBA, sprite.GetUniqueKey ("Scnr144z.pcx"), Depth ());
+
+    // "Show Available Scenarios": smalfont.fnt, White, 440,85(up), 441,86(dn)
+    Button * tab_btn_ascen {};
+    H3R_CREATE_OBJECT(tab_btn_ascen, Button) {
+        "GSPBUTT.DEF", this, Button::H3R_UI_BTN_UPDN};
+    tab_btn_ascen->SetPos (414, 81);
+    tab_btn_ascen->UploadFrames ();
+    tab_btn_ascen->Click.Subscribe (this, &NewGameDialog::ToggleAvailScen);
+    tab_btn_ascen->SetText ("Show Available Scenarios", "smalfont.fnt",
+        H3R_TEXT_COLOR_WHITE);
+
+    // "Random Map": smalfont.fnt, White, 475,109(up), 476,110(dn)
+    Button * tab_btn_rnd_scen {};
+    H3R_CREATE_OBJECT(tab_btn_rnd_scen, Button) {
+        "GSPBUTT.DEF", this, Button::H3R_UI_BTN_UPDN};
+    tab_btn_rnd_scen->SetPos (414, 105);
+    tab_btn_rnd_scen->UploadFrames ();
+    tab_btn_rnd_scen->Click.Subscribe (this, &NewGameDialog::ToggleRndScen);
+    tab_btn_rnd_scen->SetText ("Random Map", "smalfont.fnt",
+        H3R_TEXT_COLOR_WHITE);
+
+    // "Scenario Description:": smalfont.fnt, Gold, 422,141
+    RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
+        "smalfont.fnt", "Scenario Description:", 422, 138, H3R_TEXT_COLOR_GOLD,
+        Depth ());
+
+    // Scenario Description: smalfont.fnt, White, 422, 155; layout word-wrap
+    // at x=740; after y=269 - show a scrollbar (word-wrap at 724):
     //  - weird behavior: if you came to an scroll-bar requiring entry, with
     //    "arrow down", the scroll-bar goes to its max. position; "arrow up":
     //    the scroll-bar appears set to its min. position
@@ -109,118 +145,31 @@ NewGameDialog::NewGameDialog(Window * base_window)
     //  - the scroll-bar is vertical only
     //  - the scroll-bar resets to its min. position if you switch items with
     //    the mouse
-    // Line spacing: ~5 pixels
-    // "Victory Condition:": smallfont.fnt, Gold, 422,292
-    // Victory Condition: smallfont.fnt, White, 456,316
-    // "Loss Condition:": smallfont.fnt, Gold, 422,348
-    // Loss Condition: smallfont.fnt, White, 456,375
-    // "Allies:": smallfont.fnt, White, 420,409
-    // "Enemies:": smallfont.fnt, White, 586,409
-    // "Map Diff:": smallfont.fnt, Gold, 429,439
-    // "Player Difficulty:": smallfont.fnt, Gold, 529,439
-    // "Rating:": smallfont.fnt, Gold, 686,439
+    auto text_rows = TextRenderingEngine::One ().LayoutText ("smalfont.fnt",
+        "A remake to be of the game engine of the well-known computer game "
+        "\"Heroes of Might and Magic III\" and its official expansions.",
+        740-422-test->Width ());
+    int y = 155;
+    for (auto & text : text_rows) {
+        RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
+        "smalfont.fnt", text, 422, y, H3R_TEXT_COLOR_WHITE, Depth ());
+        y += 16; // TODO get font Height
+    }
+
+    // "Victory Condition:": smalfont.fnt, Gold, 422,292
+    // Victory Condition: smalfont.fnt, White, 456,316
+    // "Loss Condition:": smalfont.fnt, Gold, 422,348
+    // Loss Condition: smalfont.fnt, White, 456,375
+    // "Allies:": smalfont.fnt, White, 420,409
+    // "Enemies:": smalfont.fnt, White, 586,409
+    // "Map Diff:": smalfont.fnt, Gold, 429,439
+    // "Player Difficulty:": smalfont.fnt, Gold, 529,439
+    // "Rating:": smalfont.fnt, Gold, 686,439
     // Map Diff: the text is centered at top=473,x=416;500
     // Rating: the text is centered at top=473,x=668;747
     // "Show Advanced Options:" 443,513 (these appear to be centered at the long
     // buttons)
-
-    /*static Def * sprite_p {};
-    auto bitmap_data = [](){ return sprite_p->ToRGBA ()->operator byte * (); };
-
-    // Decoration
-    int key;
-    // using the buttons depth, because the big UI VBO is rendered prior
-    // everything else
-    int depth = Depth () + 1;
-    Pal pp {Game::GetResource ("PLAYERS.PAL")};
-    Def sprite {Game::GetResource ("dialgbox.def")};
-    sprite_p = &sprite;
-    sprite.SetPlayerColor (Game::CurrentPlayerColor, pp);
-    int dw = sprite.Width (), dh = sprite.Height ();
-    // printf ("deco size: %d %d" EOL, dw, dh);
-    int tile_x = (size.X - 2*dw), tile_y = (size.Y - 2*dh);
-    H3R_ENSURE(tile_x > 0 && tile_y > 0, "Can't decorate")
-    tile_x = Align (tile_x, dw) / dw;
-    tile_y = Align (tile_y, dh) / dh;
-    sprite.Query ("DiBoxT.pcx");
-    for (int i = 0; i < tile_x; i++) {
-        key = _re_keys.Add (re.GenKey ());
-        re.UploadFrame (key, _l+dw+i*dw, _t, dw,
-            dh, bitmap_data, h3rBitmapFormat::RGBA,
-            sprite.GetUniqueKey ("dialgbox.def"), depth);
-    }
-    sprite.Query ("DiBoxB.pcx");
-    for (int i = 0; i < tile_x; i++) {
-        key = _re_keys.Add (re.GenKey ());
-        re.UploadFrame (key, _l+dw+i*dw, _t+size.Y-dh, dw,
-            dh, bitmap_data, h3rBitmapFormat::RGBA,
-            sprite.GetUniqueKey ("dialgbox.def"), depth);
-    }
-    sprite.Query ("DiBoxL.pcx");
-    for (int i = 0; i < tile_y; i++) {
-        key = _re_keys.Add (re.GenKey ());
-        re.UploadFrame (key, _l, _t+dh, dw,
-            dh, bitmap_data, h3rBitmapFormat::RGBA,
-            sprite.GetUniqueKey ("dialgbox.def"), depth);
-    }
-    sprite.Query ("DiBoxR.pcx");
-    for (int i = 0; i < tile_y; i++) {
-        key = _re_keys.Add (re.GenKey ());
-        re.UploadFrame (key, _l+size.X-dw, _t+dh, dw,
-            dh, bitmap_data, h3rBitmapFormat::RGBA,
-            sprite.GetUniqueKey ("dialgbox.def"), depth);
-    }
-    sprite.Query ("DiBoxTL.pcx");
-    key = _re_keys.Add (re.GenKey ());
-    re.UploadFrame (key, _l, _t, dw, dh, bitmap_data, h3rBitmapFormat::RGBA,
-        sprite.GetUniqueKey ("dialgbox.def"), depth);
-    sprite.Query ("DiBoxBL.pcx");
-    key = _re_keys.Add (re.GenKey ());
-    re.UploadFrame (key, _l, _t+size.Y-dh, dw, dh,
-        bitmap_data, h3rBitmapFormat::RGBA,
-        sprite.GetUniqueKey ("dialgbox.def"), depth);
-    sprite.Query ("DiBoxTR.pcx");
-    key = _re_keys.Add (re.GenKey ());
-    re.UploadFrame (key, _l+size.X-dw, _t, dw, dh,
-        bitmap_data, h3rBitmapFormat::RGBA,
-        sprite.GetUniqueKey ("dialgbox.def"), depth);
-    sprite.Query ("DiBoxBR.pcx");
-    key = _re_keys.Add (re.GenKey ());
-    re.UploadFrame (key, _l+size.X-dw, _t+size.Y-dh, dw, dh,
-        bitmap_data, h3rBitmapFormat::RGBA,
-        sprite.GetUniqueKey ("dialgbox.def"), depth);
-
-    // Text
-    Label * lbl;
-    // managed by the Window destructor via Add()
-    H3R_CREATE_OBJECT(lbl, Label) {msg, fnt, Point {277,267}, this};
-
-    // Buttons: "box66x32.pcx", iCANCEL.def, iOKAY.def
-    // ok the above one is 68x34
-    // This: Box64x30.pcx is 66x32
-    static Pcx * pcx {};
-    Pcx pcx_bmp {Game::GetResource ("Box64x30.pcx")};
-    pcx = &pcx_bmp;
-    auto pcx_bitmap = []() { return pcx->ToRGBA ()->operator byte * (); };
-    key = _re_keys.Add (re.GenKey ());
-    re.UploadFrame (key, 326, 334, pcx_bmp.Width (), pcx_bmp.Height (),
-        pcx_bitmap, h3rBitmapFormat::RGBA, "Box64x30.pcx", depth);
-    key = _re_keys.Add (re.GenKey ());
-    re.UploadFrame (key, 409, 334, pcx_bmp.Width (), pcx_bmp.Height (),
-        pcx_bitmap, h3rBitmapFormat::RGBA, "Box64x30.pcx", depth);
-    Button * btn_ok {}, * btn_cancel {};
-    // managed by the Window destructor via Add()
-    H3R_CREATE_OBJECT(btn_ok, Button) {
-        "iOKAY.def", this, Button::H3R_UI_BTN_UPDN};
-    btn_ok->SetPos (327, 335);
-    btn_ok->UploadFrames ();
-    btn_ok->Click.Subscribe (this, &MessageBox::HandleOKClick);
-    H3R_CREATE_OBJECT(btn_cancel, Button) {
-        "iCANCEL.def", this, Button::H3R_UI_BTN_UPDN};
-    btn_cancel->SetPos (410, 335);
-    btn_cancel->UploadFrames ();
-    btn_cancel->Click.Subscribe (this, &MessageBox::HandleCancelClick);*/
-}
+}// NewGameDialog::NewGameDialog()
 
 NewGameDialog::~NewGameDialog()
 {
@@ -246,14 +195,22 @@ void NewGameDialog::OnKeyUp(const EventArgs & e)
     }
 }
 
-/*void MessageBox::HandleBeginClick(EventArgs *)
+/*void NewGameDialog::HandleBeginClick(EventArgs *)
 {
     _dr = DialogResult::OK; _has_dr = true;
 }
 
-void MessageBox::HandleBackClick(EventArgs *)
+void NewGameDialog::HandleBackClick(EventArgs *)
 {
     _dr = DialogResult::Cancel; _has_dr = true;
 }*/
+
+void NewGameDialog::ToggleAvailScen(EventArgs *)
+{
+}
+
+void NewGameDialog::ToggleRndScen(EventArgs *)
+{
+}
 
 NAMESPACE_H3R

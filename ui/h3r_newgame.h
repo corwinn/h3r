@@ -61,22 +61,22 @@ H3R_NAMESPACE
 //    - Starting Hero: can't select: hpsrand6.pcx; other variations:
 //      2 dies with "?": HPSRAND4.PCX ?; heroes with "?": hpsrand.pcx ?
 //  - main: GSelPop1.pcx (370x585)
-//    - background: gamselb(0|1).pcx (w: 800, h: 600) - randomly chosen
+//    [] background: gamselb(0|1).pcx (w: 800, h: 600) - randomly chosen
 //    - button "begin": GSPBGIN.DEF  (w: 166, h:  40)
 //      - another one: ScnrBeg.def   (w: 166, h:  40) ?!
 //    - button "back" : SCNRBACK.DEF (w: 166, h:  40) (n & s only)
 // <> This mess speaks of a 3rd party that is ordering it <>
-//    - the odd long buttons (the tab switch ones): GSPBUT2.DEF ( has no < );
-//      ( has < ) : GSPBUTT.DEF      (w: 200, h:  20)
+//    [] the odd long buttons (the tab switch ones): GSPBUT2.DEF ( has no < );
+//       ( has < ) : GSPBUTT.DEF      (w: 200, h:  20)
 //    - diff. buttons: GSPBUT[3;7].DEF - 0-4 (w:  30, h:  46)
 //    - mini-static-flags: itgflags.def      (w:  15, h:  20)
-//    - quad arrow down button: ScnrBDn.def; correct and pointless: ScnrBUp.def
-//      the other two pointless ones: ScnrBLf.def, ScnrBRt.def
+//    [] quad arrow down button: ScnrBDn.def; correct and pointless: ScnrBUp.def
+//       the other two pointless ones: ScnrBLf.def, ScnrBRt.def
 //                                           (w:  16, h:  16)
-//    - scroll-bar middle button: ScnrBSl.def(w:  16, h:  16)
-//    - another scroll-bar set: SCXLBUT.def(w:  44, h:  33), SLIDBUV.def(w:  16,
-//      h:  16), SLIDEBUH.def(w:  16, h:  16), SLIDEBUV.def(w:  16, h:  16) ?!
-//    - top-left mini-icon of the selected map size: ScnrMpSz.def
+//    [] scroll-bar middle button: ScnrBSl.def(w:  16, h:  16)
+//    [] another scroll-bar set: SCXLBUT.def(w:  44, h:  33), SLIDBUV.def(w:  16,
+//       h:  16), SLIDEBUH.def(w:  16, h:  16), SLIDEBUV.def(w:  16, h:  16) ?!
+//    [] top-left mini-icon of the selected map size: ScnrMpSz.def
 //                                           (w:  29, h:  23)
 //    - victory condition mini-icon: SCNRVICT.def (w:  29, h:  21)
 //    - loss condition mini-icon: SCNRLOSS.def    (w:  29, h:  21)
@@ -116,6 +116,8 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
 
     // private void HandleBeginClick(EventArgs *);
     // private void HandleBackClick(EventArgs *);
+    private void ToggleAvailScen(EventArgs *);
+    private void ToggleRndScen(EventArgs *);
 };
 
 NAMESPACE_H3R
