@@ -141,6 +141,7 @@ void RenderEngine::Render()
 
     // stage3: text
     for (auto * n = _texts.Prev (); n != nullptr; n = n->Prev ()) {
+        if (! n->Data.Visible) continue;
         glBindTexture (GL_TEXTURE_2D, n->Data.Texture);
         glBindBuffer (GL_ARRAY_BUFFER, n->Data.Vbo);
         WinVBOClientState ();
