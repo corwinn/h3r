@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_control.h"
 #include "h3r_eventargs.h"
 #include "h3r_event.h"
+#include "h3r_label.h"
 
 //  The code here did depend on the role of the Def parser. Wrong design.
 // To decouple them: Button shall store copies of the bitmaps it is using.
@@ -90,6 +91,20 @@ class Button: public Control
 
     // Usage: Click.Subscribe (this, &descendant_of_IHandleEvents::handler)
     public Event Click {};
+
+    // label and label_down: it moves 1 pixel down, when I click the button
+    private Label * _lbl {}, * _lbl_dn {};
+    // Calling it a second time will ignore all parameters, except the 1st one.
+    // Again: this is not a general use UI framework; should you happen to want
+    // to design one, look at the ".NET" "Windows.Forms" or the "Delphi" "VCL"!
+    // Usually all Controls have a Text/Name property, an independent Font
+    // property, Fore/Back-ground color/fill/brush/bla-bla properties; the
+    // controls have design/runtime state * tons of other state, etc. Designing
+    // a general-use UI framework is pointless, certainly not the point of this
+    // code, and so far the result is slow, heavy, unmanageable mess, with ages
+    // of docs to read.
+    // Don't waste your time writing frameworks, craft programs instead.
+    public void SetText(const String &, const String &, unsigned int);
 };// Button
 
 NAMESPACE_H3R

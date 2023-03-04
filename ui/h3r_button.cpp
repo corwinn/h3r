@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_string.h"
 #include "h3r_sdlrwops.h"
 #include "h3r_window.h"
+#include "h3r_textrenderingengine.h"
 
 H3R_NAMESPACE
 
@@ -166,6 +167,7 @@ void Button::OnMouseDown(const EventArgs &)
     // By default all offsets are "_on", and H3R_ENSURE ensures it exists.
     // So even if "_os" wasn't uploaded, "_on" shall be rendered.
     re->ChangeOffset (_rkey, _os);
+    if (_lbl) { _lbl->SetHidden (true); _lbl_dn->SetHidden (false); }
     Log::Info ("MouseDown" EOL);
     auto stream = Game::GetResource ("BUTTON.wav");
     if (! stream) {
@@ -199,6 +201,7 @@ void Button::OnMouseUp(const EventArgs &)
     _mouse_down = false;
     auto re = Window::UI;
     re->ChangeOffset (_rkey, _mouse_over ? _oh : _on);
+    if (_lbl) { _lbl->SetHidden (false); _lbl_dn->SetHidden (true); }
     // If you release the button outside of the of the thing you clicked on
     // there shall be no mouse click event.
     if (! _mouse_over) return;
@@ -213,6 +216,23 @@ void Button::OnVisibilityChanged()
         _mouse_over = _mouse_down = false;
     }
     Window::UI->ChangeVisibility (_rkey, ! Hidden ());
+}
+
+void Button::SetText(const String & text, const String & font, unsigned int c)
+{
+    if (_lbl) {
+        _lbl->SetText (text);
+        _lbl_dn->SetText (text);
+        return;
+    }
+    Point ts = TextRenderingEngine::One ().MeasureText (font, text);
+    // TODO I have yet to find out, how the game does this:
+    //      right now my cx and cy are 440, 86; the game ones are 440, 85
+    int cx = Pos ().X + (Width () - ts.Width) / 2,   // HCenter
+        cy = Pos ().Y + (Height () - ts.Height) / 2; // VCenter
+    H3R_CREATE_OBJECT(_lbl, Label) {text, font, Point {cx, cy-1}, this, c};
+    H3R_CREATE_OBJECT(_lbl_dn, Label) {text, font, Point {cx+1, cy}, this, c};
+    _lbl_dn->SetHidden (true);
 }
 
 NAMESPACE_H3R
