@@ -45,7 +45,7 @@ H3R_NAMESPACE
 
 // A very simple control for positioning text on screen.
 #undef public
-class Label: public Control
+class Label final : public Control
 #define public public:
 {
     private RenderEngine::TextKey _tkey;
@@ -69,6 +69,7 @@ class Label: public Control
         Window::UI->UpdateText (_tkey, _font, _text, Pos ().X, Pos ().Y,
             _color, Depth ());
     }
+    private void OnVisibilityChanged() override;
 };
 
 NAMESPACE_H3R

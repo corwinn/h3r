@@ -58,4 +58,9 @@ Label::Label(
         Depth ());
 }
 
+void Label::OnVisibilityChanged()
+{
+    Window::UI->ChangeTextVisibility (_tkey, ! Hidden ());
+}
+
 NAMESPACE_H3R
