@@ -99,7 +99,8 @@ class Control
     public inline int Width() const { return _bb.Size.Width; }
     public inline int Height() const { return _bb.Size.Height; }
     // Let controls know, their position has been changed.
-    public virtual Control * SetPos(int, int);
+    public Control * SetPos(int, int);
+    protected Control * SetPosNoNotify(int, int); // use at init.
 
     // Upload the Frames to the RenderEngine.
     // This is not called on construction, on purpose: so that layout can be
@@ -141,7 +142,11 @@ class Control
     }
     protected virtual void OnKeyDown(const EventArgs &) {}
     protected virtual void OnKeyUp(const EventArgs &) {}
+
+    // Handle this in order for your control to honor shown/hidden state.
     protected virtual void OnVisibilityChanged() {}
+    // Handle this in order for your control to allow being moved around.
+    protected virtual void OnMoved(int, int) {}
 
     //TODO hint system; MyHint: Event ... show_hint (myhint);
     //     Control.RMB += (Event & ShowHint) => Root().OnEvent (ShowHint);
