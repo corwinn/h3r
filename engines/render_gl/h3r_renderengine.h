@@ -262,6 +262,9 @@ class RenderEngine final
     //  over Window2 - requires updating the z coordinates of both windows.
     public void UpdateRenderOrder(int key, h3rDepthOrder order);
 
+    // Move (all frames)
+    public void UpdateLocation(int key, GLint dx, GLint dy);
+
     public static void Init();
 
     // Text
@@ -274,6 +277,8 @@ class RenderEngine final
         GLuint Vbo {};    //      objs visible at once
         bool Visible {true};
         bool InUse {false};
+        bool HasTransform {false};
+        GLfloat Tx {}, Ty {};
     };
     private LList<RenderEngine::TextEntry> _texts {};
     public class TextKey final
@@ -285,6 +290,15 @@ class RenderEngine final
         public inline void ChangeTextVisibility(bool state)
         {
             _node->Data.Visible = state;
+        }
+        public inline void SetTranslateTransform(bool state,
+            GLfloat tx, GLfloat ty)
+        {
+            _node->Data.HasTransform = state;
+            if (state) {
+                _node->Data.Tx = tx;
+                _node->Data.Ty = ty;
+            }
         }
         public inline RenderEngine::TextEntry & Entry() { return _node->Data; }
     };
@@ -298,6 +312,8 @@ class RenderEngine final
         const String & font_name, const String & txt, int left, int top,
         unsigned int color, h3rDepthOrder order);
     public void ChangeTextVisibility(TextKey & key, bool state);
+    public void TextSetTranslateTransform(TextKey & key, bool state,
+        GLfloat = 0.f, GLfloat = 0.f);
     public void DeleteText(TextKey & key);
 
     // Window

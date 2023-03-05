@@ -145,7 +145,14 @@ void RenderEngine::Render()
         glBindTexture (GL_TEXTURE_2D, n->Data.Texture);
         glBindBuffer (GL_ARRAY_BUFFER, n->Data.Vbo);
         WinVBOClientState ();
-        glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+        if (n->Data.HasTransform) {
+            glLoadIdentity ();
+            glTranslatef (n->Data.Tx, n->Data.Ty, .0f);
+            glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
+            glLoadIdentity ();
+        }
+        else
+            glDrawArrays (GL_TRIANGLE_STRIP, 0, 4);
     }
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 }// RenderEngine::Render()
@@ -257,23 +264,43 @@ void RenderEngine::ChangeOffset(int key, GLint value)
     lists._index[_entries[key].Key] = _entries[key].Base + _entries[key].Offset;
 }
 
-//TODO Not tested!
 void RenderEngine::UpdateRenderOrder(int key, h3rDepthOrder order)
 {
+    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
     RenderEngine::Entry & e = _entries[key];
-    // all sprite frames
-    size_t ofs_in_bytes =
-        (e.Base + e.Frames * H3R_SPRITE_VERTICES)
-        * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);
-    size_t buf_in_bytes = H3R_SPRITE_FLOATS * sizeof(H3Rfloat);
+    size_t ofs_in_bytes = e.Base * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);
+    size_t buf_in_bytes = e.Frames * H3R_SPRITE_FLOATS * sizeof(H3Rfloat);
     Array<H3Rfloat> buf_data {static_cast<int>(H3R_SPRITE_FLOATS) * e.Frames};
     H3Rfloat * buf = buf_data;
     glGetBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
     H3RGL_Debug
     // z is each 3rd: {x,y,z,u,v}
-    for (int i = 2; i < buf_data.Length (); i += H3R_VERTEX_COMPONENTS)
-        buf_data[i] = Depht2z (order);
+    for (int i = 0; i < buf_data.Length (); i += H3R_VERTEX_COMPONENTS)
+        buf_data[i+2] = Depht2z (order);
+    glBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
+    H3RGL_Debug
+}
+// The code below, and the one above, doesn't look the same; they're the same.
+void RenderEngine::UpdateLocation(int key, GLint dx, GLint dy)
+{
+    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
+    H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
+    RenderEngine::Entry & e = _entries[key];
+    // all sprite frames
+    size_t ofs_in_bytes = e.Base * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);
+        /*(e.Base + e.Frames * H3R_SPRITE_VERTICES)
+        * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);*/
+    size_t buf_in_bytes = e.Frames * H3R_SPRITE_FLOATS * sizeof(H3Rfloat);
+    Array<H3Rfloat> buf_data {static_cast<int>(H3R_SPRITE_FLOATS) * e.Frames};
+    H3Rfloat * buf = buf_data;
+    /*printf ("key: %d, ofs_in_bytes: %ld, buf_in_bytes: %ld\n", key,
+        ofs_in_bytes, buf_in_bytes);*/
+    glGetBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
+    H3RGL_Debug
+    // z is each 3rd: {x,y,z,u,v}
+    for (int i = 0; i < buf_data.Length (); i += H3R_VERTEX_COMPONENTS)
+        buf_data[i] += dx, buf_data[i+1] += dy;
     glBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
     H3RGL_Debug
 }
@@ -399,6 +426,12 @@ void RenderEngine::UpdateText(TextKey & key,
 void RenderEngine::ChangeTextVisibility(TextKey & key, bool state)
 {
     key.ChangeTextVisibility (state);
+}
+
+void RenderEngine::TextSetTranslateTransform(TextKey & key, bool state,
+    GLfloat tx, GLfloat ty)
+{
+    key.SetTranslateTransform (state, tx, ty);
 }
 
 void RenderEngine::DeleteText(TextKey & key)
