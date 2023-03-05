@@ -76,6 +76,10 @@ class TextRenderingEngine final
     // be used if and when I find out "how" the game does auto-size of its
     // message boxes. There is probably some max size and some grow steps ...
     // Returns a list of rows to render.
+    //
+    // Differs the game one: This one can put more text prior using a vertical
+    // scroll-bar: no idea why? - the same text fits and is rendered just fine.
+    //
     //LATER Unicode requires stream processing of "txt".
     public List<String> LayoutText(const String & font_name, const String & txt,
         int w/*, Box & actualbox*/);
