@@ -33,34 +33,127 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **** END LICENCE BLOCK ****/
 
 #include "h3r_label.h"
+#include "h3r_scrollbar.h"
+#include "h3r_textrenderingengine.h"
 
 H3R_NAMESPACE
 
 Label::Label(
     const String & text, const String & font, const Point & pos, Control * base,
-    unsigned int color)
-    : Control {base}, _tkey {Window::UI->GenTextKey ()}, _font {font},
-    _text {text}, _color{color}
+    unsigned int color, bool mline, Point mbox)
+    : Control {base}, _ml{mline}, _mb{mbox}, _font {font}, _text {text},
+    _color{color}
 {
     SetPos (pos.X, pos.Y);
-    Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y, _color,
-        Depth ());
+    SetText ();
 }
 
 Label::Label(
     const String & text, const String & font, const Point & pos, Window * base,
-    unsigned int color)
-    : Control {base}, _tkey {Window::UI->GenTextKey ()}, _font {font},
-    _text {text}, _color{color}
+    unsigned int color, bool mline, Point mbox)
+    : Control {base}, _ml{mline}, _mb{mbox}, _font {font}, _text {text},
+    _color{color}
 {
     SetPos (pos.X, pos.Y);
-    Window::UI->UploadText (_tkey, _font, _text, pos.X, pos.Y, _color,
-        Depth ());
+    SetText ();
+}
+
+Label::~Label()
+{
+    for (int i = 0; i < _tkeys.Count (); i++)
+        Window::UI->DeleteText (_tkeys[i]);
+    // if (_vs) H3R_DESTROY_OBJECT(_vs, ScrollBar)
 }
 
 void Label::OnVisibilityChanged()
 {
-    Window::UI->ChangeTextVisibility (_tkey, ! Hidden ());
+    for (int i = 0; i < _tkeys.Count (); i++)
+        Window::UI->ChangeTextVisibility (_tkeys[i], ! Hidden ());
+    if (_ml && _vs) _vs->SetHidden (Hidden ());
+}
+
+void Label::SetText(const String & value)
+{
+    _text = value;
+    SetText ();
+}
+
+void Label::SetText()
+{
+    if (_text.Empty ()) return;
+    auto RE = Window::UI;
+    if (! _ml) {
+        if (_tkeys.Count () <= 0)
+            Window::UI->UploadText (_tkeys.Add (RE->GenTextKey ()), _font,
+                _text, Pos ().X, Pos ().Y, _color, Depth ());
+        else
+            Window::UI->UpdateText (_tkeys[0], _font, _text, Pos ().X, Pos ().Y,
+                _color, Depth ());
+        return;
+    }
+    // Multi-line
+    if (_tkeys.Count () > 0)
+        for (int i = 0; i < _tkeys.Count (); i++)
+            Window::UI->DeleteText (_tkeys[i]);
+    _tkeys.Clear ();
+    auto & TRE = TextRenderingEngine::One ();
+    auto text_rows = TRE.LayoutText (_font, _text, _mb.Width);
+    int y = Pos ().Y;
+    _font_h = TRE.FontHeight (_font);
+    if (text_rows.Count () * _font_h > _mb.Height) { // needs a vscrollbar
+        // It it is the same situation as with the button: I need to create
+        // foo in order for it to init its size from unknown, so I can position
+        // it later. In this case I need ScrollBar::Width() in order to align
+        // it right at the text box. This time the VBO gets updated.
+        if (!_vs) {
+            H3R_CREATE_OBJECT(_vs, ScrollBar) {
+                this, Point {Pos ().X, y}, _mb.Height};
+            _vs->Scroll.Subscribe (this, &Label::HandleScroll);
+            _vs->SetPos (Pos ().X + _mb.Width - _vs->Width (),
+                _vs->Control::Pos ().Y);
+        }
+        text_rows.Clear ();
+        //LATER There is some invisible padding here; I doubt the game will
+        //      all a glyph to "touch" the scrollbar
+        int pad_r = 2, sbar_pad = _mb.Width - (_vs->Width () + pad_r);
+        H3R_ENSURE(sbar_pad > 0, "No space to render the text")
+        text_rows = TRE.LayoutText (_font, _text, sbar_pad);
+        _vs->SetHidden (false);
+    }
+    else { if (_vs) _vs->SetHidden (true); }
+    _num_visible = 0;
+    for (auto & text : text_rows) {
+        RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
+            _font, text, Pos ().X, y, _color, Depth ());
+        y += _font_h;
+        if (y <= (Pos ().Y+_mb.Height)) _num_visible++;
+    }
+    if (_vs && ! _vs->Hidden ()) {
+        printf ("<> rows: %d, visible: %d\n", text_rows.Count (), _num_visible);
+        _vs->Min = 0;
+        _vs->Max = _vs->Min + (text_rows.Count () - _num_visible);
+        _vs->Pos = 0;
+    }
+    UpdateVisible ();
+}// Label::SetText()
+
+void Label::UpdateVisible()
+{
+    if (nullptr == _vs) return;
+    auto RE = Window::UI;
+    int ty {}; // translate y
+    for (int i = 0; i < _tkeys.Count (); i++) {
+        if (i == _vs->Pos) ty = -(i * _font_h);
+        bool v = (i >= _vs->Pos && i < _vs->Pos+_num_visible);
+        RE->ChangeTextVisibility (_tkeys[i], v);
+        RE->TextSetTranslateTransform (_tkeys[i], v, 0, ty);
+    }
+}
+
+void Label::HandleScroll(EventArgs *)
+{
+    // printf ("e->Delta: %d, _vs->Pos: %d\n", e->Delta, (int)(_vs->Pos));
+    UpdateVisible ();
 }
 
 NAMESPACE_H3R

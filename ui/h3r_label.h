@@ -40,37 +40,44 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_point.h"
 #include "h3r_control.h"
 #include "h3r_window.h"
+#include "h3r_list.h"
 
 H3R_NAMESPACE
 
 // A very simple control for positioning text on screen.
 #undef public
-class Label final : public Control
+class Label final : public Control, public IHandleEvents
 #define public public:
 {
-    private RenderEngine::TextKey _tkey;
+    private bool _ml {};
+    private Point _mb {};
+    private List<RenderEngine::TextKey> _tkeys {};
     private String _font;
     private String _text;
     private unsigned int _color {H3R_TEXT_COLOR_MSGB};
+    private class ScrollBar * _vs {};
+    private int _num_visible {};
+    private int _font_h {};
 
+    // text, font, location, manager, color, multi-line, multi-line box.
+    // When mline, and the text is longer than the box height, a vscrollbar
+    // shall be shown.
     public Label(
         const String &, const String &, const Point &, Control *,
-        unsigned int = H3R_TEXT_COLOR_MSGB);
+        unsigned int = H3R_TEXT_COLOR_MSGB, bool = false, Point = Point {});
     public Label(
         const String &, const String &, const Point &, Window *,
-        unsigned int = H3R_TEXT_COLOR_MSGB);
-    public ~Label() override { Window::UI->DeleteText (_tkey); }
-
+        unsigned int = H3R_TEXT_COLOR_MSGB, bool = false, Point = Point {});
+    public ~Label() override;
     public inline const String & Text() const { return _text; }
     public inline const String & Font() const { return _font; }
-    public inline void SetText(const String & value)
-    {
-        _text = value;
-        Window::UI->UpdateText (_tkey, _font, _text, Pos ().X, Pos ().Y,
-            _color, Depth ());
-    }
+    public void SetText(const String & value);
+
+    private void SetText(); // used on init
     private void OnVisibilityChanged() override;
-};
+    private void UpdateVisible(); // on/off text keys based on _mb.Height
+    private void HandleScroll(EventArgs *);
+};// Label
 
 NAMESPACE_H3R
 
