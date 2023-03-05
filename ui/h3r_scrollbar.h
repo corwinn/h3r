@@ -127,6 +127,8 @@ class ScrollBar final : public Control, public IHandleEvents
     private void HandleScrollUp(EventArgs *);
 
     public inline int Width() const { return _a; }
+    private void OnVisibilityChanged() override;
+    private void OnMoved(int, int) override;
 };// ScrollBar
 
 NAMESPACE_H3R

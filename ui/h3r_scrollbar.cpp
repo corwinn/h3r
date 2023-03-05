@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_window.h"
 #include "h3r_def.h"
 #include "h3r_game.h"
+#include "h3r_log.h"
 
 H3R_NAMESPACE
 
@@ -77,11 +78,11 @@ void ScrollBar::Init(Point pos, int h)
     H3R_ENSURE (pos.Y >= 0 && pos.Y < H3R_UI_MAX_VALUE,
         "Bug: suspicious pixel size")
 
-    SetPos (pos.X, pos.Y);
+    SetPosNoNotify (pos.X, pos.Y);
 
     Min.Changed.Subscribe (this, &ScrollBar::UpdateView);
     Max.Changed.Subscribe (this, &ScrollBar::UpdateView);
-    LargeStep.Changed.Subscribe (this, &ScrollBar::UpdateView);
+    SmallStep.Changed.Subscribe (this, &ScrollBar::UpdateView);
     LargeStep.Changed.Subscribe (this, &ScrollBar::UpdateView);
     Pos.Changed.Subscribe (this, &ScrollBar::UpdateView);
 
@@ -168,16 +169,22 @@ void ScrollBar::Model2View()
     }
     else {
         RE->ChangeVisibility (_key_m, true);
-        RE->ChangeVisibility (_key_b, false);
+        RE->ChangeVisibility (_key_b, true);
         btn_up->SetHidden (false);
         btn_dn->SetHidden (false);
-        int d2 = (Min - Max) + 1;
-        H3R_ENSURE(d2, "Bug: d2 can't be 0")
-        int t = static_cast<int>(Control::Pos ().Y + _a + Pos * (1.0 * d1 / d2));
-        if (t != _t) {//TODO update the RE
+        int d2 = (Max - Min);
+        if (0 == d2) {
+            Log::Info ("Warning: pointless scrollbar: Min = Max" EOL);
+            return;
+        }
+        int t = static_cast<int>(Control::Pos ().Y + _a + Pos * (1.0*d1/d2));
+        // printf ("<> d1: %d, d2: %d, t:%d, _t:%d\n", d1, d2, t, _t);
+        if (t != _t) {
+            RE->UpdateLocation (_key_m, 0, t-_t);
+            _t = t;
         }
     }
-}
+}// ScrollBar::Model2View()
 
 void ScrollBar::NotifyOnScroll(int d)
 {
@@ -190,10 +197,38 @@ void ScrollBar::NotifyOnScroll(int d)
 
 void ScrollBar::HandleScrollDown(EventArgs *)
 {
+    static EventArgs args {};
+    args.Delta = 1; // the mid button moved 1 down
+    Pos = Pos + args.Delta; // Why using Property? - that's why
+    Scroll (&args);
 }
 
 void ScrollBar::HandleScrollUp(EventArgs *)
 {
+    static EventArgs args {};
+    args.Delta = -1; // the mid button moved 1 up
+    Pos = Pos + args.Delta;
+    Scroll (&args);
+}
+
+void ScrollBar::OnVisibilityChanged()
+{
+    H3R_ENSURE(btn_up && btn_dn, "bug: not initialized yet")
+    auto RE = Window::UI;
+    RE->ChangeVisibility (_key_m, ! Hidden ());
+    RE->ChangeVisibility (_key_b, ! Hidden ());
+    btn_up->SetHidden (Hidden ());
+    btn_dn->SetHidden (Hidden ());
+}
+
+void ScrollBar::OnMoved(int dx, int dy)
+{
+    H3R_ENSURE(btn_up && btn_dn, "bug: not initialized yet")
+    auto RE = Window::UI;
+    RE->UpdateLocation (_key_m, dx, dy);
+    RE->UpdateLocation (_key_b, dx, dy);
+    btn_up->SetPos (btn_up->Pos ().X + dx, btn_up->Pos ().Y + dy);
+    btn_dn->SetPos (btn_dn->Pos ().X + dx, btn_dn->Pos ().Y + dy);
 }
 
 NAMESPACE_H3R
