@@ -90,6 +90,8 @@ class TextRenderingEngine final
     private Font * TryLoadFont(const String & name);
 
     public static TextRenderingEngine & One();
+
+    public int FontHeight(const String & name);
 };// TextRenderingEngine
 
 NAMESPACE_H3R

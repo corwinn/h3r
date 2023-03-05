@@ -189,6 +189,7 @@ List<String> TextRenderingEngine::LayoutText(const String & font_name,
             // printf ("<> EOL\n");
             txt_rows.Put (static_cast<String &&>(line));
             line += "";
+            tw = 0;
         }
         if (i >= e) break;
         l = i;
@@ -319,6 +320,12 @@ TextRenderingEngine & TextRenderingEngine::One()
 {
     static TextRenderingEngine e {};
     return e;
+}
+
+int TextRenderingEngine::FontHeight(const String & name)
+{
+    Font * fnt = TryLoadFont (name);
+    return fnt->Height ();
 }
 
 NAMESPACE_H3R
