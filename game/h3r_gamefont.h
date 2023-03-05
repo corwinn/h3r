@@ -55,6 +55,7 @@ class GameFont final: public Font
     public GameFont(const String & name);
     public ~GameFont() override {}
     public inline operator bool() { return _fnt; }
+    public inline int Height() override { return _fnt.Height (); }
 };
 
 NAMESPACE_H3R
