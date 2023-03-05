@@ -78,13 +78,13 @@ class Button: public Control
     public Button(const String &, Window *, int = H3R_UI_BTN_DEFAULT);
     public virtual ~Button() override;
 
-    public virtual Control * SetPos(int, int) override;
     public void UploadFrames() override;
 
     protected virtual void OnMouseMove(const EventArgs &) override;
     protected virtual void OnMouseDown(const EventArgs &) override;
     protected virtual void OnMouseUp(const EventArgs &) override;
     protected virtual void OnVisibilityChanged() override;
+    protected virtual void OnMoved(int, int) override;
 
     private bool _mouse_over {};
     private bool _mouse_down {};

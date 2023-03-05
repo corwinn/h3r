@@ -123,12 +123,6 @@ void Button::UploadFrames()
         }
 }
 
-Control * Button::SetPos(int x, int y)
-{
-    Control::SetPos (x, y);
-    return this;
-}
-
 //TODO there are way too many software events happening in response to the HW
 //     ones; create the interactive event filter:
 //     All events are Enqueued. At a certain time interval (this game doesn't
@@ -216,6 +210,13 @@ void Button::OnVisibilityChanged()
         _mouse_over = _mouse_down = false;
     }
     Window::UI->ChangeVisibility (_rkey, ! Hidden ());
+}
+
+void Button::OnMoved(int dx, int dy)//TODO UploadFrames() is no longer needed
+{
+    if (! _rkey) return; // not initialized yet
+    auto RE = Window::UI;
+    RE->UpdateLocation (_rkey, dx, dy);
 }
 
 void Button::SetText(const String & text, const String & font, unsigned int c)
