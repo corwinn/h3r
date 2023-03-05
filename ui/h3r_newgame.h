@@ -39,7 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_renderengine.h"
 #include "h3r_dialogwindow.h"
 #include "h3r_string.h"
-#include "h3r_list.h"
 #include "h3r_event.h"
 #include "h3r_scrollbar.h"
 
@@ -106,7 +105,6 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     private bool _has_dr {};
     private DialogResult _dr {};
     private int _t {}, _l {};
-    private List<RenderEngine::TextKey> _tkeys {};
 
     public NewGameDialog(Window * base_window);
     public ~NewGameDialog() override;

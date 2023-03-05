@@ -81,23 +81,19 @@ NewGameDialog::NewGameDialog(Window * base_window)
         dlg_main.Height (), bitmap_data,
         h3rBitmapFormat::RGBA, "GSelPop1.pcx", Depth ());
 
-    ScrollBar * test {};
-    H3R_CREATE_OBJECT(test, ScrollBar) {this, Point {725, 155}, 115};
-
     // By default if shows info about the 1st available scenario. The default
     // difficulty is normal: GSPBUT4.DEF.
 
     // Set text color.
     // Gold: 238,214,123; White: 255,255,255
     // "Scenario Name:" smallfont.fnt, Gold, 422,31
-    RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
-        "smalfont.fnt", "Scenario Name:", 422, 28, H3R_TEXT_COLOR_GOLD,
-        Depth ());
+    Label * lbl {};
+    H3R_CREATE_OBJECT(lbl, Label) {"Scenario Name:", "smalfont.fnt",
+        Point {422, 28}, this, H3R_TEXT_COLOR_GOLD};
 
     //TODO property; Scenario Name: bigfont.fnt, Gold,     422,50
-    RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
-        "bigfont.fnt", "H3R", 422, 45, H3R_TEXT_COLOR_GOLD,
-        Depth ());
+    H3R_CREATE_OBJECT(lbl, Label) {"H3R", "bigfont.fnt",
+        Point {422, 45}, this, H3R_TEXT_COLOR_GOLD};
 
     //TODO property; Map Size Icon
     static Array<byte> * bitmap {};
@@ -132,29 +128,18 @@ NewGameDialog::NewGameDialog(Window * base_window)
         H3R_TEXT_COLOR_WHITE);
 
     // "Scenario Description:": smalfont.fnt, Gold, 422,141
-    RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
-        "smalfont.fnt", "Scenario Description:", 422, 138, H3R_TEXT_COLOR_GOLD,
-        Depth ());
+    H3R_CREATE_OBJECT(lbl, Label) {"Scenario Description:", "smalfont.fnt",
+        Point {422, 138}, this, H3R_TEXT_COLOR_GOLD};
 
     // Scenario Description: smalfont.fnt, White, 422, 155; layout word-wrap
-    // at x=740; after y=269 - show a scrollbar (word-wrap at 724):
-    //  - weird behavior: if you came to an scroll-bar requiring entry, with
-    //    "arrow down", the scroll-bar goes to its max. position; "arrow up":
-    //    the scroll-bar appears set to its min. position
-    //  - the scroll-bar scrolls lines of text, not pixels (ain't smooth)
-    //  - the scroll-bar is vertical only
-    //  - the scroll-bar resets to its min. position if you switch items with
-    //    the mouse
-    auto text_rows = TextRenderingEngine::One ().LayoutText ("smalfont.fnt",
+    // at x=740; after y=269. I won't reproduce the weird behavior of the
+    // original, like word-wrapping with imaginary scroll-bar; and scroll-bar
+    // jumping to max position on item switching.
+    H3R_CREATE_OBJECT(lbl, Label) {
         "A remake to be of the game engine of the well-known computer game "
         "\"Heroes of Might and Magic III\" and its official expansions.",
-        740-422-test->Width ());
-    int y = 155;
-    for (auto & text : text_rows) {
-        RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
-        "smalfont.fnt", text, 422, y, H3R_TEXT_COLOR_WHITE, Depth ());
-        y += 16; // TODO get font Height
-    }
+        "smalfont.fnt", Point {422, 155}, this, H3R_TEXT_COLOR_WHITE, true,
+        Point {741-422, 270-155}};
 
     // "Victory Condition:": smalfont.fnt, Gold, 422,292
     // Victory Condition: smalfont.fnt, White, 456,316
@@ -171,11 +156,7 @@ NewGameDialog::NewGameDialog(Window * base_window)
     // buttons)
 }// NewGameDialog::NewGameDialog()
 
-NewGameDialog::~NewGameDialog()
-{
-    for (int i = 0; i < _tkeys.Count (); i++)
-        Window::UI->DeleteText (_tkeys[i]);
-}
+NewGameDialog::~NewGameDialog() {}
 
 DialogResult NewGameDialog::ShowDialog()
 {
