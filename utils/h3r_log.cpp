@@ -50,8 +50,8 @@ Log::Log()
     Log::_one = this;
     OS::Log_stdout ("Log::Log ()" EOL);
 }
-
-Log::~Log() { _thr.Stop (); _one = nullptr; }
+//TODO there is something odd here: a can't see this printf() when Exit()
+Log::~Log() { printf ("~Log ();\n"); Flush (); _thr.Stop (); _one = nullptr; }
 
 void Log::Flush()
 {
