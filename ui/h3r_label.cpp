@@ -44,7 +44,7 @@ Label::Label(
     : Control {base}, _ml{mline}, _mb{mbox}, _font {font}, _text {text},
     _color{color}
 {
-    SetPos (pos.X, pos.Y);
+    SetPosNoNotify (pos.X, pos.Y);
     SetText ();
 }
 
@@ -54,7 +54,7 @@ Label::Label(
     : Control {base}, _ml{mline}, _mb{mbox}, _font {font}, _text {text},
     _color{color}
 {
-    SetPos (pos.X, pos.Y);
+    SetPosNoNotify (pos.X, pos.Y);
     SetText ();
 }
 
@@ -83,6 +83,12 @@ void Label::SetText()
     if (_text.Empty ()) return;
     auto RE = Window::UI;
     if (! _ml) {
+        if (_mb.X && _mb.Y) { // (center, center) at it
+            auto & TRE = TextRenderingEngine::One ();
+            auto ts = TRE.MeasureText (_font, _text);
+            SetPosNoNotify (Pos ().X + ((_mb.Width - ts.Width)/2),
+                Pos ().Y + ((_mb.Height - ts.Height)/2));
+        }
         if (_tkeys.Count () <= 0)
             Window::UI->UploadText (_tkeys.Add (RE->GenTextKey ()), _font,
                 _text, Pos ().X, Pos ().Y, _color, Depth ());
@@ -91,7 +97,9 @@ void Label::SetText()
                 _color, Depth ());
         return;
     }
-    // Multi-line
+    // Multi-line. This differs the original: it manages to show more text prior
+    // using a vertical scroll-bar. I don't see a reason to figure out what the
+    // original does wrong.
     if (_tkeys.Count () > 0)
         for (int i = 0; i < _tkeys.Count (); i++)
             Window::UI->DeleteText (_tkeys[i]);
@@ -101,7 +109,7 @@ void Label::SetText()
     int y = Pos ().Y;
     _font_h = TRE.FontHeight (_font);
     if (text_rows.Count () * _font_h > _mb.Height) { // needs a vscrollbar
-        // It it is the same situation as with the button: I need to create
+        // It is the same situation as with the button: I need to create
         // foo in order for it to init its size from unknown, so I can position
         // it later. In this case I need ScrollBar::Width() in order to align
         // it right at the text box. This time the VBO gets updated.
@@ -114,8 +122,9 @@ void Label::SetText()
         }
         text_rows.Clear ();
         //LATER There is some invisible padding here; I doubt the game will
-        //      all a glyph to "touch" the scrollbar
-        int pad_r = 2, sbar_pad = _mb.Width - (_vs->Width () + pad_r);
+        //      allow a glyph to "touch" the scrollbar
+        int pad_r = 2, // guesswork
+            sbar_pad = _mb.Width - (_vs->Width () + pad_r);
         H3R_ENSURE(sbar_pad > 0, "No space to render the text")
         text_rows = TRE.LayoutText (_font, _text, sbar_pad);
         _vs->SetHidden (false);

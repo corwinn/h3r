@@ -62,6 +62,8 @@ class Label final : public Control, public IHandleEvents
     // text, font, location, manager, color, multi-line, multi-line box.
     // When mline, and the text is longer than the box height, a vscrollbar
     // shall be shown.
+    // When not mline, but mbox is specified, the text shall be centered at it:
+    //   box=(location,mbox) <- vertical and horizontal center at it
     public Label(
         const String &, const String &, const Point &, Control *,
         unsigned int = H3R_TEXT_COLOR_MSGB, bool = false, Point = Point {});
