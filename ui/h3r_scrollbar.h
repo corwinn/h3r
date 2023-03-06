@@ -39,35 +39,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_control.h"
 #include "h3r_event.h"
 #include "h3r_button.h"
+#include "h3r_property.h"
 
 H3R_NAMESPACE
-
-// Preview: deciding whether its pros outweigh its cons. Temporary here.
-template <typename T> class Property final
-{
-    private T _v {};
-    public Property() {}
-    public Property(const T & v) : _v{v} {}
-    public Property(T && v) : _v{v} {}
-    public T & operator=(const T & v)
-    {
-        if (_v != v) {
-            _v = v;
-            Changed (nullptr);
-        }
-        return _v;
-    }
-    public T & operator=(T && v)
-    {
-        if (_v != v) {
-            _v = static_cast<T &&>(v);
-            Changed (nullptr);
-        }
-        return _v;
-    }
-    public operator T() { return _v; }
-    public Event Changed {};
-};
 
 // Scrollbars are intricate mechanisms. This one can't do a few things the big
 // UI framework ones can:
