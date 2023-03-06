@@ -66,6 +66,16 @@ static bool InitBitmap(Button::TempSpriteData *& tsd, Def & sprite,
     return true;
 }
 
+// Nothing is simple: "SCNRBACK.def" has "ScnrBacn.pcx"
+static String name_lookup(const String & n, const String & r)
+{
+    auto foo = n.ToLower ();
+    const char * buf = foo.AsZStr ();
+    int ofs = foo.Length () - (foo.Length () < 12 ? 4 : 5);
+    H3R_ENSURE (ofs > 0, "Odd name")
+    return static_cast<String &&>(foo.Replace (buf+ofs, r));
+}
+
 void Button::Init(const String & res_name, int flags)
 {
     Def sprite {Game::GetResource (res_name)};
@@ -73,22 +83,25 @@ void Button::Init(const String & res_name, int flags)
     H3R_ENSURE(flags > 0 && flags < 16, "Odd flags")
     if (flags & H3R_UI_BTN_UP)
         H3R_ENSURE (InitBitmap (_tsdn, sprite, res_name,
-            res_name.ToLower ().Replace (".def", "n.pcx")), "no n.pcx")
+            name_lookup (res_name, "n.pcx")), "no n.pcx")
     if (flags & H3R_UI_BTN_DOWN)
         H3R_ENSURE (InitBitmap (_tsds, sprite, res_name,
-            res_name.ToLower ().Replace (".def", "s.pcx")), "no s.pcx")
+            name_lookup (res_name, "s.pcx")), "no s.pcx")
     if (flags & H3R_UI_BTN_HOVER)
         H3R_ENSURE (InitBitmap (_tsdh, sprite, res_name,
-            res_name.ToLower ().Replace (".def", "h.pcx")), "no h.pcx")
+            name_lookup (res_name, "h.pcx")), "no h.pcx")
     if (flags & H3R_UI_BTN_GRAYOUT)
         H3R_ENSURE (InitBitmap (_tsdd, sprite, res_name,
-            res_name.ToLower ().Replace (".def", "d.pcx")), "no d.pcx")
+            name_lookup (res_name, "d.pcx")), "no d.pcx")
 }
 
 Button::Button(const String & res_name, Control * base, int flags)
     : Control {base}
 {
     Init (res_name, flags);
+    Checked.Changed.Subscribe (this, &Button::CheckedChanged);
+    _e.Sender = this;
+    Checked.EventArgs = &_e;
 }
 
 Button::~Button() {}
@@ -97,6 +110,9 @@ Button::Button(const String & res_name, Window * base,  int flags)
     : Control {base}
 {
     Init (res_name, flags);
+    Checked.Changed.Subscribe (this, &Button::CheckedChanged);
+    _e.Sender = this;
+    Checked.EventArgs = &_e;
 }
 
 void Button::UploadFrames()
@@ -140,6 +156,7 @@ void Button::OnMouseMove(const EventArgs & e)
     p.X = e.X;
     p.Y = e.Y;
     _mouse_over = HitTest (p);
+    if (Checkable) return;
     auto re = Window::UI;
     // Why is there no _flags check? - see the explanation at OnMouseDown().
     re->ChangeOffset (_rkey,
@@ -200,6 +217,7 @@ void Button::OnMouseUp(const EventArgs &)
     // there shall be no mouse click event.
     if (! _mouse_over) return;
     // Log::Info ("MouseUp" EOL);
+    if (Checkable) Checked = ! Checked;
     Click (nullptr);
 }
 
@@ -234,6 +252,15 @@ void Button::SetText(const String & text, const String & font, unsigned int c)
     H3R_CREATE_OBJECT(_lbl, Label) {text, font, Point {cx, cy-1}, this, c};
     H3R_CREATE_OBJECT(_lbl_dn, Label) {text, font, Point {cx+1, cy}, this, c};
     _lbl_dn->SetHidden (true);
+}
+
+void Button::CheckedChanged(EventArgs *)
+{
+    static int t {};
+    // printf ("<>Checked: %d\n", (bool)Checked);
+    if (Checked) t = _on, _on = _oh;
+    else _on = t;
+    Window::UI->ChangeOffset (_rkey, _on);
 }
 
 NAMESPACE_H3R

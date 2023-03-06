@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_eventargs.h"
 #include "h3r_event.h"
 #include "h3r_label.h"
+#include "h3r_property.h"
 
 //  The code here did depend on the role of the Def parser. Wrong design.
 // To decouple them: Button shall store copies of the bitmaps it is using.
@@ -50,7 +51,7 @@ H3R_NAMESPACE
 
 // Its size is stored at the resource it is created from.
 #undef public
-class Button: public Control
+class Button: public Control, public IHandleEvents
 #define public public:
 {
     public enum {
@@ -105,6 +106,19 @@ class Button: public Control
     // of docs to read.
     // Don't waste your time writing frameworks, craft programs instead.
     public void SetText(const String &, const String &, unsigned int);
+
+    // When true the "hover" state is used to render a "checked" state.
+    // Not a check-box, because the "up" and "down" frames are used as well.
+    public Property<bool> Checkable {};
+    // When true, the button is "checked"; it becomes "checked" when you click
+    // on it - the game does that on "OnMouseUp".
+    public Property<bool> Checked {};
+    public struct ButtonEventArgs : EventArgs
+    {
+        class Button * Sender {};//TODO make this the norm: X * sender
+    };
+    private ButtonEventArgs _e {};
+    private void CheckedChanged(EventArgs *);
 };// Button
 
 NAMESPACE_H3R
