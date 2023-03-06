@@ -36,31 +36,36 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_PROPERTY_H_
 
 #include "h3r.h"
+#include "h3r_event.h"
 
 H3R_NAMESPACE
 
-// Class RW property. Simple (POD) types only.
-template <typename T, typename O> class Property
+// Class RW property. Simple types only.
+template <typename T> class Property final
 {
-    using EventHandler = void (O::*)(O *, const T &);
-    // private: void (O::*_c)(O *) {};
-    private: EventHandler _c;
-    private: O * _o {};
-    private: T _v {};
-    public: Property() {}
-    public: Property(const T & v) : _v {v} {}
-    public: operator T() { return _v; }
-    public: T & operator=(const T & v)
+    private T _v {};
+    public Property() {}
+    public Property(const T & v) : _v{v} {}
+    public Property(T && v) : _v{v} {}
+    public T & operator=(const T & v)
     {
         if (_v != v) {
-            auto pv = _v;
             _v = v;
-            if (_o && _c) (_o->*_c) (_o, pv);
+            Changed (EventArgs);
         }
         return _v;
     }
-    // public: void OnChanged(O * o, void (O::*c)(O *)) { _o = o; _c = c;  }
-    public: void OnChanged(O * o, EventHandler c) { _o = o; _c = c;  }
+    public T & operator=(T && v)
+    {
+        if (_v != v) {
+            _v = static_cast<T &&>(v);
+            Changed (EventArgs);
+        }
+        return _v;
+    }
+    public operator T() { return _v; }
+    public Event Changed {};
+    public EventArgs * EventArgs {};
 };
 #define property Property
 
