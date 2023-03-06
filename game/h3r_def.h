@@ -233,6 +233,21 @@ class Def final : public ResDecoder
         }
         return nullptr;
     }
+    public inline Def * Query(int block, int sub_sprite)
+    {
+        H3R_ENSURE(block >= 0 && block < _sprites.Length (), "No such block")
+        auto & b = _sprites[block];
+        H3R_ENSURE(sub_sprite >= 0 && sub_sprite < b.Entries.Length (),
+            "No such sprite")
+        SetRequest (&(b.Entries[sub_sprite]));
+        return this;
+    }
+    public inline int BlockNum() const { return _sprites.Length (); }
+    public inline int SpriteNum(int block) const
+    {
+        H3R_ENSURE(block >= 0 && block < _sprites.Length (), "No such block")
+        return _sprites[block].Entries.Length ();
+    }
     //TODO to Decoder as a virtual one
     // Use Query() first.
     public inline String GetUniqueKey(const String & suffix)
