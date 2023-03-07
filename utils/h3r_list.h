@@ -91,7 +91,7 @@ template <typename T,
         }
     }
 
-    public void CopyTo(List<T> & dst) const//TODO testme
+    public void CopyTo(List<T> & dst) const
     {
         if (this == &dst) return;
         dst.FreeObjects ();

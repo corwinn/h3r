@@ -145,7 +145,7 @@ class String final
     public String Replace(const char *, const char *);
 
     // One char token, for now.
-    public List<String> Split(char token);//TODO testme
+    public List<String> Split(char token);
 
     public bool Empty() const { return ! (Length () > 0); }
 };// String

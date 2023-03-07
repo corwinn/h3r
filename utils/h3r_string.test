@@ -370,6 +370,15 @@ H3R_TEST_(const_array_ref)
     H3R_TEST_ARE_EQUAL(1, c.Length ())
 H3R_TEST_END
 
+H3R_TEST_(split)
+    String c {"a.b.c"};
+    auto t = c.Split ('.');
+    H3R_TEST_ARE_EQUAL(3, t.Count ())
+    H3R_TEST_ARE_EQUAL("a", t[0])
+    H3R_TEST_ARE_EQUAL("b", t[1])
+    H3R_TEST_ARE_EQUAL("c", t[2])
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()

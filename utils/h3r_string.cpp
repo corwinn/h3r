@@ -175,7 +175,7 @@ List<String> String::Split(char token)
     auto b = buf + Length ();
     for (int i = 0; i < Length (); i++) {
         if (token == buf[i]) {
-            list.Add (String {a, i});
+            list.Add (String {a, (int)(i-(a-buf))});
             while (i < Length () && token == buf[i]) i++; // skip .
             a = buf + i; // i points right after a .
                          // i++ will move it to the next symbol
