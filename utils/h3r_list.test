@@ -244,6 +244,7 @@ struct mv final
     mv() {}
     mv(int t) : q{t} {}
     mv & operator=(mv && v) { q = v.q; v.q = 0; return *this; }
+    mv & operator=(const mv & v) { q = v.q; return *this; }
 };
 
 H3R_TEST_(put)
@@ -258,6 +259,43 @@ H3R_TEST_(put)
     H3R_TEST_ARE_EQUAL(2, l.Count ())
     H3R_TEST_ARE_EQUAL(1, l[0].q)
     H3R_TEST_ARE_EQUAL(3, l[1].q)
+H3R_TEST_END
+
+H3R_TEST_(MoveTo)
+    List<mv> l;
+    l.Put (mv {0}). Put (mv {1}). Put (mv {2});
+    H3R_TEST_ARE_EQUAL(3, l.Count ())
+    H3R_TEST_ARE_EQUAL(0, l[0].q)
+    H3R_TEST_ARE_EQUAL(1, l[1].q)
+    H3R_TEST_ARE_EQUAL(2, l[2].q)
+
+    List<mv> d;
+    H3R_TEST_ARE_EQUAL(0, d.Count ())
+    l.MoveTo (d);
+    H3R_TEST_ARE_EQUAL(0, l.Count ())
+    H3R_TEST_ARE_EQUAL(0, d[0].q)
+    H3R_TEST_ARE_EQUAL(1, d[1].q)
+    H3R_TEST_ARE_EQUAL(2, d[2].q)
+H3R_TEST_END
+
+H3R_TEST_(CopyTo)
+    List<mv> l;
+    l.Put (mv {0}). Put (mv {1}). Put (mv {2});
+    H3R_TEST_ARE_EQUAL(3, l.Count ())
+    H3R_TEST_ARE_EQUAL(0, l[0].q)
+    H3R_TEST_ARE_EQUAL(1, l[1].q)
+    H3R_TEST_ARE_EQUAL(2, l[2].q)
+
+    List<mv> d;
+    H3R_TEST_ARE_EQUAL(0, d.Count ())
+    l.CopyTo (d);
+    H3R_TEST_ARE_EQUAL(3, l.Count ())
+    H3R_TEST_ARE_EQUAL(0, l[0].q)
+    H3R_TEST_ARE_EQUAL(1, l[1].q)
+    H3R_TEST_ARE_EQUAL(2, l[2].q)
+    H3R_TEST_ARE_EQUAL(0, d[0].q)
+    H3R_TEST_ARE_EQUAL(1, d[1].q)
+    H3R_TEST_ARE_EQUAL(2, d[2].q)
 H3R_TEST_END
 
 NAMESPACE_H3R

@@ -102,7 +102,7 @@ template <typename T,
         CopyObjects (dst._list, _list, _cap);
     }
 
-    public void MoveTo(List<T> & dst)//TODO testme
+    public void MoveTo(List<T> & dst)
     {
         if (this == &dst) return;
         dst.FreeObjects ();
@@ -156,10 +156,11 @@ template <typename T,
         Grow ();
         return _list[_cnt++] = itm;
     }
-    public void Put(T && itm)
+    public List<T> & Put(T && itm)
     {
         Grow ();
         _list[_cnt++] = static_cast<T &&>(itm);
+        return *this;
     }
     // Remove all occurrences. Slow. Use rarely. You want fast: use an LL.
     // Returns whether something was removed (found) or not.
