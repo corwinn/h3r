@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
+// What is it? Something C++ does not have. Something that C# is very good at.
+
 #ifndef _H3R_PROPERTY_H_
 #define _H3R_PROPERTY_H_
 
