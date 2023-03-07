@@ -238,6 +238,28 @@ H3R_TEST_(subscript)
     H3R_TEST_ARE_EQUAL (8, list1[0])
 H3R_TEST_END
 
+struct mv final
+{
+    int q {};
+    mv() {}
+    mv(int t) : q{t} {}
+    mv & operator=(mv && v) { q = v.q; v.q = 0; return *this; }
+};
+
+H3R_TEST_(put)
+    List<mv> l;
+    mv a {1};
+    l.Put (static_cast<mv &&>(a)); // it gets moved
+    H3R_TEST_IS_FALSE(l.Empty ())
+    H3R_TEST_ARE_EQUAL(1, l.Count ())
+    H3R_TEST_ARE_EQUAL(1, l[0].q)
+    H3R_TEST_ARE_EQUAL(0, a.q)
+    l.Put (mv {3});
+    H3R_TEST_ARE_EQUAL(2, l.Count ())
+    H3R_TEST_ARE_EQUAL(1, l[0].q)
+    H3R_TEST_ARE_EQUAL(3, l[1].q)
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()
