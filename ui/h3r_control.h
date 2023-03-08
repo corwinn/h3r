@@ -113,6 +113,7 @@ class Control
     public inline bool Enabled() const { return _enabled; }
     public inline void SetHidden(bool value)
     {
+        for (auto p : _n) p->SetHidden (value);
         if (value != _hidden) {
             _hidden = value;
             OnVisibilityChanged ();
