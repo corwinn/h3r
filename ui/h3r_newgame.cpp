@@ -364,6 +364,14 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
             tab_ascen.Width (), tab_ascen.Height (), bitmap_data,
             h3rBitmapFormat::RGBA, "SCSelBck.pcx", Depth ());
         _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
+
+        // "Select a Scenario to Play" - MedFont.fnt, 114,28(center at
+        // 24,22-392,46), gold
+        Label * lbl {};
+        H3R_CREATE_OBJECT(lbl, Label) {"Select a Scenario to Play",
+            "MedFont.fnt",
+            Point {24, 22}, _tab_avail_scen, H3R_TEXT_COLOR_GOLD, false,
+            Point {392-24, 46-22}};
     }
     //
     _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
