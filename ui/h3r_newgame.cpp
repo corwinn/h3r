@@ -359,16 +359,16 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
             return;
         }
         bmp_data = byte_arr_ptr->operator byte * ();
-        _tab_avail_scen_key1 = RE->GenKey ();
-        RE->UploadFrame (_tab_avail_scen_key1, _tab_avail_scen->Pos ().Left,
-            _tab_avail_scen->Pos ().Top,
+        RE->UploadFrame (_tab_avail_scen_keys.Add (RE->GenKey ()),
+            _tab_avail_scen->Pos ().Left, _tab_avail_scen->Pos ().Top,
             tab_ascen.Width (), tab_ascen.Height (), bitmap_data,
             h3rBitmapFormat::RGBA, "SCSelBck.pcx", Depth ());
         _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
     }
     //
     _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
-    RE->ChangeVisibility (_tab_avail_scen_key1, ! _tab_avail_scen->Hidden ());
+    for (auto k : _tab_avail_scen_keys)
+        RE->ChangeVisibility (k, ! _tab_avail_scen->Hidden ());
 }
 
 void NewGameDialog::ToggleRndScen(EventArgs *)
