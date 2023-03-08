@@ -164,14 +164,10 @@ void ScrollBar::Model2View()
     if (d1 < 0) { // nothing to render
         RE->ChangeVisibility (_key_m, false);
         RE->ChangeVisibility (_key_b, false);
-        btn_up->SetHidden (true);
-        btn_dn->SetHidden (true);
     }
     else {
         RE->ChangeVisibility (_key_m, true);
         RE->ChangeVisibility (_key_b, true);
-        btn_up->SetHidden (false);
-        btn_dn->SetHidden (false);
         int d2 = (Max - Min);
         if (0 == d2) {
             Log::Info ("Warning: pointless scrollbar: Min = Max" EOL);
@@ -215,10 +211,8 @@ void ScrollBar::OnVisibilityChanged()
 {
     H3R_ENSURE(btn_up && btn_dn, "bug: not initialized yet")
     auto RE = Window::UI;
-    RE->ChangeVisibility (_key_m, ! Hidden ());
     RE->ChangeVisibility (_key_b, ! Hidden ());
-    btn_up->SetHidden (Hidden ());
-    btn_dn->SetHidden (Hidden ());
+    RE->ChangeVisibility (_key_m, ! Hidden ());
 }
 
 void ScrollBar::OnMoved(int dx, int dy)
