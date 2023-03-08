@@ -391,6 +391,20 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
             x += btn->Width () + 1;
         }
 
+        // filter by size buttons: SCALBUT.DEF
+        //      - alt1: SC L GBUT.DEF ; alt2: SC M DBUT.DEF ?!
+        //      - alt3: SC S MBUT.DEF; alt4: SC X LBUT.DEF
+        x = 161; // y=52
+        List<String> grp {5};
+        grp.Put ("SCSMBUT.DEF").Put ("SCMDBUT.DEF").Put ("SCLGBUT.DEF")
+           .Put ("SCXLBUT.DEF").Put ("SCALBUT.DEF");
+        for (auto & n : grp) {
+            H3R_CREATE_OBJECT(btn, Button) {
+                n, _tab_avail_scen, Button::H3R_UI_BTN_UPDN};
+            btn->SetPos (x, 52);
+            btn->UploadFrames ();
+            x += btn->Width () + 3;
+        }
     }
     //
     _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());

@@ -80,17 +80,17 @@ H3R_NAMESPACE
 //    [] victory condition mini-icon: SCNRVICT.def (w:  29, h:  21)
 //    [] loss condition mini-icon: SCNRLOSS.def    (w:  29, h:  21)
 //  - tab: "Random Map": RanMapBk.pcx
-//  - tab: "Show Available Scenarios" SCSelBck.pcx
-//    - group by size buttons: RanSiz(L|M|S|X).def; "All": SCALBUT.DEF
-//      - alt1: SC L GBUT.DEF ; alt2: SC M DBUT.DEF ?!
-//      - alt3: SC S MBUT.DEF; alt4: SC X LBUT.DEF
-//    - sort by Map Version column header button: SCButCp.DEF
+//  [] tab: "Show Available Scenarios" SCSelBck.pcx
+//    [] filter by size buttons: RanSiz(L|M|S|X).def; "All": SCALBUT.DEF
+//      [] alt1: SC L GBUT.DEF ; alt2: SC M DBUT.DEF ?!
+//      [] alt3: SC S MBUT.DEF; alt4: SC X LBUT.DEF
+//    [] sort by Map Version column header button: SCButCp.DEF
 //    - map version icon: ScSelC.def
-//    - sort by Player Num column header button: SCBUTT1.DEF
-//    - sort by Map Size column header button: SCBUTT2.DEF
-//    - sort by Map Name column header button: SCBUTT3.DEF
-//    - sort by Victory Con column header button: SCBUTT4.DEF
-//    - sort by Loss Con column header button: SCBUTT5.DEF
+//    [] sort by Player Num column header button: SCBUTT1.DEF
+//    [] sort by Map Size column header button: SCBUTT2.DEF
+//    [] sort by Map Name column header button: SCBUTT3.DEF
+//    [] sort by Victory Con column header button: SCBUTT4.DEF
+//    [] sort by Loss Con column header button: SCBUTT5.DEF
 //
 //   I can't find the tool-tip windows yet.
 //
