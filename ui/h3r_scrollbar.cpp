@@ -129,8 +129,11 @@ void ScrollBar::Init(Point pos, int h)
     bitmap = s1->ToRGBA ();
     H3R_ENSURE(bitmap, "Sprite->ToRGBA() failed")
     _key_m = RE->GenKey ();
+    printf ("<> : m_pos: %d, %d\n", pos.X, _t);
+    //TODO for some unknown to me reason this started rendering below _key_b?!
+    //     e.g. the +1
     RE->UploadFrame (_key_m, pos.X, _t, _a, _a, bitmap_data,
-        h3rBitmapFormat::RGBA, sprite.GetUniqueKey ("ScnrBSl.def"), Depth ());
+        h3rBitmapFormat::RGBA, sprite.GetUniqueKey ("ScnrBSl.def"), Depth ()+1);
 }
 
 static bool the_way_is_shut {};
@@ -145,7 +148,7 @@ void ScrollBar::UpdateView(EventArgs *)
     H3R_ARG_EXC_IF(Max < Min, "Be very careful when changing Min/Max")
     // Validate.
     if (Pos < Min) Pos = Min;
-    if (Pos > Min) Pos = Max;
+    if (Pos > Max) Pos = Max;
     if (LargeStep > (Max - Min)) LargeStep = (Max - Min);
     if (LargeStep < 1) LargeStep = 1;
     if (SmallStep > LargeStep) SmallStep = LargeStep / 10;
@@ -173,8 +176,10 @@ void ScrollBar::Model2View()
             Log::Info ("Warning: pointless scrollbar: Min = Max" EOL);
             return;
         }
-        int t = static_cast<int>(Control::Pos ().Y + _a + Pos * (1.0*d1/d2));
-        // printf ("<> d1: %d, d2: %d, t:%d, _t:%d\n", d1, d2, t, _t);
+        int t = static_cast<int>(
+            Control::Pos ().Y + _a + (Pos-Min) * (1.0*d1/d2));
+        /*printf ("<> d1: %d, d2: %d, t:%d, _t:%d, pos: %d, min: %d\n",
+            d1, d2, t, _t, (int)Pos, (int)Min);*/
         if (t != _t) {
             RE->UpdateLocation (_key_m, 0, t-_t);
             _t = t;
