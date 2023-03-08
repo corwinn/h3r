@@ -369,15 +369,34 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
         // 24,22-392,46), gold
         Label * lbl {};
         H3R_CREATE_OBJECT(lbl, Label) {"Select a Scenario to Play",
-            "MedFont.fnt",
-            Point {24, 22}, _tab_avail_scen, H3R_TEXT_COLOR_GOLD, false,
-            Point {392-24, 46-22}};
+            "MedFont.fnt", Point {24, 22}, _tab_avail_scen, H3R_TEXT_COLOR_GOLD,
+            false, Point {392-24, 46-22}};
+
+        // "Map Sizes" - smalfont.fnt, 60,63(c:24,52-157,84), gold
+        H3R_CREATE_OBJECT(lbl, Label) {"Map Sizes", "smalfont.fnt",
+            Point {24, 52}, _tab_avail_scen, H3R_TEXT_COLOR_GOLD,
+            false, Point {157-24, 84-52}};
+
+        // Column header buttons:
+        Button * btn {};
+        List<String> ch {6};
+        int x = 26; // y=92
+        ch.Put ("SCBUTT1.DEF").Put ("SCBUTT2.DEF").Put ("SCButCp.DEF")
+          .Put ("SCBUTT3.DEF").Put ("SCBUTT4.DEF").Put ("SCBUTT5.DEF");
+        for (auto & n : ch) {
+            H3R_CREATE_OBJECT(btn, Button) {
+                n, _tab_avail_scen, Button::H3R_UI_BTN_UPDN};
+            btn->SetPos (x, 92);
+            btn->UploadFrames ();
+            x += btn->Width () + 1;
+        }
+
     }
     //
     _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
     for (auto k : _tab_avail_scen_keys)
         RE->ChangeVisibility (k, ! _tab_avail_scen->Hidden ());
-}
+}// NewGameDialog::ToggleAvailScen()
 
 void NewGameDialog::ToggleRndScen(EventArgs *)
 {
