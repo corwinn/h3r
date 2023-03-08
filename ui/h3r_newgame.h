@@ -59,7 +59,7 @@ H3R_NAMESPACE
 //    - castle icons (for the Starting Town column): ITPA.def
 //    - Starting Hero: can't select: hpsrand6.pcx; other variations:
 //      2 dies with "?": HPSRAND4.PCX ?; heroes with "?": hpsrand.pcx ?
-//  - main: GSelPop1.pcx (370x585)
+//  [] main: GSelPop1.pcx (370x585)
 //    [] background: gamselb(0|1).pcx (w: 800, h: 600) - randomly chosen
 //    [] - another one: ScnrBeg.def   (w: 166, h:  40) ?!
 //         button "begin": GSPBGIN.DEF  (w: 166, h:  40)
@@ -104,7 +104,11 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     // private List<int> _re_keys {};
     private bool _has_dr {};
     private DialogResult _dr {};
-    private int _t {}, _l {};
+    private int _t {}, _l {}; // top, left - of the persistent (right) part
+
+    //PERHAPS this shall be a separate class: UserControl
+    private Control * _tab_avail_scen {};
+    private int _tab_avail_scen_key1 {};
 
     public NewGameDialog(Window * base_window);
     public ~NewGameDialog() override;

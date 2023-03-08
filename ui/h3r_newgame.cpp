@@ -339,6 +339,36 @@ void NewGameDialog::HandleBackClick(EventArgs *)
 
 void NewGameDialog::ToggleAvailScen(EventArgs *)
 {
+    auto RE = Window::UI;
+
+    if (! _tab_avail_scen) {
+        H3R_CREATE_OBJECT(_tab_avail_scen, Control) {this};
+        _tab_avail_scen->SetPos (3, 6);
+        // _tab_avail_scen->Resize (tab_ascen.Width (), tab_ascen.Height ());
+        // SCSelBck.pcx - 575 x 585
+
+        static byte * bmp_data {};
+        // static Array<byte> * bitmap {};
+        auto bitmap_data = []() { return bmp_data; };
+
+        //TODO helper or description?
+        Pcx tab_ascen {Game::GetResource ("SCSelBck.pcx")};
+        auto byte_arr_ptr = tab_ascen.ToRGBA ();
+        if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
+            H3R_NS::Log::Err ("Failed to load SCSelBck.pcx" EOL);
+            return;
+        }
+        bmp_data = byte_arr_ptr->operator byte * ();
+        _tab_avail_scen_key1 = RE->GenKey ();
+        RE->UploadFrame (_tab_avail_scen_key1, _tab_avail_scen->Pos ().Left,
+            _tab_avail_scen->Pos ().Top,
+            tab_ascen.Width (), tab_ascen.Height (), bitmap_data,
+            h3rBitmapFormat::RGBA, "SCSelBck.pcx", Depth ());
+        _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
+    }
+    //
+    _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
+    RE->ChangeVisibility (_tab_avail_scen_key1, ! _tab_avail_scen->Hidden ());
 }
 
 void NewGameDialog::ToggleRndScen(EventArgs *)
