@@ -363,7 +363,6 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
             _tab_avail_scen->Pos ().Left, _tab_avail_scen->Pos ().Top,
             tab_ascen.Width (), tab_ascen.Height (), bitmap_data,
             h3rBitmapFormat::RGBA, "SCSelBck.pcx", Depth ());
-        _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
 
         // "Select a Scenario to Play" - MedFont.fnt, 114,28(center at
         // 24,22-392,46), gold
@@ -405,6 +404,13 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
             btn->UploadFrames ();
             x += btn->Width () + 3;
         }
+
+        // VSCrollBar
+        H3R_CREATE_OBJECT(_tab_avail_scen_vs, ScrollBar) {
+            _tab_avail_scen, Point {375, 92}, 572-92};
+            // _tab_avail_scen_vs->Scroll.Subscribe (this, ?);
+
+        _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
     }
     //
     _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());

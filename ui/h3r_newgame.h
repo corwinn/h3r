@@ -109,6 +109,7 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     //PERHAPS this shall be a separate class: UserControl
     private Control * _tab_avail_scen {};
     private List<int> _tab_avail_scen_keys {};
+    private ScrollBar * _tab_avail_scen_vs {};
 
     public NewGameDialog(Window * base_window);
     public ~NewGameDialog() override;
