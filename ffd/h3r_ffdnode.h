@@ -76,6 +76,74 @@ class FFDNode
     private void FromField();
     public ~FFDNode();
 
+    // FFDNode Converter - used by the Get() method.
+    template <typename T> struct NodeCon final { NodeCon() = delete; };
+    template <> struct NodeCon<int> final
+    {
+        FFDNode * Node;
+        NodeCon(FFDNode * node) : Node {node} {}
+        inline operator int() { return Node->AsInt (); }
+    };
+    template <> struct NodeCon<bool> final
+    {
+        FFDNode * Node;
+        NodeCon(FFDNode * node) : Node {node} {}
+        inline operator bool() { return Node->AsInt (); }
+    };
+    template <> struct NodeCon<String> final
+    {
+        FFDNode * Node;
+        NodeCon(FFDNode * node) : Node {node} {}
+        inline operator String()
+        {
+            return static_cast<String &&>(Node->AsString ());
+        }
+    };
+    template <> struct NodeCon<byte> final
+    {
+        FFDNode * Node;
+        NodeCon(FFDNode * node) : Node {node} {}
+        inline operator byte() { return Node->AsByte (); }
+    };
+    template <> struct NodeCon<FFDNode *> final
+    {
+        FFDNode * Node;
+        NodeCon(FFDNode * node) : Node {node} {}
+        inline operator FFDNode *() { return Node; }
+    };
+
+    // Use this, instead of loosing yourself searching for the As.*() methods.
+    // Stops the program if nn is not found with tracing info included.
+    // Returns "dt" if "nn" isn't enabled.
+    public template <typename T> T Get(const String & nn, T dt = T {})
+    {
+        auto node = NodeByName (nn);
+        if (nullptr == node) {
+            Dbg << "\"" << nn << "\" does not exist." << EOL;
+            OS::Exit (101);//LATER FFD_ERROR_CODES at libffd
+        }
+        if (node->Enabled ()) return NodeCon<T> {node}.operator T ();
+        else return dt;
+    }
+
+    public inline bool IsEnum() const
+    {
+        if (! Enabled ()) return false;
+        auto sn = FieldNode ();
+        H3R_ENSURE(nullptr != sn, "No syntax node")
+        //TODO what instance nodes are allowed to have no type info?
+        H3R_ENSURE(nullptr != sn->DType, "No type info")
+        return sn->DType->IsEnum ();
+    }
+    public inline const String & GetEnumName() const
+    {
+        int v = AsInt ();
+        auto itm = FieldNode ()->DType->EnumItems.Find (
+            [&v](const auto & itm) { return itm.Value == v; });
+        H3R_ENSURE(nullptr != itm, "Unknown enum value")
+        return itm->Name;
+    }
+
     //PERHAPS all of these As.* must handle the _hk flag
     public String AsString();
     private inline FFDNode * Hash(const FFDNode * key) const
@@ -104,6 +172,7 @@ class FFDNode
         else
             H3R_ENSURE(0, "Empty HashTable")
     }
+    public inline byte AsByte() const { return _data[0]; }
     public inline int AsInt(FFDNode * ht = nullptr) const
     {
         int result {};
