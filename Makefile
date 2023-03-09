@@ -53,7 +53,7 @@ _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
  -Iengines -Iengines/$(RENDER_ENGINE) \
  -Ios/ui -Ios/ui/$(WIN_SYSTEM) -Iffd `pkg-config --cflags sdl2`
 
-CXXFLAGS = $(_I) -std=c++11 $(_O) $(_F) $(_W)
+CXXFLAGS = $(_I) -std=c++14 $(_O) $(_F) $(_W)
 SRC = $(wildcard ./*/*.cpp)
 SRC += $(wildcard os/$(PLATFORM)/*.cpp)
 SRC += $(wildcard engines/$(RENDER_ENGINE)/*.cpp)
