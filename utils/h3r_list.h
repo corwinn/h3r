@@ -213,6 +213,15 @@ template <typename T,
         else if (len > _cnt) Grow (len);
         else while (--_cnt != len) LD<T>{} (_list[_cnt]);
     }
+
+    // F: bool (*)(const T &)
+    public template <typename Fd> T * Find(Fd on_itm)//TODO testme
+    {
+        for (int i = 0; i < _cnt; i++)
+            if (on_itm (static_cast<const T &>(_list[i])))
+                return &(_list[i]);
+        return nullptr;
+    }
 };// List
 
 NAMESPACE_H3R
