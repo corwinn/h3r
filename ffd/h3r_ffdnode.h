@@ -105,6 +105,12 @@ class FFDNode
         NodeCon(FFDNode * node) : Node {node} {}
         inline operator byte() { return Node->AsByte (); }
     };
+    template <> struct NodeCon<short> final
+    {
+        FFDNode * Node;
+        NodeCon(FFDNode * node) : Node {node} {}
+        inline operator short() { return Node->AsShort (); }
+    };
     template <> struct NodeCon<FFDNode *> final
     {
         FFDNode * Node;
@@ -116,6 +122,7 @@ class FFDNode
     public template <typename T> T Get(const String & nn, T dt = T {})
     {
         auto node = NodeByName (nn);
+        //TODO there is a problem here: how to differ bug from use-case?
         if (nullptr == node) return dt;
         return NodeCon<T> {node}.operator T ();
     }
@@ -166,6 +173,17 @@ class FFDNode
             H3R_ENSURE(0, "Empty HashTable")
     }
     public inline byte AsByte() const { return _data[0]; }
+    public inline short AsShort() const
+    {
+        switch (_data.Length ())
+        {
+            case 1:
+                return static_cast<short>(*(_data.operator byte * ()));
+            case 2: return
+                *(reinterpret_cast<short *>(_data.operator byte * ()));
+            default: H3R_ENSURE(0, "Don't request that AsShort")
+        }
+    }
     public inline int AsInt(FFDNode * ht = nullptr) const
     {
         int result {};
@@ -341,13 +359,15 @@ class FFDNode
         return ArrayOfFields () ? _fields.Count ()
             : _data.Length () / _array_item_size;
     };
-    public FFDNode * operator[](int i)
+    public inline FFDNode * operator[](int i)
     {
         //LATER create unconditional FFDNode from memory stream;
         //      sync with SNode::PrecomputeSize()
         H3R_ENSURE(ArrayOfFields (), "Pre-computed size, not implemented yet")
         return _fields[i];
     }
+
+    public inline const Array<byte> * AsByteArray() { return &_data; }
 };// FFDNode
 
 NAMESPACE_H3R
