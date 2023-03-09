@@ -62,27 +62,12 @@ int main(int argc, char ** argv)
 
     // test->PrintTree ();
 
-    // This is just for one, albeit VIP node:
-    auto version = test->NodeByName ("Version");
-    if (! version) { Dbg << "\"Version\" not found" << EOL; return 1; }
-    if (! version->Enabled ()) {
-        Dbg << "\"Version\" not enabled" << EOL; return 1; }
-    auto version_info = version->FieldNode ();
-    if (! version_info) {
-        Dbg << "\"Version\" has no syntax node?!" << EOL; return 1; }
-    version_info->DbgPrint ();
-    auto version_type_info = version_info->DType;
-    if (! version_type_info) {
-        Dbg << "\"Version\" has no type info?!" << EOL; return 1; }
-    if (version_type_info->IsEnum ()) {
-        int v = version->AsInt ();
-        auto itm = version_type_info->EnumItems.Find (
-            [&v](const auto & itm) { return itm.Value == v; });
-        if (! itm) { Dbg << "Unknown \"Version\"" << EOL; return 1; }
-        Dbg << "Version: " << itm->Name << EOL;
-    }
+    auto vvalue = test->Get<int> ("Version");
+    auto version = test->Get<decltype(test)> ("Version");
+    if (version->IsEnum ())
+        Dbg << "Version: " << version->GetEnumName () << EOL;
     else
-        Dbg << "Version: " << version->AsInt () << EOL;
+        Dbg << "Version: " << vvalue << EOL;
 
     H3R_DESTROY_OBJECT(test, FFDNode)
 
