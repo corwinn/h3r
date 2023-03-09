@@ -53,7 +53,6 @@ class FFDNode
     private Stream * _s {}; // reference
     private FFD::SNode * _n {}; // reference ; node
     private FFD::SNode * _f {}; // reference ; field node (Foo _f[])
-    private bool _enabled {true}; // set by bool expr.
     private bool _signed {}; // signed machine types
     private bool _array {}; // array of struct at _fields
     private int _array_item_size {}; // array of struct at _data
@@ -113,23 +112,16 @@ class FFDNode
         inline operator FFDNode *() { return Node; }
     };
 
-    // Use this, instead of loosing yourself searching for the As.*() methods.
-    // Stops the program if nn is not found with tracing info included.
-    // Returns "dt" if "nn" isn't enabled.
+    // Returns "dt" if "nn" ain't present.
     public template <typename T> T Get(const String & nn, T dt = T {})
     {
         auto node = NodeByName (nn);
-        if (nullptr == node) {
-            Dbg << "\"" << nn << "\" does not exist." << EOL;
-            OS::Exit (101);//LATER FFD_ERROR_CODES at libffd
-        }
-        if (node->Enabled ()) return NodeCon<T> {node}.operator T ();
-        else return dt;
+        if (nullptr == node) return dt;
+        return NodeCon<T> {node}.operator T ();
     }
 
     public inline bool IsEnum() const
     {
-        if (! Enabled ()) return false;
         auto sn = FieldNode ();
         H3R_ENSURE(nullptr != sn, "No syntax node")
         //TODO what instance nodes are allowed to have no type info?
@@ -195,7 +187,6 @@ class FFDNode
         }
         return result;
     }
-    public inline bool Enabled() const { return _enabled; }
 
     struct ExprCtx final // required to evaluate enum elements in expression.
     {
@@ -284,7 +275,7 @@ class FFDNode
             auto sn = n->FieldNode ();
             // Dbg << "  NodeByName: q:" << name << ", vs:" << sn->Name
             //     << EOL;
-            if (n->_enabled && sn->Name == name) return n;
+            if (sn->Name == name) return n;
         }
 
         if (_base) return _base->NodeByName (name);
@@ -302,7 +293,7 @@ class FFDNode
             /*Dbg << " field: " << sn->Name << ", type: "
                 << (sn->DType ? sn->DType->Name : "none")
                 << ", arr. dims: " << sn->ArrDims () << EOL;*/
-            if (n->_enabled && 1 == sn->ArrDims ()
+            if (1 == sn->ArrDims ()
                 && sn->DType && sn->DType->Name == type_name) return n;
         }
         if (_base) return _base->FindHashTable (type_name);

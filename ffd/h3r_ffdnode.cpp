@@ -220,8 +220,6 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
             ctx.NoSymbol = true; // evaluate to false
         if (lsym && rsym) {
             Dbg << "    lsym && rsym " << EOL;
-            H3R_ENSURE(lsym->_enabled, "NodeByName() contract failed")
-            H3R_ENSURE(rsym->_enabled, "NodeByName() contract failed")
             ctx.v[0] = lsym->AsInt ();
             ctx.v[1] = rsym->AsInt ();
             return;
@@ -233,7 +231,6 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
         }
         else if (2 == ctx.i) { // requested both; handle enum|const op symbol
             if (lsym && ! rsym) {
-                H3R_ENSURE(lsym->_enabled, "l: NodeByName() contract failed")
                 Dbg << "    lsym && ! rsym "; lsym->_n->DbgPrint ();
                 // check against the type set
                 if (lsym->_n->DType->IsEnum ()) {
@@ -254,7 +251,6 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
                 return;
             }//TODO handle the reverse: if (! lsym && rsym)
             else {//LATER swapping requires index swapping at ctx.v as well
-                H3R_ENSURE(rsym->_enabled, "r: NodeByName() contract failed")
                 Dbg << "    ! lsym && rsym "; rsym->_n->DbgPrint ();
                 // check against the type set
                 if (rsym->_n->DType->IsEnum ()) {
@@ -279,7 +275,6 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
             Dbg << "    lookup for 1 symbol: ";
             if (lsym) {
                 Dbg << " left: ";
-                H3R_ENSURE(lsym->_enabled, "l: NodeByName() contract failed")
                 ctx.v[0] = lsym->AsInt ();
                 Dbg << ctx.v[0] << EOL;
                 ctx.NoSymbol = false;
@@ -287,7 +282,6 @@ void FFDNode::ResolveSymbols(ExprCtx & ctx, FFD::SNode * sn, FFDNode * base)
             }
             if (rsym) {
                 Dbg << " right: ";
-                H3R_ENSURE(rsym->_enabled, "r: NodeByName() contract failed")
                 ctx.v[1] = rsym->AsInt ();
                 Dbg << ctx.v[1] << EOL;
                 ctx.NoSymbol = false;
