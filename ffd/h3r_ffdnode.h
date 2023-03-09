@@ -72,13 +72,13 @@ class FFDNode
     // "node" processing)
     public FFDNode(FFD::SNode *, Stream *, FFDNode * base = nullptr,
         FFD::SNode * = nullptr);
-    public void FromStruct(FFD::SNode * = nullptr);
-    public void FromField();
+    private void FromStruct(FFD::SNode * = nullptr);
+    private void FromField();
     public ~FFDNode();
 
     //PERHAPS all of these As.* must handle the _hk flag
     public String AsString();
-    public inline FFDNode * Hash(const FFDNode * key) const
+    private inline FFDNode * Hash(const FFDNode * key) const
     {
         H3R_ARG_EXC_IF(nullptr == key, "Hash(): key can't be null")
         // auto sn = key->FieldNode ();
