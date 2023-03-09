@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-//c clang++ -std=c++11 -Wall -Wextra -Wshadow -O0 -g -gdwarf-4 -fsanitize=address,undefined,integer,leak -fvisibility=hidden -I. -Ios -Ios/posix -Iutils -Istream -Iffd -O0 -g -DH3R_DEBUG -UH3R_MM -fno-exceptions -fno-threadsafe-statics main.a parse_map_ffd.cpp -o parse_map_ffd -lz
+//c clang++ -std=c++14 -Wall -Wextra -Wshadow -O0 -g -gdwarf-4 -fsanitize=address,undefined,integer,leak -fvisibility=hidden -I. -Ios -Ios/posix -Iutils -Istream -Iffd -O0 -g -DH3R_DEBUG -UH3R_MM -fno-exceptions -fno-threadsafe-statics main.a parse_map_ffd.cpp -o parse_map_ffd -lz
 
 // run:
 //  #01 - ~40 min.; tons of errors; parsed: 3137/6167 maps; good
@@ -59,7 +59,31 @@ int main(int argc, char ** argv)
     Dbg.Enabled = true;
     Dbg << "nodes: " << test->NodeCount ()
         << ", bytes: " << test->NodeCount () * sizeof(*test) << EOL;
+
     // test->PrintTree ();
+
+    // This is just for one, albeit VIP node:
+    auto version = test->NodeByName ("Version");
+    if (! version) { Dbg << "\"Version\" not found" << EOL; return 1; }
+    if (! version->Enabled ()) {
+        Dbg << "\"Version\" not enabled" << EOL; return 1; }
+    auto version_info = version->FieldNode ();
+    if (! version_info) {
+        Dbg << "\"Version\" has no syntax node?!" << EOL; return 1; }
+    version_info->DbgPrint ();
+    auto version_type_info = version_info->DType;
+    if (! version_type_info) {
+        Dbg << "\"Version\" has no type info?!" << EOL; return 1; }
+    if (version_type_info->IsEnum ()) {
+        int v = version->AsInt ();
+        auto itm = version_type_info->EnumItems.Find (
+            [&v](const auto & itm) { return itm.Value == v; });
+        if (! itm) { Dbg << "Unknown \"Version\"" << EOL; return 1; }
+        Dbg << "Version: " << itm->Name << EOL;
+    }
+    else
+        Dbg << "Version: " << version->AsInt () << EOL;
+
     H3R_DESTROY_OBJECT(test, FFDNode)
 
     return 0;
