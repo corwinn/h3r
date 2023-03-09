@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-//c clang++ -std=c++14 -Wall -Wextra -Wshadow -O0 -g -gdwarf-4 -fsanitize=address,undefined,integer,leak -fvisibility=hidden -I. -Ios -Ios/posix -Iutils -Istream -Iffd -O0 -g -DH3R_DEBUG -UH3R_MM -fno-exceptions -fno-threadsafe-statics main.a parse_map_ffd.cpp -o parse_map_ffd -lz
+//c clang++ -std=c++14 -Wall -Wextra -Wshadow -O0 -g -gdwarf-4 -fsanitize=address,undefined,integer,leak -fvisibility=hidden -I. -Ios -Ios/posix -Iutils -Istream -Iffd -Igame -O0 -g -DH3R_DEBUG -UH3R_MM -fno-exceptions -fno-threadsafe-statics main.a parse_map_ffd.cpp -o parse_map_ffd -lz
 
 // run:
 //  #01 - ~40 min.; tons of errors; parsed: 3137/6167 maps; good
@@ -45,31 +45,27 @@ H3R_ERR_DEFINE_UNHANDLED
 H3R_ERR_DEFINE_HANDLER(Memory,H3R_ERR_HANDLER_UNHANDLED)
 H3R_ERR_DEFINE_HANDLER(File,H3R_ERR_HANDLER_UNHANDLED)
 
-#include "h3r_ffdnode.h"
+#include "h3r_map.h"
 
 int main(int argc, char ** argv)
 {
-    if (3 != argc)
-        return printf ("usage: parse_map_ffd descritpion_file h3m_file\n");
-
-    H3R_NS::FFD ffd {};
+    if (2 != argc)
+        return printf ("usage: parse_map_ffd h3m_file\n");
 
     Dbg.Enabled = false;
-    auto test = ffd.File2Tree (argv[1], argv[2]);
+        bool header_only {};
+        H3R_NS::Map map {argv[1], header_only = true};
     Dbg.Enabled = true;
-    Dbg << "nodes: " << test->NodeCount ()
-        << ", bytes: " << test->NodeCount () * sizeof(*test) << EOL;
 
-    // test->PrintTree ();
-
-    auto vvalue = test->Get<int> ("Version");
-    auto version = test->Get<decltype(test)> ("Version");
-    if (version->IsEnum ())
-        Dbg << "Version: " << version->GetEnumName () << EOL;
-    else
-        Dbg << "Version: " << vvalue << EOL;
-
-    H3R_DESTROY_OBJECT(test, FFDNode)
+    Dbg << "Version: " << map.VersionName () << EOL
+        << "Size   : " << map.Size () << EOL
+        << "Levels : " << map.Levels () << EOL
+        << "Name   : " << map.Name () << EOL
+        << "Descr  : " << map.Descr ().EllipsisAt (77) << EOL
+        << "Diff.  : " << map.Difficulty () << EOL
+        << "Players: " << map.PlayerNum () << EOL
+        << "VCon   : " << map.VCon() << EOL
+        << "LCon   : " << map.LCon() << EOL;
 
     return 0;
 }

@@ -36,6 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_MAP_H_
 
 #include "h3r.h"
+#include "h3r_ffdnode.h"
+#include "h3r_list.h"
 
 H3R_NAMESPACE
 
@@ -44,10 +46,72 @@ using h3rObjRef = int;
 using h3rObjType = byte;
 using h3rCoord = byte;
 
-class Map
+#define H3R_VERSION_ROE 0x0e
+#define H3R_VERSION_AB  0x15
+#define H3R_VERSION_SOD 0x1c
+#define H3R_VERSION_WOG 0x33
+
+class Map final
 {
-    // Waiting for the FFD ...
-};
+    private FFDNode * _map {};
+
+    // cached - no need for live update
+    private h3rMapVersion _version {};
+    private String _version_name {};
+    private bool _has_players {}; //TODO an "enigma"
+    private int _nxy {}; // 36, 72, 108, 144
+    private int _nz {}; // 1 or 2
+    private String _name {};
+    private String _description {};
+    private byte _difficulty {};
+    private byte _level_cap {};
+    public struct Location final { int X{-1}, Y{-1}, Z{-1}; };
+    private struct Player final
+    {
+        bool Human {};    // Allowed to be
+        bool Computer {}; //
+        byte Behavior {};  // random, warrior, builder, explorer
+        short Factions {}; // Allowed
+        bool GenAtMT {};  // Generate at Main Town
+        Location MT {};
+        bool RndHero {};            // ?
+        byte CustomHeroId {};       // ?
+        byte CustomHeroPortrait {}; // ?
+        String CustomHeroName {};   // ?
+        struct AllowedHero final { byte Id; String Name; };
+        List <AllowedHero> AllowedHeroes {};
+    };
+    private List<Player> _players {};
+    private int _players_can_play {};
+    //
+    private byte _vcon {};
+    private bool _vcon_ai {};
+    private bool _vcon_default_too {};
+    private byte _vcon_type {};
+    private byte _vcon_hlevel {};
+    private byte _vcon_clevel {};
+    private Location _vcon_loc {};
+    private int _vcon_quantity {};
+    private byte _lcon {};
+    private short _lcon_quantity {};
+    private Location _lcon_loc {};
+    //
+    private List<byte> _teams {};
+
+    public Map(const String &, bool = true);
+    public ~Map();
+
+    public inline h3rMapVersion Version() const { return _version; }
+    public inline const String & VersionName() const { return _version_name; }
+    public inline int Size() const { return _nxy; }
+    public inline int Levels() const { return _nz; }
+    public inline const String & Name() const { return _name; }
+    public inline const String & Descr() const { return _description; }
+    public inline int Difficulty() const { return _difficulty; }
+    public inline int PlayerNum() const { return _players_can_play; }
+    public inline int VCon() const { return _vcon; }
+    public inline int LCon() const { return _lcon; }
+};// Map
 
 NAMESPACE_H3R
 
