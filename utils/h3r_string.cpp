@@ -186,4 +186,14 @@ List<String> String::Split(char token)
     return static_cast<List<String> &&>(list);
 }
 
+String String::EllipsisAt(int index) const
+{
+    H3R_ARG_EXC_IF(index < 0, "\"index\" can't be negative")
+    if (index >= Length ()) return *this;
+    if (0 == index) return "...";
+    Array<byte> buf {_b};
+    buf.Resize (index);
+    return static_cast<String &&>(String {buf, buf.Length ()} + "...");
+}
+
 NAMESPACE_H3R

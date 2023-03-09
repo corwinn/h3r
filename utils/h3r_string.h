@@ -147,6 +147,8 @@ class String final
     // One char token, for now.
     public List<String> Split(char token);
 
+    public String EllipsisAt(int index) const;//TODO testme
+
     public bool Empty() const { return ! (Length () > 0); }
 };// String
 
