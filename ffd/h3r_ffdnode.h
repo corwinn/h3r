@@ -55,7 +55,8 @@ class FFDNode
     private FFD::SNode * _f {}; // reference ; field node (Foo _f[])
     private bool _enabled {true}; // set by bool expr.
     private bool _signed {}; // signed machine types
-    private bool _array {}; // array of struct
+    private bool _array {}; // array of struct at _fields
+    private int _array_item_size {}; // array of struct at _data
     private bool _hk {}; // hash key
     private FFD::SNode * _arr_dim[3] {}; // references; store the dimensions
     // No point making it an LL:
@@ -333,11 +334,28 @@ class FFDNode
         }
     }
 
-    public inline int NodeCount() const
+    public inline int TotalNodeCount() const
     {
         int cnt {_fields.Count ()};
-        for (auto node : _fields) cnt += node->NodeCount ();
+        for (auto node : _fields) cnt += node->TotalNodeCount ();
         return cnt;
+    }
+
+    public inline bool ArrayOfFields() const
+    {
+        return _array && 0 == _array_item_size;
+    }
+    public inline int NodeCount() const
+    {
+        return ArrayOfFields () ? _fields.Count ()
+            : _data.Length () / _array_item_size;
+    };
+    public FFDNode * operator[](int i)
+    {
+        //LATER create unconditional FFDNode from memory stream;
+        //      sync with SNode::PrecomputeSize()
+        H3R_ENSURE(ArrayOfFields (), "Pre-computed size, not implemented yet")
+        return _fields[i];
     }
 };// FFDNode
 

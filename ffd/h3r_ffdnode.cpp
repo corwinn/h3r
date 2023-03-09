@@ -390,9 +390,10 @@ void FFDNode::EvalArray()
     H3R_ENSURE(final_size >= 0 && final_size <= 1<<21, // H3M_MAX_FILE_SIZE
         "suspicious array size")
     // item size
+    _array_item_size = 0;
     if (n->DType->IsMachType () || n->DType->IsEnum ()) {
         Dbg << " ++item size: " << n->DType->Size << " bytes" << EOL;
-        final_size *= n->DType->Size;
+        final_size *= (_array_item_size = n->DType->Size);
         H3R_ENSURE(final_size >= 0 && final_size <= 1<<21, // H3M_MAX_FILE_SIZE
             "suspicious array size")
         _data.Resize (final_size);
@@ -405,7 +406,7 @@ void FFDNode::EvalArray()
         int psize = n->DType->PrecomputeSize ();
         if (psize > 0) { // 41472 TTile for example
             Dbg << " ++item pre-computed size: " << psize << " bytes" << EOL;
-            final_size *= psize;
+            final_size *= (_array_item_size = psize);
             H3R_ENSURE(final_size >= 0 && final_size <= 1<<21,
                 "suspicious array size")
             // read once
