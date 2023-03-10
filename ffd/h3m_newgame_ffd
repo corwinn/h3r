@@ -67,7 +67,7 @@ enum Behavior byte
     BUILDER  2
     EXPLORER 3
 
-const MAP_PLAYERS          8
+const MAP_PLAYERS            8
 
 const MAP_DEFAULT_HERO_ID 0xff
 

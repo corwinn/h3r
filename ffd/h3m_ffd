@@ -380,7 +380,7 @@ struct PlayerCantPlay
 struct PrimaryHero
     bool Random
     byte Identity
-    byte Portrait (Identity != MAP_DEFAULT_HERO_ID)
+    byte Portrait  (Identity != MAP_DEFAULT_HERO_ID)
     MapString Name (Identity != MAP_DEFAULT_HERO_ID)
 
 struct PlayerCanPlay
@@ -394,7 +394,7 @@ struct PlayerCanPlay
     bool        Gen2     (HasMainTown && (Version != ROE)) // No idea whats this
     Location    MainTown (HasMainTown)
     PrimaryHero MainHero
-    byte        NoIdea             (Version != ROE)
+    byte        NoIdea                   (Version != ROE)
     CustomizedHero CustomizedHeroes[int] (Version != ROE)
 
 struct Player
