@@ -127,7 +127,7 @@ auto Log_stdout = [](const char * fmt, ...)
     int r {};
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release ____ {
-            thread_gate};//TODO "valgrind" points out thread_gate isn't init.
+            thread_gate};
         va_list ap;
         va_start (ap, fmt);
         r = vprintf (fmt, ap);
