@@ -439,8 +439,6 @@ bool FFD::SNode::ParseEnum(FFDParser & parser)
     return false;
 }// FFD::SNode::ParseEnum()
 
-FFD::FFD() {}
-
 FFD::~FFD()
 {
     while (_tail) {
@@ -555,7 +553,7 @@ static void resolve_all_types(FFD::SNode * n)
     n->WalkForward ([&](FFD::SNode * nn){ nn->ResolveTypes (); return true; });
 }
 
-FFDNode * FFD::File2Tree(const String & d, const String & f)
+FFD::FFD(const String & d)
 {
     OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
     MemoryStream br {&fh, static_cast<int>(fh.Size ())};
@@ -604,7 +602,10 @@ FFDNode * FFD::File2Tree(const String & d, const String & f)
     //    they're being resolved at "runtime".
     resolve_all_types (_head);
     print_tree (_head);
+}// FFD::FFD()
 
+FFDNode * FFD::File2Tree(const String & f)
+{
     // 3. Apply
     OS::FileStream fh2 {f, H3R_NS::OS::FileStream::Mode::ReadOnly};
     Stream * s {&fh2};

@@ -56,7 +56,7 @@ class FFDNode;
 //   data = FFD::File2Tree ("description", "file").
 class FFD
 {
-    public FFD();
+    public FFD(const String & d);
     public ~FFD();
 
     // TODO FFD::Load ("description").Parse ("foo");
@@ -323,7 +323,8 @@ class FFD
     // at its neighbors w/o accessing third party objects.
     private FFD::SNode * _tail {}, * _head {}; // DLL<FFD::SNode>
 
-    public FFDNode * File2Tree(const String & d, const String & f);
+    // public FFDNode * File2Tree(const String & d, const String & f);
+    public FFDNode * File2Tree(const String & f);
 };// FFD
 
 NAMESPACE_H3R
