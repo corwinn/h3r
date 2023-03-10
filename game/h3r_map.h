@@ -56,6 +56,11 @@ byte const H3R_DEFAULT_BYTE {255};
 
 class Map final
 {
+    // Not the best solution, but should do for the time being.
+    private static FFD * _ffd_h;
+    private static FFD * _ffd;
+    private static int _map_cnt;
+
     private FFDNode * _map {};
 
     // cached - no need for live update

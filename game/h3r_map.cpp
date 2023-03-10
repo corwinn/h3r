@@ -39,7 +39,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-static FFD global_ffd {};//TODO should this be "my" issue?
+FFD * Map::_ffd_h {};
+FFD * Map::_ffd {};
+int Map::_map_cnt {0};
 
 namespace {
 static void ReadLocation(FFDNode * node, Map::Location & l)
@@ -71,13 +73,25 @@ Map::~Map()
 {
     if (_map)
         H3R_DESTROY_OBJECT(_map, FFDNode)
+    if (! --_map_cnt) {
+        H3R_DESTROY_OBJECT(_ffd_h, FFD)
+        H3R_DESTROY_OBJECT(_ffd, FFD)
+    }
 }
 
 Map::Map(const String & h3m, bool header_only)
 {
-    _map = global_ffd.File2Tree (
+    H3R_ENSURE (_map_cnt >= 0 && _map_cnt < H3R_MAX_OPEN_MAP_COUNT, "No no")
+    H3R_ENSURE (_map_cnt < 0x4ffffffe, "No no no no")
+    if (! _map_cnt) {
         //LATER decide where remake resources will be
-        (header_only ? "ffd/h3m_newgame_ffd" : "ffd/h3m_ffd"), h3m);
+        H3R_CREATE_OBJECT(_ffd_h, FFD) {"ffd/h3m_newgame_ffd"};
+        H3R_CREATE_OBJECT(_ffd, FFD) {"ffd/h3m_ffd"};
+    }
+    _map_cnt++;
+
+    auto ffd = header_only ? _ffd_h : _ffd;
+    _map = ffd->File2Tree (h3m);
     H3R_ENSURE(nullptr != _map, "Map load failed")
 
     auto version_node = _map->Get<decltype(_map)> ("Version");
