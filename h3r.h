@@ -98,6 +98,8 @@ using h3rPlayerColor = byte;
 // more details.
 #define H3R_DEFAULT_PLAYER_COLOR 0
 
+#define H3R_MAX_OPEN_MAP_COUNT (1<<17)
+
 enum class h3rBitmapFormat {RGB, RGBA};
 using h3rBitmapCallback = byte* (*)();
 

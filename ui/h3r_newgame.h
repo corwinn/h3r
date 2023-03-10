@@ -41,6 +41,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_string.h"
 #include "h3r_event.h"
 #include "h3r_scrollbar.h"
+#include "h3r_criticalsection.h"
+#include "h3r_asyncfsenum.h"
+#include "h3r_map.h"
 
 H3R_NAMESPACE
 
@@ -128,7 +131,49 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     // The difficulty group; I don't see a reason to create a class yet.
     private void BtnGroup(EventArgs *);
     private Button * _btn_grp[5] {}; // refs
-};
+
+    private List<Map *> _maps {};
+    private OS::CriticalSection _map_gate {};
+    // Does the original do recursive scan: no.
+    // Does it do an async. scan: no.
+    // Does this remake do the above: yes.
+    //LATER think about an option to show progress somewhere
+    private class MapListInit final // header_only = true
+    {
+        private List<Map *> & MapList;
+        private OS::CriticalSection & MapListGate;
+        private AsyncFsEnum<MapListInit> _subject;
+        private int _files {}, _dirs {};
+        private bool HandleItem(
+            const H3R_NS::AsyncFsEnum<MapListInit>::EnumItem & itm)
+        {
+            if (itm.IsDirectory) return _dirs++, ! Stop;
+            _files++;
+            if (! itm.FileName.ToLower ().EndsWith (".h3m")) return ! Stop;
+            Dbg.Enabled = false;
+                bool header_only {};
+                Map * map {};
+                H3R_CREATE_OBJECT(map, Map) {itm.Name, header_only = true};
+            Dbg.Enabled = true;
+            {
+                __pointless_verbosity::CriticalSection_Acquire_finally_release
+                    ___ {MapListGate};
+                MapList.Add (map);
+            }
+            return ! Stop;
+        }
+        public MapListInit(String p, List<Map *> & l, OS::CriticalSection & lg)
+            : MapList{l}, MapListGate{lg}, _subject{
+//np base_path: p, observer: this, handle_on_item: &MapListInit::HandleItem
+                p, this, &MapListInit::HandleItem} {}
+        public bool Complete() const { return _subject.Complete (); }
+        public int Files() const { return _files; }
+        public int Directories() const { return _dirs; }
+        public bool Stop {false};
+    } _scan_for_maps; // MapListInit
+
+    protected void OnRender() override;
+};// NewGameDialog
 
 NAMESPACE_H3R
 

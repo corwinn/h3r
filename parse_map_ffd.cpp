@@ -52,12 +52,13 @@ int main(int argc, char ** argv)
 #if PARSE_6167
     if (3 != argc)
         return printf ("usage: parse_map_ffd descritpion_file h3m_file\n");
-    H3R_NS::FFD ffd {};
     Dbg.Enabled = false;
-        auto test = ffd.File2Tree (argv[1], argv[2]);
+        H3R_NS::FFD ffd {argv[1]};
+        auto test = ffd.File2Tree (argv[2]);
     Dbg.Enabled = true;
     Dbg << "nodes: " << test->TotalNodeCount ()
         << ", bytes: " << test->TotalNodeCount () * sizeof(*test) << EOL;
+    // test->PrintTree ();
     H3R_DESTROY_OBJECT(test, FFDNode)
 #else
     if (2 != argc)

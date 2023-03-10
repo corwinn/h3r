@@ -46,7 +46,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 
 NewGameDialog::NewGameDialog(Window * base_window)
-    : DialogWindow {base_window, Point {370, 585}}
+    : DialogWindow {base_window, Point {370, 585}}, _maps {}, _map_gate {},
+        _scan_for_maps {"Maps", _maps, _map_gate}
 {
     H3R_ENSURE(Window::MainWindow != nullptr,
         "NewGameDialog requires MainWindow")
@@ -307,7 +308,17 @@ NewGameDialog::NewGameDialog(Window * base_window)
     btn->Click.Subscribe (this, &NewGameDialog::Back);
 }// NewGameDialog::NewGameDialog()
 
-NewGameDialog::~NewGameDialog() {}
+NewGameDialog::~NewGameDialog()
+{
+    _scan_for_maps.Stop = true;
+
+    while (! _scan_for_maps.Complete ())
+        // The MainWindow could be unavailable, so just wait
+        OS::Thread::SleepForAWhile ();
+
+    for (auto m : _maps)
+        H3R_DESTROY_OBJECT(m, Map)
+}
 
 DialogResult NewGameDialog::ShowDialog()
 {
@@ -409,6 +420,8 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
         H3R_CREATE_OBJECT(_tab_avail_scen_vs, ScrollBar) {
             _tab_avail_scen, Point {375, 92}, 572-92};
             // _tab_avail_scen_vs->Scroll.Subscribe (this, ?);
+        _tab_avail_scen_vs->Min = 1; // just to be on the safe side
+        _tab_avail_scen_vs->LargeStep = 18; // defined by SCSelBck
 
         _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
     }
@@ -449,5 +462,32 @@ void NewGameDialog::BtnGroup(EventArgs * e)
             _btn_grp[i]->Checked = (_btn_grp[i] == args->Sender);
     working = false;
 }
+
+void NewGameDialog::OnRender()
+{
+    Window::OnRender ();
+    if (nullptr == _tab_avail_scen_vs) return;
+    /*if (_scan_for_maps.Complete ()) {
+        if (_tab_avail_scen_vs->Max != _maps.Count ()) {
+            printf ("Found: %d maps" EOL, _maps.Count ());
+            _tab_avail_scen_vs->Max = _maps.Count ();
+        }
+        return;
+    }*/
+    static bool show_once {};
+    if (show_once) return; // from here on, this is done on Scroll events only.
+    __pointless_verbosity::CriticalSection_Acquire_finally_release
+        ___ {_map_gate};
+    if (_tab_avail_scen_vs->Max != _maps.Count ())
+        _tab_avail_scen_vs->Max = _maps.Count ();
+    if (_maps.Count () >= _tab_avail_scen_vs->LargeStep) {
+        // the scroll-bar is 1-based
+        int a = _tab_avail_scen_vs->Min - 1;
+        int v = _tab_avail_scen_vs->LargeStep;
+        for (int i = a; i < v+a; i++)
+            printf ("maps[%d]: %s" EOL, i, (_maps[i])->Name ().AsZStr ());
+        show_once = true;
+    }
+}// NewGameDialog::OnRender()
 
 NAMESPACE_H3R
