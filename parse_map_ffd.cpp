@@ -62,10 +62,24 @@ int main(int argc, char ** argv)
         << "Levels : " << map.Levels () << EOL
         << "Name   : " << map.Name () << EOL
         << "Descr  : " << map.Descr ().EllipsisAt (77) << EOL
-        << "Diff.  : " << map.Difficulty () << EOL
+        << "Diff.  : " << map.DifficultyName () << EOL
         << "Players: " << map.PlayerNum () << EOL
-        << "VCon   : " << map.VCon() << EOL
-        << "LCon   : " << map.LCon() << EOL;
+        << "VCon   : " << map.VCon () << EOL
+        << "LCon   : " << map.LCon () << EOL;
+    for (int i = 0; i < map.PlayerNum (); i++) {
+        auto & p = map.PlayerAt (i);
+        Dbg << "Player #" << i << EOL
+            << " Primary Hero:" << EOL
+            << "  Random   : " << (p.PHRnd ? "yes" : "no") << EOL
+            << "  Identity : " << p.PHIdentity << EOL
+            << "  Portrait : " << p.PHPortrait << EOL
+            << "  Name     : " << p.PHName << EOL;
+        for (int j = 0; j < p.CustomizedHeroes.Count (); j++) {
+            Dbg << " Customized Hero #" << j << ":" << EOL
+                << "   Id       : " << p.CustomizedHeroes[j].Id << EOL
+                << "   Name     : " << p.CustomizedHeroes[j].Name << EOL;
+        }
+    }
 
     return 0;
 }
