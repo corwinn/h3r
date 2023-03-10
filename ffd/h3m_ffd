@@ -345,6 +345,13 @@ enum MapVersion int
     SOD 0x1c
     WOG 0x33
 
+enum MapDifficulty byte
+    Easy       0
+    Normal     1
+    Hard       2
+    Expert     3
+    Impossible 4
+
 enum Behavior byte
     RANDOM   0
     WARRIOR  1
@@ -524,7 +531,7 @@ format h3m
     bool           TwoLevels  // 0:1 or 1:2
     MapString      Name
     MapString      Description
-    byte           Difficulty
+    MapDifficulty  Difficulty
     byte           LevelLimit (Version != ROE)
     //
     Player         Players[MAP_PLAYERS]
