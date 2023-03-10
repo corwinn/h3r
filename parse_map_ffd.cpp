@@ -80,15 +80,15 @@ int main(int argc, char ** argv)
     for (int i = 0; i < map.PlayerNum (); i++) {
         auto & p = map.PlayerAt (i);
         Dbg << "Player #" << i << EOL
-            << " Primary Hero:" << EOL
-            << "  Random   : " << (p.PHRnd ? "yes" : "no") << EOL
-            << "  Identity : " << p.PHIdentity << EOL
-            << "  Portrait : " << p.PHPortrait << EOL
-            << "  Name     : " << p.PHName << EOL;
+            << " Primary Hero:"
+            << " Random: " << (p.PHRnd ? "yes" : "no")
+            << ", Identity: " << p.PHIdentity
+            << ", Portrait: " << p.PHPortrait
+            << ", Name: " << p.PHName << EOL;
         for (int j = 0; j < p.CustomizedHeroes.Count (); j++) {
-            Dbg << " Customized Hero #" << j << ":" << EOL
-                << "   Id       : " << p.CustomizedHeroes[j].Id << EOL
-                << "   Name     : " << p.CustomizedHeroes[j].Name << EOL;
+            Dbg << " Customized Hero #" << j << ":"
+                << " Id: " << p.CustomizedHeroes[j].Id
+                << ", Name: " << p.CustomizedHeroes[j].Name << EOL;
         }
     }
 #endif

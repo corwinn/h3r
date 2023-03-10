@@ -140,7 +140,7 @@ Map::Map(const String & h3m, bool header_only)
 
     auto vcon = _map->Get<decltype(_map)> ("SpecialWCon");
     H3R_ENSURE(nullptr != vcon, "SpecialWCon shall exist")
-    _vcon = vcon->Get<byte> ("VCon");
+    _vcon = (vcon->Get<byte> ("VCon") ^ H3R_DEFAULT_BYTE) + 1; // "vcdesc.txt"
     _vcon_default_too = vcon->Get<bool> ("AllowNormalAsWell");
     _vcon_ai = vcon->Get<bool> ("AppliesToAI");
     //TODO if s.o. decides to name them differently:
@@ -156,7 +156,7 @@ Map::Map(const String & h3m, bool header_only)
 
     auto lcon = _map->Get<decltype(_map)> ("SpecialLCon");
     H3R_ENSURE(nullptr != lcon, "SpecialLCon shall exist")
-    _lcon = lcon->Get<byte> ("LCon");
+    _lcon = (lcon->Get<byte> ("LCon") ^ H3R_DEFAULT_BYTE) + 1; // "lcdesc.txt"
     ReadLocation (lcon->Get<decltype(_map)> ("Pos"), _lcon_loc);
     _lcon_quantity = lcon->Get<short> ("Quantity");
 

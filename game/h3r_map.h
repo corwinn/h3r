@@ -46,6 +46,9 @@ using h3rObjRef = int;
 using h3rObjType = byte;
 using h3rCoord = byte;
 
+// "not set", "use the default", etc.
+byte const H3R_DEFAULT_BYTE {255};
+
 #define H3R_VERSION_ROE 0x0e
 #define H3R_VERSION_AB  0x15
 #define H3R_VERSION_SOD 0x1c
@@ -77,6 +80,10 @@ class Map final
         Location MT {};
         bool   PHRnd {};      // primary hero - is random
         byte   PHIdentity {}; // the pre-defined hero - ancestor
+        // Odd game behavior: if this happens to be 255 (use the default) - it
+        // fails to fetch the Identity default portrait (at the new game
+        // dialog), and states the hero is random, although PHRnd=0; I won't be
+        // replicating that.
         byte   PHPortrait {}; // 255: not customized?
         String PHName {};     // What if its not customized - a copy?
         struct CustomizedHero final { byte Id; String Name; };
@@ -85,7 +92,7 @@ class Map final
     private List<Player> _players {};
     private int _players_can_play {};
     //
-    private byte _vcon {};
+    private byte _vcon {}; // "vcdesc.txt" - line 0 has the "default"
     private bool _vcon_ai {};
     private bool _vcon_default_too {};
     private byte _vcon_type {};
@@ -93,7 +100,7 @@ class Map final
     private byte _vcon_clevel {};
     private Location _vcon_loc {};
     private int _vcon_quantity {};
-    private byte _lcon {};
+    private byte _lcon {}; // "lcdesc.txt" - line 0 has the "default"
     private short _lcon_quantity {};
     private Location _lcon_loc {};
     //
@@ -112,6 +119,18 @@ class Map final
     public inline const String & DifficultyName() const { return _diff_name; }
     public inline int PlayerNum() const { return _players_can_play; }
     public inline const Player & PlayerAt(int i) const { return _players[i]; }
+
+    // 255 means "default" - which happens to be line 0 at game resources.
+    // In order to avoid toying with "what would be a signed 8-bit", 255 gets
+    // translated to 0; use "vcdesc.txt" and "lcdesc.txt" (0-based) to get the
+    // text.
+    // E.g. these do not match the enum at the FFD, but the lines at the .txt.
+    //
+    // One more thing: there are two additional vcon at "vcdesc.txt" I haven't
+    // seen used:
+    //   "Defeat all monsters"
+    //   "Survive beyond a time limit"
+    //PERHAPS binary-edit a map to see if the game handles them.
     public inline int VCon() const { return _vcon; }
     public inline int LCon() const { return _lcon; }
 };// Map
