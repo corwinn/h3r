@@ -368,7 +368,7 @@ const MAP_FACTIONS  8 (Version == ROE)
 
 const MAP_DEFAULT_HERO_ID 0xff
 
-struct AllowedHero
+struct CustomizedHero
     byte      Id
     MapString Name
 
@@ -376,6 +376,12 @@ struct PlayerCantPlay
     byte Unk1[13] (Version >= SOD)
     byte Unk1[12] (Version == AB)
     byte Unk1[ 6] (Version == ROE)
+
+struct PrimaryHero
+    bool Random
+    byte Identity
+    byte Portrait (Identity != MAP_DEFAULT_HERO_ID)
+    MapString Name (Identity != MAP_DEFAULT_HERO_ID)
 
 struct PlayerCanPlay
     Behavior    AITactics
@@ -387,12 +393,9 @@ struct PlayerCanPlay
     bool        GenAtMT  (HasMainTown && (Version != ROE))
     bool        Gen2     (HasMainTown && (Version != ROE)) // No idea whats this
     Location    MainTown (HasMainTown)
-    bool        RandomHero
-    byte        CutomHeroId
-    byte        CutomHeroPortrait  (CutomHeroId != MAP_DEFAULT_HERO_ID)
-    MapString   CutomHeroName      (CutomHeroId != MAP_DEFAULT_HERO_ID)
+    PrimaryHero MainHero
     byte        NoIdea             (Version != ROE)
-    AllowedHero AllowedHeroes[int] (Version != ROE)
+    CustomizedHero CustomizedHeroes[int] (Version != ROE)
 
 struct Player
     bool Human
