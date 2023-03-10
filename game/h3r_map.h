@@ -64,9 +64,10 @@ class Map final
     private String _name {};
     private String _description {};
     private byte _difficulty {};
+    private String _diff_name {};
     private byte _level_cap {};
     public struct Location final { int X{-1}, Y{-1}, Z{-1}; };
-    private struct Player final
+    public struct Player final
     {
         bool Human {};    // Allowed to be
         bool Computer {}; //
@@ -74,12 +75,12 @@ class Map final
         short Factions {}; // Allowed
         bool GenAtMT {};  // Generate at Main Town
         Location MT {};
-        bool RndHero {};            // ?
-        byte CustomHeroId {};       // ?
-        byte CustomHeroPortrait {}; // ?
-        String CustomHeroName {};   // ?
-        struct AllowedHero final { byte Id; String Name; };
-        List <AllowedHero> AllowedHeroes {};
+        bool   PHRnd {};      // primary hero - is random
+        byte   PHIdentity {}; // the pre-defined hero - ancestor
+        byte   PHPortrait {}; // 255: not customized?
+        String PHName {};     // What if its not customized - a copy?
+        struct CustomizedHero final { byte Id; String Name; };
+        List <CustomizedHero> CustomizedHeroes {};
     };
     private List<Player> _players {};
     private int _players_can_play {};
@@ -108,7 +109,9 @@ class Map final
     public inline const String & Name() const { return _name; }
     public inline const String & Descr() const { return _description; }
     public inline int Difficulty() const { return _difficulty; }
+    public inline const String & DifficultyName() const { return _diff_name; }
     public inline int PlayerNum() const { return _players_can_play; }
+    public inline const Player & PlayerAt(int i) const { return _players[i]; }
     public inline int VCon() const { return _vcon; }
     public inline int LCon() const { return _lcon; }
 };// Map

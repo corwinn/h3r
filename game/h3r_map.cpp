@@ -78,10 +78,10 @@ Map::Map(const String & h3m, bool header_only)
     _map = global_ffd.File2Tree (
         //LATER decide where remake resources will be
         (header_only ? "ffd/h3m_newgame_ffd" : "ffd/h3m_ffd"), h3m);
-    H3R_ENSURE (_map != nullptr, "Map load failed")
+    H3R_ENSURE(nullptr != _map, "Map load failed")
 
     auto version_node = _map->Get<decltype(_map)> ("Version");
-    H3R_ENSURE(version_node, "\"Version\" shall exist")
+    H3R_ENSURE(nullptr != version_node, "\"Version\" shall exist")
     _version = version_node->AsInt ();
     H3R_ENSURE(ValidVersion (_version), "Unknown Version")
     if (version_node->IsEnum ())
@@ -92,7 +92,13 @@ Map::Map(const String & h3m, bool header_only)
     _nz = _map->Get<bool> ("TwoLevels") ? 2 : 1;
     _name = ReadMapString (_map->Get<decltype(_map)> ("Name"));
     _description = ReadMapString (_map->Get<decltype(_map)> ("Description"));
-    _difficulty = _map->Get<byte> ("Difficulty");
+
+    auto diff_node = _map->Get<decltype(_map)> ("Difficulty");
+    H3R_ENSURE(nullptr != diff_node, "\"Difficulty\" shall exist")
+    _difficulty = diff_node->AsByte ();
+    if (diff_node->IsEnum ())
+        _diff_name = diff_node->GetEnumName ();
+
     // gets "byte {}" on RoE
     _level_cap = _map->Get<byte> ("LevelLimit");
 
@@ -111,22 +117,24 @@ Map::Map(const String & h3m, bool header_only)
         p.Factions = player->Get<short> ("AllowedFactions");
 
         // while conditional, it returns "bool {}" when the node isn't there
-        p.GenAtMT = player->Get<decltype(player)> ("GenAtMT");
-        ReadLocation (player->Get<decltype(player)> ("MainTown"), p.MT);
+        p.GenAtMT = player->Get<decltype(_map)> ("GenAtMT");
+        ReadLocation (player->Get<decltype(_map)> ("MainTown"), p.MT);
 
-        p.RndHero = player->Get<bool> ("RandomHero");
-        p.CustomHeroId = player->Get<byte> ("CutomHeroId");
+        auto primary_hero = player->Get<decltype(_map)> ("MainHero");
+        H3R_ENSURE(nullptr != primary_hero, "\"MainHero\" shall exist")
+        p.PHRnd = primary_hero->Get<bool> ("Random");
+        p.PHIdentity = primary_hero->Get<byte> ("Identity");
         // 0xff seems to label "no such thing"
-        p.CustomHeroPortrait = player->Get<byte> ("CutomHeroPortrait", 255);
-        p.CustomHeroName = player->Get<String> ("CutomHeroName");
+        p.PHPortrait = primary_hero->Get<byte> ("Portrait", 255);
+        p.PHName = ReadMapString (primary_hero->Get<decltype(_map)> ("Name"));
 
-        auto allowed_heroes = player->Get<decltype(player)> ("AllowedHeroes");
-        if (allowed_heroes)
-            for (int j = 0; j < allowed_heroes->NodeCount (); j++) {
-                auto allowed_hero = allowed_heroes->operator[] (j);
-                auto & ah  = p.AllowedHeroes.Add (Player::AllowedHero {});
-                ah.Id = allowed_hero->Get<byte> ("Id");
-                ah.Name = allowed_hero->Get<String> ("Name");
+        auto c_heroes = player->Get<decltype(_map)> ("CustomizedHeroes");
+        if (c_heroes)
+            for (int j = 0; j < c_heroes->NodeCount (); j++) {
+                auto c_hero = c_heroes->operator[] (j);
+                auto & ah  = p.CustomizedHeroes.Add (Player::CustomizedHero {});
+                ah.Id = c_hero->Get<byte> ("Id");
+                ah.Name = ReadMapString (c_hero->Get<decltype(_map)> ("Name"));
             }
     }// (int i = 0; i < players->NodeCount (); i++)
 
@@ -143,13 +151,13 @@ Map::Map(const String & h3m, bool header_only)
     _vcon_type = vcon->Get<byte> ("Type"); // the type of object
     _vcon_hlevel = vcon->Get<byte> ("HallLevel");
     _vcon_clevel = vcon->Get<byte> ("CastleLevel");
-    ReadLocation (vcon->Get<decltype(vcon)> ("Pos"), _vcon_loc);
+    ReadLocation (vcon->Get<decltype(_map)> ("Pos"), _vcon_loc);
     _vcon_quantity = vcon->Get<int> ("Quantity");
 
     auto lcon = _map->Get<decltype(_map)> ("SpecialLCon");
     H3R_ENSURE(nullptr != lcon, "SpecialLCon shall exist")
     _lcon = lcon->Get<byte> ("LCon");
-    ReadLocation (lcon->Get<decltype(lcon)> ("Pos"), _lcon_loc);
+    ReadLocation (lcon->Get<decltype(_map)> ("Pos"), _lcon_loc);
     _lcon_quantity = lcon->Get<short> ("Quantity");
 
     auto teams = _map->Get<decltype(_map)> ("Team");
