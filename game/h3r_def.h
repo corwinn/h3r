@@ -99,7 +99,7 @@ class Def final : public ResDecoder
                 _sprites[i].Entries[j].~SubSprite ();
             _sprites[i].~Sprite ();
         }
-   }
+    }
     public int Num() const { return _n; }
     public inline Array<byte> * ToRGBA() override
     {
