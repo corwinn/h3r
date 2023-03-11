@@ -32,30 +32,54 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-// This will hold common rendering code for now.
-
-#ifndef _H3R_GC_H_
-#define _H3R_GC_H_
-
-//TODO rename me
+#ifndef _H3R_SPRITECONTROL_H_
+#define _H3R_SPRITECONTROL_H_
 
 #include "h3r.h"
+#include "h3r_point.h"
+#include "h3r_control.h"
 #include "h3r_def.h"
-#include "h3r_pcx.h"
+#include "h3r_string.h"
+
+// Maps sprite frames to values, since the game is using sprites for its
+// UI and frames are often used as a mapping to some object property; like
+// an icon, representing victory condition at a .h3m:
+//   SpriteControl ("SCNRVICT.def") scon;
+//   scon.Map ("ScnrVLaa.pcx", 1); // map.VCon is using "vcdesc.txt" mapping,
+//                                 // where "Acquire Artifact" is at line 1
+//   scon.Show (map.VCon);
+//TODO there are a few thing to think about here, regarding a description form
 
 H3R_NAMESPACE
 
-// Stops the program if it fails.
-// Uploads a sprite frame to the RE, using rkey, left, top, sprite, sprite_name,
-// frame_name, and depth. Returns the frame offset at the RE.
-int UploadFrame(int rkey, int l, int t, Def & sprite,
-    const String & sprite_name, const String & frame_name, h3rDepthOrder depth);
+// Its size is stored at the resource it is created from.
+// Map keys: 0-255. Re-mapping and multi-map aren't supported, because they are
+// not needed, yet.
+#undef public
+class SpriteControl: public Control
+#define public public:
+{
+    private int _rkey {};
+    private Def _sprite;
+    private String _sprite_name;
 
-// Stops the program if it fails.
-// Uploads a bitmap to the RE, using rkey, left, top, image, image_name, and
-// depth.
-void UploadFrame(int rkey, int l, int t, Pcx & image, const String & image_name,
-    h3rDepthOrder depth);
+    // This should do for now. If it happens to be not enough, then I'll
+    // complicate the code here.
+    private static int const MAP_MAX {256};
+    private int _map[MAP_MAX] {};
+
+    // Map sprite frame to an int key.
+    public void Map(const String &, int);
+
+    // Make "key" the currently visible sprite.
+    public void Show(int);
+
+    public SpriteControl(const String &, Control *, Point);
+    public SpriteControl(const String &, Window *, Point);
+    public ~SpriteControl() override;
+
+    private void OnVisibilityChanged() override;
+};// SpriteControl
 
 NAMESPACE_H3R
 

@@ -32,31 +32,37 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-// This will hold common rendering code for now.
-
-#ifndef _H3R_GC_H_
-#define _H3R_GC_H_
-
-//TODO rename me
-
-#include "h3r.h"
-#include "h3r_def.h"
-#include "h3r_pcx.h"
+#include "h3r_gc.h"
+#include "h3r_window.h"
+#include "h3r_renderengine.h"
 
 H3R_NAMESPACE
 
-// Stops the program if it fails.
-// Uploads a sprite frame to the RE, using rkey, left, top, sprite, sprite_name,
-// frame_name, and depth. Returns the frame offset at the RE.
 int UploadFrame(int rkey, int l, int t, Def & sprite,
-    const String & sprite_name, const String & frame_name, h3rDepthOrder depth);
+    const String & sprite_name, const String & frame_name, h3rDepthOrder depth)
+{
+    static Array<byte> * bitmap {};
+    auto s1 = sprite.Query (frame_name);
+    H3R_ENSUREF(nullptr != s1, "Sprite not found: %s", frame_name.AsZStr ())
+    bitmap = s1->ToRGBA ();
+    H3R_ENSUREF(nullptr != bitmap && ! bitmap->Empty (),
+        "Sprite->ToRGBA() failed: %s", frame_name.AsZStr ())
+    auto bitmap_data = []() { return bitmap->operator byte * (); };
+    return Window::UI->UploadFrame (rkey, l - sprite.Left (), t - sprite.Top (),
+        sprite.Width (), sprite.Height (), bitmap_data,
+        h3rBitmapFormat::RGBA, sprite.GetUniqueKey (sprite_name), depth);
+}
 
-// Stops the program if it fails.
-// Uploads a bitmap to the RE, using rkey, left, top, image, image_name, and
-// depth.
-void UploadFrame(int rkey, int l, int t, Pcx & image, const String & image_name,
-    h3rDepthOrder depth);
+void UploadFrame(int rkey, int l, int t, Pcx & image,
+    const String & image_name, h3rDepthOrder depth)
+{
+    static Array<byte> * bitmap {};
+    bitmap = image.ToRGBA ();
+    H3R_ENSUREF(nullptr != bitmap && ! bitmap->Empty (),
+                "Failed to load %s", image_name.AsZStr ())
+    auto bitmap_data = []() { return bitmap->operator byte * (); };
+    Window::UI->UploadFrame (rkey, l, t, image.Width (), image.Height (),
+        bitmap_data, h3rBitmapFormat::RGBA, image_name, depth);
+}
 
 NAMESPACE_H3R
-
-#endif

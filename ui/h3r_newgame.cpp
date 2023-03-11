@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_pcx.h"
 #include "h3r_label.h"
 #include "h3r_button.h"
+#include "h3r_gc.h"
 
 H3R_NAMESPACE
 
@@ -57,30 +58,11 @@ NewGameDialog::NewGameDialog(Window * base_window)
     auto RE = Window::UI;
 
     Pcx new_game_background {Game::GetResource ("gamselb1.pcx")};
-    auto byte_arr_ptr = new_game_background.ToRGB ();
-    if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
-        H3R_NS::Log::Err ("Failed to load gamselb1.pcx" EOL);
-        return;
-    }
-    static byte * bmp_data {};
-    auto bitmap_data = []() { return bmp_data; };
-    auto key = RE->GenKey ();
-    bmp_data = byte_arr_ptr->operator byte * ();
-    RE->UploadFrame (key, 0, 0, new_game_background.Width (),
-        new_game_background.Height (), bitmap_data,
-        h3rBitmapFormat::RGB, "gamselb1.pcx", Depth ());
+    UploadFrame (RE->GenKey (), 0, 0, new_game_background, "gamselb1.pcx",
+        Depth ());
 
     Pcx dlg_main {Game::GetResource ("GSelPop1.pcx")};
-    byte_arr_ptr = dlg_main.ToRGBA ();
-    if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
-        H3R_NS::Log::Err ("Failed to load GSelPop1.pcx" EOL);
-        return;
-    }
-    bmp_data = byte_arr_ptr->operator byte * ();
-    key = RE->GenKey ();
-    RE->UploadFrame (key, _l, _t, dlg_main.Width (),
-        dlg_main.Height (), bitmap_data,
-        h3rBitmapFormat::RGBA, "GSelPop1.pcx", Depth ());
+    UploadFrame (RE->GenKey (), _l, _t, dlg_main, "GSelPop1.pcx", Depth ());
 
     // By default if shows info about the 1st available scenario. The default
     // difficulty is normal: GSPBUT4.DEF.
@@ -97,16 +79,9 @@ NewGameDialog::NewGameDialog(Window * base_window)
         Point {422, 45}, this, H3R_TEXT_COLOR_GOLD};
 
     //TODO Property; Map Size Icon
-    static Array<byte> * bitmap {};
     Def sprite {Game::GetResource ("ScnrMpSz.def")};
-    auto s1 = sprite.Query ("Scnr144z.pcx");
-    H3R_ENSURE(s1, "Sprite not found")
-    bitmap = s1->ToRGBA ();
-    H3R_ENSURE(bitmap, "Sprite->ToRGBA() failed")
-    bmp_data = bitmap->operator byte * ();
-    RE->UploadFrame (RE->GenKey (), 714, 28, sprite.Width (), sprite.Height (),
-        bitmap_data,
-        h3rBitmapFormat::RGBA, sprite.GetUniqueKey ("ScnrMpSz.def"), Depth ());
+    UploadFrame (RE->GenKey (), 714, 28, sprite, "ScnrMpSz.def", "Scnr144z.pcx",
+        Depth ());
 
     // "Show Available Scenarios": smalfont.fnt, White, 440,85(up), 441,86(dn)
     Button * btn {};
@@ -163,15 +138,11 @@ NewGameDialog::NewGameDialog(Window * base_window)
     // ScnrVL.def - unknown purpose - looks like specular highlight of the
     //              above?! There is no similar thing for the Loss ones
     //TODO see if the index access is better alternative to string access
-    Def spritev {Game::GetResource ("SCNRVICT.def")};
-    s1 = spritev.Query ("ScnrVLbg.pcx");
-    H3R_ENSURE(s1, "Sprite not found")
-    bitmap = s1->ToRGBA ();
-    H3R_ENSURE(bitmap, "Sprite->ToRGBA() failed")
-    bmp_data = bitmap->operator byte * ();
-    RE->UploadFrame (RE->GenKey (), 421 - spritev.Left (), 309 - spritev.Top (),
-        spritev.Width (), spritev.Height (), bitmap_data,
-        h3rBitmapFormat::RGBA, spritev.GetUniqueKey ("SCNRVICT.def"), Depth ());
+    SpriteControl * spr_vcon {};
+    H3R_CREATE_OBJECT(spr_vcon, SpriteControl) {"SCNRVICT.def", this,
+        Point {421, 309}};
+    spr_vcon->Map ("ScnrVLbg.pcx", 5);
+    spr_vcon->Show (5);
     // Victory Condition: smalfont.fnt, White, 456,316
     H3R_CREATE_OBJECT(lbl, Label) {
         "Build a Grail structure or Defeat All Enemies", "smalfont.fnt",
@@ -187,15 +158,11 @@ NewGameDialog::NewGameDialog(Window * base_window)
     //  name[ 2]: "ScnrVLtl.pcx" - time expires
     //  name[ 3]: "ScnrVLls.pcx" - l all
     // Again, they all have offset of t,l = 1,1 because?
-    Def spritel {Game::GetResource ("SCNRLOSS.def")};
-    s1 = spritel.Query ("ScnrVLls.pcx");
-    H3R_ENSURE(s1, "Sprite not found")
-    bitmap = s1->ToRGBA ();
-    H3R_ENSURE(bitmap, "Sprite->ToRGBA() failed")
-    bmp_data = bitmap->operator byte * ();
-    RE->UploadFrame (RE->GenKey (), 422 - spritel.Left (), 366 - spritel.Top (),
-        spritel.Width (), spritel.Height (), bitmap_data,
-        h3rBitmapFormat::RGBA, spritev.GetUniqueKey ("SCNRLOSS.def"), Depth ());
+    SpriteControl * spr_lcon {};
+    H3R_CREATE_OBJECT(spr_lcon, SpriteControl) {"SCNRLOSS.def", this,
+        Point {422, 366}};
+    spr_lcon->Map ("ScnrVLls.pcx", 0);
+    spr_lcon->Show (0);
     // Loss Condition: smalfont.fnt, White, 456,375
     H3R_CREATE_OBJECT(lbl, Label) {
         "Loose All Your Towns and Heroes", "smalfont.fnt",
@@ -215,34 +182,18 @@ NewGameDialog::NewGameDialog(Window * base_window)
     //  name[ 6]: "iTG6Whit.pcx"
     //  name[ 7]: "iTG7Blak.pcx"
     Def spritef {Game::GetResource ("itgflags.def")};
-    for (int i = 0; i < spritef.SpriteNum (0); i++) { // render all flags
-        s1 = spritef.Query (0, i);
-        H3R_ENSURE(s1, "Sprite not found")
-        bitmap = s1->ToRGBA ();
-        H3R_ENSURE(bitmap, "Sprite->ToRGBA() failed")
-        bmp_data = bitmap->operator byte * ();
-        RE->UploadFrame (RE->GenKey (), 460+ i*spritef.Width (), 405,
-            spritef.Width (), spritef.Height (), bitmap_data,
-            h3rBitmapFormat::RGBA, spritef.GetUniqueKey ("itgflags.def"),
-            Depth ());
-    }
+    for (int i = 0; i < spritef.SpriteNum (0); i++) // render all flags
+        UploadFrame (RE->GenKey (), 460 + i*spritef.Width (), 405, spritef,
+            "itgflags.def", spritef.Query (0, i)->FrameName (), Depth ());
 
     // "Enemies:": smalfont.fnt, White, 586,409
     H3R_CREATE_OBJECT(lbl, Label) {"Enemies:", "smalfont.fnt",
         Point {586, 406}, this, H3R_TEXT_COLOR_WHITE};
     //TODO Property
     //     7 max - the eight one is drawn over the border
-    for (int i = 0; i < spritef.SpriteNum (0); i++) { // render all flags
-        s1 = spritef.Query (0, i);
-        H3R_ENSURE(s1, "Sprite not found")
-        bitmap = s1->ToRGBA ();
-        H3R_ENSURE(bitmap, "Sprite->ToRGBA() failed")
-        bmp_data = bitmap->operator byte * ();
-        RE->UploadFrame (RE->GenKey (), 640+ i*spritef.Width (), 405,
-            spritef.Width (), spritef.Height (), bitmap_data,
-            h3rBitmapFormat::RGBA, spritef.GetUniqueKey ("itgflags.def"),
-            Depth ());
-    }
+    for (int i = 0; i < spritef.SpriteNum (0); i++) // render all flags
+        UploadFrame (RE->GenKey (), 640 + i*spritef.Width (), 405, spritef,
+            "itgflags.def", spritef.Query (0, i)->FrameName (), Depth ());
 
     // "Map Diff:": smalfont.fnt, Gold, 429,439
     // Map Diff: the text is centered at top=473,x=416;500
@@ -421,7 +372,7 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
             _tab_avail_scen, Point {375, 92}, 572-92};
             // _tab_avail_scen_vs->Scroll.Subscribe (this, ?);
         _tab_avail_scen_vs->Min = 1; // just to be on the safe side
-        _tab_avail_scen_vs->LargeStep = 18; // defined by SCSelBck
+        _tab_avail_scen_vs->LargeStep = H3R_VISIBLE_LIST_ITEMS;
 
         _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
     }
@@ -466,14 +417,16 @@ void NewGameDialog::BtnGroup(EventArgs * e)
 void NewGameDialog::OnRender()
 {
     Window::OnRender ();
+
     if (nullptr == _tab_avail_scen_vs) return;
-    /*if (_scan_for_maps.Complete ()) {
+
+    if (_scan_for_maps.Complete ()) {
         if (_tab_avail_scen_vs->Max != _maps.Count ()) {
             printf ("Found: %d maps" EOL, _maps.Count ());
             _tab_avail_scen_vs->Max = _maps.Count ();
         }
-        return;
-    }*/
+    }
+
     static bool show_once {};
     if (show_once) return; // from here on, this is done on Scroll events only.
     __pointless_verbosity::CriticalSection_Acquire_finally_release

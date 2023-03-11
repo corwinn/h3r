@@ -32,31 +32,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 **** END LICENCE BLOCK ****/
 
-// This will hold common rendering code for now.
-
-#ifndef _H3R_GC_H_
-#define _H3R_GC_H_
-
-//TODO rename me
-
-#include "h3r.h"
-#include "h3r_def.h"
-#include "h3r_pcx.h"
+#include "h3r_spritecontrol.h"
+#include "h3r_game.h"
+#include "h3r_gc.h"
+#include "h3r_window.h"
 
 H3R_NAMESPACE
 
-// Stops the program if it fails.
-// Uploads a sprite frame to the RE, using rkey, left, top, sprite, sprite_name,
-// frame_name, and depth. Returns the frame offset at the RE.
-int UploadFrame(int rkey, int l, int t, Def & sprite,
-    const String & sprite_name, const String & frame_name, h3rDepthOrder depth);
+void SpriteControl::Map(const String & frame, int key)
+{
+    H3R_ENSURE(key >= 0 && key < SpriteControl::MAP_MAX, "Key out of range")
+    _map[key] = UploadFrame (_rkey, Pos ().Left, Pos ().Top, _sprite,
+        _sprite_name, frame, Depth ());
+}
 
-// Stops the program if it fails.
-// Uploads a bitmap to the RE, using rkey, left, top, image, image_name, and
-// depth.
-void UploadFrame(int rkey, int l, int t, Pcx & image, const String & image_name,
-    h3rDepthOrder depth);
+void SpriteControl::Show(int key)
+{
+    H3R_ENSURE(key >= 0 && key < SpriteControl::MAP_MAX, "Key out of range")
+    Window::UI->ChangeOffset (_rkey, _map[key]);
+}
+
+SpriteControl::SpriteControl(const String & sname, Control * base, Point p)
+    : Control {base}, _sprite {Game::GetResource (sname)}, _sprite_name {sname}
+{
+    SetPos (p);
+    _rkey = Window::UI->GenKey ();
+}
+
+SpriteControl::SpriteControl(const String & sname, Window * base, Point p)
+    : Control {base}, _sprite {Game::GetResource (sname)}, _sprite_name {sname}
+{
+    SetPos (p);
+    _rkey = Window::UI->GenKey ();
+}
+
+SpriteControl::~SpriteControl() {}
+
+void SpriteControl::OnVisibilityChanged()
+{
+    Window::UI->ChangeVisibility (_rkey, ! Hidden ());
+}
 
 NAMESPACE_H3R
-
-#endif

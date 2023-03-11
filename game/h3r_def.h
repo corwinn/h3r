@@ -256,6 +256,12 @@ class Def final : public ResDecoder
         return String::Format ("%s%d%s",
             _request->Name.AsZStr (), _request_id, suffix.AsZStr ());
     }
+    // Use Query() first.
+    public inline const String & FrameName() const
+    {
+        H3R_ENSURE(_request != nullptr, "Use Query() first.")
+        return _request->Name;
+    }
 
     private void Init();
 

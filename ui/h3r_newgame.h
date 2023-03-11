@@ -43,9 +43,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_scrollbar.h"
 #include "h3r_criticalsection.h"
 #include "h3r_asyncfsenum.h"
+#include "h3r_spritecontrol.h"
 #include "h3r_map.h"
 
 H3R_NAMESPACE
+
+// defined by SCSelBck.pcx
+#define H3R_VISIBLE_LIST_ITEMS 18
 
 // This one doesn't get drop shadow?!
 // And it isn't even centered?! How many thing one didn't usually notice :)
@@ -132,6 +136,29 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     private void BtnGroup(EventArgs *);
     private Button * _btn_grp[5] {}; // refs
 
+    private struct ListItem final
+    {
+        Label       * Players {}; // Total/Human
+        Label       * Size {};    // XL/L/M/S
+        SpriteControl Version;    // sprite
+        Label       * Name {};    //
+        SpriteControl Victory;    // sprite
+        SpriteControl Loss;       // sprite
+        //
+        Map * Map {};
+        ListItem(Control * base, Point ver_loc, Point vcon_loc, Point lcon_loc)
+            : Version {"ScSelC.def"  , base, ver_loc },
+              Victory {"SCNRVICT.def", base, vcon_loc},
+              Loss    {"SCNRLOSS.def", base, lcon_loc}
+        {
+        }
+        inline void SetMap(class Map * map)
+        {
+            this->Map = map;
+
+        }
+    };// ListItem
+    private List<ListItem *> _map_items {H3R_VISIBLE_LIST_ITEMS};
     private List<Map *> _maps {};
     private OS::CriticalSection _map_gate {};
     // Does the original do recursive scan: no.
