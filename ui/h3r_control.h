@@ -100,6 +100,7 @@ class Control
     public inline int Height() const { return _bb.Size.Height; }
     // Let controls know, their position has been changed.
     public Control * SetPos(int, int);
+    public Control * SetPos(Point);
     protected Control * SetPosNoNotify(int, int); // use at init.
 
     // Upload the Frames to the RenderEngine.

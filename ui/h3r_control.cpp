@@ -75,6 +75,7 @@ void Control::Resize(int w, int h)
     _bb.Size.X = w;
     _bb.Size.Y = h;
 }
+
 Control * Control::SetPos(int x, int y)
 {
     // Yep, it begins to become scary, when it begins framework-ify-ing itself.
@@ -84,6 +85,9 @@ Control * Control::SetPos(int x, int y)
     if (dx || dy) OnMoved (dx, dy);
     return this;
 }
+
+Control * Control::SetPos(Point p) { return SetPos (p.X, p.Y); }
+
 Control * Control::SetPosNoNotify(int x, int y)
 {
     _bb.Pos.X = x;
