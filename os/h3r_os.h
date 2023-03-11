@@ -97,6 +97,10 @@ void Log_stderr(const char *, ...);
     H3R_LOG_STDERR("Assertion Failed: %s", M) \
     H3R_NS::OS::Exit (H3R_NS::OS::EXIT_ASSERTION_FAILED); \
     }
+#define H3R_ENSUREF(C,M,...) if (! (C)) { \
+    H3R_LOG_STDERR("Assertion Failed: " M EOL, __VA_ARGS__) \
+    H3R_NS::OS::Exit (H3R_NS::OS::EXIT_ASSERTION_FAILED); \
+    }
 
 // Your program gets terminated if stderr is not available.
 inline void Log_stderr(const char * fmt, ...)

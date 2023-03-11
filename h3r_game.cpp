@@ -115,10 +115,8 @@ void Game::SilentLog(bool v)
     const auto & task_info = Game::RM->GetResource (name);
     while (! Game::RM->TaskComplete ())
         Game::ProcessThings (); // <- causing partially rendered UI!
-    if (nullptr == task_info.Resource)
-        Log::Err (String::Format ("Resource not found: %s" EOL,
-            name.AsZStr ()));
-    H3R_ENSURE(nullptr != task_info.Resource, "Resource not found")
+    H3R_ENSUREF(nullptr != task_info.Resource, "Resource not found: %s",
+        name.AsZStr ())
     return task_info.Resource;
 }
 
