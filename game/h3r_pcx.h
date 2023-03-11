@@ -151,6 +151,7 @@ class Pcx final : public ResDecoder
                 // Stream::Read (s, b, fmt); b += u8_num;
                 Stream::Read (*_s, b, _fmt);
                 byte t = *b; *b = *(b+2), *(b+2) = t;
+                if (4 == u8_num) *(b+3) = 255; // be non-transparent
                 b += u8_num;
             }
         return &buf;
