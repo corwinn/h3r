@@ -53,8 +53,8 @@ static bool InitBitmap(Button::TempSpriteData *& tsd, Def & sprite,
             sprite_name.AsZStr (), frame_name.AsZStr ()));
         return false;
     }
-    tsd->TopLeft.Left = sprite.Left ();
-    tsd->TopLeft.Top = sprite.Top ();
+    tsd->TopLeft.Left = sprite.FLeft ();
+    tsd->TopLeft.Top = sprite.FTop ();
     tsd->UniqueKey = sprite.GetUniqueKey (sprite_name);
     auto byte_arr = sprite.ToRGBA ();
     if (! byte_arr || byte_arr->Empty ()) {

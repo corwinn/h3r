@@ -48,8 +48,8 @@ int UploadFrame(int rkey, int l, int t, Def & sprite,
     H3R_ENSUREF(nullptr != bitmap && ! bitmap->Empty (),
         "Sprite->ToRGBA() failed: %s", frame_name.AsZStr ())
     auto bitmap_data = []() { return bitmap->operator byte * (); };
-    return Window::UI->UploadFrame (rkey, l - sprite.Left (), t - sprite.Top (),
-        sprite.Width (), sprite.Height (), bitmap_data,
+    return Window::UI->UploadFrame (rkey, l - sprite.FLeft (),
+        t - sprite.FTop (), sprite.Width (), sprite.Height (), bitmap_data,
         h3rBitmapFormat::RGBA, sprite.GetUniqueKey (sprite_name), depth);
 }
 
