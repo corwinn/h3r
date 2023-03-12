@@ -620,8 +620,11 @@ FFDNode * FFD::File2Tree(const String & f)
     if (h3m_zstream_attr) {
         int h, usize, size = static_cast<int>(fh2.Size ());
         Stream::Read (fh2, &h);
-        if (h != 0x88b1f)
+        if (h != 0x88b1f) {
+            // As it happens there are uncompressed maps - why not?!
+            fh2.Reset ();
             Dbg << "Unknown map format. Load could fail." << EOL;
+        }
         else {
             Stream::Read (fh2.End ().Seek (-4), &usize);
             H3R_ENSURE(usize > size && usize < H3M_MAX_FILE_SIZE,
