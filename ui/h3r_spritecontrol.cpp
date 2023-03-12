@@ -44,6 +44,7 @@ void SpriteControl::Map(const String & frame, int key)
     H3R_ENSURE(key >= 0 && key < SpriteControl::MAP_MAX, "Key out of range")
     _map[key] = UploadFrame (_rkey, Pos ().Left, Pos ().Top, _sprite,
         _sprite_name, frame, Depth ());
+    _has_frames = true;
 }
 
 void SpriteControl::Show(int key)
@@ -70,7 +71,8 @@ SpriteControl::~SpriteControl() {}
 
 void SpriteControl::OnVisibilityChanged()
 {
-    Window::UI->ChangeVisibility (_rkey, ! Hidden ());
+    if (_has_frames && _rkey > 0)
+        Window::UI->ChangeVisibility (_rkey, ! Hidden ());
 }
 
 NAMESPACE_H3R

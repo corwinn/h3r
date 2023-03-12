@@ -62,6 +62,7 @@ class SpriteControl: public Control
     private int _rkey {};
     private Def _sprite;
     private String _sprite_name;
+    private bool _has_frames {};
 
     // This should do for now. If it happens to be not enough, then I'll
     // complicate the code here.
