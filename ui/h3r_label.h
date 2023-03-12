@@ -58,6 +58,7 @@ class Label final : public Control, public IHandleEvents
     private class ScrollBar * _vs {};
     private int _num_visible {};
     private int _font_h {};
+    private int _last_tx {}, _last_ty {}; // used when _mb is present
 
     // text, font, location, manager, color, multi-line, multi-line box.
     // When mline, and the text is longer than the box height, a vscrollbar

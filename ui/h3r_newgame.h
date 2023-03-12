@@ -124,8 +124,6 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
 
     protected void OnKeyUp(const EventArgs &) override;
 
-    // private void HandleBeginClick(EventArgs *);
-    // private void HandleBackClick(EventArgs *);
     private void ToggleAvailScen(EventArgs *);
     private void ToggleRndScen(EventArgs *);
     private void ToggleAdvOpt(EventArgs *);
@@ -136,27 +134,69 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     private void BtnGroup(EventArgs *);
     private Button * _btn_grp[5] {}; // refs
 
-    private struct ListItem final
+    // H3R_VISIBLE_LIST_ITEMS
+    private struct ListItem final //TODO shouldn't this become a Control?
     {
-        Label       * Players {}; // Total/Human
-        Label       * Size {};    // XL/L/M/S
-        SpriteControl Version;    // sprite
-        Label       * Name {};    //
-        SpriteControl Victory;    // sprite
-        SpriteControl Loss;       // sprite
+        Control * Base {};
+        Label         * Players; // Total/Human
+        Label         * Size;    // XL/L/M/S
+        SpriteControl * Version; // sprite
+        Label         * Name;    //
+        SpriteControl * Victory; // sprite
+        SpriteControl * Loss;    // sprite
+        String        VConText {}; // these are used by 1 UI label
+        String        LConText {}; //
         //
         Map * Map {};
-        ListItem(Control * base, Point ver_loc, Point vcon_loc, Point lcon_loc)
-            : Version {"ScSelC.def"  , base, ver_loc },
-              Victory {"SCNRVICT.def", base, vcon_loc},
-              Loss    {"SCNRLOSS.def", base, lcon_loc}
+        ListItem(Control * base, Point p_loc, Point sz_loc, Point nm_loc,
+            Point ver_loc, Point vcon_loc, Point lcon_loc)
+            : Base{base}
         {
-        }
-        inline void SetMap(class Map * map)
-        {
-            this->Map = map;
+            H3R_CREATE_OBJECT(Players, Label) {"8/8", "smalfont.fnt", p_loc,
+                base, H3R_TEXT_COLOR_WHITE, false, Point {34, 26}};
+            H3R_CREATE_OBJECT(Size, Label) {"XL", "smalfont.fnt", sz_loc, base,
+                H3R_TEXT_COLOR_WHITE, false, Point {36, 26}};
 
-        }
+            H3R_CREATE_OBJECT(Version, SpriteControl) {"ScSelC.def", base,
+                ver_loc};
+            Version->Map ("ScSelCre.pcx", 0x0e);
+            Version->Map ("ScSelCab.pcx", 0x15);
+            Version->Map ("ScSelCsd.pcx", 0x1c);
+
+            H3R_CREATE_OBJECT(Name, Label) {"-", "smalfont.fnt", nm_loc, base,
+                H3R_TEXT_COLOR_WHITE, false, Point {186, 26}};
+
+            H3R_CREATE_OBJECT(Victory, SpriteControl) {"SCNRVICT.def", base,
+                vcon_loc};
+            // map to Map.VCon                  "vcdesc.txt": line "key":
+            Victory->Map ("ScnrVLaa.pcx",  1); // "Acquire Artifact"
+            Victory->Map ("ScnrVLac.pcx",  2); // "Accumulate Creatures"
+            Victory->Map ("ScnrVLar.pcx",  3); // "Accumulate Resources"
+            Victory->Map ("ScnrVLut.pcx",  4); // "Upgrade Town"
+            Victory->Map ("ScnrVLbg.pcx",  5); // "Build a Grail Structure"
+            Victory->Map ("ScnrVLdh.pcx",  6); // "Defeat Hero"
+            Victory->Map ("ScnrVLct.pcx",  7); // "Capture Town"
+            Victory->Map ("ScnrVLdm.pcx",  8); // "Defeat Monster"
+            Victory->Map ("ScnrVLfg.pcx",  9); // "Flag All Creature Dwellings"
+            Victory->Map ("ScnrVLfm.pcx", 10); // "Flag All Mines"
+            Victory->Map ("ScnrVLta.pcx", 11); // "Transport Artifact"
+            Victory->Map ("ScnrVLwn.pcx",  0); // "Defeat All Enemies"
+
+            H3R_CREATE_OBJECT(Loss, SpriteControl) {"SCNRLOSS.def", base,
+                lcon_loc};
+            // map to Map.LCon              "lcdesc.txt": line "key":
+            Loss->Map ("ScnrVLlt.pcx", 1); // "Lose Town"
+            Loss->Map ("ScnrVLlh.pcx", 2); // "Lose Hero"
+            Loss->Map ("ScnrVLtl.pcx", 3); // "Time Expires"
+            Loss->Map ("ScnrVLls.pcx", 0); // "Lose All Your Towns and Heroes"
+
+            Victory->Show (0);
+            Loss->Show (0);
+            // Everything is hidden
+            Control * all[6] = {Players, Size, Version, Name, Victory, Loss};
+            for (auto c : all) c->SetHidden (true);
+        }// ListItem::ListItem()
+        void SetMap(class Map * map);
     };// ListItem
     private List<ListItem *> _map_items {H3R_VISIBLE_LIST_ITEMS};
     private List<Map *> _maps {};
@@ -182,6 +222,12 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
                 Map * map {};
                 H3R_CREATE_OBJECT(map, Map) {itm.Name, header_only = true};
             Dbg.Enabled = true;
+            if (! map->SupportedVersion ()) { // SOD
+                Dbg << "Skipped unsupported map (" << map->VersionName ()
+                    << ") : " << itm.Name << EOL;
+                H3R_DESTROY_OBJECT(map, Map)
+                return ! Stop;
+            }
             {
                 __pointless_verbosity::CriticalSection_Acquire_finally_release
                     ___ {MapListGate};

@@ -86,8 +86,10 @@ void Label::SetText()
         if (_mb.X && _mb.Y) { // (center, center) at it
             auto & TRE = TextRenderingEngine::One ();
             auto ts = TRE.MeasureText (_font, _text);
-            SetPosNoNotify (Pos ().X + ((_mb.Width - ts.Width)/2),
-                Pos ().Y + ((_mb.Height - ts.Height)/2));
+            SetPosNoNotify (Pos ().X + ((_mb.Width - ts.Width)/2) - _last_tx,
+                Pos ().Y + ((_mb.Height - ts.Height)/2) - _last_ty);
+            _last_tx = (_mb.Width - ts.Width)/2;
+            _last_ty = (_mb.Height - ts.Height)/2;
         }
         if (_tkeys.Count () <= 0)
             Window::UI->UploadText (_tkeys.Add (RE->GenTextKey ()), _font,

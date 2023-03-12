@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_label.h"
 #include "h3r_button.h"
 #include "h3r_gc.h"
+#include "h3r_txt.h"
 
 H3R_NAMESPACE
 
@@ -262,10 +263,13 @@ NewGameDialog::NewGameDialog(Window * base_window)
 NewGameDialog::~NewGameDialog()
 {
     _scan_for_maps.Stop = true;
-
     while (! _scan_for_maps.Complete ())
         // The MainWindow could be unavailable, so just wait
         OS::Thread::SleepForAWhile ();
+
+    for (int i = 0; i < _map_items.Count (); i++)
+        H3R_DESTROY_NESTED_OBJECT(_map_items[i], NewGameDialog::ListItem,
+            ListItem)
 
     for (auto m : _maps)
         H3R_DESTROY_OBJECT(m, Map)
@@ -289,16 +293,6 @@ void NewGameDialog::OnKeyUp(const EventArgs & e)
     }
 }
 
-/*void NewGameDialog::HandleBeginClick(EventArgs *)
-{
-    _dr = DialogResult::OK; _has_dr = true;
-}
-
-void NewGameDialog::HandleBackClick(EventArgs *)
-{
-    _dr = DialogResult::Cancel; _has_dr = true;
-}*/
-
 void NewGameDialog::ToggleAvailScen(EventArgs *)
 {
     auto RE = Window::UI;
@@ -306,25 +300,14 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
     if (! _tab_avail_scen) {
         H3R_CREATE_OBJECT(_tab_avail_scen, Control) {this};
         _tab_avail_scen->SetPos (3, 6);
+
         // _tab_avail_scen->Resize (tab_ascen.Width (), tab_ascen.Height ());
         // SCSelBck.pcx - 575 x 585
-
-        static byte * bmp_data {};
-        // static Array<byte> * bitmap {};
-        auto bitmap_data = []() { return bmp_data; };
-
         //TODO helper or description?
         Pcx tab_ascen {Game::GetResource ("SCSelBck.pcx")};
-        auto byte_arr_ptr = tab_ascen.ToRGBA ();
-        if (! byte_arr_ptr || byte_arr_ptr->Empty ()) {
-            H3R_NS::Log::Err ("Failed to load SCSelBck.pcx" EOL);
-            return;
-        }
-        bmp_data = byte_arr_ptr->operator byte * ();
-        RE->UploadFrame (_tab_avail_scen_keys.Add (RE->GenKey ()),
+        UploadFrame (_tab_avail_scen_keys.Add (RE->GenKey ()),
             _tab_avail_scen->Pos ().Left, _tab_avail_scen->Pos ().Top,
-            tab_ascen.Width (), tab_ascen.Height (), bitmap_data,
-            h3rBitmapFormat::RGBA, "SCSelBck.pcx", Depth ());
+            tab_ascen, "SCSelBck.pcx", Depth ());
 
         // "Select a Scenario to Play" - MedFont.fnt, 114,28(center at
         // 24,22-392,46), gold
@@ -374,6 +357,19 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
         _tab_avail_scen_vs->Min = 1; // just to be on the safe side
         _tab_avail_scen_vs->LargeStep = H3R_VISIBLE_LIST_ITEMS;
 
+        int x1=24, x2=56, x3=97, x4=122, x5=311, x6=344, y=121, y2=124;
+        NewGameDialog::ListItem * itm {};
+        //TODO this is causing OnRender due to the threaded IO
+        for (int i = 0; i < H3R_VISIBLE_LIST_ITEMS; i++) {
+            H3R_CREATE_OBJECT(itm, NewGameDialog::ListItem) {
+                _tab_avail_scen, Point {x1, y}, Point {x2, y}, Point {x4, y},
+                Point {x3, y2+1}, Point {x5, y2}, Point {x6, y2}
+            };
+            _map_items.Add (itm);
+            y+=25, y2+=25;
+        }
+
+        // hide all
         _tab_avail_scen->SetHidden (! _tab_avail_scen->Hidden ());
     }
     //
@@ -433,14 +429,39 @@ void NewGameDialog::OnRender()
         ___ {_map_gate};
     if (_tab_avail_scen_vs->Max != _maps.Count ())
         _tab_avail_scen_vs->Max = _maps.Count ();
-    if (_maps.Count () >= _tab_avail_scen_vs->LargeStep) {
+    if (_maps.Count () >= _tab_avail_scen_vs->LargeStep
+        && _map_items.Count () == H3R_VISIBLE_LIST_ITEMS) {
         // the scroll-bar is 1-based
         int a = _tab_avail_scen_vs->Min - 1;
         int v = _tab_avail_scen_vs->LargeStep;
         for (int i = a; i < v+a; i++)
-            printf ("maps[%d]: %s" EOL, i, (_maps[i])->Name ().AsZStr ());
+            _map_items[i-a]->SetMap (_maps[i]);
+            // printf ("maps[%d]: %s" EOL, i, (_maps[i])->Name ().AsZStr ());
         show_once = true;
     }
 }// NewGameDialog::OnRender()
+
+void NewGameDialog::ListItem::SetMap(class Map * map)
+{
+    /*static Txt vcon_txt {Game::GetResource ("vcdesc.txt")};
+    static Txt lcon_txt {Game::GetResource ("lcdesc.txt")};*/
+    this->Map = map;
+    Players->SetText (
+        String::Format ("%d/%d", map->PlayerNum (), map->HumanPlayers ()));
+    Size->SetText (map->SizeName ());
+    Version->Show (map->Version ());
+    Name->SetText (map->Name ());
+    Victory->Show (map->VCon ());
+    Loss->Show (map->LCon ());
+    //TODO pointless for now; show all
+    /*Control * all[6] = {Players, Size, Version, Name, Victory, Loss};
+    for (auto c : all) c->SetHidden (false);*/
+
+    /*if (map->VConDefaultToo ())
+        VConText = String::Format ("%s or %s", vcon_txt[map->VCon ()].AsZStr (),
+            vcon_txt[0].AsZStr ());
+    else VConText = vcon_txt[map->VCon ()];
+    LConText = lcon_txt[map->LCon ()];*/
+}
 
 NAMESPACE_H3R
