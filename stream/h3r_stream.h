@@ -53,6 +53,7 @@ class Stream
 
     // true when the stream is ok
     public virtual inline operator bool() { return _f->operator bool(); }
+    public virtual inline operator bool() const { return _f->operator bool(); }
 
     // Tell()-based: Seek (x - Tell ())
     public virtual inline Stream & Seek(off_t pos)
