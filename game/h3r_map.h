@@ -96,6 +96,7 @@ class Map final
     };
     private List<Player> _players {};
     private int _players_can_play {};
+    private int _players_human {};
     //
     private byte _vcon {}; // "vcdesc.txt" - line 0 has the "default"
     private bool _vcon_ai {};
@@ -113,16 +114,29 @@ class Map final
 
     public Map(const String &, bool = true);
     public ~Map();
+    // defines if this map is supported by this project
+    public bool SupportedVersion();
 
     public inline h3rMapVersion Version() const { return _version; }
     public inline const String & VersionName() const { return _version_name; }
     public inline int Size() const { return _nxy; }
+    public inline const String SizeName() const
+    {
+        switch (_nxy) {
+            case  36: return "S";
+            case  72: return "M";
+            case 108: return "L";
+            case 144: return "XL";
+            default: return "42";//TODO
+        };
+    }
     public inline int Levels() const { return _nz; }
     public inline const String & Name() const { return _name; }
     public inline const String & Descr() const { return _description; }
     public inline int Difficulty() const { return _difficulty; }
     public inline const String & DifficultyName() const { return _diff_name; }
     public inline int PlayerNum() const { return _players_can_play; }
+    public inline int HumanPlayers() const { return _players_human; }
     public inline const Player & PlayerAt(int i) const { return _players[i]; }
 
     // 255 means "default" - which happens to be line 0 at game resources.
@@ -137,6 +151,7 @@ class Map final
     //   "Survive beyond a time limit"
     //PERHAPS binary-edit a map to see if the game handles them.
     public inline int VCon() const { return _vcon; }
+    public inline bool VConDefaultToo() const { return _vcon_default_too; }
     public inline int LCon() const { return _lcon; }
 };// Map
 

@@ -39,6 +39,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+bool Map::SupportedVersion()
+{
+    return H3R_VERSION_SOD == _version || H3R_VERSION_AB == _version
+        || H3R_VERSION_ROE == _version;
+}
+
 FFD * Map::_ffd_h {};
 FFD * Map::_ffd {};
 int Map::_map_cnt {0};
@@ -125,6 +131,7 @@ Map::Map(const String & h3m, bool header_only)
         p.Computer = player->Get<bool> ("Computer");
         if (! p.Human && ! p.Computer) continue;
         _players_can_play++;
+        if (p.Human) _players_human++;
         p.Behavior = player->Get<byte> ("AITactics");
 
         // its conditional, but AsShort() handles byte as well
@@ -154,7 +161,8 @@ Map::Map(const String & h3m, bool header_only)
 
     auto vcon = _map->Get<decltype(_map)> ("SpecialWCon");
     H3R_ENSURE(nullptr != vcon, "SpecialWCon shall exist")
-    _vcon = (vcon->Get<byte> ("VCon") ^ H3R_DEFAULT_BYTE) + 1; // "vcdesc.txt"
+    _vcon = vcon->Get<byte> ("VCon");
+    if (H3R_DEFAULT_BYTE == _vcon) _vcon = 0; else _vcon++; // "vcdesc.txt"
     _vcon_default_too = vcon->Get<bool> ("AllowNormalAsWell");
     _vcon_ai = vcon->Get<bool> ("AppliesToAI");
     //TODO if s.o. decides to name them differently:
@@ -170,7 +178,8 @@ Map::Map(const String & h3m, bool header_only)
 
     auto lcon = _map->Get<decltype(_map)> ("SpecialLCon");
     H3R_ENSURE(nullptr != lcon, "SpecialLCon shall exist")
-    _lcon = (lcon->Get<byte> ("LCon") ^ H3R_DEFAULT_BYTE) + 1; // "lcdesc.txt"
+    _lcon = lcon->Get<byte> ("LCon");
+    if (H3R_DEFAULT_BYTE == _lcon) _lcon = 0; else _lcon++; // "lcdesc.txt"
     ReadLocation (lcon->Get<decltype(_map)> ("Pos"), _lcon_loc);
     _lcon_quantity = lcon->Get<short> ("Quantity");
 
