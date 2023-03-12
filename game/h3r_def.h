@@ -117,8 +117,8 @@ class Def final : public ResDecoder
     public inline int Height() override { return _h; }
 
     // For the last queried one only.
-    public inline int Left() const { return _request ? _request->H.Left : 0; }
-    public inline int Top() const { return _request ? _request->H.Top : 0; }
+    public inline int FLeft() const { return _request ? _request->H.Left : 0; }
+    public inline int FTop() const { return _request ? _request->H.Top : 0; }
 
     private struct SubSprite final
     {
