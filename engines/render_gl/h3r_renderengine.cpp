@@ -243,7 +243,7 @@ void RenderEngine::ChangeVisibility(int key, bool value)
 {
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
     RenderEngine::Entry & e = _entries[key];
-    if (e.Visible == value) return;
+    if (e.Visible == value || 0 == e.Frames) return;
     e.Visible = value;
     auto & lists = ListByTexId (e.Texture ());
     if (value) lists._index[e.Key] = e.Base + e.Offset;
@@ -256,7 +256,7 @@ void RenderEngine::ChangeOffset(int key, GLint value)
     // printf ("RenderEngine::ChangeOffset: key: %d, value: %d" EOL,
     //    key, value);
     H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
-    if (_entries[key].Offset == value) return;
+    if (_entries[key].Offset == value || 0 == _entries[key].Frames) return;
     _entries[key].Offset = value;
     auto & lists = ListByTexId (_entries[key].Texture ());
     // printf ("RenderEngine::ChangeOffset: t: %d" EOL,

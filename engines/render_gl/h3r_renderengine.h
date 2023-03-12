@@ -229,6 +229,9 @@ class RenderEngine final
     // "render_order": if you want "a" drawn over "b", "a.order" shall be >
     // "b.order". There shall be no more than 256 distinct things one over
     // another, so a byte should be enough; change it to short otherwise.
+    //
+    // GenKey() shall be followed by all of its frames; there is no deferred
+    // frame upload, yet. LATER VBO.Insert()
     public int UploadFrame(
         int key, GLint x, GLint y, GLint w, GLint h,
         h3rBitmapCallback data, h3rBitmapFormat fmt,
