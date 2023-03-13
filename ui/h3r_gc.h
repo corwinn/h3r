@@ -48,6 +48,9 @@ H3R_NAMESPACE
 // Stops the program if it fails.
 // Uploads a sprite frame to the RE, using rkey, left, top, sprite, sprite_name,
 // frame_name, and depth. Returns the frame offset at the RE.
+// ft: Apply sprite.FLeft () and sprite.FTop () transform.
+//TODO find out why some sprites require it (mm buttons) and some do not
+// (scenario list item icons)
 int UploadFrame(int rkey, int l, int t, Def & sprite,
     const String & sprite_name, const String & frame_name, h3rDepthOrder depth);
 
