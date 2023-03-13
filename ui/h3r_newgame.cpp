@@ -43,13 +43,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_label.h"
 #include "h3r_button.h"
 #include "h3r_gc.h"
-#include "h3r_txt.h"
 
 H3R_NAMESPACE
 
 NewGameDialog::NewGameDialog(Window * base_window)
-    : DialogWindow {base_window, Point {370, 585}}, _maps {}, _map_gate {},
-        _scan_for_maps {"Maps", _maps, _map_gate}
+    : DialogWindow {base_window, Point {370, 585}},
+    _maps {}, _map_gate {},
+    _scan_for_maps {"Maps", _maps, _map_gate} // async
 {
     H3R_ENSURE(Window::MainWindow != nullptr,
         "NewGameDialog requires MainWindow")
@@ -67,22 +67,26 @@ NewGameDialog::NewGameDialog(Window * base_window)
 
     // By default if shows info about the 1st available scenario. The default
     // difficulty is normal: GSPBUT4.DEF.
+    // Text Colors: Gold: 238,214,123; White: 255,255,255
 
-    // Set text color.
-    // Gold: 238,214,123; White: 255,255,255
     // "Scenario Name:" smallfont.fnt, Gold, 422,31
     Label * lbl {};
-    H3R_CREATE_OBJECT(lbl, Label) {"Scenario Name:", "smalfont.fnt",
+    H3R_CREATE_OBJECT(lbl, Label) {
+        H3R_TEXT(GENRLTXT, H3R_GENRLTXT_SCENARIO_NAME), "smalfont.fnt",
         Point {422, 28}, this, H3R_TEXT_COLOR_GOLD};
 
-    //TODO Property; Scenario Name: bigfont.fnt, Gold,     422,50
-    H3R_CREATE_OBJECT(lbl, Label) {"H3R", "bigfont.fnt",
+    // Scenario Name: bigfont.fnt, Gold,     422,50
+    H3R_CREATE_OBJECT(_lid_sname_lbl, Label) {"H3R", "bigfont.fnt",
         Point {422, 45}, this, H3R_TEXT_COLOR_GOLD};
 
-    //TODO Property; Map Size Icon
-    Def sprite {Game::GetResource ("ScnrMpSz.def")};
-    UploadFrame (RE->GenKey (), 714, 28, sprite, "ScnrMpSz.def", "Scnr144z.pcx",
-        Depth ());
+    // Map Size Icon
+    H3R_CREATE_OBJECT(_lid_map_size_sc, SpriteControl) {"ScnrMpSz.def", this,
+        Point {714, 28}};
+    _lid_map_size_sc->Map ("ScnrAllz.pcx", 0);
+    _lid_map_size_sc->Map ("Scnr036z.pcx", 36);
+    _lid_map_size_sc->Map ("Scnr072z.pcx", 72);
+    _lid_map_size_sc->Map ("Scnr108z.pcx", 108);
+    _lid_map_size_sc->Map ("Scnr144z.pcx", 144);
 
     // "Show Available Scenarios": smalfont.fnt, White, 440,85(up), 441,86(dn)
     Button * btn {};
@@ -91,8 +95,8 @@ NewGameDialog::NewGameDialog(Window * base_window)
     btn->SetPos (414, 81);
     btn->UploadFrames ();
     btn->Click.Subscribe (this, &NewGameDialog::ToggleAvailScen);
-    btn->SetText ("Show Available Scenarios", "smalfont.fnt",
-        H3R_TEXT_COLOR_WHITE);
+    btn->SetText (H3R_TEXT(GENRLTXT, H3R_GENRLTXT_SHOW_AVAIL_SCEN),
+        "smalfont.fnt", H3R_TEXT_COLOR_WHITE);
 
     // "Random Map": smalfont.fnt, White, 475,109(up), 476,110(dn)
     H3R_CREATE_OBJECT(btn, Button) {
@@ -100,76 +104,63 @@ NewGameDialog::NewGameDialog(Window * base_window)
     btn->SetPos (414, 105);
     btn->UploadFrames ();
     btn->Click.Subscribe (this, &NewGameDialog::ToggleRndScen);
-    btn->SetText ("Random Map", "smalfont.fnt",
+    btn->SetText (H3R_TEXT(GENRLTXT, H3R_GENRLTXT_RANDOM_MAP), "smalfont.fnt",
         H3R_TEXT_COLOR_WHITE);
 
     // "Scenario Description:": smalfont.fnt, Gold, 422,141
-    H3R_CREATE_OBJECT(lbl, Label) {"Scenario Description:", "smalfont.fnt",
+    H3R_CREATE_OBJECT(lbl, Label) {
+        H3R_TEXT(GENRLTXT, H3R_GENRLTXT_SCENARIO_DESCR), "smalfont.fnt",
         Point {422, 138}, this, H3R_TEXT_COLOR_GOLD};
 
     // Scenario Description: smalfont.fnt, White, 422, 155; layout word-wrap
     // at x=740; after y=269. I won't reproduce the weird behavior of the
     // original, like word-wrapping with imaginary scroll-bar; and scroll-bar
     // jumping to max position on item switching.
-    //TODO Property
-    H3R_CREATE_OBJECT(lbl, Label) {
+    H3R_CREATE_OBJECT(_lid_sdescr_lbl, Label) {
         "A remake to be of the game engine of the well-known computer game "
         "\"Heroes of Might and Magic III\" and its official expansions.",
         "smalfont.fnt", Point {422, 155}, this, H3R_TEXT_COLOR_WHITE, true,
         Point {741-422, 270-155}};
 
     // "Victory Condition:": smalfont.fnt, Gold, 422,292
-    H3R_CREATE_OBJECT(lbl, Label) {"Victory Condition:", "smalfont.fnt",
-        Point {422, 289}, this, H3R_TEXT_COLOR_GOLD};
-    //TODO Property (bitmap+text)
+    H3R_CREATE_OBJECT(lbl, Label) {H3R_TEXT(GENRLTXT, H3R_GENRLTXT_VCON),
+        "smalfont.fnt", Point {422, 289}, this, H3R_TEXT_COLOR_GOLD};
     // victory condition mini-icon: SCNRVICT.def (w:  29, h:  21):
-    //  name[ 0]: "ScnrVLaa.pcx" - a artifact
-    //  name[ 1]: "ScnrVLac.pcx" - a creatures
-    //  name[ 2]: "ScnrVLar.pcx" - a resources
-    //  name[ 3]: "ScnrVLut.pcx" - up town
-    //  name[ 4]: "ScnrVLbg.pcx" - grail
-    //  name[ 5]: "ScnrVLdh.pcx" - d hero
-    //  name[ 6]: "ScnrVLct.pcx" - capture town
-    //  name[ 7]: "ScnrVLdm.pcx" - d monster
-    //  name[ 8]: "ScnrVLfg.pcx" - flag cre dwe
-    //  name[ 9]: "ScnrVLfm.pcx" - flag mines
-    //  name[10]: "ScnrVLta.pcx" - transport art
-    //  name[11]: "ScnrVLwn.pcx" - defeat all
-    // They all have offset of t,l = 1,1 because?
-    // ScnrVL.def - unknown purpose - looks like specular highlight of the
-    //              above?! There is no similar thing for the Loss ones
-    //TODO see if the index access is better alternative to string access
-    SpriteControl * spr_vcon {};
-    H3R_CREATE_OBJECT(spr_vcon, SpriteControl) {"SCNRVICT.def", this,
+    // ScnrVL.def - unknown purpose - looks like specular highlight?!
+    H3R_CREATE_OBJECT(_lid_vcon_sc, SpriteControl) {"SCNRVICT.def", this,
         Point {420, 308}};
-    spr_vcon->Map ("ScnrVLbg.pcx", 5);
-    spr_vcon->Show (5);
+    _lid_vcon_sc->Map ("ScnrVLwn.pcx",  0); // "Defeat All Enemies"
+    _lid_vcon_sc->Map ("ScnrVLaa.pcx",  1); // "Acquire Artifact"
+    _lid_vcon_sc->Map ("ScnrVLac.pcx",  2); // "Accumulate Creatures"
+    _lid_vcon_sc->Map ("ScnrVLar.pcx",  3); // "Accumulate Resources"
+    _lid_vcon_sc->Map ("ScnrVLut.pcx",  4); // "Upgrade Town"
+    _lid_vcon_sc->Map ("ScnrVLbg.pcx",  5); // "Build a Grail Structure"
+    _lid_vcon_sc->Map ("ScnrVLdh.pcx",  6); // "Defeat Hero"
+    _lid_vcon_sc->Map ("ScnrVLct.pcx",  7); // "Capture Town"
+    _lid_vcon_sc->Map ("ScnrVLdm.pcx",  8); // "Defeat Monster"
+    _lid_vcon_sc->Map ("ScnrVLfg.pcx",  9); // "Flag All Creature Dwellings"
+    _lid_vcon_sc->Map ("ScnrVLfm.pcx", 10); // "Flag All Mines"
+    _lid_vcon_sc->Map ("ScnrVLta.pcx", 11); // "Transport Artifact"
     // Victory Condition: smalfont.fnt, White, 456,316
-    H3R_CREATE_OBJECT(lbl, Label) {
-        "Build a Grail structure or Defeat All Enemies", "smalfont.fnt",
-        Point {456, 313}, this, H3R_TEXT_COLOR_WHITE};
+    H3R_CREATE_OBJECT(_lid_vcon_lbl, Label) {H3R_TEXT(vcdesc, H3R_VCON_DEFAULT),
+        "smalfont.fnt", Point {456, 313}, this, H3R_TEXT_COLOR_WHITE};
 
     // "Loss Condition:": smalfont.fnt, Gold, 422,348
-    H3R_CREATE_OBJECT(lbl, Label) {"Loss Condition:", "smalfont.fnt",
-        Point {422, 345}, this, H3R_TEXT_COLOR_GOLD};
-    //TODO Property (bitmap+text)
+    H3R_CREATE_OBJECT(lbl, Label) {H3R_TEXT(GENRLTXT, H3R_GENRLTXT_LCON),
+        "smalfont.fnt", Point {422, 345}, this, H3R_TEXT_COLOR_GOLD};
     // loss condition mini-icon: SCNRLOSS.def    (w:  29, h:  21)
-    //  name[ 0]: "ScnrVLlt.pcx" - l town
-    //  name[ 1]: "ScnrVLlh.pcx" - l hero
-    //  name[ 2]: "ScnrVLtl.pcx" - time expires
-    //  name[ 3]: "ScnrVLls.pcx" - l all
-    // Again, they all have offset of t,l = 1,1 because?
-    SpriteControl * spr_lcon {};
-    H3R_CREATE_OBJECT(spr_lcon, SpriteControl) {"SCNRLOSS.def", this,
+    H3R_CREATE_OBJECT(_lid_lcon_sc, SpriteControl) {"SCNRLOSS.def", this,
         Point {420, 365}};
-    spr_lcon->Map ("ScnrVLls.pcx", 0);
-    spr_lcon->Show (0);
+    _lid_lcon_sc->Map ("ScnrVLls.pcx", 0); // "Lose All Your Towns and Heroes"
+    _lid_lcon_sc->Map ("ScnrVLlt.pcx", 1); // "Lose Town"
+    _lid_lcon_sc->Map ("ScnrVLlh.pcx", 2); // "Lose Hero"
+    _lid_lcon_sc->Map ("ScnrVLtl.pcx", 3); // "Time Expires"
     // Loss Condition: smalfont.fnt, White, 456,375
-    H3R_CREATE_OBJECT(lbl, Label) {
-        "Loose All Your Towns and Heroes", "smalfont.fnt",
-        Point {456, 372}, this, H3R_TEXT_COLOR_WHITE};
+    H3R_CREATE_OBJECT(_lid_lcon_lbl, Label) {H3R_TEXT(lcdesc, H3R_LCON_DEFAULT),
+        "smalfont.fnt", Point {456, 372}, this, H3R_TEXT_COLOR_WHITE};
 
     // "Allies:": smalfont.fnt, White, 420,409
+    //TODO R&D there is "Allies", but no "Allies:" at "GENRLTXT.TXT"
     H3R_CREATE_OBJECT(lbl, Label) {"Allies:", "smalfont.fnt",
         Point {420, 406}, this, H3R_TEXT_COLOR_WHITE};
     //TODO Property
@@ -187,7 +178,7 @@ NewGameDialog::NewGameDialog(Window * base_window)
         UploadFrame (RE->GenKey (), 460 + i*spritef.Width (), 405, spritef,
             "itgflags.def", spritef.Query (0, i)->FrameName (), Depth ());
 
-    // "Enemies:": smalfont.fnt, White, 586,409
+    // "Enemies:": smalfont.fnt, White, 586,409 ; same q as with "Allies:"
     H3R_CREATE_OBJECT(lbl, Label) {"Enemies:", "smalfont.fnt",
         Point {586, 406}, this, H3R_TEXT_COLOR_WHITE};
     //TODO Property
@@ -198,14 +189,14 @@ NewGameDialog::NewGameDialog(Window * base_window)
 
     // "Map Diff:": smalfont.fnt, Gold, 429,439
     // Map Diff: the text is centered at top=473,x=416;500
-    H3R_CREATE_OBJECT(lbl, Label) {"Map Diff:", "smalfont.fnt",
+    H3R_CREATE_OBJECT(lbl, Label) {
+        H3R_TEXT(GENRLTXT, H3R_GENRLTXT_MAP_DIFFICULTY), "smalfont.fnt",
         Point {429, 436}, this, H3R_TEXT_COLOR_GOLD};
-    //TODO Property
-    H3R_CREATE_OBJECT(lbl, Label) {"Hard", "smalfont.fnt",
+    H3R_CREATE_OBJECT(_lid_diff_lbl, Label) {"Hard", "smalfont.fnt",
         Point {413, 454}, this, H3R_TEXT_COLOR_WHITE, false,
         Point {503-413, 502-454}};
 
-    // "Player Difficulty:": smalfont.fnt, Gold, 529,439
+    // "Player Difficulty:": smalfont.fnt, Gold, 529,439; as "Allies:"
     H3R_CREATE_OBJECT(lbl, Label) {"Player Difficulty:", "smalfont.fnt",
         Point {529, 436}, this, H3R_TEXT_COLOR_GOLD};
     // diff. buttons: GSPBUT[3;7].DEF - 0-4 (w:  30, h:  46)
@@ -214,7 +205,6 @@ NewGameDialog::NewGameDialog(Window * base_window)
     // Checked.
     // Rating: 80, 100, 130, 160, 200 [%] - the text changes based on button
     //         clicked.
-    //TODO Property
     for (int i = 0, j = 506; i < 5; i++, j+=32) {
         H3R_CREATE_OBJECT(btn, Button) {
             String::Format ("GSPBUT%d.DEF", i+3), this};
@@ -226,12 +216,11 @@ NewGameDialog::NewGameDialog(Window * base_window)
     }
     _btn_grp[1]->Checked = true; // 100% is the default
 
-    // "Rating:": smalfont.fnt, Gold, 686,439
+    // "Rating:": smalfont.fnt, Gold, 686,439; as "Allies:"
     // Rating: the text is centered at top=473,x=668;747
     H3R_CREATE_OBJECT(lbl, Label) {"Rating:", "smalfont.fnt",
         Point {686, 436}, this, H3R_TEXT_COLOR_GOLD};
-    //TODO Property
-    H3R_CREATE_OBJECT(lbl, Label) {"100%", "smalfont.fnt",
+    H3R_CREATE_OBJECT(_lid_rating_lbl, Label) {"100%", "smalfont.fnt",
         Point {665, 454}, this, H3R_TEXT_COLOR_WHITE, false,
         Point {749-665, 502-454}};
 
@@ -242,7 +231,7 @@ NewGameDialog::NewGameDialog(Window * base_window)
     btn->SetPos (414, 509);
     btn->UploadFrames ();
     btn->Click.Subscribe (this, &NewGameDialog::ToggleAdvOpt);
-    btn->SetText ("Show Advanced Options", "smalfont.fnt",
+    btn->SetText (H3R_TEXT(GENRLTXT, H3R_GENRLTXT_SHOW_ADV_OPT), "smalfont.fnt",
         H3R_TEXT_COLOR_WHITE);
 
     // - another one: ScnrBeg.def   (w: 166, h:  40) ?!
@@ -258,6 +247,14 @@ NewGameDialog::NewGameDialog(Window * base_window)
     btn->SetPos (584, 535);
     btn->UploadFrames ();
     btn->Click.Subscribe (this, &NewGameDialog::Back);
+
+    Map * map {};
+    {
+        __pointless_verbosity::CriticalSection_Acquire_finally_release
+            ___ {_map_gate};
+        if (_maps.Count () > 0) map = _maps[0];
+    }
+    SetListItem (map);
 }// NewGameDialog::NewGameDialog()
 
 NewGameDialog::~NewGameDialog()
@@ -362,8 +359,9 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
         //TODO this is causing OnRender due to the threaded IO
         for (int i = 0; i < H3R_VISIBLE_LIST_ITEMS; i++) {
             H3R_CREATE_OBJECT(itm, NewGameDialog::ListItem) {
-                _tab_avail_scen, Point {x1, y}, Point {x2, y}, Point {x4, y},
-                Point {x3, y2}, Point {x5, y2}, Point {x6, y2}
+                _tab_avail_scen,
+                Point {x1,  y}, Point {x2,  y}, Point {x4,  y},// text (1, 2, 4)
+                Point {x3, y2}, Point {x5, y2}, Point {x6, y2} // icon (3, 5, 6)
             };
             _map_items.Add (itm);
             y+=25, y2+=25;
@@ -398,6 +396,7 @@ void NewGameDialog::Back(EventArgs *)
 void NewGameDialog::BtnGroup(EventArgs * e)
 {
     static bool working {};
+    static const char * rating[5] = {"80%", "100%", "130%", "160%", "200%"};
     if (working) return;
     working = true;
     H3R_ENSURE(nullptr != e, "EventArgs can't be null")
@@ -405,8 +404,11 @@ void NewGameDialog::BtnGroup(EventArgs * e)
     H3R_ENSURE(nullptr != args, "EventArgs can't be null")
     H3R_ENSURE(nullptr != args->Sender, "Sender can't be null")
     for (int i = 0; i < 5; i++)
-        if (_btn_grp[i])
+        if (_btn_grp[i]) {
             _btn_grp[i]->Checked = (_btn_grp[i] == args->Sender);
+            if (_btn_grp[i]->Checked && nullptr != _lid_rating_lbl)
+                _lid_rating_lbl->SetText (rating[i]);
+        }
     working = false;
 }
 
@@ -443,8 +445,6 @@ void NewGameDialog::OnRender()
 
 void NewGameDialog::ListItem::SetMap(class Map * map)
 {
-    /*static Txt vcon_txt {Game::GetResource ("vcdesc.txt")};
-    static Txt lcon_txt {Game::GetResource ("lcdesc.txt")};*/
     this->Map = map;
     Players->SetText (
         String::Format ("%d/%d", map->PlayerNum (), map->HumanPlayers ()));
@@ -457,11 +457,49 @@ void NewGameDialog::ListItem::SetMap(class Map * map)
     /*Control * all[6] = {Players, Size, Version, Name, Victory, Loss};
     for (auto c : all) c->SetHidden (false);*/
 
-    /*if (map->VConDefaultToo ())
-        VConText = String::Format ("%s or %s", vcon_txt[map->VCon ()].AsZStr (),
-            vcon_txt[0].AsZStr ());
-    else VConText = vcon_txt[map->VCon ()];
-    LConText = lcon_txt[map->LCon ()];*/
+    VConText = map->VConText ();
+    LConText = map->LConText ();
 }
+
+void NewGameDialog::SetListItem(ListItem * itm)
+{
+    if (nullptr == itm) {              // my defaults differ the original:
+        _lid_sname_lbl->SetText ("-"); //       vs ""
+        _lid_map_size_sc->Show (0);    // "All" vs "S"
+        _lid_sdescr_lbl->SetText ("-");//       vs ""
+        _lid_vcon_sc->Show (0);        //       vs nothing
+        _lid_vcon_lbl->SetText ("-");  //       vs ""
+        _lid_lcon_sc->Show (0);        //       vs nothing
+        _lid_lcon_lbl->SetText ("-");  //       vs ""
+        _lid_diff_lbl->SetText ("-");  //       vs ""
+        _btn_grp[1]->Checked = true;   // 100%  vs ""
+        _lid_rating_lbl->SetText ("100%");//    vs ""
+    }
+    else {
+        _lid_sname_lbl->SetText  (itm->Map->Name ());
+        _lid_map_size_sc->Show   (itm->Map->Size ());
+        _lid_sdescr_lbl->SetText (itm->Map->Descr ());
+        _lid_vcon_sc->Show       (itm->Map->VCon ());
+        _lid_vcon_lbl->SetText   (itm->VConText);
+        _lid_lcon_sc->Show       (itm->Map->LCon ());
+        _lid_lcon_lbl->SetText   (itm->LConText);
+        _lid_diff_lbl->SetText   (itm->Map->DifficultyName ());
+    }
+}// NewGameDialog::SetListItem()
+
+void NewGameDialog::SetListItem(Map * map)
+{
+    if (! map) SetListItem(static_cast<ListItem *>(nullptr));
+    else {
+        _lid_sname_lbl->SetText  (map->Name ());
+        _lid_map_size_sc->Show   (map->Size ());
+        _lid_sdescr_lbl->SetText (map->Descr ());
+        _lid_vcon_sc->Show       (map->VCon ());
+        _lid_vcon_lbl->SetText   (map->VConText ());
+        _lid_lcon_sc->Show       (map->LCon ());
+        _lid_lcon_lbl->SetText   (map->LConText ());
+        _lid_diff_lbl->SetText   (map->DifficultyName ());
+    }
+}// NewGameDialog::SetListItem()
 
 NAMESPACE_H3R

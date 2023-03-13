@@ -113,6 +113,17 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     private DialogResult _dr {};
     private int _t {}, _l {}; // top, left - of the persistent (right) part
 
+    // List item: details
+    private Label         * _lid_sname_lbl   {};
+    private SpriteControl * _lid_map_size_sc {};
+    private Label         * _lid_sdescr_lbl  {};
+    private SpriteControl * _lid_vcon_sc     {};
+    private Label         * _lid_vcon_lbl    {};
+    private SpriteControl * _lid_lcon_sc     {};
+    private Label         * _lid_lcon_lbl    {};
+    private Label         * _lid_diff_lbl    {};
+    private Label         * _lid_rating_lbl  {};
+
     //PERHAPS this shall be a separate class: UserControl
     private Control * _tab_avail_scen {};
     private List<int> _tab_avail_scen_keys {};
@@ -147,7 +158,7 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
         String        VConText {}; // these are used by 1 UI label
         String        LConText {}; //
         //
-        Map * Map {};
+        Map * Map {}; //TODO remove me from here
         ListItem(Control * base, Point p_loc, Point sz_loc, Point nm_loc,
             Point ver_loc, Point vcon_loc, Point lcon_loc)
             : Base{base}
@@ -244,6 +255,8 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
         public int Directories() const { return _dirs; }
         public bool Stop {false};
     } _scan_for_maps; // MapListInit
+    private void SetListItem(ListItem *);
+    private void SetListItem(Map *);
 
     protected void OnRender() override;
 };// NewGameDialog
