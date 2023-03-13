@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_ffd.h"
 #include "h3r_log.h"
 #include "h3r_string.h"
+#include "h3r_game.h"
 
 H3R_NAMESPACE
 
@@ -188,5 +189,20 @@ Map::Map(const String & h3m, bool header_only)
         for (byte b : *(teams->AsByteArray ()))
             _teams.Add (b);
 }// Map::Map()
+
+const String & Map::VConText() const
+{
+    static String foo {};
+    if (_vcon_default_too && _vcon != H3R_VCON_DEFAULT)
+        return foo = String::Format ("%s or %s",
+            Game::vcdesc->operator[] (_vcon).AsZStr (),
+            Game::vcdesc->operator[] (H3R_VCON_DEFAULT).AsZStr ());
+    else return Game::vcdesc->operator[] (_vcon);
+}
+
+const String & Map::LConText() const
+{
+    return Game::lcdesc->operator[] (_lcon);
+}
 
 NAMESPACE_H3R

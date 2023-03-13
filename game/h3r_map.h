@@ -151,8 +151,10 @@ class Map final
     //   "Survive beyond a time limit"
     //PERHAPS binary-edit a map to see if the game handles them.
     public inline int VCon() const { return _vcon; }
+    public const String & VConText() const;
     public inline bool VConDefaultToo() const { return _vcon_default_too; }
     public inline int LCon() const { return _lcon; }
+    public const String & LConText() const;
 };// Map
 
 NAMESPACE_H3R
