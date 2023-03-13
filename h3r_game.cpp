@@ -57,6 +57,10 @@ IWindow * Game::MainWindow {};
 
 h3rPlayerColor Game::CurrentPlayerColor {H3R_DEFAULT_PLAYER_COLOR};
 
+Txt * Game::GENRLTXT {};
+Txt * Game::lcdesc {};
+Txt * Game::vcdesc {};
+
 Game::Game(const char * process_path)
 #if LOG_FILE
     : _3rd {"main.log"}
@@ -122,6 +126,13 @@ void Game::SilentLog(bool v)
 
 int Game::Run(int argc, char ** argv)
 {
+    Txt genrltxt {GetResource ("GENRLTXT.TXT"), "GENRLTXT.TXT"};
+    Game::GENRLTXT = &genrltxt;
+    Txt lcdesctxt {GetResource ("lcdesc.txt"), "lcdesc.txt"};
+    Game::lcdesc = &lcdesctxt;
+    Txt vcdesctxt {GetResource ("vcdesc.txt"), "vcdesc.txt"};
+    Game::vcdesc = &vcdesctxt;
+
     // create the main window
     // Again, no plug-in interface yet, so
     auto main_window =

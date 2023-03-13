@@ -47,6 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_gamearchives.h"
 #include "h3r_asyncfsenum.h"
 #include "h3r_iwindow.h"
+#include "h3r_txt.h"
 
 H3R_NAMESPACE
 
@@ -122,6 +123,11 @@ class Game final
     public static Stream * GetResource(const String & name);
 
     public static h3rPlayerColor CurrentPlayerColor;
+
+    //TODO text services: names, indexes, ranges, etc.
+    public static Txt * GENRLTXT; // some .txt has to be widely accessible
+    public static Txt * lcdesc;
+    public static Txt * vcdesc;
 
     private class ResManagerInit final
     {

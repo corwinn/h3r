@@ -42,24 +42,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_stream.h"
 #include "h3r_string.h"
 
+// this is where it becomes scary; guess the number of these
+// New_Game->Available_Scenarios
+#define H3R_GENRLTXT_SCENARIO_NAME 587
+#define H3R_GENRLTXT_SCENARIO_DESCR 588
+#define H3R_GENRLTXT_SHOW_AVAIL_SCEN 592
+#define H3R_GENRLTXT_RANDOM_MAP 862
+#define H3R_GENRLTXT_VCON 589
+#define H3R_GENRLTXT_LCON 590
+#define H3R_GENRLTXT_MAP_DIFFICULTY 586
+#define H3R_GENRLTXT_SHOW_ADV_OPT 593
+
+// lcdesc.txt
+#define H3R_LCON_DEFAULT 0
+// vcdesc.txt
+#define H3R_VCON_DEFAULT 0
+
 H3R_NAMESPACE
 
 class Txt final
 {
     private List<String> _lines {};
-    private inline String ReadLine(Stream * stream) //TODO to StreamReader
+    private String _res_name;
+
+    //TODO to StreamReader
+    private inline bool ReadLine(Stream * stream, String & result)
     {
         static const int BUF_SIZE {128};
         static byte buf[BUF_SIZE] {};
         static byte * n {}, * e {}, * m {};
         m = n ? n : buf;
-        String result {};
         bool cr {}, lf {};
         for (;;) {
             if (n >= e) {
                 auto av = stream->Size () - stream->Tell (); // available bytes
                 auto br = av > BUF_SIZE ? BUF_SIZE : av;          // read bytes
-                if (0 == br) return static_cast<String &&>(result);
+                if (0 == br) return false;
                 stream->Read (buf, br);
                 m = n = buf, e = buf + br;
             }
@@ -71,26 +89,34 @@ class Txt final
             int l = cr && lf ? 2 : lf ? 1 : 0;
             if (n-(l ? l-1 : 0) > m)
                 result += String {m, static_cast<int>((n-(l ? l-1 : 0))-m)};
-            /*printf ("l: %d, result: %s, n:%d\n", l, result.AsZStr (),
+            /*printf ("ld: %d, result: %s, n:%ld\n", l, result.AsZStr (),
                 n-m);*/
             n++;
-            if (l > 0) return result; // EOL
+            if (l > 0) return true; // EOL
             if (n >= e && stream->Tell () < stream->Size ()) continue;
-            return result; // EOF
+            return true; // EOF
         }
     }// ReadLine()
-    public Txt(Stream * stream)
+    public Txt(Stream * stream, const String & res_name)
+        : _res_name{res_name}
     {
         H3R_ENSURE(nullptr != stream, "TXT: no stream")
         int p = (1<<16);
-        do {
-            _lines.Put (static_cast<String &&>(ReadLine (stream)));
-        } while (p-- && stream->Tell () < stream->Size ());
+        String line {};
+        while (p-- && ReadLine (stream, line))
+            _lines.Put (static_cast<String &&>(line));
         H3R_ENSURE(p > 0, "Too many lines of text")
     }
     public ~Txt() {}
     public inline int LineCount() const { return _lines.Count (); }
-    public inline const String & operator[](int i) const { return _lines[i]; }
+    // If you see that text: either your data is corrupted, or my program has a
+    // bug.
+    public inline const String & operator[](int i) const
+    {
+        static String bug {};
+        return i >= 0 && i < _lines.Count () ? _lines[i]
+            : bug = String::Format ("bug[]:%s:%d", _res_name.AsZStr (), i);
+    }
 };// Txt
 
 NAMESPACE_H3R

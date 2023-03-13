@@ -69,6 +69,8 @@ static_assert(sizeof(int) >= 4, "This program expects 32-bit int at least");
 #define H3R_DESTROY_NESTED_OBJECT(P,N,T) \
     { if (nullptr != P) { P->N::~T (); H3R_NS::OS::Free (P); } }
 
+#define H3R_TEXT(R,I) (Game::R->operator [] (I))
+
 //TODO move "include <new>" to where its needed only
 #undef public
 #undef private
