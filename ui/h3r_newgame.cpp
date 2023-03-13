@@ -141,7 +141,7 @@ NewGameDialog::NewGameDialog(Window * base_window)
     //TODO see if the index access is better alternative to string access
     SpriteControl * spr_vcon {};
     H3R_CREATE_OBJECT(spr_vcon, SpriteControl) {"SCNRVICT.def", this,
-        Point {421, 309}};
+        Point {420, 308}};
     spr_vcon->Map ("ScnrVLbg.pcx", 5);
     spr_vcon->Show (5);
     // Victory Condition: smalfont.fnt, White, 456,316
@@ -161,7 +161,7 @@ NewGameDialog::NewGameDialog(Window * base_window)
     // Again, they all have offset of t,l = 1,1 because?
     SpriteControl * spr_lcon {};
     H3R_CREATE_OBJECT(spr_lcon, SpriteControl) {"SCNRLOSS.def", this,
-        Point {422, 366}};
+        Point {420, 365}};
     spr_lcon->Map ("ScnrVLls.pcx", 0);
     spr_lcon->Show (0);
     // Loss Condition: smalfont.fnt, White, 456,375
@@ -357,13 +357,13 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
         _tab_avail_scen_vs->Min = 1; // just to be on the safe side
         _tab_avail_scen_vs->LargeStep = H3R_VISIBLE_LIST_ITEMS;
 
-        int x1=24, x2=56, x3=97, x4=122, x5=311, x6=344, y=121, y2=124;
+        int x1=24, x2=56, x3=91, x4=122, x5=309, x6=342, y=121, y2=123;
         NewGameDialog::ListItem * itm {};
         //TODO this is causing OnRender due to the threaded IO
         for (int i = 0; i < H3R_VISIBLE_LIST_ITEMS; i++) {
             H3R_CREATE_OBJECT(itm, NewGameDialog::ListItem) {
                 _tab_avail_scen, Point {x1, y}, Point {x2, y}, Point {x4, y},
-                Point {x3, y2+1}, Point {x5, y2}, Point {x6, y2}
+                Point {x3, y2}, Point {x5, y2}, Point {x6, y2}
             };
             _map_items.Add (itm);
             y+=25, y2+=25;
