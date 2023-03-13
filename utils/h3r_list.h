@@ -196,6 +196,10 @@ template <typename T,
     public bool Empty() const { return _cnt <= 0; }
     public int Count() const { return _cnt; }
     public void Clear() { FreeObjects (); }
+
+    // A word about "range-based for loop" and event-driven programming: just
+    // don't use them together.
+    //TODO remove these
     public const T * begin() const { return _list; }
     public const T * end  () const { return _list + _cnt; }
 
