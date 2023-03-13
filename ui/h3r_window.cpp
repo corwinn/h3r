@@ -216,36 +216,46 @@ void Window::ProcessMessages()//TODO static
 // Observer
 void Window::OnKeyDown(const EventArgs & e)
 {
-    for (Control * c : _controls) if (! c->Hidden ()) c->OnKeyDown (e);
+    // don't nofity the newly-created one(s) just yet
+    for (int i = 0, c = _controls.Count (); i < c; i++)
+        if (! _controls[i]->Hidden ()) _controls[i]->OnKeyDown (e);
+    // Doing that is dangerous: adding controls at event handler of this, is
+    // could cause a realoc at _controls thus invalidating the current pointer.
+    // for (Control * c : _controls) if (! c->Hidden ()) c->OnKeyDown (e);
 }
 void Window::OnKeyUp(const EventArgs & e)
 {
-    for (Control * c : _controls) if (! c->Hidden ()) c->OnKeyUp (e);
+    for (int i = 0, c = _controls.Count (); i < c; i++)
+        if (! _controls[i]->Hidden ()) _controls[i]->OnKeyUp (e);
 }
 void Window::OnMouseMove(const EventArgs & e)
 {
-    for (Control * c : _controls) if (! c->Hidden ()) c->OnMouseMove (e);
+    for (int i = 0, c = _controls.Count (); i < c; i++)
+        if (! _controls[i]->Hidden ()) _controls[i]->OnMouseMove (e);
 }
 void Window::OnMouseDown(const EventArgs & e)
 {
-    for (Control * c : _controls) if (! c->Hidden ()) c->OnMouseDown (e);
+    for (int i = 0, c = _controls.Count (); i < c; i++)
+        if (! _controls[i]->Hidden ()) _controls[i]->OnMouseDown (e);
 }
 void Window::OnMouseUp(const EventArgs &e)
 {
-    for (Control * c : _controls) if (! c->Hidden ()) c->OnMouseUp (e);
+    for (int i = 0, c = _controls.Count (); i < c; i++)
+        if (! _controls[i]->Hidden ()) _controls[i]->OnMouseUp (e);
 }
 void Window::OnShow()
 {
     _visible = true;
-    for (Control * c : _shown) c->SetHidden (false);
+    for (int i = 0, c = _shown.Count (); i < c; i++)
+        _shown[i]->SetHidden (false);
 }
-void Window::OnHide()
+void Window::OnHide()//TODO do the same at Control::SetHidden
 {
     _shown.Clear ();
-    for (Control * c : _controls)
-        if (! c->Hidden ()) {
-            _shown.Add (c);
-            c->SetHidden (true);
+    for (int i = 0, c = _controls.Count (); i < c; i++)
+        if (! _controls[i]->Hidden ()) {
+            _shown.Add (_controls[i]);
+            _controls[i]->SetHidden (true);
         }
     _visible = false;
 }
