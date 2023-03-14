@@ -75,15 +75,19 @@ Point GameFont::MeasureText(const String & text, int width,
 // Convert 1 byte .fnt to 2 bytes GL_LUMINANCE_ALPHA
 static void CopyGlyph(byte * dst, int w, int px, byte * src, int gw, int gh)
 {
+    H3R_ENSURE(px >= 0, "can't render in front of the bitmap")
     size_t dst_pitch = 2*w;
     byte * dst_row = dst + 2*px;
     for (int y = 0; y < gh ; y++) {
         for (int x = 0; x < gw ; x++) {
             byte c = src[y*gw+x];
             // dst_row[2*x] = c > 0 ? 255 : 0;    // 255: 1, 255
-            dst_row[2*x] = c; // unmodifiec; they're using 255,243,222
+            // last resort to protect against wrong memory access
+            // if (dst_row+2*x >= dst && dst_row+2*x+1 < dst+(y+1)*dst_pitch) {
+            dst_row[2*x] = c; // unmodified; they're using 255,243,222
             // dst_row[2*x+1] = 1 == c ? 128 : c; // 0.5 alpha for smoothing
             dst_row[2*x+1] = 1 == c ? 200 : c; // 0.78 alpha for smoothing
+            // }
         }
         dst_row += dst_pitch;
     }
@@ -94,11 +98,13 @@ void GameFont::RenderText(const String & text, byte * buf, int w, int h)
     (void)h; //TODO
     const byte * txt = text.AsByteArray ();
     int advance0 = _fnt.GlyphXOffset1 (txt[0]);
+    if (advance0 < 0) advance0 = 0;//TODO can't render in front of the bitmap
     int gh = _fnt.Height (); int advance_x = advance0;
     for (int i = 0; i < text.Length (); i++) {
         int gw = _fnt.GlyphWidth (txt[i]);
         byte * glyph = _fnt.GlyphBitmap (txt[i]);
-    /*printf ("Glyph %3d:" EOL, txt[i]); // TODO h3r_debug_helpers
+    // TODO h3r_debug_helpers
+    /*printf ("Glyph %3d, advance:%d :" EOL, txt[i], advance_x);
     for (int y = 0; y < gh; y++) {
         for (int x = 0; x < gw; x++)
             printf ("%3d ", glyph[y*gw+x]);
