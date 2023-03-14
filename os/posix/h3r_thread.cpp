@@ -38,17 +38,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 namespace OS {
 
-static int const THREAD_MAX {5}; // Log, Files, MusicRT, Music, SoundFX
-Thread * Thread::Threads[THREAD_MAX];
+// Log, Files, FileEnum, MusicRT, Music, SoundFX
+// Because while "FileEnum" is in progress, "Files" is needed to load resources.
+static int const THREAD_MAX {6};
+Thread * Thread::Threads[THREAD_MAX] {};
 
 //TODO I'm not sure this is a good idea. Threads should start and stop in
 // certain order, for example: the logger thread should stop last - prior main
 Thread::Thread(Proc & p)
     : _p {p}
 {
-    static int ti {0};
-    H3R_ENSURE(ti >= 0 && ti < THREAD_MAX, "thread index out of range")
-    Thread::Threads[ti++] = this;
+    int ti {0};
+    for (int i = 0; i < THREAD_MAX; i++)
+        if (nullptr != Thread::Threads[i]) ti++;
+    // This program has certain threading model: see above. Creating threads w/o
+    // reason won't be tolerated; THREAD_MAX represents highly complicated mess
+    // already!
+    //
+    // "Do not trouble trouble till trouble troubles you."
+    //  A saying in Maule, Tear.
+    //
+    H3R_ENSURE(ti >= 0 && ti < THREAD_MAX, "THREAD_MAX reached")
+    for (int i = 0; i < THREAD_MAX; i++)
+        if (nullptr == Thread::Threads[i]) { // put new first available
+            Thread::Threads[i] = this;
+            break;
+        }
     auto r = pthread_create (&_thr, nullptr, [](void * q) -> void *
         {
             return ((Proc *)q)->Run ();
@@ -60,7 +75,7 @@ Thread::~Thread()
 {
     for (size_t i = 0; i < THREAD_MAX; i++)
         if (this == Thread::Threads[i]) {
-            Thread::Threads[i] = nullptr;
+            Thread::Threads[i] = nullptr; // mark free
             if (! _p.stop) Stop ();
             return;
         }

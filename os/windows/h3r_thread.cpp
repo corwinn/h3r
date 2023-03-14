@@ -38,7 +38,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 H3R_NAMESPACE
 namespace OS {
 
-static int const THREAD_MAX {5}; // Log, Files, MusicRT, Music, SoundFX
+// Log, Files, FileEnum, MusicRT, Music, SoundFX
+// Because while "FileEnum" is in progress, "Files" is needed to load resources.
+static int const THREAD_MAX {6};
 Thread * Thread::Threads[THREAD_MAX];
 HANDLE Thread::ThreadHandles[THREAD_MAX];
 
@@ -47,9 +49,15 @@ HANDLE Thread::ThreadHandles[THREAD_MAX];
 Thread::Thread(Proc & p)
     : _p {p}
 {
-    static int ti {0};
+    int ti {0};
+    for (int i = 0; i < THREAD_MAX; i++)
+        if (nullptr != Thread::Threads[i]) ti++;
     H3R_ENSURE(ti >= 0 && ti < THREAD_MAX, "thread index out of range")
-    Thread::Threads[ti++] = this;
+    for (int i = 0; i < THREAD_MAX; i++)
+        if (nullptr == Thread::Threads[i]) { // put new first available
+            Thread::Threads[i] = this;
+            break;
+        }
     const LPSECURITY_ATTRIBUTES THREAD_SA {nullptr};
     const SIZE_T  THREAD_DEFAULT_STACK_SIZE {0};
     const DWORD   THREAD_RUN_AT_ONCE {0};
@@ -68,7 +76,7 @@ Thread::~Thread()
 {
     for (size_t i = 0; i < THREAD_MAX; i++)
         if (this == Thread::Threads[i]) {
-            Thread::Threads[i] = nullptr;
+            Thread::Threads[i] = nullptr; // mark free
             if (! _p.stop) Stop ();
             return;
         }
