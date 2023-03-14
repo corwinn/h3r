@@ -199,7 +199,7 @@ template <typename T,
 
     // A word about "range-based for loop" and event-driven programming: just
     // don't use them together.
-    //TODO remove these
+    //TODO remove these; just: Iterator
     public const T * begin() const { return _list; }
     public const T * end  () const { return _list + _cnt; }
 
