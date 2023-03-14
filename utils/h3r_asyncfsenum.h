@@ -70,17 +70,25 @@ template <typename T> class AsyncFsEnum final
     };
     // since the notification is in the task thread context
     using OnItem = bool (T::*)(const EnumItem &);
+    using OnComplete = void (T::*)();
     private T * _on_item_observer;
     private OnItem _on_item;
+    private OnComplete _done;
     private bool ThrNotify()
     {
         return (_on_item_observer->*_on_item) (_task.State);
     }
+    private void ThrNotifyComplete()
+    {
+        (_on_item_observer->*_done) ();
+    }
     private String _root;
+    // It requires its own thread to load other file IO while enumerating.
     private TaskThread _thread {};
-    public AsyncFsEnum(String base_path, T * observer, OnItem handle_on_item)
+    public AsyncFsEnum(String base_path, T * observer,
+        OnItem handle_on_item, OnComplete handle_on_complete)
         : _on_item_observer{observer}, _on_item{handle_on_item},
-        _root{base_path}, _task {*this}
+        _done{handle_on_complete}, _root{base_path}, _task {*this}
     {
         _thread.Task = _task;
     }
@@ -118,6 +126,7 @@ template <typename T> class AsyncFsEnum final
                                 task._directories.Size () : task._stack_load;
                     return task._subject.ThrNotify ();
                 });
+            _subject.ThrNotifyComplete ();
             H3R_NS::OS::Log_stdout ("stack_load: %zu" EOL, _stack_load);
         }
     } _task;
