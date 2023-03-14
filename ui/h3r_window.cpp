@@ -219,8 +219,8 @@ void Window::OnKeyDown(const EventArgs & e)
     // don't nofity the newly-created one(s) just yet
     for (int i = 0, c = _controls.Count (); i < c; i++)
         if (! _controls[i]->Hidden ()) _controls[i]->OnKeyDown (e);
-    // Doing that is dangerous: adding controls at event handler of this, is
-    // could cause a realoc at _controls thus invalidating the current pointer.
+    // Doing that is dangerous: adding controls at event handler of this could
+    // cause a realloc at _controls thus invalidating the current pointer.
     // for (Control * c : _controls) if (! c->Hidden ()) c->OnKeyDown (e);
 }
 void Window::OnKeyUp(const EventArgs & e)
