@@ -134,6 +134,7 @@ void Label::SetText()
     else { if (_vs) _vs->SetHidden (true); }
     _num_visible = 0;
     for (auto & text : text_rows) {
+        // printf ("<> mline: row: %s\n", text.AsZStr ());
         RE->UploadText (_tkeys.Add (RE->GenTextKey ()),
             _font, text, Pos ().X, y, _color, Depth ());
         y += _font_h;
@@ -147,6 +148,12 @@ void Label::SetText()
     }
     UpdateVisible ();
 }// Label::SetText()
+
+void Label::SetColor(unsigned int c)
+{
+    for (int i = 0; i < _tkeys.Count (); i++)
+        Window::UI->ChangeTextColor (_tkeys[i], c);
+}
 
 void Label::UpdateVisible()
 {

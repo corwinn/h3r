@@ -315,6 +315,7 @@ class RenderEngine final
         const String & font_name, const String & txt, int left, int top,
         unsigned int color, h3rDepthOrder order);
     public void ChangeTextVisibility(TextKey & key, bool state);
+    public void ChangeTextColor(TextKey & key, unsigned int color);
     public void TextSetTranslateTransform(TextKey & key, bool state,
         GLfloat = 0.f, GLfloat = 0.f);
     public void DeleteText(TextKey & key);

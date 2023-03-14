@@ -75,6 +75,7 @@ class Label final : public Control, public IHandleEvents
     public inline const String & Text() const { return _text; }
     public inline const String & Font() const { return _font; }
     public void SetText(const String & value);
+    public void SetColor(unsigned int);
 
     private void SetText(); // used on init
     private void OnVisibilityChanged() override;

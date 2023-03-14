@@ -428,6 +428,23 @@ void RenderEngine::ChangeTextVisibility(TextKey & key, bool state)
     key.ChangeTextVisibility (state);
 }
 
+void RenderEngine::ChangeTextColor(TextKey & key, unsigned int color)
+{
+    RenderEngine::TextEntry & e = key.Entry ();
+    if (! e.InUse) return; //LATER H3R_ENSURE?
+    glBindBuffer (GL_ARRAY_BUFFER, e.Vbo);
+    GLfloat verts[36] {}; // {x,y,z,u,v,r,g,b,a}[4]
+    glGetBufferSubData (GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+    H3RGL_Debug
+    union {unsigned int c; byte rgba[4]; };
+    c = color; GLfloat r = rgba[0]/255.f, g = rgba[1]/255.f, b = rgba[2]/255.f,
+        a = rgba[3]/255.f;
+    for (int i = 0; i < 36; i += 9)
+        verts[i+5] = r, verts[i+6] = g, verts[i+7] = b, verts[i+8] = a;
+    glBufferSubData (GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
+    H3RGL_Debug
+}
+
 void RenderEngine::TextSetTranslateTransform(TextKey & key, bool state,
     GLfloat tx, GLfloat ty)
 {
