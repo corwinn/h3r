@@ -210,6 +210,7 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
         void SetMap(class Map * map);
     };// ListItem
     private List<ListItem *> _map_items {H3R_VISIBLE_LIST_ITEMS};
+    private ListItem * _selected {};
     private List<Map *> _maps {};
     private OS::CriticalSection _map_gate {};
     // Does the original do recursive scan: no.
@@ -258,7 +259,13 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     private void SetListItem(ListItem *);
     private void SetListItem(Map *);
 
+    private NewGameDialog::ListItem * ChangeSelected(NewGameDialog::ListItem *);
+
     protected void OnRender() override;
+
+    // The game changes selection based on mouse down location, but on mouse up
+    // event; looks inconsistent; this remake will act on mouse down.
+    protected void OnMouseDown(const EventArgs &) override;
 };// NewGameDialog
 
 NAMESPACE_H3R

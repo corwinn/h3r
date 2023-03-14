@@ -439,6 +439,7 @@ void NewGameDialog::OnRender()
         for (int i = a; i < v+a; i++)
             _map_items[i-a]->SetMap (_maps[i]);
             // printf ("maps[%d]: %s" EOL, i, (_maps[i])->Name ().AsZStr ());
+        SetListItem (ChangeSelected (_map_items[0]));
         show_once = true;
     }
 }// NewGameDialog::OnRender()
@@ -478,6 +479,7 @@ void NewGameDialog::SetListItem(ListItem * itm)
     else {
         _lid_sname_lbl->SetText  (itm->Map->Name ());
         _lid_map_size_sc->Show   (itm->Map->Size ());
+        printf ("big text: %s\n", itm->Map->Descr ().AsZStr ());
         _lid_sdescr_lbl->SetText (itm->Map->Descr ());
         _lid_vcon_sc->Show       (itm->Map->VCon ());
         _lid_vcon_lbl->SetText   (itm->VConText);
@@ -501,5 +503,36 @@ void NewGameDialog::SetListItem(Map * map)
         _lid_diff_lbl->SetText   (map->DifficultyName ());
     }
 }// NewGameDialog::SetListItem()
+
+NewGameDialog::ListItem * NewGameDialog::ChangeSelected(
+    NewGameDialog::ListItem * value)
+{
+    if (value != _selected) {
+        if (_selected) {
+            _selected->Players->SetColor (H3R_TEXT_COLOR_WHITE);
+            _selected->Size->SetColor (H3R_TEXT_COLOR_WHITE);
+            _selected->Name->SetColor (H3R_TEXT_COLOR_WHITE);
+        }
+        _selected = value;
+        if (_selected) {
+            _selected->Players->SetColor (H3R_TEXT_COLOR_GOLD);
+            _selected->Size->SetColor (H3R_TEXT_COLOR_GOLD);
+            _selected->Name->SetColor (H3R_TEXT_COLOR_GOLD);
+        }
+    }
+    return _selected;
+}
+
+void NewGameDialog::OnMouseDown(const EventArgs & e)
+{
+    DialogWindow::OnMouseDown (e);
+
+    //LATER stop ignoring modifiers
+    printf ("Mouse down at: %d, %d\n", e.X, e.Y);
+    int l=25, r=373, t=123, h=25;
+    int row = e.X >= l && e.X <= r ? (e.Y-t)/h : -1;
+    if (row >= 0 && row <= _map_items.Count ())
+        SetListItem (ChangeSelected (_map_items[row]));
+}
 
 NAMESPACE_H3R
