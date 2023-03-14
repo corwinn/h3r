@@ -49,6 +49,7 @@ void SpriteControl::Map(const String & frame, int key)
 
 void SpriteControl::Show(int key)
 {
+    if (Hidden ()) return;
     H3R_ENSURE(key >= 0 && key < SpriteControl::MAP_MAX, "Key out of range")
     Window::UI->ChangeOffset (_rkey, _map[key]);
 }
