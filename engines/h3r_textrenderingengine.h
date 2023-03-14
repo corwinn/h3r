@@ -66,9 +66,7 @@ class TextRenderingEngine final
     private int _text_width {};
     private int _text_height {};
     public inline int TexBufferPitch() { return _text_width * 2; }
-    // Layout and render the text into 2-channel LUMINANCE_ALPHA buffer.
-    // The "box" could increase in size. Do not manage the returned buffer.
-    //LATER Alignment
+    // Render a single line of text into 2-channel LUMINANCE_ALPHA buffer.
     public byte * RenderText(const String & font_name, const String & txt,
         int & w, int & h);
 

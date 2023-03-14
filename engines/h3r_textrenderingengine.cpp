@@ -89,30 +89,8 @@ Font * TextRenderingEngine::TryLoadFont(const String & name)
     return nullptr;
 }
 
-// Split to lines. ASCII-only, LF and or CRLF for now.
-//LATER TextService::ToLines(const String &); and test me; also iconv, not
-//      ASCII-only
-template <typename T>
-static void TextService__ToLines(const String & txt, T & s,
-    void (*on_line)(String &&, T &))
-{
-    const byte * buf = txt.AsByteArray (), * l =  buf;
-    int const tlen = txt.Length ();
-    for (int i = 0; i < tlen; i++)
-        if ('\n' == buf[i] && (i > 0 && buf[i-1] != '\r')) {
-            on_line (String {l, (int)((buf + i) - l)}, s);
-            l = buf+i+1;
-        }
-        else if ('\r' == buf[i] && (i < tlen-1 && '\n' == buf[i+1])) {
-            on_line (String {l, (int)((buf + i) - l)}, s);
-            l = buf+i+2;
-        }
-    if (l < buf + tlen)
-        on_line (String {l, (int)((buf + tlen) - l)}, s);
-}
-
-// const int H3R_MAX_TEXT_WIDTH {640}; // TODO measure the at the game
-// const int H3R_MAX_TEXT_HEIGHT {480}; // TODO measure the at the game
+// const int H3R_MAX_TEXT_WIDTH {640}; // TODO measure it at the game
+// const int H3R_MAX_TEXT_HEIGHT {480}; // TODO measure it at the game
 
 // The game handles very long words by wrapping them.
 // The game handles \r\n.
@@ -126,6 +104,7 @@ static inline bool is_eol(const byte * & i, const byte * m)
     if (i > m) return false;
     if (m-1 == i) return i++, '\n' == *i;
     if ('\r' == *i && '\n' == *(i+1)) return i += 2, true;
+    if ('\n' == *i) return i++, true;
     return false;
 }
 static inline void skip_ws(const byte * & i, const byte * m)
@@ -161,7 +140,10 @@ static inline void handle_token(List<String> & rows, String & line,
     else {
         tw -= ts.Width;
         if (tw < 0) {
-            if (! line.Empty ()) rows.Put (static_cast<String &&>(line));
+            if (! line.Empty ()) {
+                rows.Put (static_cast<String &&>(line));
+                if (" " == token) return; // skip " " at line start
+            }
             line += token; tw = w - ts.Width;
             H3R_ENSURE(tw >= 0, "Unhandled width overflow")
         }
@@ -194,7 +176,10 @@ List<String> TextRenderingEngine::LayoutText(const String & font_name,
         if (i >= e) break;
         l = i;
         if (! is_ws (i)) {
+            auto chk = i;
             while (i < e && is_sym (i)) i++;
+            // if (i == chk) printf ("%002X, e-i:%ld\n", *i, e-i);
+            H3R_ENSURE(i > chk, "neither ws nor sym leads to infinity")
             /*printf ("<> Word: ");
                 for (auto c = l; c < i; c++) printf ("%c", *c);
             printf ("\n");*/
@@ -234,37 +219,13 @@ byte * TextRenderingEngine::RenderText(
 
     tw = th = 0;
     if (txt.Empty ()) return nullptr;
+    Point size = fnt->MeasureText (txt);
+    tw = size.Width;
+    th = size.Height;
+    // printf ("tw: %d, th: %d\n", tw, th);
     //TODO shall I render an "Error: Empty String"?
 
-    List<Point> txt_rows_size {};
-    List<String> txt_rows {};
-    int hh {}; // text width, text height, highest height
-    auto trick = [&](String && s)
-    {
-        txt_rows.Add ((String &&)s);
-        Point & size = txt_rows_size.Add (fnt->MeasureText (s));
-        if (size.X > tw) tw = size.X;
-        if (size.Y > hh) hh = size.Y;
-        th += size.Y;
-        // printf ("TRE: row: %s: w: %d, h: %d" EOL, s.AsZStr (), size.X,
-        //     size.Y);
-    };
-    // The code below should call the code above; I doubt it, but lets see.
-    // That's what I call "inversion of control" :D. Ok, more "yield return" but
-    // that's another topic.
-    // If this works, it will greatly simplify my UI events observer by
-    // eliminating a whole class and all its descendants altogether.
-    //LATER R&D IEnumerable<T> using this.
-    TextService__ToLines<decltype(trick)> (txt, trick,
-        [](String && s, decltype(trick) & f) -> void { f ((String &&)s); });
-    // printf ("TRE: rows: %d: tw: %d, th: %d, hh: %d" EOL,
-    //    txt_rows.Count (), tw, th, hh);
-    H3R_ENSURE(txt_rows.Count () > 0, "Nope; at least one row shall be here")
-
-    // Use center for now.
-    int line_spacing = hh/3; // TODO measure the in-game one.
-    th += line_spacing * (txt_rows.Count () - 1);
-    byte * row_buf = Font::AllocateBuffer (tw, hh); // One buffer for each row
+    byte * row_buf = Font::AllocateBuffer (tw, th); // One buffer for each row
     OS::__pointless_verbosity::__try_finally_free<byte> ____ {row_buf};
     // Well, I can't do that without providing pitch for copy_rectangle()s
     if (tw > _text_width || th > _text_height) {
@@ -274,36 +235,23 @@ byte * TextRenderingEngine::RenderText(
         printf ("TRE: resizing rendering buffer to: w:%d, h:%d" EOL, tw, th);
     }
 
-    // render the txt_rows
-    int b = hh;
-    for (int i = 0 ; i < txt_rows.Count (); i++) {
-        int l = (tw - txt_rows_size[i].X) / 2; // hcenter
-        int t = b - hh;
-        // printf ("TRE: render text of size: w:%d, h:%d" EOL,
-        //    txt_rows_size[i].X, txt_rows_size[i].Y);
-        fnt->RenderText (
-            txt_rows[i], row_buf, txt_rows_size[i].X, txt_rows_size[i].Y);
+    fnt->RenderText (txt, row_buf, tw, th);
     /*printf ("After RenderText()\n");
-    for (int y = 0; y < txt_rows_size[i].Y; y++) {
-        for (int x = 0; x < txt_rows_size[i].X; x++)
-            printf ("%2X ", row_buf[y*2*txt_rows_size[i].X+2*x]);
+    for (int y = 0; y < th; y++) {
+        for (int x = 0; x < tw; x++)
+            printf ("%2X ", row_buf[y*2*tw+2*x]);
         printf ("\n");
     }*/
-        // printf ("TRE: copy rectangle: _tw: %d, l:%d, t:%d, w:%d, h:%d" EOL,
-        //       _text_width, l, t, txt_rows_size[i].X, txt_rows_size[i].Y);
-        Font::CopyRectangle (
-            _text_buffer, _text_width, l, t,
-            row_buf, txt_rows_size[i].X, txt_rows_size[i].Y,
-            txt_rows_size[i].X*2);
+    // printf ("TRE: copy rectangle: _tw: %d, 0:%d, 0:%d, w:%d, h:%d" EOL,
+    //       _text_width, 0, 0, tw, th);
+    Font::CopyRectangle (
+        _text_buffer, _text_width, 0, 0, row_buf, tw, th, tw*2);
     /*printf ("After CopyRectangle()\n");
     for (int y = 0; y < _text_height; y++) {
         for (int x = 0; x < _text_width; x++)
             printf ("%2X ", _text_buffer[y*2*_text_width+2*x]);
         printf ("\n");
     }*/
-        b += hh+line_spacing;
-    }
-
     return _text_buffer;
 }// TextRenderingEngine::RenderText()
 
