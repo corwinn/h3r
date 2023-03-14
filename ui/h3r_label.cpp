@@ -74,6 +74,9 @@ void Label::OnVisibilityChanged()
 
 void Label::SetText(const String & value)
 {
+    // no need to call ton of code if nothing changed
+    if (_text == value) return;
+
     _text = value;
     SetText ();
 }
@@ -151,6 +154,8 @@ void Label::SetText()
 
 void Label::SetColor(unsigned int c)
 {
+    if (_color == c) return;
+    _color = c; // preserve it
     for (int i = 0; i < _tkeys.Count (); i++)
         Window::UI->ChangeTextColor (_tkeys[i], c);
 }
@@ -158,6 +163,7 @@ void Label::SetColor(unsigned int c)
 void Label::UpdateVisible()
 {
     if (nullptr == _vs) return;
+    if (_vs->Hidden ()) return; // don't update anything if there is no vs
     auto RE = Window::UI;
     int ty {}; // translate y
     for (int i = 0; i < _tkeys.Count (); i++) {
