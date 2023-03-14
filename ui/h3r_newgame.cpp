@@ -252,7 +252,7 @@ NewGameDialog::NewGameDialog(Window * base_window)
     {
         __pointless_verbosity::CriticalSection_Acquire_finally_release
             ___ {_map_gate};
-        if (_maps.Count () > 0) map = _maps[0];
+        if (_maps.Count () > 0) map = _maps.FirstMap ();
     }
     SetListItem (map);
 }// NewGameDialog::NewGameDialog()
@@ -267,9 +267,6 @@ NewGameDialog::~NewGameDialog()
     for (int i = 0; i < _map_items.Count (); i++)
         H3R_DESTROY_NESTED_OBJECT(_map_items[i], NewGameDialog::ListItem,
             ListItem)
-
-    for (auto m : _maps)
-        H3R_DESTROY_OBJECT(m, Map)
 }
 
 DialogResult NewGameDialog::ShowDialog()
@@ -357,6 +354,8 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
         int x1=24, x2=56, x3=91, x4=122, x5=309, x6=342, y=121, y2=123;
         NewGameDialog::ListItem * itm {};
         //TODO this is causing OnRender due to the threaded IO
+        // The idea is to create them all and hide/show according to
+        // _maps.Count ()
         for (int i = 0; i < H3R_VISIBLE_LIST_ITEMS; i++) {
             H3R_CREATE_OBJECT(itm, NewGameDialog::ListItem) {
                 _tab_avail_scen,
@@ -416,36 +415,50 @@ void NewGameDialog::OnRender()
 {
     Window::OnRender ();
 
-    if (nullptr == _tab_avail_scen_vs) return;
+    if (nullptr == _tab_avail_scen_vs || _maps.Count () <= 0 ) return;
 
-    if (_scan_for_maps.Complete ()) {
-        if (_tab_avail_scen_vs->Max != _maps.Count ()) {
-            printf ("Found: %d maps" EOL, _maps.Count ());
-            _tab_avail_scen_vs->Max = _maps.Count ();
-        }
-    }
-
-    static bool show_once {};
-    if (show_once) return; // from here on, this is done on Scroll events only.
     __pointless_verbosity::CriticalSection_Acquire_finally_release
         ___ {_map_gate};
-    if (_tab_avail_scen_vs->Max != _maps.Count ())
+    /*printf ("Min: %d, Max: %d, cnt: %d\n", (int)_tab_avail_scen_vs->Min,
+        (int)_tab_avail_scen_vs->Max, _maps.Count ());*/
+    if (_tab_avail_scen_vs->Max != _maps.Count ()) // update in real-time
         _tab_avail_scen_vs->Max = _maps.Count ();
-    if (_maps.Count () >= _tab_avail_scen_vs->LargeStep
-        && _map_items.Count () == H3R_VISIBLE_LIST_ITEMS) {
+    // from here on, this is done on Scroll events only.
+    // if (_show_once) return;
+    if (_map_items.Count () < H3R_VISIBLE_LIST_ITEMS)
+        return; // aren't created yet
+    _changed = _maps.Count () > _prev_maps_count;
+    _prev_maps_count = _maps.Count ();
+    if (! _changed) return;
+    //if (_maps.Count () >= _tab_avail_scen_vs->LargeStep
+    //    || _scan_for_maps.Complete ()) {
         // the scroll-bar is 1-based
-        int a = _tab_avail_scen_vs->Min - 1;
-        int v = _tab_avail_scen_vs->LargeStep;
-        for (int i = a; i < v+a; i++)
-            _map_items[i-a]->SetMap (_maps[i]);
-            // printf ("maps[%d]: %s" EOL, i, (_maps[i])->Name ().AsZStr ());
-        SetListItem (ChangeSelected (_map_items[0]));
-        show_once = true;
+        // int a = _tab_avail_scen_vs->Pos - 1;
+    auto nmap = _maps.FirstVisible ();
+    for (int i = 0; nullptr != nmap && i < _map_items.Count ()
+        ; i++, nmap = nmap->Next ()) {
+        bool map_changed = _map_items[i]->Map != _maps.Map (nmap);
+        _map_items[i]->SetMap (_maps.Map (nmap));
+        // auto-update to 1st until the user interferes
+        if (0 == i && map_changed && ! _user_changed_selected_item)
+            SetListItem (ChangeSelected (_map_items[0]->Map));
+        // printf ("maps[%d/%d/%p]: %s" EOL, i, _maps.Count (),
+        //     nmap->Next (), _maps.Map (nmap)->Name ().AsZStr ());
     }
+    if (_user_changed_selected_item)
+        ChangeSelected (_selected_map);
+
+    /*if (! _scan_for_maps.Complete ())
+        SetListItem (ChangeSelected (_map_items[0]));*/
+    // change once; no need update to 1st - it shall jump around should the user
+    // selects something
+    // if (nullptr == _selected) SetListItem (ChangeSelected (_map_items[0]));
+    _changed = false;
 }// NewGameDialog::OnRender()
 
 void NewGameDialog::ListItem::SetMap(class Map * map)
 {
+    if (this->Map == map) return;
     this->Map = map;
     Players->SetText (
         String::Format ("%d/%d", map->PlayerNum (), map->HumanPlayers ()));
@@ -464,7 +477,7 @@ void NewGameDialog::ListItem::SetMap(class Map * map)
 
 void NewGameDialog::SetListItem(ListItem * itm)
 {
-    if (nullptr == itm) {              // my defaults differ the original:
+    if (nullptr == itm || nullptr == itm->Map) {// original
         _lid_sname_lbl->SetText ("-"); //       vs ""
         _lid_map_size_sc->Show (0);    // "All" vs "S"
         _lid_sdescr_lbl->SetText ("-");//       vs ""
@@ -479,7 +492,7 @@ void NewGameDialog::SetListItem(ListItem * itm)
     else {
         _lid_sname_lbl->SetText  (itm->Map->Name ());
         _lid_map_size_sc->Show   (itm->Map->Size ());
-        printf ("big text: %s\n", itm->Map->Descr ().AsZStr ());
+        // printf ("big text: %s\n", itm->Map->Descr ().AsZStr ());
         _lid_sdescr_lbl->SetText (itm->Map->Descr ());
         _lid_vcon_sc->Show       (itm->Map->VCon ());
         _lid_vcon_lbl->SetText   (itm->VConText);
@@ -504,23 +517,31 @@ void NewGameDialog::SetListItem(Map * map)
     }
 }// NewGameDialog::SetListItem()
 
-NewGameDialog::ListItem * NewGameDialog::ChangeSelected(
-    NewGameDialog::ListItem * value)
+NewGameDialog::MapListInit::MapListInit(String p, MapList & l,
+    OS::CriticalSection & lg)
+    : MList{l}, MapListGate{lg}, _subject{
+//np base_path: p, observer: this, handle_on_item: &MapListInit::HandleItem
+    p, this, &MapListInit::HandleItem, &MapListInit::Done} {}
+
+NewGameDialog::ListItem * NewGameDialog::ChangeSelected(Map * value)
 {
-    if (value != _selected) {
-        if (_selected) {
-            _selected->Players->SetColor (H3R_TEXT_COLOR_WHITE);
-            _selected->Size->SetColor (H3R_TEXT_COLOR_WHITE);
-            _selected->Name->SetColor (H3R_TEXT_COLOR_WHITE);
+    NewGameDialog::ListItem * result {};
+    //if (value != _selected_map)
+        for (int i = 0; i < _map_items.Count (); i++) {
+            if (_map_items[i]->Map == value) {
+                result = _map_items[i];
+                _map_items[i]->Players->SetColor (H3R_TEXT_COLOR_GOLD);
+                _map_items[i]->Size->SetColor (H3R_TEXT_COLOR_GOLD);
+                _map_items[i]->Name->SetColor (H3R_TEXT_COLOR_GOLD);
+            }
+            else {
+                _map_items[i]->Players->SetColor (H3R_TEXT_COLOR_WHITE);
+                _map_items[i]->Size->SetColor (H3R_TEXT_COLOR_WHITE);
+                _map_items[i]->Name->SetColor (H3R_TEXT_COLOR_WHITE);
+            }
         }
-        _selected = value;
-        if (_selected) {
-            _selected->Players->SetColor (H3R_TEXT_COLOR_GOLD);
-            _selected->Size->SetColor (H3R_TEXT_COLOR_GOLD);
-            _selected->Name->SetColor (H3R_TEXT_COLOR_GOLD);
-        }
-    }
-    return _selected;
+    _selected_map = value;
+    return result;
 }
 
 void NewGameDialog::OnMouseDown(const EventArgs & e)
@@ -531,8 +552,10 @@ void NewGameDialog::OnMouseDown(const EventArgs & e)
     printf ("Mouse down at: %d, %d\n", e.X, e.Y);
     int l=25, r=373, t=123, h=25;
     int row = e.X >= l && e.X <= r ? (e.Y-t)/h : -1;
-    if (row >= 0 && row <= _map_items.Count ())
-        SetListItem (ChangeSelected (_map_items[row]));
+    if (row >= 0 && row <= _map_items.Count ()) {
+        _user_changed_selected_item = true;
+        SetListItem (ChangeSelected (_map_items[row]->Map));
+    }
 }
 
 NAMESPACE_H3R

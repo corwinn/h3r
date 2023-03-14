@@ -45,6 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_asyncfsenum.h"
 #include "h3r_spritecontrol.h"
 #include "h3r_map.h"
+#include "h3r_dll.h"
+#include "h3r_sort.h"
 
 H3R_NAMESPACE
 
@@ -105,7 +107,7 @@ H3R_NAMESPACE
 //  - load progress bars: loadprog.def
 //  - load background: loadbar.pcx
 #undef public
-class NewGameDialog : public DialogWindow, public IHandleEvents
+class NewGameDialog final : public DialogWindow, public IHandleEvents
 #define public public:
 {
     // private List<int> _re_keys {};
@@ -210,8 +212,93 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
         void SetMap(class Map * map);
     };// ListItem
     private List<ListItem *> _map_items {H3R_VISIBLE_LIST_ITEMS};
-    private ListItem * _selected {};
-    private List<Map *> _maps {};
+    // private ListItem * _selected {};
+    private Map * _selected_map {};
+    private using Node = LList<Map *>;
+#undef public
+    private class MapList final : public ISortable<Node>
+#define public public:
+    {
+        private Node * _head {}, * _tail {};
+        private Node * _visible {};
+        private int _cnt {};
+        public ~MapList()
+        {
+            // printf ("destroying %d nodes\n", _cnt);
+            while (_tail) {
+                auto n = _tail->Prev ();
+                _tail = _tail->Delete (); _cnt--; // keep the LL up to date
+                H3R_DESTROY_OBJECT(_tail->Data, Map)
+                H3R_DESTROY_OBJECT(_tail, LList<class Map *>)
+                // printf (" destr %d nodes\n", _cnt);
+                _tail = n;
+            }
+            H3R_ENSURE(0 == _cnt, "bug at an LL")
+            _head = _tail = _visible = 0;
+        }
+
+        // ISortable<Node>
+        Node * first() override { return _head; }
+        Node * next(Node * a) override { return a->Next (); }
+        bool cmp(Node * a, Node * b) override
+        {
+            //TODO This compiles w/o String having "operator>=" what the?
+            // return a->Data->Name () >= b->Data->Name ();
+
+            // The default; TODO the other keys; the multi-key always has
+            //                   Name() as 2nd priority
+            auto k1 = String::Format ("%d%s", a->Data->Version (),
+                a->Data->Name ().AsZStr ());
+            auto k2 = String::Format ("%d%s", b->Data->Version (),
+                b->Data->Name ().AsZStr ());
+            auto len = k1.Length () < k2.Length () ? k1.Length ()
+                : k2.Length ();
+            return OS::Memcmp (k1.AsZStr (), k2.AsZStr (), len) >= 0;
+        }
+        // insert "b" prior "a"; b != null ; nullptr as "b" will get you a null
+        // dereference; when "a" is nullptr "b" is the new last one
+        void insert(Node * a, Node * b) override
+        {
+            if (b == _tail) _tail = b->Prev ();
+            if (b == _head) _head = b->Next ();
+            if (nullptr == a) { _tail = _tail->InsertAfter (b->Delete ()); }
+            else {
+                a->Insert (b->Delete ());
+                if (a == _head) _head = b;
+            }
+        }
+
+        public inline void Add(class Map * m)
+        {
+            Node * n {};
+            H3R_CREATE_OBJECT(n, Node) {}; _cnt++;
+            n->Data = m;
+            if (! _head) _head = _tail = _visible = n;
+            else {
+                // As it happens it does matter if inserting at _head or not: in
+                // a live update scene this is causing unsorted items being
+                // displayed, when sorting is partitioned, resulting in top item
+                // staying still while next n-1 are constantly being changed:
+                // _head->InsertAfter (n); if (! _tail) _tail = n;
+
+                // This renders better, because the unsorted partition is being
+                // constructed at ll.tail while a few at ll.head are being
+                // displayed.
+                _tail = _tail->InsertAfter (n);
+            }
+        }
+        public inline class Map * FirstMap() const { return this->Map (_head); }
+        public inline Node * FirstVisible() const { return _visible; }
+        public inline Node * First() const { return _head; }
+        public inline class Map * Map(Node * n) const
+        {
+            return nullptr != n ? n->Data : nullptr;
+        }
+        public inline int Count() const { return _cnt; }
+        public inline void SetVisible(Node * n) { _visible = n; }
+    };
+    private MapList _maps {};
+
     private OS::CriticalSection _map_gate {};
     // Does the original do recursive scan: no.
     // Does it do an async. scan: no.
@@ -219,10 +306,11 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     //LATER think about an option to show progress somewhere
     private class MapListInit final // header_only = true
     {
-        private List<Map *> & MapList;
+        private MapList & MList;
         private OS::CriticalSection & MapListGate;
         private AsyncFsEnum<MapListInit> _subject;
         private int _files {}, _dirs {};
+        // AsyncFsEnum<MapListInit> handler
         private bool HandleItem(
             const H3R_NS::AsyncFsEnum<MapListInit>::EnumItem & itm)
         {
@@ -243,14 +331,25 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
             {
                 __pointless_verbosity::CriticalSection_Acquire_finally_release
                     ___ {MapListGate};
-                MapList.Add (map);
+                MList.Add (map);
+                //TODO name this SORT_PARTITION_SIZE or something
+                if (MList.Count () % 200 == 0) {
+                    sort (MList);
+                    // update _visible; this should not happen on UI sort event
+                    MList.SetVisible (MList.First ());
+                }
             }
             return ! Stop;
         }
-        public MapListInit(String p, List<Map *> & l, OS::CriticalSection & lg)
-            : MapList{l}, MapListGate{lg}, _subject{
-//np base_path: p, observer: this, handle_on_item: &MapListInit::HandleItem
-                p, this, &MapListInit::HandleItem} {}
+        // AsyncFsEnum<MapListInit> handler
+        private void Done()
+        {
+            printf ("Found: %d maps" EOL, MList.Count ());
+            sort (MList);
+            // update _visible; this should not happen on UI sort event
+            MList.SetVisible (MList.First ());
+        }
+        public MapListInit(String p, MapList & l, OS::CriticalSection & lg);
         public bool Complete() const { return _subject.Complete (); }
         public int Files() const { return _files; }
         public int Directories() const { return _dirs; }
@@ -259,8 +358,11 @@ class NewGameDialog : public DialogWindow, public IHandleEvents
     private void SetListItem(ListItem *);
     private void SetListItem(Map *);
 
-    private NewGameDialog::ListItem * ChangeSelected(NewGameDialog::ListItem *);
+    private NewGameDialog::ListItem * ChangeSelected(Map *);
 
+    private bool _changed {}; // temporary - until TabControl
+    private bool _user_changed_selected_item {};
+    private int _prev_maps_count {};
     protected void OnRender() override;
 
     // The game changes selection based on mouse down location, but on mouse up
