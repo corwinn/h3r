@@ -132,6 +132,7 @@ class Game final
     private class ResManagerInit final
     {
         private H3R_NS::GameArchives GA {};
+        // its IO as well - the RM needs IOThread
         private H3R_NS::ResManager & RM;
         private H3R_NS::AsyncFsEnum<ResManagerInit> _subject;
         private int _files {}, _dirs {};
@@ -160,10 +161,12 @@ class Game final
             } else _dirs++;
             return true;
         }
-        public ResManagerInit(H3R_NS::String path, H3R_NS::ResManager& rm)
+        private void Done() {}
+        public ResManagerInit(H3R_NS::String path, H3R_NS::ResManager & rm)
             : GA {}, RM{rm}, _subject{
 //np base_path: path, observer: this, handle_on_item: &ResManagerInit::HandleItem
-                path, this, &ResManagerInit::HandleItem} {}
+                path, this, &ResManagerInit::HandleItem, &ResManagerInit::Done}
+        {}
         public bool Complete() const { return _subject.Complete (); }
         public int Files() const { return _files; }
         public int Directories() const { return _dirs; }
