@@ -247,6 +247,33 @@ void ScrollBar::OnMouseDown(const EventArgs & e)
         Pos = Pos + LargeStep;
         if (notify) NotifyOnScroll (Pos-p);
     }
+    else if (e.Y > _t) {
+        _my = e.Y - (_t-(Control::Pos ().Y+_a));
+        _drag = true;
+    }
+}
+
+void ScrollBar::OnMouseMove(const EventArgs & e)
+{
+    Control::OnMouseMove (e);
+    if (_drag) {
+        int dy = e.Y - _my; // vector
+        if (dy) {
+            int d1 = Size ().Height - 3 * _a; // pixels
+            int d2 = (Max - Min);             // scroll units
+            int p = static_cast<int>(Min + dy * (1.0*d2/d1)); // projection
+            int d = p-Pos; // delta scroll units
+            bool notify = p >= Min && p <= Max;
+            Pos = p;
+            if (notify && d) NotifyOnScroll (d);
+        }
+    }
+}
+
+void ScrollBar::OnMouseUp(const EventArgs & e)
+{
+    Control::OnMouseUp (e);
+    _drag = false; _my = 0;
 }
 
 NAMESPACE_H3R

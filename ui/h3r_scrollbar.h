@@ -104,6 +104,10 @@ class ScrollBar final : public Control, public IHandleEvents
     private void OnVisibilityChanged() override;
     private void OnMoved(int, int) override;
     private void OnMouseDown(const EventArgs &) override;
+    private void OnMouseMove(const EventArgs &) override;
+    private void OnMouseUp(const EventArgs &) override;
+    private bool _drag {};
+    private int _my {};
 };// ScrollBar
 
 NAMESPACE_H3R

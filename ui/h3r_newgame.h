@@ -353,7 +353,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         private OS::CriticalSection & MapListGate;
         private AsyncFsEnum<MapListInit> _subject;
         private int _files {}, _dirs {};
-        private int _supported_maps {};
+        // private int _supported_maps {};
         // AsyncFsEnum<MapListInit> handler
         private bool HandleItem(
             const H3R_NS::AsyncFsEnum<MapListInit>::EnumItem & itm)
