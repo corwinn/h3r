@@ -74,6 +74,26 @@ void Label::OnVisibilityChanged()
 
 void Label::SetText(const String & value)
 {
+    // Creating it on the fly is causing RM.Load is causing ProcessMessages is
+    // causing re-entry at OnRender - and that's not ok. so.
+    // In this case this method is called by the constructors e.g. the init.
+    // code is here.
+    //
+    // UI and RM use-case: Load all resources outside of event-driven protected
+    // areas like OnRender().
+    //
+    // It is the same situation as with the button: I need to create
+    // foo in order for it to init its size from unknown, so I can position
+    // it later. In this case I need ScrollBar::Width() in order to align
+    // it right at the text box. This time the VBO gets updated.
+    if (_ml && !_vs) {
+        H3R_CREATE_OBJECT(_vs, ScrollBar) {
+            this, Pos (), _mb.Height};
+        _vs->Scroll.Subscribe (this, &Label::HandleScroll);
+        _vs->SetPos (Pos ().X + _mb.Width - _vs->Width (),
+            _vs->Control::Pos ().Y);
+    }
+
     // no need to call ton of code if nothing changed
     if (_text == value) return;
 
@@ -114,17 +134,6 @@ void Label::SetText()
     int y = Pos ().Y;
     _font_h = TRE.FontHeight (_font);
     if (text_rows.Count () * _font_h > _mb.Height) { // needs a vscrollbar
-        // It is the same situation as with the button: I need to create
-        // foo in order for it to init its size from unknown, so I can position
-        // it later. In this case I need ScrollBar::Width() in order to align
-        // it right at the text box. This time the VBO gets updated.
-        if (!_vs) {
-            H3R_CREATE_OBJECT(_vs, ScrollBar) {
-                this, Point {Pos ().X, y}, _mb.Height};
-            _vs->Scroll.Subscribe (this, &Label::HandleScroll);
-            _vs->SetPos (Pos ().X + _mb.Width - _vs->Width (),
-                _vs->Control::Pos ().Y);
-        }
         text_rows.Clear ();
         //LATER There is some invisible padding here; I doubt the game will
         //      allow a glyph to "touch" the scrollbar
