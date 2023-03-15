@@ -262,10 +262,11 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
 
             // The default; TODO the other keys; the multi-key always has
             //                   Name() as 2nd priority
+            //TODO their sort is case-insensitive: "n" is prior "M"
             auto k1 = String::Format ("%d%s", a->Data->Version (),
-                a->Data->Name ().AsZStr ());
+                a->Data->Name ().ToLower ().AsZStr ());
             auto k2 = String::Format ("%d%s", b->Data->Version (),
-                b->Data->Name ().AsZStr ());
+                b->Data->Name ().ToLower (). AsZStr ());
             auto len = k1.Length () < k2.Length () ? k1.Length ()
                 : k2.Length ();
             return OS::Memcmp (k1.AsZStr (), k2.AsZStr (), len) >= 0;
@@ -281,7 +282,9 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
 
             if (b == _tail) _tail = b->Prev ();
             if (b == _head) _head = b->Next ();
-            if (nullptr == a) { _tail = _tail->InsertAfter (b->Delete ()); }
+            if (nullptr == a) {
+                if (b != _tail) _tail = _tail->InsertAfter (b->Delete ());
+            }
             else {
                 a->Insert (b->Delete ());
                 if (a == _head) _head = b;
@@ -332,7 +335,10 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             return nullptr != n ? n->Data : nullptr;
         }
         public inline int Count() const { return _cnt; }
-        public inline void SetVisible(Node * n) { _visible = n; }
+        public inline void SetVisible(Node * n)
+        {
+            if (nullptr != n) _visible = n;
+        }
     };// MapList
     private MapList _maps {};
 
@@ -347,6 +353,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         private OS::CriticalSection & MapListGate;
         private AsyncFsEnum<MapListInit> _subject;
         private int _files {}, _dirs {};
+        private int _supported_maps {};
         // AsyncFsEnum<MapListInit> handler
         private bool HandleItem(
             const H3R_NS::AsyncFsEnum<MapListInit>::EnumItem & itm)
@@ -359,7 +366,8 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 Map * map {};
                 H3R_CREATE_OBJECT(map, Map) {itm.Name, header_only = true};
             Dbg.Enabled = true;
-            if (! map->SupportedVersion ()) { // SOD
+            //TODO check: the game skips nameless maps it seems
+            if (! map->SupportedVersion () || map->Name ().Empty ()) { // SOD
                 Dbg << "Skipped unsupported map (" << map->VersionName ()
                     << ") : " << itm.Name << EOL;
                 H3R_DESTROY_OBJECT(map, Map)
@@ -369,6 +377,8 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 __pointless_verbosity::CriticalSection_Acquire_finally_release
                     ___ {MapListGate};
                 MList.Add (map);
+                /*printf ("add: map[%3d]: %s\n", _supported_maps++,
+                        map->Name ().AsZStr ());*/
                 //TODO name this SORT_PARTITION_SIZE or something
                 if (MList.Count () % 200 == 0)
                     sort (MList);
@@ -378,11 +388,18 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         // AsyncFsEnum<MapListInit> handler
         private void Done()
         {
+            //TODO Log::Unbuffered
             printf ("Found: %d maps" EOL, MList.Count ());
             // the file enum thread still - so don't invite race conditions
             __pointless_verbosity::CriticalSection_Acquire_finally_release
                 ___ {MapListGate};
             sort (MList);
+            /*auto n = MList.First ();
+            int id = 0;
+            while (nullptr != n) {
+                printf ("map[%3d]: %s\n", id++, n->Data->Name ().AsZStr ());
+                n = n->Next ();
+            }*/
         }
         public MapListInit(String p, MapList & l, OS::CriticalSection & lg);
         public bool Complete() const { return _subject.Complete (); }
@@ -398,11 +415,13 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     private bool _changed {}; // temporary - until TabControl
     private bool _user_changed_selected_item {};
     private int _prev_maps_count {};
-    protected void OnRender() override;
+    private void OnRender() override;
 
     // The game changes selection based on mouse down location, but on mouse up
     // event; looks inconsistent; this remake will act on mouse down.
-    protected void OnMouseDown(const EventArgs &) override;
+    private void OnMouseDown(const EventArgs &) override;
+
+    private void Scroll(EventArgs *);
 };// NewGameDialog
 
 NAMESPACE_H3R

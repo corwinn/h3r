@@ -350,6 +350,7 @@ void NewGameDialog::ToggleAvailScen(EventArgs *)
             // _tab_avail_scen_vs->Scroll.Subscribe (this, ?);
         _tab_avail_scen_vs->Min = 1; // just to be on the safe side
         _tab_avail_scen_vs->LargeStep = H3R_VISIBLE_LIST_ITEMS;
+        _tab_avail_scen_vs->Scroll.Subscribe (this, &NewGameDialog::Scroll);
 
         int x1=24, x2=56, x3=91, x4=122, x5=309, x6=342, y=121, y2=123;
         NewGameDialog::ListItem * itm {};
@@ -421,8 +422,15 @@ void NewGameDialog::OnRender()
         ___ {_map_gate};
     /*printf ("Min: %d, Max: %d, cnt: %d\n", (int)_tab_avail_scen_vs->Min,
         (int)_tab_avail_scen_vs->Max, _maps.Count ());*/
-    if (_tab_avail_scen_vs->Max != _maps.Count ()) // update in real-time
-        _tab_avail_scen_vs->Max = _maps.Count ();
+    if (_tab_avail_scen_vs->Max != _maps.Count ()) { // update in real-time
+        if (_maps.Count () > H3R_VISIBLE_LIST_ITEMS)
+            _tab_avail_scen_vs->Max =
+                _maps.Count () - H3R_VISIBLE_LIST_ITEMS + 1;
+        else
+            _tab_avail_scen_vs->Max = H3R_VISIBLE_LIST_ITEMS; // no scroll
+        // it clamps to Max-Min: no worries
+        _tab_avail_scen_vs->LargeStep = H3R_VISIBLE_LIST_ITEMS;
+    }
 
     if (_map_items.Count () < H3R_VISIBLE_LIST_ITEMS)
         return; // aren't created yet
@@ -518,6 +526,7 @@ NewGameDialog::MapListInit::MapListInit(String p, MapList & l,
 
 NewGameDialog::ListItem * NewGameDialog::ChangeSelected(Map * value)
 {
+    // printf ("s: %p, v: %p\n", _selected_map, value);
     NewGameDialog::ListItem * result {};
     //if (value != _selected_map)
         for (int i = 0; i < _map_items.Count (); i++) {
@@ -542,13 +551,35 @@ void NewGameDialog::OnMouseDown(const EventArgs & e)
     DialogWindow::OnMouseDown (e);
 
     //LATER stop ignoring modifiers
-    printf ("Mouse down at: %d, %d\n", e.X, e.Y);
+    // printf ("Mouse down at: %d, %d\n", e.X, e.Y);
+
+    // ListItem
     int l=25, r=373, t=123, h=25;
-    int row = e.X >= l && e.X <= r ? (e.Y-t)/h : -1;
+    int row = e.X >= l && e.X <= r && e.Y >= 122 && e.Y <= 572 ? (e.Y-t)/h : -1;
     if (row >= 0 && row <= _map_items.Count ()) {
         _user_changed_selected_item = true;
         SetListItem (ChangeSelected (_map_items[row]->Map));
     }
+}
+
+void NewGameDialog::Scroll(EventArgs * e)
+{
+    /*printf ("Scroll: Min: %d, Max: %d, SmallStep: %d, LargeStep: %d, "
+        "Delta: %d, Pos: %d\n",
+        (int)(_tab_avail_scen_vs->Min),
+        (int)(_tab_avail_scen_vs->Max),
+        (int)(_tab_avail_scen_vs->SmallStep),
+        (int)(_tab_avail_scen_vs->LargeStep),
+        e->Delta,
+        (int)(_tab_avail_scen_vs->Pos));*/
+    if (e->Delta > 0)
+        for (int i = 0; i < e->Delta; i++)
+            _maps.SetVisible (_maps.FirstVisible ()->Next ());
+    else if (e->Delta < 0)
+        for (int i = 0; i < -e->Delta; i++)
+            _maps.SetVisible (_maps.FirstVisible ()->Prev ());
+    _user_changed_selected_item = true; // don't auto-select the 1st item
+    _prev_maps_count--; // the most odd "changed" :)
 }
 
 NAMESPACE_H3R
