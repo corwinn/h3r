@@ -423,18 +423,16 @@ void NewGameDialog::OnRender()
         (int)_tab_avail_scen_vs->Max, _maps.Count ());*/
     if (_tab_avail_scen_vs->Max != _maps.Count ()) // update in real-time
         _tab_avail_scen_vs->Max = _maps.Count ();
-    // from here on, this is done on Scroll events only.
-    // if (_show_once) return;
+
     if (_map_items.Count () < H3R_VISIBLE_LIST_ITEMS)
         return; // aren't created yet
+
     _changed = _maps.Count () > _prev_maps_count;
     _prev_maps_count = _maps.Count ();
     if (! _changed) return;
-    //if (_maps.Count () >= _tab_avail_scen_vs->LargeStep
-    //    || _scan_for_maps.Complete ()) {
-        // the scroll-bar is 1-based
-        // int a = _tab_avail_scen_vs->Pos - 1;
-    auto nmap = _maps.FirstVisible ();
+
+    //TODO this results in 1200 "if" per second for no apparent reason; refine
+    auto nmap = _maps.FirstVisible (); // shall be modified by Scroll()
     for (int i = 0; nullptr != nmap && i < _map_items.Count ()
         ; i++, nmap = nmap->Next ()) {
         bool map_changed = _map_items[i]->Map != _maps.Map (nmap);
@@ -448,11 +446,6 @@ void NewGameDialog::OnRender()
     if (_user_changed_selected_item)
         ChangeSelected (_selected_map);
 
-    /*if (! _scan_for_maps.Complete ())
-        SetListItem (ChangeSelected (_map_items[0]));*/
-    // change once; no need update to 1st - it shall jump around should the user
-    // selects something
-    // if (nullptr == _selected) SetListItem (ChangeSelected (_map_items[0]));
     _changed = false;
 }// NewGameDialog::OnRender()
 

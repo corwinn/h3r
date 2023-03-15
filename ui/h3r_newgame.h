@@ -215,6 +215,20 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     // private ListItem * _selected {};
     private Map * _selected_map {};
     private using Node = LList<Map *>;
+    // Encapsulates pretty complicated state of a map list being sorted and
+    // updated and rendered in real-time:
+    //   * thread 1: an async. file enumerator:
+    //     * adding maps
+    //     * performing multi-key sort when certain amount of maps is added
+    //   * thread 2: main: rendering a fragment of the list while complying with
+    //     user interaction:
+    //     * select a map
+    //     * scroll up/down the map list
+    //     * stop thread 1 when the user decides to close the dialog
+    // Why? Because if you have many maps (or slow, or under a heavy load HDD)
+    // you can start playing prior all of them are being enumerated.
+    // Because a program should handle things gracefully. Because there is no
+    // objective reason to not do so.
 #undef public
     private class MapList final : public ISortable<Node>
 #define public public:
@@ -238,6 +252,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         }
 
         // ISortable<Node>
+        //TODO testme
         Node * first() override { return _head; }
         Node * next(Node * a) override { return a->Next (); }
         bool cmp(Node * a, Node * b) override
@@ -259,6 +274,11 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         // dereference; when "a" is nullptr "b" is the new last one
         void insert(Node * a, Node * b) override
         {
+            // printf("<> prior: a: %p, b: %p, v: %p\n", a, b, _visible);
+
+            // it is a little bit complicated: _visible shall stay at nth node
+            Node * b_prev = b->Prev ();
+
             if (b == _tail) _tail = b->Prev ();
             if (b == _head) _head = b->Next ();
             if (nullptr == a) { _tail = _tail->InsertAfter (b->Delete ()); }
@@ -266,7 +286,24 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 a->Insert (b->Delete ());
                 if (a == _head) _head = b;
             }
-        }
+
+            // _visible stays at nth node
+            if (_visible == a) _visible = b;
+            else if (_visible == b) { if (b_prev) _visible = b_prev; }
+            else { if (_visible->Prev ()) _visible = _visible->Prev (); }
+
+            // printf("<> after: a: %p, b: %p, v: %p\n", a, b, _visible);
+            // Battle-field test unit.
+            // Diagram-warrior: nodes_lls_sorting_and_rt-ui.dia
+            // Bug caught in 3 minutes: incorrect handling of "v" is neither "a"
+            // nor "b" case.
+            // When dealing with nodes (LL, Trees, Nets, Graphs, Whatever) use
+            // diagrams, and common sense, or face serious time waste.
+            // This here is simple; try understanding the linux memory manager.
+            /*
+            H3R_ENSURE(_visible == _head, "bug hunter: back to the white-board")
+            */
+        }// ISortable.insert()
 
         public inline void Add(class Map * m)
         {
@@ -296,7 +333,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         }
         public inline int Count() const { return _cnt; }
         public inline void SetVisible(Node * n) { _visible = n; }
-    };
+    };// MapList
     private MapList _maps {};
 
     private OS::CriticalSection _map_gate {};
@@ -333,11 +370,8 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                     ___ {MapListGate};
                 MList.Add (map);
                 //TODO name this SORT_PARTITION_SIZE or something
-                if (MList.Count () % 200 == 0) {
+                if (MList.Count () % 200 == 0)
                     sort (MList);
-                    // update _visible; this should not happen on UI sort event
-                    MList.SetVisible (MList.First ());
-                }
             }
             return ! Stop;
         }
@@ -345,9 +379,10 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         private void Done()
         {
             printf ("Found: %d maps" EOL, MList.Count ());
+            // the file enum thread still - so don't invite race conditions
+            __pointless_verbosity::CriticalSection_Acquire_finally_release
+                ___ {MapListGate};
             sort (MList);
-            // update _visible; this should not happen on UI sort event
-            MList.SetVisible (MList.First ());
         }
         public MapListInit(String p, MapList & l, OS::CriticalSection & lg);
         public bool Complete() const { return _subject.Complete (); }
