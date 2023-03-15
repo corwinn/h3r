@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_gamefont.h"
 #include "h3r_game.h"
 #include "h3r_log.h"
+#include "h3r_dbg.h"
 
 H3R_NAMESPACE
 
@@ -45,6 +46,12 @@ GameFont::GameFont(const String & name)
     else Log::Err (String::Format ("Font load failed: %s" EOL, name.AsZStr ()));
 }
 
+static inline int HorisontalAdvance(const byte * buf, int i, Fnt & fnt)
+{
+    return (i > 0 ? fnt.GlyphXOffset2 (buf[i-1]) : 0)
+        + fnt.GlyphXOffset1 (buf[i]) + fnt.GlyphWidth (buf[i]);
+}
+
 Point GameFont::MeasureText(const String & text)
 {
     if (! _fnt) return Point {};
@@ -52,7 +59,7 @@ Point GameFont::MeasureText(const String & text)
     result.Y = _fnt.Height ();
     const byte * buf = text.AsByteArray ();
     for (int i = 0; i < text.Length (); i++)
-        result.X += _fnt.HorisontalAdvance (buf[i]);
+        result.X += HorisontalAdvance (buf, i, _fnt);
     return result;
 }
 
@@ -65,7 +72,7 @@ Point GameFont::MeasureText(const String & text, int width,
     const byte * buf = text.AsByteArray ();
     int w {};
     for (int i = 0; i < text.Length (); i++) {
-        int delta = _fnt.HorisontalAdvance (buf[i]);
+        int delta = HorisontalAdvance (buf, i, _fnt);
         result.X += delta;
         if ((w += delta) > width) { w = delta; if (on_width) on_width (i); }
     }
@@ -75,11 +82,13 @@ Point GameFont::MeasureText(const String & text, int width,
 // Convert 1 byte .fnt to 2 bytes GL_LUMINANCE_ALPHA
 static void CopyGlyph(byte * dst, int w, int px, byte * src, int gw, int gh)
 {
-    H3R_ENSURE(px >= 0, "can't render in front of the bitmap")
+    /* H3R_ENSURE(px >= 0, "can't render in front of the bitmap")
+    printf (" bug hunter: dst: %p, w: %d, px: %d, src: %p, gw: %d, gh: %d\n",
+        dst, w, px, src, gw, gh);*/
     size_t dst_pitch = 2*w;
-    byte * dst_row = dst + 2*px;
+    byte * dst_row = dst + 2*(px < 0 ? 0 : px);
     for (int y = 0; y < gh ; y++) {
-        for (int x = 0; x < gw ; x++) {
+        for (int x = (px < 0 ? -px : 0); x < gw ; x++) {
             byte c = src[y*gw+x];
             // dst_row[2*x] = c > 0 ? 255 : 0;    // 255: 1, 255
             // last resort to protect against wrong memory access
@@ -95,31 +104,26 @@ static void CopyGlyph(byte * dst, int w, int px, byte * src, int gw, int gh)
 
 void GameFont::RenderText(const String & text, byte * buf, int w, int h)
 {
+    /*Point pp = MeasureText (text);
+    printf ("bug-hunter: buf: %p, w: %d, h: %d, txt.w:%d\n", buf, w, h,
+        pp.Width);*/
     (void)h; //TODO
     const byte * txt = text.AsByteArray ();
-    int advance0 = _fnt.GlyphXOffset1 (txt[0]);
-    if (advance0 < 0) advance0 = 0;//TODO can't render in front of the bitmap
-    int gh = _fnt.Height (); int advance_x = advance0;
+    int gh = _fnt.Height (); int advance_x = 0;
     for (int i = 0; i < text.Length (); i++) {
         int gw = _fnt.GlyphWidth (txt[i]);
         byte * glyph = _fnt.GlyphBitmap (txt[i]);
-    // TODO h3r_debug_helpers
-    /*printf ("Glyph %3d, advance:%d :" EOL, txt[i], advance_x);
-    for (int y = 0; y < gh; y++) {
-        for (int x = 0; x < gw; x++)
-            printf ("%3d ", glyph[y*gw+x]);
-        printf (EOL);
-    }*/
+        /*Dbg.Fmt ("Glyph %3d, advance: ", txt[i]) << advance_x << " :" << EOL;
+        PrintBuf2D ("%3d ", glyph, gw, gh, 1);*/
+        /*printf (" bug-hunter g:[%d, %d, %d]\n", _fnt.GlyphXOffset1 (txt[i]),
+            _fnt.GlyphWidth (txt[i]), _fnt.GlyphXOffset2 (txt[i]));*/
+        advance_x += _fnt.GlyphXOffset1 (txt[i])
+            + (i > 0 ? _fnt.GlyphXOffset2 (txt[i-1]) : 0);
         CopyGlyph (buf, w, advance_x, glyph, gw, gh);
-    /*printf ("buf after glyph %3d:" EOL, txt[i]);
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++)
-            printf ("%3d ", buf[y*2*w+2*x]);
-        printf (EOL);
-    }*/
-        advance_x += _fnt.HorisontalAdvance (txt[i]) - advance0;
+        /*Dbg.Fmt ("buf after glyph %3d:", txt[i]) << EOL;
+        PrintBuf2D ("%3d ", buf, w, h, 2);*/
+        advance_x += _fnt.GlyphWidth (txt[i]);
     }
-}
-
+}// GameFont::RenderText()
 
 NAMESPACE_H3R

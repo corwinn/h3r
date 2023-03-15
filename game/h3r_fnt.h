@@ -125,11 +125,22 @@ class Fnt final : public ResDecoder
     }// Init
     private Array<Fnt::Glyph> _glyphs {256}; // cache
     public operator bool() { return _ok; }//TODO at the base class
-    public inline int HorisontalAdvance(byte char_index)
+    // Off: testing HorisontalAdvance() at game_font:
+    //   g[n-1].o2 + g[n].o1 + g[n].w
+    /*public inline int HorisontalAdvance(byte char_index)
     {
         const Fnt::Glyph & g = _glyphs[char_index];
+        auto adv_x = g.XOffset1 + g.Width + g.XOffset2;
+        if (adv_x < g.Width) {
+            // Such offsets are causing buffer overruns at the renderer, because
+            // Measured < rendered for the last glyph.
+            //TODO figure out these odd numbers at each glyph
+            // printf ("<> figure me out: glyph info: 1: %d, w: %d, 2: %d\n",
+            //     g.XOffset1, g.Width, g.XOffset2);
+        }
+        // H3R_ENSURE(adv_x >= g.Width, "bug hunter: txt_h_adv: this ain't it")
         return g.XOffset1 + g.Width + g.XOffset2;
-    }
+    }*/
     public inline int GlyphWidth(byte char_index)
     {
         return _glyphs[char_index].Width;
@@ -138,10 +149,16 @@ class Fnt final : public ResDecoder
     {
         return _glyphs[char_index].Bitmap;
     }
-    // For line start
+    // For line start.
     public inline int GlyphXOffset1(byte char_index)
     {
         return _glyphs[char_index].XOffset1;
+    }
+    // For measure - XOffset2 shouldn't be used for the last char: see the bug
+    // hunter above.
+    public inline int GlyphXOffset2(byte char_index)
+    {
+        return _glyphs[char_index].XOffset2;
     }
 };// Fnt
 
