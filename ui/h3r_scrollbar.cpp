@@ -198,18 +198,16 @@ void ScrollBar::NotifyOnScroll(int d)
 
 void ScrollBar::HandleScrollDown(EventArgs *)
 {
-    static EventArgs args {};
-    args.Delta = 1; // the mid button moved 1 down
-    Pos = Pos + args.Delta; // Why using Property? - that's why
-    Scroll (&args);
+    bool notify = Pos != Max;
+    Pos = Pos + SmallStep; // Why using Property? - that's why
+    if (notify) NotifyOnScroll (SmallStep);
 }
 
 void ScrollBar::HandleScrollUp(EventArgs *)
 {
-    static EventArgs args {};
-    args.Delta = -1; // the mid button moved 1 up
-    Pos = Pos + args.Delta;
-    Scroll (&args);
+    bool notify = Pos != Min;
+    Pos = Pos - SmallStep;
+    if (notify) NotifyOnScroll (-SmallStep);
 }
 
 void ScrollBar::OnVisibilityChanged()
@@ -228,6 +226,27 @@ void ScrollBar::OnMoved(int dx, int dy)
     RE->UpdateLocation (_key_b, dx, dy);
     btn_up->SetPos (btn_up->Pos ().X + dx, btn_up->Pos ().Y + dy);
     btn_dn->SetPos (btn_dn->Pos ().X + dx, btn_dn->Pos ().Y + dy);
+}
+
+void ScrollBar::OnMouseDown(const EventArgs & e)
+{
+    Control::OnMouseDown (e);
+
+    Point pos = Control::Pos (), size = Size ();
+    if (e.X < pos.X || e.X > pos.X + _a) return;
+    if (e.Y < pos.Y + _a || e.Y > pos.Y + size.Height - _a) return;
+    if (e.Y < _t) {
+        bool notify = Pos != Min;
+        int p = Pos;
+        Pos = Pos - LargeStep;
+        if (notify) NotifyOnScroll (Pos-p);
+    }
+    else if (e.Y > _t+_a) {
+        bool notify = Pos != Max;
+        int p = Pos;
+        Pos = Pos + LargeStep;
+        if (notify) NotifyOnScroll (Pos-p);
+    }
 }
 
 NAMESPACE_H3R
