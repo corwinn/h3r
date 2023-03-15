@@ -41,6 +41,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+// print h rows, w size each; cell: buf[x,y][n-1]
+void PrintBuf2D(const char * cell_fmt, const byte * buf, int w, int h, int n);
+
 // Convenience.
 struct UnqueuedThreadSafeDebugLog final
 {

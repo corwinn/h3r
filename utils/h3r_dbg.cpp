@@ -41,4 +41,14 @@ UnqueuedThreadSafeDebugLog & UnqueuedThreadSafeDebugLog::D()
     static UnqueuedThreadSafeDebugLog l; return l;
 }
 
+void PrintBuf2D(const char * cell_fmt, const byte * buf, int w, int h, int n)
+{
+    auto & log = UnqueuedThreadSafeDebugLog::D ();
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++)
+            log.Fmt (cell_fmt, buf[y*n*w+x*n]);
+        log << EOL;
+    }
+}
+
 NAMESPACE_H3R
