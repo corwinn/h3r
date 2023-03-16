@@ -439,20 +439,7 @@ void NewGameDialog::OnRender()
     _prev_maps_count = _maps.Count ();
     if (! _changed) return;
 
-    //TODO this results in 1200 "if" per second for no apparent reason; refine
-    auto nmap = _maps.FirstVisible (); // shall be modified by Scroll()
-    for (int i = 0; nullptr != nmap && i < _map_items.Count ()
-        ; i++, nmap = nmap->Next ()) {
-        bool map_changed = _map_items[i]->Map != _maps.Map (nmap);
-        _map_items[i]->SetMap (_maps.Map (nmap));
-        // auto-update to 1st until the user interferes
-        if (0 == i && map_changed && ! _user_changed_selected_item)
-            SetListItem (ChangeSelected (_map_items[0]->Map));
-        // printf ("maps[%d/%d/%p]: %s" EOL, i, _maps.Count (),
-        //     nmap->Next (), _maps.Map (nmap)->Name ().AsZStr ());
-    }
-    if (_user_changed_selected_item)
-        ChangeSelected (_selected_map);
+    Model2View ();
 
     _changed = false;
 }// NewGameDialog::OnRender()
@@ -579,7 +566,27 @@ void NewGameDialog::Scroll(EventArgs * e)
         for (int i = 0; i < -e->Delta; i++)
             _maps.SetVisible (_maps.FirstVisible ()->Prev ());
     _user_changed_selected_item = true; // don't auto-select the 1st item
-    _prev_maps_count--; // the most odd "changed" :)
+    Model2View ();
+    // _user_changed_selected_item = true; // don't auto-select the 1st item
+    // _prev_maps_count--; // the most odd "changed" :)
+}
+
+void NewGameDialog::Model2View()
+{
+    //TODO this results in 1200 "if" per second for no apparent reason; refine
+    auto nmap = _maps.FirstVisible (); // shall be modified by Scroll()
+    for (int i = 0; nullptr != nmap && i < _map_items.Count ()
+        ; i++, nmap = nmap->Next ()) {
+        bool map_changed = _map_items[i]->Map != _maps.Map (nmap);
+        _map_items[i]->SetMap (_maps.Map (nmap));
+        // auto-update to 1st until the user interferes
+        if (0 == i && map_changed && ! _user_changed_selected_item)
+            SetListItem (ChangeSelected (_map_items[0]->Map));
+        // printf ("maps[%d/%d/%p]: %s" EOL, i, _maps.Count (),
+        //     nmap->Next (), _maps.Map (nmap)->Name ().AsZStr ());
+    }
+    if (_user_changed_selected_item)
+        ChangeSelected (_selected_map);
 }
 
 void NewGameDialog::OnKeyDown(const EventArgs & e)
@@ -591,30 +598,45 @@ void NewGameDialog::OnKeyDown(const EventArgs & e)
     if (nullptr == _tab_avail_scen_vs) return;
 
     if (! _tab_avail_scen->Hidden ()) switch (e.Key) {
-        case H3R_KEY_ARROW_DN:
-            // move the selected one (the gold-colored) down; scroll down
-            // when it is the bottom one
+        case H3R_KEY_ARROW_DN: {// see the docs at SelectedMap2ListItemIndex()
+            int si = SelectedMap2ListItemIndex ();
+            if (si < _map_items.Count ()-1) { // just change the selected item
+                SetListItem (ChangeSelected (_map_items[si+1]->Map));
+                break;
+            }
             if (_tab_avail_scen_vs->Pos < _tab_avail_scen_vs->Max) {
                 _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos + 1;
-                SetListItem (ChangeSelected (_map_items[0]->Map));
                 kbd.Delta = 1; Scroll (&kbd);
+                SetListItem (ChangeSelected (// bottom one stays selected
+                    _map_items[_map_items.Count ()-1]->Map));
             }
-        break;
-        case H3R_KEY_ARROW_UP:
+        } break;
+        case H3R_KEY_ARROW_UP: {
+            int si = SelectedMap2ListItemIndex ();
+            if (si > 0) { // just change the selected item
+                SetListItem (ChangeSelected (_map_items[si-1]->Map));
+                break;
+            }
             if (_tab_avail_scen_vs->Pos > _tab_avail_scen_vs->Min) {
                 _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos - 1;
                 kbd.Delta = -1; Scroll (&kbd);
+                SetListItem (ChangeSelected (// top one stays selected
+                    _map_items[0]->Map));
             }
-        break;
+        } break;
         case H3R_KEY_PGDN:
             if (_tab_avail_scen_vs->Pos < _tab_avail_scen_vs->Max) {
                 kbd.Delta = _tab_avail_scen_vs->Max - _tab_avail_scen_vs->Pos;
                 // printf ("Delta: %d\n", kbd.Delta);
                 if (kbd.Delta > _tab_avail_scen_vs->LargeStep)
                     kbd.Delta = _tab_avail_scen_vs->LargeStep;
-                else { kbd.Delta = _tab_avail_scen_vs->LargeStep - (_tab_avail_scen_vs->Pos - (_tab_avail_scen_vs->Max - _tab_avail_scen_vs->LargeStep));
+                /*else {
+                    kbd.Delta = _tab_avail_scen_vs->LargeStep
+                        - (_tab_avail_scen_vs->Pos
+                            - (_tab_avail_scen_vs->Max
+                                - _tab_avail_scen_vs->LargeStep));
                     // printf ("Delta2: %d\n", kbd.Delta);
-                }
+                }*/
                 _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos+kbd.Delta;
                 Scroll (&kbd);
             }
