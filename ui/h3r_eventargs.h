@@ -42,6 +42,10 @@ H3R_NAMESPACE
 #define H3R_NO_KEY 0
 #define H3R_KEY_Q 1
 #define H3R_KEY_ESC 2
+#define H3R_KEY_ARROW_DN 3
+#define H3R_KEY_ARROW_UP 4
+#define H3R_KEY_PGDN 5
+#define H3R_KEY_PGUP 6
 
 #define H3R_MKEY_LEFT 1
 
