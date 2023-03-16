@@ -217,6 +217,7 @@ void SDLWindow::ProcessMessages()
         switch (_e.type) {
             case SDL_WINDOWEVENT: HandleWindowEvent (); break;
             case SDL_KEYUP: HandleKeyboardEvent (e); break;
+            case SDL_KEYDOWN: HandleKeyboardEventDown (e); break;
             case SDL_MOUSEMOTION: HandleMouseMotionEvent (e); break;
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP: HandleMouseButtonEvent (e); break;
@@ -251,6 +252,39 @@ void SDLWindow::HandleKeyboardEvent(EventArgs & e)
             { e.Key = H3R_KEY_Q; OnKeyUp (e); e.Key = H3R_NO_KEY; } break;
         case SDL_SCANCODE_ESCAPE:
             { e.Key = H3R_KEY_ESC; OnKeyUp (e); e.Key = H3R_NO_KEY; } break;
+        case SDL_SCANCODE_UP:
+            { e.Key = H3R_KEY_ARROW_UP; OnKeyUp (e); e.Key = H3R_NO_KEY; }
+        break;
+        case SDL_SCANCODE_DOWN:
+            { e.Key = H3R_KEY_ARROW_DN; OnKeyUp (e); e.Key = H3R_NO_KEY; }
+        break;
+        case SDL_SCANCODE_PAGEUP:
+            { e.Key = H3R_KEY_PGUP; OnKeyUp (e); e.Key = H3R_NO_KEY; } break;
+        case SDL_SCANCODE_PAGEDOWN:
+            { e.Key = H3R_KEY_PGDN; OnKeyUp (e); e.Key = H3R_NO_KEY; } break;
+        default: break;
+    }
+}
+
+void SDLWindow::HandleKeyboardEventDown(EventArgs & e)
+{
+    THE_WAY_IS_SHUT
+
+    switch (_e.key.keysym.scancode) {
+        case SDL_SCANCODE_Q:
+            { e.Key = H3R_KEY_Q; OnKeyDown (e); e.Key = H3R_NO_KEY; } break;
+        case SDL_SCANCODE_ESCAPE:
+            { e.Key = H3R_KEY_ESC; OnKeyDown (e); e.Key = H3R_NO_KEY; } break;
+        case SDL_SCANCODE_UP:
+            { e.Key = H3R_KEY_ARROW_UP; OnKeyDown (e); e.Key = H3R_NO_KEY; }
+        break;
+        case SDL_SCANCODE_DOWN:
+            { e.Key = H3R_KEY_ARROW_DN; OnKeyDown (e); e.Key = H3R_NO_KEY; }
+        break;
+        case SDL_SCANCODE_PAGEUP:
+            { e.Key = H3R_KEY_PGUP; OnKeyDown (e); e.Key = H3R_NO_KEY; } break;
+        case SDL_SCANCODE_PAGEDOWN:
+            { e.Key = H3R_KEY_PGDN; OnKeyDown (e); e.Key = H3R_NO_KEY; } break;
         default: break;
     }
 }

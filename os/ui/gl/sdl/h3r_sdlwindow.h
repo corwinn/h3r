@@ -75,6 +75,7 @@ class SDLWindow : public OSWindow
     private void Resized();
     private void HandleWindowEvent();
     private void HandleKeyboardEvent(EventArgs &);
+    private void HandleKeyboardEventDown(EventArgs &);
     private void HandleMouseMotionEvent(EventArgs &);
     private void HandleMouseButtonEvent(EventArgs &);
     public void ProcessMessages() override;
