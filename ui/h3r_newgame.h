@@ -420,6 +420,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     // The game changes selection based on mouse down location, but on mouse up
     // event; looks inconsistent; this remake will act on mouse down.
     private void OnMouseDown(const EventArgs &) override;
+    private void OnKeyDown(const EventArgs &) override;
 
     private void Scroll(EventArgs *);
 };// NewGameDialog

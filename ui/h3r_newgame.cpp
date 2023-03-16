@@ -582,4 +582,55 @@ void NewGameDialog::Scroll(EventArgs * e)
     _prev_maps_count--; // the most odd "changed" :)
 }
 
+void NewGameDialog::OnKeyDown(const EventArgs & e)
+{
+    static EventArgs kbd {};
+    DialogWindow::OnKeyDown (e);
+
+    if (nullptr == _tab_avail_scen) return;
+    if (nullptr == _tab_avail_scen_vs) return;
+
+    if (! _tab_avail_scen->Hidden ()) switch (e.Key) {
+        case H3R_KEY_ARROW_DN:
+            // move the selected one (the gold-colored) down; scroll down
+            // when it is the bottom one
+            if (_tab_avail_scen_vs->Pos < _tab_avail_scen_vs->Max) {
+                _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos + 1;
+                SetListItem (ChangeSelected (_map_items[0]->Map));
+                kbd.Delta = 1; Scroll (&kbd);
+            }
+        break;
+        case H3R_KEY_ARROW_UP:
+            if (_tab_avail_scen_vs->Pos > _tab_avail_scen_vs->Min) {
+                _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos - 1;
+                kbd.Delta = -1; Scroll (&kbd);
+            }
+        break;
+        case H3R_KEY_PGDN:
+            if (_tab_avail_scen_vs->Pos < _tab_avail_scen_vs->Max) {
+                kbd.Delta = _tab_avail_scen_vs->Max - _tab_avail_scen_vs->Pos;
+                // printf ("Delta: %d\n", kbd.Delta);
+                if (kbd.Delta > _tab_avail_scen_vs->LargeStep)
+                    kbd.Delta = _tab_avail_scen_vs->LargeStep;
+                else { kbd.Delta = _tab_avail_scen_vs->LargeStep - (_tab_avail_scen_vs->Pos - (_tab_avail_scen_vs->Max - _tab_avail_scen_vs->LargeStep));
+                    // printf ("Delta2: %d\n", kbd.Delta);
+                }
+                _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos+kbd.Delta;
+                Scroll (&kbd);
+            }
+        break;
+        case H3R_KEY_PGUP:
+            if (_tab_avail_scen_vs->Pos > _tab_avail_scen_vs->Min) {
+                kbd.Delta = _tab_avail_scen_vs->Pos - _tab_avail_scen_vs->Min;
+                if (kbd.Delta > _tab_avail_scen_vs->LargeStep)
+                    kbd.Delta = _tab_avail_scen_vs->LargeStep;
+                kbd.Delta = -kbd.Delta;
+                _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos+kbd.Delta;
+                Scroll (&kbd);
+            }
+        break;
+        default: break;
+    }// switch (e.Key)
+}// NewGameDialog::OnKeyDown()
+
 NAMESPACE_H3R
