@@ -73,6 +73,7 @@ class Control
     // The difference: _enabled represents whether a control is "grayed out";
     // _hidden controls whether a control is rendered at all.
 
+    protected Control * _base {};
     protected Window * _window;
     protected h3rDepthOrder _depth;
     // Render order. See Window: "Automatic depth".
@@ -112,14 +113,36 @@ class Control
     public inline void SetEnabled(bool value) { _enabled = value; }
     // Has a specific sprite for it.
     public inline bool Enabled() const { return _enabled; }
-    public inline void SetHidden(bool value)
+    private List<Control *> _shown {};
+    public inline void SetHidden(bool value, bool src_is_base = false)
     {
-        for (auto p : _n) p->SetHidden (value);
-        if (value != _hidden) {
-            _hidden = value;
-            OnVisibilityChanged ();
+        if (value == _hidden) return;
+        // sub-control shouldn't become visible while its base is not
+        if (nullptr != _base && ! value && _base->Hidden ()) return;
+        _hidden = ! _hidden;
+        // handle: base.hide() ; shown[i].hide() ; base.show()
+        //         (the anything-but-simple booleans in action)
+        //         "&& _base->Hidden ()" == src_is_base=true at
+        //         "_shown[i]->SetHidden (false);"
+        if (_hidden && nullptr != _base && _base->Hidden () && ! src_is_base)
+            _base->_shown.Remove (this);
+        OnVisibilityChanged ();
+        // printf ("<> %p SetHidden: %d\n", this, value);
+        if (value) { // hide
+            _shown.Clear (); // remember what was hidden
+            for (int i = 0, c = _n.Count (); i < c; i++)
+                if (! _n[i]->Hidden ()) {
+                    // printf ("<> %p store hidden %d\n", this, i);
+                    _shown.Add (_n[i]);
+                    _n[i]->SetHidden (true, true);
+                };
         }
-    }
+        else // show only those that weren't hidden
+            for (int i = 0, c = _shown.Count (); i < c; i++) {
+                // printf ("<> %p SetHidden show non-hidden %d\n", this, i);
+                _shown[i]->SetHidden (false);
+            }
+    }// SetHidden()
     // "hidden" do receive no events.
     public inline bool Hidden() const { return _hidden; }
 
@@ -132,18 +155,24 @@ class Control
     protected virtual void OnRender(/*GC &*/) {} //TODO useless?
     protected virtual void OnMouseMove(const EventArgs &e)
     {
-        for (auto p : _n) p->OnMouseMove (e);
+        for (auto p : _shown) p->OnMouseMove (e);
     }
     protected virtual void OnMouseUp(const EventArgs & e)
     {
-        for (auto p : _n) p->OnMouseUp (e);
+        for (auto p : _shown) p->OnMouseUp (e);
     }
     protected virtual void OnMouseDown(const EventArgs & e)
     {
-        for (auto p : _n) p->OnMouseDown (e);
+        for (auto p : _shown) p->OnMouseDown (e);
     }
-    protected virtual void OnKeyDown(const EventArgs &) {}
-    protected virtual void OnKeyUp(const EventArgs &) {}
+    protected virtual void OnKeyDown(const EventArgs & e)
+    {
+        for (auto p : _shown) p->OnKeyDown (e);
+    }
+    protected virtual void OnKeyUp(const EventArgs & e)
+    {
+        for (auto p : _shown) p->OnKeyUp (e);
+    }
 
     // Handle this in order for your control to honor shown/hidden state.
     protected virtual void OnVisibilityChanged() {}

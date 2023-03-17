@@ -53,7 +53,7 @@ void Control::Add(Control * c)
 }
 
 Control::Control(Control * base)
-    : _window{GetWindow (base)}
+    : _base{base}, _window{GetWindow (base)}
 {
     H3R_ARG_EXC_IF(this == base, "this can't be base")
     H3R_ARG_EXC_IF(nullptr == base, "base shan't be null")
