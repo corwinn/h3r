@@ -36,7 +36,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_TEXCACHE_H_
 
 #include "h3r.h"
+#if _WIN32
+#undef public
+#endif
 #include <GL/gl.h>
+#if _WIN32
+#define public public:
+#endif
 #include "h3r_string.h"
 
 H3R_NAMESPACE

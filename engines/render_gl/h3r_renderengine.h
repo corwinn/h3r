@@ -46,6 +46,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_dll.h"
 #include "h3r_stack.h"
 #include <GL/gl.h>
+#if _WIN32
+#include <GL/glext.h>
+#endif
 
 H3R_NAMESPACE
 

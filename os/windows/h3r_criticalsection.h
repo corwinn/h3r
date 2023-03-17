@@ -40,7 +40,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Used by base building blocks: Log_stderr, Log_stdout, MM
 
 #include "h3r.h"
+#undef public
 #include "windows.h"
+#define public public:
 
 H3R_NAMESPACE
 namespace OS {

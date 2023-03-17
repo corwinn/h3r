@@ -54,7 +54,8 @@ H3R_ERR_DEFINE_HANDLER(Log,H3R_ERR_HANDLER_UNHANDLED)
 static char ** a2b(PSTR lpCmdLine, int & argc)
 {
     //TODO implement me
-    static H3R_NS::Array<char> result {H3R_NS::OS::Strlen (lpCmdLine) + 4};
+    static H3R_NS::Array<char> result {
+        static_cast<int>(H3R_NS::OS::Strlen (lpCmdLine)) + 4};
     H3R_NS::OS::Memmove ((char *) result, lpCmdLine, result.Length () - 4);
     argc = 1;
     static char * cptr {};

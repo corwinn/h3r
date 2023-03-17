@@ -36,7 +36,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _H3R_OS_H_
 
 #if _WIN32
+#undef public
 #include "windows.h"
+#define public public:
 #endif
 
 #include <stdio.h>

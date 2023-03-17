@@ -39,7 +39,7 @@ APPS = h3r-static.exe
 LOG ?= -DLOG_FILE
 PLATFORM ?= windows
 STATIC ?= TODO
-RENDER_API ?= gl
+RENDER_ENGINE ?= render_gl
 WIN_SYSTEM ?= gl/sdl
 CC = ccache x86_64-w64-mingw32-clang
 CXX = ccache x86_64-w64-mingw32-clang++
@@ -48,23 +48,24 @@ H3R_TEST ?=
 _W  = -Wall -Wextra -Wshadow
 _O  = -O0 -g -DH3R_DEBUG -DH3R_MM -fno-exceptions -fno-threadsafe-statics \
  $(H3R_TEST) -DGL_GLEXT_PROTOTYPES -DSDL_MAIN_HANDLED -Umain -Dmain=WinMain \
- $(LOG)
+ $(LOG) -U_USE_32BIT_TIME_T
 _F  = -fvisibility=hidden
 #TODO release build _F = -fvisibility=hidden -fno-rtti
 _L = -mwindows -mconsole -lglu32 -lopengl32 -Wl,--as-needed -lzlib \
- -lSDL2 -lSDL2_mixer
+ -lSDL2 -lSDL2_mixer -lwinpthread
 _Ls = -static -mwindows -mconsole -lglu32 -lopengl32 -Wl,--as-needed \
  -lzlibstatic -lwinmm -limm32 -lole32 -loleaut32 -lversion -ldinput8 \
- -lsetupapi -lSDL2 -lSDL2_mixer
+ -lsetupapi -lSDL2 -lSDL2_mixer -lwinpthread
 _I  = -I. -Ios -Ios/$(PLATFORM) -Iutils -Iui -Istream -Iasync -Igame \
- -Igame/$(RENDER_API) \
- -Ios/ui -Ios/ui/$(WIN_SYSTEM) `$(CC_SYSROOT)/bin/sdl2-config --cflags`
+ -Iengines -Iengines/$(RENDER_ENGINE) \
+ -Ios/ui -Ios/ui/$(WIN_SYSTEM) -Iffd `$(CC_SYSROOT)/bin/sdl2-config --cflags`
 
 # c++14 is required for h3r_gl.h
 CXXFLAGS = $(_I) -std=c++14 $(_O) $(_F) $(_W)
 SRC = $(wildcard ./*/*.cpp)
 SRC += $(wildcard os/$(PLATFORM)/*.cpp)
-SRC += $(wildcard game/$(RENDER_API)/*.cpp)
+SRC += $(wildcard engines/$(RENDER_ENGINE)/*.cpp)
+SRC += $(wildcard engines/*.cpp)
 SRC += $(wildcard os/ui/$(WIN_SYSTEM)/*.cpp)
 SRC := $(filter-out ./prior_publish/%,$(SRC))
 OBJ = $(patsubst %.cpp,%.o,$(SRC))

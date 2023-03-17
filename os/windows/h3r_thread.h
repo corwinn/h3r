@@ -52,6 +52,7 @@ class Thread final
     private HANDLE _thr {};
     // public: static Thread & Create(Proc &);
     public static void Sleep(int); // [milliseconds] : [1;1000]
+    public static void NanoSleep(long); // [nanoseconds]
     public static void SleepForAWhile(); // 1 [millisecond]
     public Thread(Proc &);
     public ~Thread();

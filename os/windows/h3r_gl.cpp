@@ -53,6 +53,15 @@ void (*pglBufferData)(GLenum, GLsizeiptr, const void *, GLenum){};
 void (*pglDeleteBuffers)(GLsizei, const GLuint *){};
  void glDeleteBuffers(GLsizei a, const GLuint * b)
     { pglDeleteBuffers (a, b); }
+void (*pglMultiDrawArrays)(GLenum, const GLint *, const GLsizei *, GLsizei){};
+ void glMultiDrawArrays(GLenum mode, const GLint * first, const GLsizei * count,
+    GLsizei drawcount) { pglMultiDrawArrays (mode, first, count, drawcount); }
+void (*pglBufferSubData)(GLenum, GLintptr, GLsizeiptr, const void *){};
+ void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
+    const void * data) { pglBufferSubData (target, offset, size, data); }
+void (*pglGetBufferSubData)(GLenum, GLintptr, GLsizeiptr, void *){};
+ void glGetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
+    void * data) { pglGetBufferSubData (target, offset, size, data); }
 /*GLuint (*pglCreateShader)(GLenum){};
  GLuint glCreateShader(GLenum a) {return pglCreateShader (a);}
 void (*pglDeleteShader)(GLuint){};
@@ -176,6 +185,9 @@ bool H3rGL_Init()
         && Init_GL_proc ("glBindBuffer", pglBindBuffer)
         && Init_GL_proc ("glBufferData", pglBufferData)
         && Init_GL_proc ("glDeleteBuffers", pglDeleteBuffers)
+        && Init_GL_proc ("glMultiDrawArrays", pglMultiDrawArrays)
+        && Init_GL_proc ("glBufferSubData", pglBufferSubData)
+        && Init_GL_proc ("glGetBufferSubData", pglGetBufferSubData)
         /*&& Init_GL_proc ("glCreateShader", pglCreateShader)
         && Init_GL_proc ("glDeleteShader", pglDeleteShader)
         && Init_GL_proc ("glShaderSource", pglShaderSource)
