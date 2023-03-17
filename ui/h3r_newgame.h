@@ -427,9 +427,9 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     // model: _maps; view: _map_items, _lid_.*
     private void Model2View();
 
-    // The original does something odd: if you select a map and drag the scroll-
-    // bar in such a way that the selected one goes off-screen, selecting
-    // another map using the arrow up/down keys won't focus (make it visible)
+    // The original game does something odd: if you select a map and drag the
+    // scroll-bar in such a way that the selected one goes off-screen, selecting
+    // another map, using the arrow up/down keys, won't focus (make it visible)
     // the selected one.
     // This behavior won't be replicated. Changing selection will focus it (it
     // will show it as the top one.
@@ -437,9 +437,9 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     // Page Up/Down doesn't change the selected map - it just does what the
     // vertical scrollbar does.
     //
-    // Up/Down arrow changes the selected map and scrolls up/down when the
-    // selected item becomes a boundary item (top one + arrow up; bottom one +
-    // arrow down).
+    // Up/Down arrow does change the selected map; and it scrolls the list
+    // up/down when the selected item becomes a boundary item (top one + arrow
+    // up; bottom one + arrow down).
     private inline int SelectedMap2ListItemIndex() // long name on purpose
     {
         for (int i = 0; i < _map_items.Count (); i++)
