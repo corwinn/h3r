@@ -137,7 +137,7 @@ void Label::SetText()
         text_rows.Clear ();
         //LATER There is some invisible padding here; I doubt the game will
         //      allow a glyph to "touch" the scrollbar
-        int pad_r = 2, // guesswork
+        int pad_r = 5, // guesswork
             sbar_pad = _mb.Width - (_vs->Width () + pad_r);
         H3R_ENSURE(sbar_pad > 0, "No space to render the text")
         text_rows = TRE.LayoutText (_font, _text, sbar_pad);
