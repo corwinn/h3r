@@ -439,6 +439,7 @@ void NewGameDialog::OnRender()
     _prev_maps_count = _maps.Count ();
     if (! _changed) return;
 
+    //TODO this results in 1200 "if" per second for no apparent reason; refine
     Model2View ();
 
     _changed = false;
@@ -573,7 +574,6 @@ void NewGameDialog::Scroll(EventArgs * e)
 
 void NewGameDialog::Model2View()
 {
-    //TODO this results in 1200 "if" per second for no apparent reason; refine
     auto nmap = _maps.FirstVisible (); // shall be modified by Scroll()
     for (int i = 0; nullptr != nmap && i < _map_items.Count ()
         ; i++, nmap = nmap->Next ()) {
