@@ -549,7 +549,9 @@ void NewGameDialog::OnMouseDown(const EventArgs & e)
     // ListItem
     int l=25, r=373, t=123, h=25;
     int row = e.X >= l && e.X <= r && e.Y >= 122 && e.Y <= 572 ? (e.Y-t)/h : -1;
-    if (row >= 0 && row <= _map_items.Count ()) {
+    if (row >= 0 && row <= _map_items.Count ()
+        // handle avail maps < list-items
+        && nullptr != _map_items[row]->Map) {
         _user_changed_selected_item = true;
         SetListItem (ChangeSelected (_map_items[row]->Map));
     }
@@ -599,7 +601,8 @@ void NewGameDialog::OnKeyDown(const EventArgs & e)
         case H3R_KEY_ARROW_DN: {// see the docs at SelectedMap2ListItemIndex()
             int si = SelectedMap2ListItemIndex ();
             if (si < _map_items.Count ()-1) { // just change the selected item
-                SetListItem (ChangeSelected (_map_items[si+1]->Map));
+                if (si < _maps.Count ()-1) // handle avail maps < list-items
+                    SetListItem (ChangeSelected (_map_items[si+1]->Map));
                 break;
             }
             if (_tab_avail_scen_vs->Pos < _tab_avail_scen_vs->Max) {

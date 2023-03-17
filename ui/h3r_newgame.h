@@ -409,7 +409,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             // the file enum thread still - so don't invite race conditions
             __pointless_verbosity::CriticalSection_Acquire_finally_release
                 ___ {MapListGate};
-            sort (MList);
+            if (MList.Count () > 1) sort (MList);
             /*auto n = MList.First ();
             int id = 0;
             while (nullptr != n) {
