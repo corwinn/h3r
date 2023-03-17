@@ -114,7 +114,11 @@ class Control
     // Has a specific sprite for it.
     public inline bool Enabled() const { return _enabled; }
     private List<Control *> _shown {};
-    public inline void SetHidden(bool value, bool src_is_base = false)
+    // "base_updating" - internal use only; is set to "true" when a base node is
+    // updating its sub-nodes - i.e. the current invoker of SetHidden() is
+    // this->_base
+    //LATER either a private function: SetHiddenInternal() or Control * invoker
+    public inline void SetHidden(bool value, bool base_updating = false)
     {
         if (value == _hidden) return;
         // sub-control shouldn't become visible while its base is not
@@ -122,9 +126,9 @@ class Control
         _hidden = ! _hidden;
         // handle: base.hide() ; shown[i].hide() ; base.show()
         //         (the anything-but-simple booleans in action)
-        //         "&& _base->Hidden ()" == src_is_base=true at
+        //         "&& _base->Hidden ()" == base_updating=true at
         //         "_shown[i]->SetHidden (false);"
-        if (_hidden && nullptr != _base && _base->Hidden () && ! src_is_base)
+        if (_hidden && nullptr != _base && _base->Hidden () && ! base_updating)
             _base->_shown.Remove (this);
         OnVisibilityChanged ();
         // printf ("<> %p SetHidden: %d\n", this, value);
