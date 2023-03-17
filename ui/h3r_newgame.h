@@ -150,7 +150,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     // H3R_VISIBLE_LIST_ITEMS
     private struct ListItem final //TODO shouldn't this become a Control?
     {
-        Control * Base {};
+        // Control * Base {};
         Label         * Players; // Total/Human
         Label         * Size;    // XL/L/M/S
         SpriteControl * Version; // sprite
@@ -163,7 +163,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         Map * Map {}; //TODO remove me from here
         ListItem(Control * base, Point p_loc, Point sz_loc, Point nm_loc,
             Point ver_loc, Point vcon_loc, Point lcon_loc)
-            : Base{base}
+            // : Base{base}
         {
             H3R_CREATE_OBJECT(Players, Label) {"8/8", "smalfont.fnt", p_loc,
                 base, H3R_TEXT_COLOR_WHITE, false, Point {34, 26}};
@@ -206,10 +206,26 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             Victory->Show (0);
             Loss->Show (0);
             // Everything is hidden
-            Control * all[6] = {Players, Size, Version, Name, Victory, Loss};
-            for (auto c : all) c->SetHidden (true);
+            SetHidden (true);
         }// ListItem::ListItem()
         void SetMap(class Map * map);
+        bool Hidden {};
+        inline void SetHidden(bool value)
+        {
+            Control * all[6] = {Players, Size, Version, Name, Victory, Loss};
+            for (auto c : all) c->SetHidden (Hidden = value);
+        }
+        inline void SetDefaults()
+        {
+            Players->SetText ("0/0");
+            Size->SetText ("-");
+            Version->Show (0x0e);
+            Name->SetText ("-");
+            Victory->Show (0);
+            Loss->Show (0);
+            VConText = "-";
+            LConText = "-";
+        }
     };// ListItem
     private List<ListItem *> _map_items {H3R_VISIBLE_LIST_ITEMS};
     // private ListItem * _selected {};

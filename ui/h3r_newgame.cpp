@@ -426,8 +426,10 @@ void NewGameDialog::OnRender()
         if (_maps.Count () > H3R_VISIBLE_LIST_ITEMS)
             _tab_avail_scen_vs->Max =
                 _maps.Count () - H3R_VISIBLE_LIST_ITEMS + 1;
-        else
-            _tab_avail_scen_vs->Max = H3R_VISIBLE_LIST_ITEMS; // no scroll
+        else {
+            _tab_avail_scen_vs->SetHidden (true);
+            // _tab_avail_scen_vs->Max = _tab_avail_scen_vs->Min; // no scroll
+        }
         // it clamps to Max-Min: no worries
         _tab_avail_scen_vs->LargeStep = H3R_VISIBLE_LIST_ITEMS;
     }
@@ -449,6 +451,11 @@ void NewGameDialog::ListItem::SetMap(class Map * map)
 {
     if (this->Map == map) return;
     this->Map = map;
+    if (nullptr == Map) {
+        SetDefaults ();
+        SetHidden (true);
+        return;
+    }
     Players->SetText (
         String::Format ("%d/%d", map->PlayerNum (), map->HumanPlayers ()));
     Size->SetText (map->SizeName ());
@@ -456,12 +463,10 @@ void NewGameDialog::ListItem::SetMap(class Map * map)
     Name->SetText (map->Name ());
     Victory->Show (map->VCon ());
     Loss->Show (map->LCon ());
-    //TODO pointless for now; show all
-    /*Control * all[6] = {Players, Size, Version, Name, Victory, Loss};
-    for (auto c : all) c->SetHidden (false);*/
-
     VConText = map->VConText ();
     LConText = map->LConText ();
+
+    SetHidden (false);
 }
 
 void NewGameDialog::SetListItem(ListItem * itm)
@@ -493,7 +498,7 @@ void NewGameDialog::SetListItem(ListItem * itm)
 
 void NewGameDialog::SetListItem(Map * map)
 {
-    if (! map) SetListItem(static_cast<ListItem *>(nullptr));
+    if (nullptr == map) SetListItem(static_cast<ListItem *>(nullptr));
     else {
         _lid_sname_lbl->SetText  (map->Name ());
         _lid_map_size_sc->Show   (map->Size ());
@@ -552,14 +557,9 @@ void NewGameDialog::OnMouseDown(const EventArgs & e)
 
 void NewGameDialog::Scroll(EventArgs * e)
 {
-    /*printf ("Scroll: Min: %d, Max: %d, SmallStep: %d, LargeStep: %d, "
-        "Delta: %d, Pos: %d\n",
-        (int)(_tab_avail_scen_vs->Min),
-        (int)(_tab_avail_scen_vs->Max),
-        (int)(_tab_avail_scen_vs->SmallStep),
-        (int)(_tab_avail_scen_vs->LargeStep),
-        e->Delta,
-        (int)(_tab_avail_scen_vs->Pos));*/
+    //TODO appropriate function at the tab-control (when its ready)
+    if (_tab_avail_scen_vs->Hidden ()) return; // no scroll
+
     if (e->Delta > 0)
         for (int i = 0; i < e->Delta; i++)
             _maps.SetVisible (_maps.FirstVisible ()->Next ());
@@ -568,15 +568,13 @@ void NewGameDialog::Scroll(EventArgs * e)
             _maps.SetVisible (_maps.FirstVisible ()->Prev ());
     _user_changed_selected_item = true; // don't auto-select the 1st item
     Model2View ();
-    // _user_changed_selected_item = true; // don't auto-select the 1st item
-    // _prev_maps_count--; // the most odd "changed" :)
 }
 
 void NewGameDialog::Model2View()
 {
     auto nmap = _maps.FirstVisible (); // shall be modified by Scroll()
-    for (int i = 0; nullptr != nmap && i < _map_items.Count ()
-        ; i++, nmap = nmap->Next ()) {
+    for (int i = 0; /*nullptr != nmap &&*/ i < _map_items.Count ()
+        ; i++, nmap = nullptr != nmap ? nmap->Next () : nullptr) {
         bool map_changed = _map_items[i]->Map != _maps.Map (nmap);
         _map_items[i]->SetMap (_maps.Map (nmap));
         // auto-update to 1st until the user interferes
