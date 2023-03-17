@@ -153,7 +153,8 @@ void Label::SetText()
         if (y <= (Pos ().Y+_mb.Height)) _num_visible++;
     }
     if (_vs && ! _vs->Hidden ()) {
-        printf ("<> rows: %d, visible: %d\n", text_rows.Count (), _num_visible);
+        // printf ("<> rows: %d, visible: %d\n", text_rows.Count (),
+        //    _num_visible);
         _vs->Min = 0;
         _vs->Max = _vs->Min + (text_rows.Count () - _num_visible);
         _vs->Pos = 0;

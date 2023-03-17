@@ -81,10 +81,10 @@ LodFS::LodFS(const String & fname)
     //TODO validate entries
     /*int i {0};
     for (const auto & e : _entries)
-        OS::Log_stdout (
-            "%s: entry: %004d: %c (%00000008d/%00000008d) \"%s\"" EOL,
-            fname.AsZStr (), i++, (e.SizeU > e.SizeC && e.SizeC > 0 ? 'C' : 'U'),
-                e.SizeC, e.SizeU, e.Name);*/
+        OS::Log_stdout ("%s: entry: %004d: %c (%00000008d/%00000008d) \"%s\""
+            EOL, fname.AsZStr (), i++,
+            (e.SizeU > e.SizeC && e.SizeC > 0 ? 'C' : 'U'),
+            e.SizeC, e.SizeU, e.Name);*/
 
     H3R_CREATE_OBJECT(_rrs, RefReadStream) {_s, 0, 0};
     H3R_CREATE_OBJECT(_zis, ZipInflateStream) {_rrs, 0, 0};
@@ -129,7 +129,7 @@ Stream * LodFS::Get(const String & res)
 #ifdef IMPROVISED_CACHE
     LodFS::CacheEntry cached_entry {};
     if (_cache.TryGetValue (res.operator const Array<byte> &(), cached_entry)) {
-        printf ("Cached: %s" EOL, res.AsZStr ());
+        // printf ("Cached: %s" EOL, res.AsZStr ());
         return cached_entry.S;
     }
 #endif

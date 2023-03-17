@@ -185,8 +185,8 @@ class ResManager : protected VFS
         public using RMTask::RMTask;
         public inline void Do() override
         {
-            static OS::TimeSpec time_a, time_b;
-            OS::GetCurrentTime (time_a);
+            /*static OS::TimeSpec time_a, time_b;
+            OS::GetCurrentTime (time_a);*/
 
             State.Resource = nullptr;
             // auto all = _subject._vfs_objects.Count ();
@@ -199,9 +199,9 @@ class ResManager : protected VFS
                 if (nullptr != (State.Resource = vfs->Get (State.Name))) break;
             }
 
-            OS::GetCurrentTime (time_b);
+            /*OS::GetCurrentTime (time_b);
             auto frame_time = OS::TimeSpecDiff (time_a, time_b); // [nsec]
-            printf ("RMGetTask: %lu [nsec]" EOL, frame_time);
+            printf ("RMGetTask: %lu [nsec]" EOL, frame_time);*/
         }
         public Stream * GetStream()
         {

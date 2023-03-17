@@ -169,13 +169,13 @@ Array<byte> * Def::Decode(Array<byte> & buf, int u8_num)
             _request->Offset+sizeof(SubSpriteHeader));
         H3R_ENSURE(_request->H.AnimWidth == _w, "leaf.w != tree.w")
         H3R_ENSURE(_request->H.AnimHeight == _h, "leaf.h != tree.h")
-        printf ("DEF: %s: W:%d, H:%d, S: " EOL,
+        /*printf ("DEF: %s: W:%d, H:%d, S: " EOL,
             _request->Name.AsZStr (), _w, _h);
         printf (
             "DEF.H: %s: Type:%d, AW:%d, AH:%d W:%d, H:%d, T:%d, L:%d" EOL,
             _request->Name.AsZStr (), _request->H.Type, _request->H.AnimWidth,
             _request->H.AnimHeight, _request->H.Width, _request->H.Height,
-            _request->H.Top, _request->H.Left);
+            _request->H.Top, _request->H.Left);*/
         /*store_as_bmp (const_cast<char *>(_request->Name.AsZStr ()),
             static_cast<const byte *>(indexed_bitmap),
             sh.Width, sh.Height, 8, static_cast<const byte *>(_palette));*/
