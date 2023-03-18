@@ -44,6 +44,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
+//LATER multi-colored label: text enclosed in {} is colored differently
+//      238, 186, 33; they're colored at the scenario list items and at the
+//      details pane (Name); the selection color does not override it.
+
+
 // A very simple control for positioning text on screen.
 #undef public
 class Label final : public Control, public IHandleEvents
