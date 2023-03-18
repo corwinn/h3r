@@ -41,21 +41,19 @@ H3R_NAMESPACE
 Label::Label(
     const String & text, const String & font, const Point & pos, Control * base,
     unsigned int color, bool mline, Point mbox)
-    : Control {base}, _ml{mline}, _mb{mbox}, _font {font}, _text {text},
-    _color{color}
+    : Control {base}, _ml{mline}, _mb{mbox}, _font {font}, _color{color}
 {
     SetPosNoNotify (pos.X, pos.Y);
-    SetText (_text); // init. the _vs
+    SetText (text); // init. the _vs
 }
 
 Label::Label(
     const String & text, const String & font, const Point & pos, Window * base,
     unsigned int color, bool mline, Point mbox)
-    : Control {base}, _ml{mline}, _mb{mbox}, _font {font}, _text {text},
-    _color{color}
+    : Control {base}, _ml{mline}, _mb{mbox}, _font {font}, _color{color}
 {
     SetPosNoNotify (pos.X, pos.Y);
-    SetText (_text); // init. the _vs
+    SetText (text); // init. the _vs
 }
 
 Label::~Label()

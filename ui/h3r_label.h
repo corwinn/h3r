@@ -53,7 +53,7 @@ class Label final : public Control, public IHandleEvents
     private Point _mb {};
     private List<RenderEngine::TextKey> _tkeys {};
     private String _font;
-    private String _text;
+    private String _text {};
     private unsigned int _color {H3R_TEXT_COLOR_MSGB};
     private class ScrollBar * _vs {};
     private int _num_visible {};
