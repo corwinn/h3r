@@ -125,6 +125,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     private Label         * _lid_lcon_lbl    {};
     private Label         * _lid_diff_lbl    {};
     private Label         * _lid_rating_lbl  {};
+    private class Map     * _lid_map         {}; // selected map
 
     //PERHAPS this shall be a separate class: UserControl
     private Control * _tab_avail_scen {};
@@ -208,8 +209,9 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             // Everything is hidden
             SetHidden (true);
         }// ListItem::ListItem()
-        void SetMap(class Map * map);
+        void SetMap(class Map * map, bool selected = false);
         bool Hidden {};
+        bool Selected {};
         inline void SetHidden(bool value)
         {
             Control * all[6] = {Players, Size, Version, Name, Victory, Loss};
@@ -217,6 +219,8 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         }
         inline void SetDefaults()
         {
+            Selected = false;
+            Map = nullptr;
             Players->SetText ("0/0");
             Size->SetText ("-");
             Version->Show (0x0e);
@@ -228,8 +232,19 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         }
     };// ListItem
     private List<ListItem *> _map_items {H3R_VISIBLE_LIST_ITEMS};
-    // private ListItem * _selected {};
-    private Map * _selected_map {};
+    // Model2View() binds _selected_list_item, _lid_map, and Node->Selected ()
+    private ListItem * _selected_list_item {};
+    // bad design:
+    // private Map * _selected_map {};
+    // private struct Roller final
+    /*private int _sindex {};   // selected index at _map_items
+    private Node * _snode {}; // selected node  at _maps
+    // just change selected
+    private inline void Select(int d)
+    {
+        SetListItem (ChangeSelected (_map_items[_index+d]->Map));
+    }*/
+
     private using Node = LList<Map *>;
     // Encapsulates pretty complicated state of a map list being sorted and
     // updated and rendered in real-time:
@@ -251,6 +266,8 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     {
         private Node * _head {}, * _tail {};
         private Node * _visible {};
+        private Node * _selected {};
+        private bool _auto_selected {true};
         private int _cnt {};
         public ~MapList()
         {
@@ -307,9 +324,11 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             }
 
             // _visible stays at nth node
-            if (_visible == a) _visible = b;
+            if (_visible == a) _visible =  b;
             else if (_visible == b) { if (b_prev) _visible = b_prev; }
             else { if (_visible->Prev ()) _visible = _visible->Prev (); }
+            if (_auto_selected)
+                _selected = _visible;
 
             // printf("<> after: a: %p, b: %p, v: %p\n", a, b, _visible);
             // Battle-field test unit.
@@ -329,7 +348,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             Node * n {};
             H3R_CREATE_OBJECT(n, Node) {}; _cnt++;
             n->Data = m;
-            if (! _head) _head = _tail = _visible = n;
+            if (! _head) _head = _tail = _visible = _selected = n;
             else {
                 // As it happens it does matter if inserting at _head or not: in
                 // a live update scene this is causing unsorted items being
@@ -354,6 +373,14 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         public inline void SetVisible(Node * n)
         {
             if (nullptr != n) _visible = n;
+        }
+        public inline Node * Selected() const { return _selected; }
+        public inline void SetSelected(Node * n)
+        {
+            if (n != _selected) {
+                _auto_selected = false;
+                _selected = n;
+            }
         }
     };// MapList
     private MapList _maps {};
@@ -426,10 +453,11 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     private void SetListItem(ListItem *);
     private void SetListItem(Map *);
 
-    private NewGameDialog::ListItem * ChangeSelected(Map *);
+    // handles mouse clicks and arrow up/down at the scenario list
+    // private NewGameDialog::ListItem * ChangeSelected(int);
 
     private bool _changed {}; // temporary - until TabControl
-    private bool _user_changed_selected_item {};
+    // private bool _user_changed_selected_item {};
     private int _prev_maps_count {};
     private void OnRender() override;
 
@@ -456,12 +484,6 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     // Up/Down arrow does change the selected map; and it scrolls the list
     // up/down when the selected item becomes a boundary item (top one + arrow
     // up; bottom one + arrow down).
-    private inline int SelectedMap2ListItemIndex() // long name on purpose
-    {
-        for (int i = 0; i < _map_items.Count (); i++)
-            if (_map_items[i]->Map == _selected_map) return i;
-        return -1;
-    }
 };// NewGameDialog
 
 NAMESPACE_H3R

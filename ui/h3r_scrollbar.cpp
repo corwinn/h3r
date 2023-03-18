@@ -140,7 +140,7 @@ static bool the_way_is_shut {};
 
 void ScrollBar::UpdateView(EventArgs *)
 {
-    if (Hidden ()) return;
+    // if (Hidden ()) return;
     static bool working {};
     H3R_ARG_EXC_IF(the_way_is_shut, "Don't do that")
     if (working) return; // filter-out re-entry caused by validation
@@ -162,7 +162,7 @@ void ScrollBar::UpdateView(EventArgs *)
 
 void ScrollBar::Model2View()
 {
-    if (Hidden ()) return;
+    // if (Hidden ()) return;
     auto RE = Window::UI;
     // At this game, the only thing to update is the Top of the middle button.
     int d1 = Size ().Height - 3 * _a; // up + dn + mid = 3 * a
