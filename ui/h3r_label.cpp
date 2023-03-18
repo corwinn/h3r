@@ -45,7 +45,7 @@ Label::Label(
     _color{color}
 {
     SetPosNoNotify (pos.X, pos.Y);
-    SetText ();
+    SetText (_text); // init. the _vs
 }
 
 Label::Label(
@@ -55,7 +55,7 @@ Label::Label(
     _color{color}
 {
     SetPosNoNotify (pos.X, pos.Y);
-    SetText ();
+    SetText (_text); // init. the _vs
 }
 
 Label::~Label()
@@ -86,7 +86,7 @@ void Label::SetText(const String & value)
     // foo in order for it to init its size from unknown, so I can position
     // it later. In this case I need ScrollBar::Width() in order to align
     // it right at the text box. This time the VBO gets updated.
-    if (_ml && !_vs) {
+    if (_ml && nullptr == _vs) {
         H3R_CREATE_OBJECT(_vs, ScrollBar) {
             this, Pos (), _mb.Height};
         _vs->Scroll.Subscribe (this, &Label::HandleScroll);
