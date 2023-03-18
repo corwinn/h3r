@@ -582,7 +582,7 @@ void NewGameDialog::Model2View()
         _map_items[i]->SetMap (_maps.Map (nmap), selected);
     }
     if (nullptr != _selected_list_item) // it is visible
-            SetListItem (_selected_list_item);
+        SetListItem (_selected_list_item);
 }
 
 void NewGameDialog::OnKeyDown(const EventArgs & e)
@@ -594,35 +594,28 @@ void NewGameDialog::OnKeyDown(const EventArgs & e)
     if (nullptr == _tab_avail_scen_vs) return;
     if (_tab_avail_scen->Hidden ()) return;
 
-    /*switch (e.Key) {
-        case H3R_KEY_ARROW_DN: {// see the docs at SelectedMap2ListItemIndex()
-            int si = SelectedMap2ListItemIndex ();
-            if (si < _map_items.Count ()-1) { // just change the selected item
-                if (si < _maps.Count ()-1) // handle avail maps < list-items
-                    SetListItem (ChangeSelected (_map_items[si+1]->Map));
-                break;
-            }
-            if (_tab_avail_scen_vs->Pos < _tab_avail_scen_vs->Max) {
+    switch (e.Key) {
+        case H3R_KEY_ARROW_DN: {
+            if (nullptr != _maps.Selected ()
+                && nullptr != _maps.Selected ()->Next ()) {
+                _maps.SetSelected (_maps.Selected ()->Next ());
                 _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos + 1;
-                kbd.Delta = 1; Scroll (&kbd);
-                SetListItem (ChangeSelected (// bottom one stays selected
-                    _map_items[_map_items.Count ()-1]->Map));
+                Model2View ();
+                if (nullptr == _selected_list_item)
+                    kbd.Delta = 1; Scroll (&kbd);
             }
         } break;
         case H3R_KEY_ARROW_UP: {
-            int si = SelectedMap2ListItemIndex ();
-            if (si > 0) { // just change the selected item
-                SetListItem (ChangeSelected (_map_items[si-1]->Map));
-                break;
-            }
-            if (_tab_avail_scen_vs->Pos > _tab_avail_scen_vs->Min) {
+            if (nullptr != _maps.Selected ()
+                && nullptr != _maps.Selected ()->Prev ()) {
+                _maps.SetSelected (_maps.Selected ()->Prev ());
                 _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos - 1;
-                kbd.Delta = -1; Scroll (&kbd);
-                SetListItem (ChangeSelected (// top one stays selected
-                    _map_items[0]->Map));
+                Model2View ();
+                if (nullptr == _selected_list_item)
+                    kbd.Delta = -1; Scroll (&kbd);
             }
         } break;
-        case H3R_KEY_PGDN:
+        /*case H3R_KEY_PGDN:
             if (_tab_avail_scen_vs->Pos < _tab_avail_scen_vs->Max) {
                 kbd.Delta = _tab_avail_scen_vs->Max - _tab_avail_scen_vs->Pos;
                 // printf ("Delta: %d\n", kbd.Delta);
@@ -648,9 +641,9 @@ void NewGameDialog::OnKeyDown(const EventArgs & e)
                 _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos+kbd.Delta;
                 Scroll (&kbd);
             }
-        break;
+        break;*/
         default: break;
-    }// switch (e.Key)*/
+    }// switch (e.Key)
 }// NewGameDialog::OnKeyDown()
 
 NAMESPACE_H3R
