@@ -187,7 +187,9 @@ void SDLWindow::Show()
 void SDLWindow::Render()
 {
     if (! _initialized) return;
-    THE_WAY_IS_SHUT
+    THE_WAY_IS_SHUT // If you're here: don't async-load resources at OnRender :)
+    // Loading resources at OnRender() means you did wrong; resources shall be
+    // loaded elsewhere. OnRender() has extremely heavy task, so ...
 
     if (! _gc || ! _visible) return;
     OnRender ();
