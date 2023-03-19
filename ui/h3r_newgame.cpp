@@ -49,7 +49,7 @@ H3R_NAMESPACE
 NewGameDialog::NewGameDialog(Window * base_window)
     : DialogWindow {base_window, Point {370, 585}},
     _maps {}, _map_gate {},
-    _scan_for_maps {"Maps", _maps, _map_gate} // async
+    _scan_for_maps {"Maps", _maps, _map_gate, _map_list} // async
 {
     H3R_ENSURE(Window::MainWindow != nullptr,
         "NewGameDialog requires MainWindow")
@@ -437,15 +437,9 @@ void NewGameDialog::OnRender()
         else // no scroll
             _tab_avail_scen_vs->SetHidden (true);
     }
-
     if (_map_items.Count () < H3R_VISIBLE_LIST_ITEMS)
         return; // aren't created yet
-
-    _changed = _maps.Count () > _prev_maps_count;
-        _prev_maps_count = _maps.Count ();
-        if (! _changed) return;
-        Model2View ();
-    _changed = false;
+    Model2View ();
 }// NewGameDialog::OnRender()
 
 void NewGameDialog::ListItem::SetMap(class Map * map, bool selected)
@@ -471,7 +465,8 @@ void NewGameDialog::ListItem::SetMap(class Map * map, bool selected)
         String::Format ("%d/%d", map->PlayerNum (), map->HumanPlayers ()));
     Size->SetText (map->SizeName ());
     Version->Show (map->Version ());
-    Name->SetText (map->Name ());
+    // The original game acts this way:
+    Name->SetText (map->Name ().Empty () ? "Unnamed" : map->Name ());
     Victory->Show (map->VCon ());
     Loss->Show (map->LCon ());
     VConText = map->VConText ();
@@ -530,8 +525,8 @@ void NewGameDialog::SetListItem(Map * map)
 }// NewGameDialog::SetListItem()
 
 NewGameDialog::MapListInit::MapListInit(String p, MapList & l,
-    OS::CriticalSection & lg)
-    : MList{l}, MapListGate{lg}, _subject{
+    OS::CriticalSection & lg, Array<Map *> & list)
+    : MList{l}, MapListGate{lg}, MList2{list}, _subject{
 //np base_path: p, observer: this, handle_on_item: &MapListInit::HandleItem
     p, this, &MapListInit::HandleItem, &MapListInit::Done} {}
 
@@ -548,41 +543,28 @@ void NewGameDialog::OnMouseDown(const EventArgs & e)
     if (row >= 0 && row <= _map_items.Count ()
         // handle avail maps < list-items
         && nullptr != _map_items[row]->Map) {
-        // _user_changed_selected_item = true; <- _maps.SetSelected() does that
-        _maps.SetSelected (_maps.FirstVisible ());
-        for (int i = 0; nullptr != _maps.Selected () && i < row; i++)
-            _maps.SetSelected (_maps.Selected ()->Next ());
-        Model2View ();
+        _ml_selected = _ml_top + row;
     }
 }
 
-void NewGameDialog::Scroll(EventArgs * e)
+void NewGameDialog::Scroll(EventArgs *)
 {
+    //TODO ui:timer - to prevent too many events/sec
+    if (_map_list.Length () <= 0) return;
     //TODO appropriate function at the tab-control (when its ready)
     if (_tab_avail_scen_vs->Hidden ()) return; // no scroll
-
-    if (e->Delta > 0)
-        for (int i = 0; i < e->Delta; i++)
-            _maps.SetVisible (_maps.FirstVisible ()->Next ());
-    else if (e->Delta < 0)
-        for (int i = 0; i < -e->Delta; i++)
-            _maps.SetVisible (_maps.FirstVisible ()->Prev ());
-    Model2View ();
+    // the scroll-bar is set-up to match the _map_list
+    _ml_top = _tab_avail_scen_vs->Pos - _tab_avail_scen_vs->Min;
 }
 
-void NewGameDialog::Model2View()
+void NewGameDialog::Model2View() // ensure _map_gate is acquired
 {
-    auto nmap = _maps.FirstVisible (); // shall be modified by Scroll()
-    _selected_list_item = nullptr;
-    for (int i = 0; i < _map_items.Count ()
-        ; i++, nmap = nullptr != nmap ? nmap->Next () : nullptr) {
-        bool selected =
-            nullptr != _maps.Selected () ? _maps.Selected () == nmap : false;
-        if (selected) _selected_list_item = _map_items[i];
-        _map_items[i]->SetMap (_maps.Map (nmap), selected);
-    }
-    if (nullptr != _selected_list_item) // it is visible
-        SetListItem (_selected_list_item);
+    for (int i = 0, j = _ml_top; i < _map_items.Count (); i++, j++)
+        _map_items[i]->SetMap (
+            j < _map_list.Length () ? _map_list[j] : nullptr,
+            j == _ml_selected);
+    if (_map_list.Length () > 0)
+        SetListItem (_map_list[_ml_selected]);
 }
 
 void NewGameDialog::OnKeyDown(const EventArgs & e)
@@ -596,54 +578,63 @@ void NewGameDialog::OnKeyDown(const EventArgs & e)
 
     switch (e.Key) {
         case H3R_KEY_ARROW_DN: {
-            if (nullptr != _maps.Selected ()
-                && nullptr != _maps.Selected ()->Next ()) {
-                _maps.SetSelected (_maps.Selected ()->Next ());
+            if (_map_list.Length ()-1 == _ml_selected) break;
+            _ml_selected++;
+            if (_ml_selected - _ml_top >= H3R_VISIBLE_LIST_ITEMS) {
                 _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos + 1;
-                Model2View ();
-                if (nullptr == _selected_list_item)
-                    kbd.Delta = 1; Scroll (&kbd);
+                Scroll (&kbd);
             }
         } break;
         case H3R_KEY_ARROW_UP: {
-            if (nullptr != _maps.Selected ()
-                && nullptr != _maps.Selected ()->Prev ()) {
-                _maps.SetSelected (_maps.Selected ()->Prev ());
+            if (0 == _ml_selected) break;
+            _ml_selected--;
+            if (_ml_selected < _ml_top) {
                 _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos - 1;
-                Model2View ();
-                if (nullptr == _selected_list_item)
-                    kbd.Delta = -1; Scroll (&kbd);
+                Scroll (&kbd);
             }
         } break;
-        /*case H3R_KEY_PGDN:
-            if (_tab_avail_scen_vs->Pos < _tab_avail_scen_vs->Max) {
-                kbd.Delta = _tab_avail_scen_vs->Max - _tab_avail_scen_vs->Pos;
-                // printf ("Delta: %d\n", kbd.Delta);
-                if (kbd.Delta > _tab_avail_scen_vs->LargeStep)
-                    kbd.Delta = _tab_avail_scen_vs->LargeStep;
-                /*else {
-                    kbd.Delta = _tab_avail_scen_vs->LargeStep
-                        - (_tab_avail_scen_vs->Pos
-                            - (_tab_avail_scen_vs->Max
-                                - _tab_avail_scen_vs->LargeStep));
-                    // printf ("Delta2: %d\n", kbd.Delta);
-                }*/
-/*                _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos+kbd.Delta;
-                Scroll (&kbd);
+        // original bug: the key goes to the description scroll-bar as well
+        case H3R_KEY_PGDN: {
+            // I'm having hard time figuring out the logic of the original.
+            int ns = _ml_selected + H3R_VISIBLE_LIST_ITEMS-1;
+            if (ns >= _map_list.Length ()) break;
+            // anchor bottom
+            int ds = ns - _ml_selected; // delta-selected
+            int nt = _ml_top + ds;
+            if (nt > _map_list.Length ()-H3R_VISIBLE_LIST_ITEMS) {
+                int kt = nt - (_map_list.Length ()-H3R_VISIBLE_LIST_ITEMS);
+                nt = _map_list.Length ()-H3R_VISIBLE_LIST_ITEMS;
+                if (nt < 0) nt = 0;
+                if (_ml_selected == _ml_top)
+                    _ml_selected = nt;      // one time: do this;
+                else _ml_selected = ns-kt ; // the next time: ...; the point?!
             }
-        break;
-        case H3R_KEY_PGUP:
-            if (_tab_avail_scen_vs->Pos > _tab_avail_scen_vs->Min) {
-                kbd.Delta = _tab_avail_scen_vs->Pos - _tab_avail_scen_vs->Min;
-                if (kbd.Delta > _tab_avail_scen_vs->LargeStep)
-                    kbd.Delta = _tab_avail_scen_vs->LargeStep;
-                kbd.Delta = -kbd.Delta;
-                _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos+kbd.Delta;
-                Scroll (&kbd);
-            }
-        break;*/
-        default: break;
+            else
+                _ml_selected = ns;
+            _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Min + (_ml_top = nt);
+        } break;
+        // original bug: the key goes to the description scroll-bar as well
+        case H3R_KEY_PGUP: {//TODO the same odd behavior as H3R_KEY_PGDN
+            //TODO arrow down until 1 line scrolls down; page-up; play the odd
+            //     game again;
+            if (_ml_selected < H3R_VISIBLE_LIST_ITEMS && 0 == _ml_top) break;
+            int np = _ml_selected - H3R_VISIBLE_LIST_ITEMS+1;
+            if (np < 0) np = 0;
+            int dp = _ml_selected - np;
+            _ml_selected = np;
+            _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Pos - dp;
+            Scroll (&kbd);
+        } break;
+        default: return;
     }// switch (e.Key)
+    // focus - a.k.a. - make the selection visible if it went off-screen
+    if (_ml_selected < _ml_top ||
+        _ml_selected >= _ml_top + H3R_VISIBLE_LIST_ITEMS)
+        _ml_top = _ml_selected;
+    if (_ml_top > _map_list.Length ()-H3R_VISIBLE_LIST_ITEMS)
+        _ml_top = _map_list.Length ()-H3R_VISIBLE_LIST_ITEMS;
+    if (_ml_top < 0) _ml_top = 0;
+    _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Min + _ml_top;
 }// NewGameDialog::OnKeyDown()
 
 NAMESPACE_H3R

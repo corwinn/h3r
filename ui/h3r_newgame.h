@@ -47,6 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_map.h"
 #include "h3r_dll.h"
 #include "h3r_sort.h"
+#include "h3r_array.h"
 
 H3R_NAMESPACE
 
@@ -232,18 +233,6 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
         }
     };// ListItem
     private List<ListItem *> _map_items {H3R_VISIBLE_LIST_ITEMS};
-    // Model2View() binds _selected_list_item, _lid_map, and Node->Selected ()
-    private ListItem * _selected_list_item {};
-    // bad design:
-    // private Map * _selected_map {};
-    // private struct Roller final
-    /*private int _sindex {};   // selected index at _map_items
-    private Node * _snode {}; // selected node  at _maps
-    // just change selected
-    private inline void Select(int d)
-    {
-        SetListItem (ChangeSelected (_map_items[_index+d]->Map));
-    }*/
 
     private using Node = LList<Map *>;
     // Encapsulates pretty complicated state of a map list being sorted and
@@ -265,9 +254,6 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
 #define public public:
     {
         private Node * _head {}, * _tail {};
-        private Node * _visible {};
-        private Node * _selected {};
-        private bool _auto_selected {true};
         private int _cnt {};
         public ~MapList()
         {
@@ -281,7 +267,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 _tail = n;
             }
             H3R_ENSURE(0 == _cnt, "bug at an LL")
-            _head = _tail = _visible = 0;
+            _head = _tail = nullptr;
         }
 
         // ISortable<Node>
@@ -302,17 +288,14 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 b->Data->Name ().ToLower (). AsZStr ());
             auto len = k1.Length () < k2.Length () ? k1.Length ()
                 : k2.Length ();
-            return OS::Memcmp (k1.AsZStr (), k2.AsZStr (), len) >= 0;
+            // sort like the original game; the prev sort differs
+            auto tmp = OS::Memcmp (k1.AsZStr (), k2.AsZStr (), len);
+            return 0 == tmp ? k1.Length () > k2.Length () : tmp > 0;
         }
         // insert "b" prior "a"; b != null ; nullptr as "b" will get you a null
         // dereference; when "a" is nullptr "b" is the new last one
         void insert(Node * a, Node * b) override
         {
-            // printf("<> prior: a: %p, b: %p, v: %p\n", a, b, _visible);
-
-            // it is a little bit complicated: _visible shall stay at nth node
-            Node * b_prev = b->Prev ();
-
             if (b == _tail) _tail = b->Prev ();
             if (b == _head) _head = b->Next ();
             if (nullptr == a) {
@@ -322,25 +305,6 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 a->Insert (b->Delete ());
                 if (a == _head) _head = b;
             }
-
-            // _visible stays at nth node
-            if (_visible == a) _visible =  b;
-            else if (_visible == b) { if (b_prev) _visible = b_prev; }
-            else { if (_visible->Prev ()) _visible = _visible->Prev (); }
-            if (_auto_selected)
-                _selected = _visible;
-
-            // printf("<> after: a: %p, b: %p, v: %p\n", a, b, _visible);
-            // Battle-field test unit.
-            // Diagram-warrior: nodes_lls_sorting_and_rt-ui.dia
-            // Bug caught in 3 minutes: incorrect handling of "v" is neither "a"
-            // nor "b" case.
-            // When dealing with nodes (LL, Trees, Nets, Graphs, Whatever) use
-            // diagrams, and common sense, or face serious time waste.
-            // This here is simple; try understanding the linux memory manager.
-            /*
-            H3R_ENSURE(_visible == _head, "bug hunter: back to the white-board")
-            */
         }// ISortable.insert()
 
         public inline void Add(class Map * m)
@@ -348,7 +312,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             Node * n {};
             H3R_CREATE_OBJECT(n, Node) {}; _cnt++;
             n->Data = m;
-            if (! _head) _head = _tail = _visible = _selected = n;
+            if (! _head) _head = _tail = /*_visible = _selected =*/ n;
             else {
                 // As it happens it does matter if inserting at _head or not: in
                 // a live update scene this is causing unsorted items being
@@ -363,27 +327,20 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             }
         }
         public inline class Map * FirstMap() const { return this->Map (_head); }
-        public inline Node * FirstVisible() const { return _visible; }
         public inline Node * First() const { return _head; }
         public inline class Map * Map(Node * n) const
         {
             return nullptr != n ? n->Data : nullptr;
         }
         public inline int Count() const { return _cnt; }
-        public inline void SetVisible(Node * n)
-        {
-            if (nullptr != n) _visible = n;
-        }
-        public inline Node * Selected() const { return _selected; }
-        public inline void SetSelected(Node * n)
-        {
-            if (n != _selected) {
-                _auto_selected = false;
-                _selected = n;
-            }
-        }
     };// MapList
     private MapList _maps {};
+
+    // same load; more memory; but way more simple scrolling code <- I'm going
+    // simple
+    private Array<Map *> _map_list {}; // duplicate of _maps
+    private int _ml_top {};
+    private int _ml_selected {};
 
     private OS::CriticalSection _map_gate {};
     // Does the original do recursive scan: no.
@@ -392,8 +349,9 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     //LATER think about an option to show progress somewhere
     private class MapListInit final // header_only = true
     {
-        private MapList & MList;
+        private MapList & MList; // sorting
         private OS::CriticalSection & MapListGate;
+        private Array<Map *> & MList2; // scrolling
         private AsyncFsEnum<MapListInit> _subject;
         private int _files {}, _dirs {};
         // private int _supported_maps {};
@@ -409,8 +367,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 Map * map {};
                 H3R_CREATE_OBJECT(map, Map) {itm.Name, header_only = true};
             Dbg.Enabled = true;
-            //TODO check: the game skips nameless maps it seems
-            if (! map->SupportedVersion () || map->Name ().Empty ()) { // SOD
+            if (! map->SupportedVersion ()) { // SOD
                 Dbg << "Skipped unsupported map (" << map->VersionName ()
                     << ") : " << itm.Name << EOL;
                 H3R_DESTROY_OBJECT(map, Map)
@@ -423,8 +380,13 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 /*printf ("add: map[%3d]: %s\n", _supported_maps++,
                         map->Name ().AsZStr ());*/
                 //TODO name this SORT_PARTITION_SIZE or something
-                if (MList.Count () % 200 == 0)
+                if (MList.Count () % 200 == 0) {
                     sort (MList);
+                    MList2.Resize (MList.Count ());
+                    auto n = MList.First ();
+                    for (int i = 0; i < MList.Count (); i++, n = n->Next ())
+                        MList2[i] = n->Data;
+                }
             }
             return ! Stop;
         }
@@ -436,7 +398,13 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
             // the file enum thread still - so don't invite race conditions
             __pointless_verbosity::CriticalSection_Acquire_finally_release
                 ___ {MapListGate};
-            if (MList.Count () > 1) sort (MList);
+            if (MList.Count () > 1) {
+                sort (MList);
+                MList2.Resize (MList.Count ());
+                auto n = MList.First ();
+                for (int i = 0; i < MList.Count (); i++, n = n->Next ())
+                    MList2[i] = n->Data;
+            }
             /*auto n = MList.First ();
             int id = 0;
             while (nullptr != n) {
@@ -444,7 +412,8 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
                 n = n->Next ();
             }*/
         }
-        public MapListInit(String p, MapList & l, OS::CriticalSection & lg);
+        public MapListInit(String p, MapList & l, OS::CriticalSection & lg,
+            Array<Map *> & list);
         public bool Complete() const { return _subject.Complete (); }
         public int Files() const { return _files; }
         public int Directories() const { return _dirs; }
@@ -453,12 +422,6 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     private void SetListItem(ListItem *);
     private void SetListItem(Map *);
 
-    // handles mouse clicks and arrow up/down at the scenario list
-    // private NewGameDialog::ListItem * ChangeSelected(int);
-
-    private bool _changed {}; // temporary - until TabControl
-    // private bool _user_changed_selected_item {};
-    private int _prev_maps_count {};
     private void OnRender() override;
 
     // The game changes selection based on mouse down location, but on mouse up
@@ -470,20 +433,6 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
 
     // model: _maps; view: _map_items, _lid_.*
     private void Model2View();
-
-    // The original game does something odd: if you select a map and drag the
-    // scroll-bar in such a way that the selected one goes off-screen, selecting
-    // another map, using the arrow up/down keys, won't focus (make it visible)
-    // the selected one.
-    // This behavior won't be replicated. Changing selection will focus it (it
-    // will show it as the top one.
-    //
-    // Page Up/Down doesn't change the selected map - it just does what the
-    // vertical scrollbar does.
-    //
-    // Up/Down arrow does change the selected map; and it scrolls the list
-    // up/down when the selected item becomes a boundary item (top one + arrow
-    // up; bottom one + arrow down).
 };// NewGameDialog
 
 NAMESPACE_H3R
