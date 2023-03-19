@@ -537,6 +537,9 @@ void NewGameDialog::OnMouseDown(const EventArgs & e)
     //LATER stop ignoring modifiers
     // printf ("Mouse down at: %d, %d\n", e.X, e.Y);
 
+    __pointless_verbosity::CriticalSection_Acquire_finally_release
+        ___ {_map_gate};
+
     // ListItem
     int l=25, r=373, t=123, h=25;
     int row = e.X >= l && e.X <= r && e.Y >= 122 && e.Y <= 572 ? (e.Y-t)/h : -1;
@@ -544,6 +547,7 @@ void NewGameDialog::OnMouseDown(const EventArgs & e)
         // handle avail maps < list-items
         && nullptr != _map_items[row]->Map) {
         _ml_selected = _ml_top + row;
+        _ml_selected_map = _map_items[row]->Map;
     }
 }
 
@@ -563,8 +567,16 @@ void NewGameDialog::Model2View() // ensure _map_gate is acquired
         _map_items[i]->SetMap (
             j < _map_list.Length () ? _map_list[j] : nullptr,
             j == _ml_selected);
-    if (_map_list.Length () > 0)
+    if (_map_list.Length () > 0) {
+        if (nullptr != _ml_selected_map
+            && _ml_selected_map != _map_list[_ml_selected]
+            && ! _scan_for_maps.Complete ())
+            // the user interfered during a background scan and the sort()
+            // has changed the _ml_selected meaning
+            for (int i = 0; i < _map_list.Length (); i++)
+                if (_map_list[i] == _lid_map) { _ml_selected = i; break; }
         SetListItem (_map_list[_ml_selected]);
+    }
 }
 
 void NewGameDialog::OnKeyDown(const EventArgs & e)
@@ -575,6 +587,9 @@ void NewGameDialog::OnKeyDown(const EventArgs & e)
     if (nullptr == _tab_avail_scen) return;
     if (nullptr == _tab_avail_scen_vs) return;
     if (_tab_avail_scen->Hidden ()) return;
+
+    __pointless_verbosity::CriticalSection_Acquire_finally_release
+        ___ {_map_gate};
 
     switch (e.Key) {
         case H3R_KEY_ARROW_DN: {
@@ -635,6 +650,8 @@ void NewGameDialog::OnKeyDown(const EventArgs & e)
         _ml_top = _map_list.Length ()-H3R_VISIBLE_LIST_ITEMS;
     if (_ml_top < 0) _ml_top = 0;
     _tab_avail_scen_vs->Pos = _tab_avail_scen_vs->Min + _ml_top;
+
+    _ml_selected_map = _map_items[_ml_selected-_ml_top]->Map;
 }// NewGameDialog::OnKeyDown()
 
 NAMESPACE_H3R

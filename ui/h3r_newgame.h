@@ -341,6 +341,7 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     private Array<Map *> _map_list {}; // duplicate of _maps
     private int _ml_top {};
     private int _ml_selected {};
+    private Map * _ml_selected_map {}; // detect user interference during scan
 
     private OS::CriticalSection _map_gate {};
     // Does the original do recursive scan: no.
