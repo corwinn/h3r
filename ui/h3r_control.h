@@ -124,7 +124,9 @@ class Control
         // sub-control shouldn't become visible while its base is not
         if (nullptr != _base && ! value && _base->Hidden ()) return;
         // unhidden shall let the base know
-        if (nullptr != _base && ! value) _base->_shown.Add (this);
+        if (nullptr != _base && ! value)
+            if (! _base->_shown.Contains (this))
+                _base->_shown.Add (this);
         _hidden = ! _hidden;
         // handle: base.hide() ; shown[i].hide() ; base.show()
         //         (the anything-but-simple booleans in action)
