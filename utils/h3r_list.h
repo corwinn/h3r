@@ -214,6 +214,7 @@ template <typename T,
         H3R_ARG_EXC_IF(len < 0, "len can't be < 0")
         if (len == _cnt) return;
         if (0 == len) FreeObjects ();
+        //TODO this shall do nothing when _cnt != _cap; fix it
         else if (len > _cnt) Grow (len);
         else while (--_cnt != len) LD<T>{} (_list[_cnt]);
     }
