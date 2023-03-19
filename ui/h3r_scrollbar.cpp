@@ -260,7 +260,8 @@ void ScrollBar::OnMouseMove(const EventArgs & e)
 {
     Control::OnMouseMove (e);
     if (Hidden ()) return;
-
+    //TODO draw diagrams and carefully check all these algorithms; or I'll end
+    //     up in an endless debug session(s) again
     if (_drag) {
         int dy = e.Y - _my; // vector
         if (dy) {
@@ -268,7 +269,7 @@ void ScrollBar::OnMouseMove(const EventArgs & e)
             int d2 = (Max - Min);             // scroll units
             int p = static_cast<int>(Min + dy * (1.0*d2/d1)); // projection
             int d = p-Pos; // delta scroll units
-            bool notify = p >= Min && p <= Max;
+            bool notify = Pos != Min && Pos != Max;
             Pos = p;
             if (notify && d) NotifyOnScroll (d);
         }
