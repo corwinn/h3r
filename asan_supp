@@ -1,3 +1,4 @@
 leak:radeonsi_dri.so
 leak:libX11.so.6
 leak:XkbGetMap
+leak:glXChooseFBConfigSGIX

@@ -115,10 +115,14 @@ SDLWindow::SDLWindow(int, char **, Point && size)
     //TODO all SDL_GL_SetAttribute and SDL_GL_GetAttribute need error checking.
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    // These two are casuing new memory leak:
+    //   glXChooseFBConfigSGIX @ libGL.so - thats "mesa 3d"
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK,
-        // SDL_GL_CONTEXT_PROFILE_CORE);
-        SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        SDL_GL_CONTEXT_PROFILE_CORE);
+    //    SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+
     SDL_GL_SetAttribute (SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute (SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute (SDL_GL_RED_SIZE, 8);
