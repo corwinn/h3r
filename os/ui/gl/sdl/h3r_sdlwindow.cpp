@@ -33,6 +33,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **** END LICENCE BLOCK ****/
 
 #include "h3r_sdlwindow.h"
+#if defined(_WIN32) && !defined(H3R_GL_DUMMY_CONTEXT)
+#include "h3r_gl.h"
+#endif
 
 namespace __pointless_verbosity
 {
@@ -112,6 +115,10 @@ SDLWindow::SDLWindow(int, char **, Point && size)
     //TODO all SDL_GL_SetAttribute and SDL_GL_GetAttribute need error checking.
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_PROFILE_MASK,
+        // SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+    SDL_GL_SetAttribute (SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     SDL_GL_SetAttribute (SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute (SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute (SDL_GL_RED_SIZE, 8);
@@ -158,6 +165,20 @@ SDLWindow::SDLWindow(int, char **, Point && size)
     SDL_GL_GetAttribute (SDL_GL_ALPHA_SIZE, &attr);
     printf (",%d" EOL, attr);
     printf ("  V-sync: %d" EOL, SDL_GL_GetSwapInterval ());
+    SDL_GL_GetAttribute (SDL_GL_CONTEXT_PROFILE_MASK, &attr);
+    printf ("  Profile: ");
+    switch (attr) {
+        case SDL_GL_CONTEXT_PROFILE_CORE: printf ("Core"); break;
+        case SDL_GL_CONTEXT_PROFILE_COMPATIBILITY: printf ("Compat"); break;
+        case SDL_GL_CONTEXT_PROFILE_ES: printf ("ES"); break;
+        default: printf ("a mystery"); break;
+    }
+    printf (EOL);
+
+#if defined(_WIN32) && !defined(H3R_GL_DUMMY_CONTEXT)
+    //TODO SDL_GL_GetProcAddress
+    H3R_ENSURE(H3rGL_Init (), "OpenGL init failed")
+#endif
 }// SDLWindow::SDLWindow()
 
 SDLWindow::~SDLWindow()
