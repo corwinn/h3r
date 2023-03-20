@@ -47,9 +47,11 @@ H3R_ERR_DEFINE_HANDLER(Log,H3R_ERR_HANDLER_UNHANDLED)
 
 #include "h3r_game.h"
 
-#if _WIN32
+#ifdef _WIN32
 #include "windows.h"
+#ifdef H3R_GL_DUMMY_CONTEXT
 #include "h3r_gl.h"
+#endif
 #include "h3r_array.h"
 static char ** a2b(PSTR lpCmdLine, int & argc)
 {
@@ -65,7 +67,9 @@ static char ** a2b(PSTR lpCmdLine, int & argc)
 
 INT WINAPI WinMain(HINSTANCE, HINSTANCE, PSTR lpCmdLine, INT)
 {
-    H3rGL_Init ();
+#ifdef H3R_GL_DUMMY_CONTEXT
+    if (! H3rGL_Init ()) return printf ("OpenGL init failed" EOL), 1;
+#endif
     int argc {1};
     char ** argv {};
     //char ** argv = a2b (lpCmdLine, argc);

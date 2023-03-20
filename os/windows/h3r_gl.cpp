@@ -34,34 +34,60 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //LATER clarify __MINGW32__ vs __MINGW64__
 #if __MINGW32__
-
+#include <windows.h>
 #include <GL/gl.h>
-#undef GL_GLEXT_PROTOTYPES
+// #undef GL_GLEXT_PROTOTYPES
 #include <GL/glext.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 extern "C" {
+// Use their declarations:
+//  - there are calling conventions hidden under the hood
+//  - you get compiler-notified on signature changes
 //TODO codegen starts here
-void (*pglGenBuffers)(GLsizei, GLuint *){};
- void glGenBuffers(GLsizei a, GLuint * b) {pglGenBuffers (a, b);}
-void (*pglBindBuffer)(GLenum, GLuint){};
- void glBindBuffer(GLenum a, GLuint b) {pglBindBuffer (a, b);}
-void (*pglBufferData)(GLenum, GLsizeiptr, const void *, GLenum){};
- void glBufferData(GLenum a, GLsizeiptr b, const void * c, GLenum d)
-    { pglBufferData (a, b, c, d); }
-void (*pglDeleteBuffers)(GLsizei, const GLuint *){};
- void glDeleteBuffers(GLsizei a, const GLuint * b)
-    { pglDeleteBuffers (a, b); }
-void (*pglMultiDrawArrays)(GLenum, const GLint *, const GLsizei *, GLsizei){};
- void glMultiDrawArrays(GLenum mode, const GLint * first, const GLsizei * count,
-    GLsizei drawcount) { pglMultiDrawArrays (mode, first, count, drawcount); }
-void (*pglBufferSubData)(GLenum, GLintptr, GLsizeiptr, const void *){};
- void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
-    const void * data) { pglBufferSubData (target, offset, size, data); }
-void (*pglGetBufferSubData)(GLenum, GLintptr, GLsizeiptr, void *){};
- void glGetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
-    void * data) { pglGetBufferSubData (target, offset, size, data); }
+PFNGLGENBUFFERSPROC pglGenBuffers {};
+void glGenBuffers(GLsizei a, GLuint * b) { pglGenBuffers (a, b); }
+PFNGLBINDBUFFERPROC pglBindBuffer {};
+void glBindBuffer(GLenum a, GLuint b) { pglBindBuffer (a, b); }
+PFNGLBUFFERDATAPROC pglBufferData {};
+void glBufferData(GLenum a, GLsizeiptr b, const void * c, GLenum d)
+{
+    pglBufferData (a, b, c, d);
+}
+PFNGLDELETEBUFFERSPROC pglDeleteBuffers {};
+void glDeleteBuffers(GLsizei a, const GLuint * b)
+{
+    pglDeleteBuffers (a, b);
+}
+PFNGLMULTIDRAWARRAYSPROC pglMultiDrawArrays {};
+void glMultiDrawArrays(GLenum mode, const GLint * first,
+    const GLsizei * count, GLsizei drawcount)
+{
+    pglMultiDrawArrays (mode, first, count, drawcount);
+}
+PFNGLBUFFERSUBDATAPROC pglBufferSubData {};
+void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
+    const void * data)
+{
+    pglBufferSubData (target, offset, size, data);
+}
+PFNGLGETBUFFERSUBDATAPROC pglGetBufferSubData {};
+void glGetBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size,
+    void * data)
+{
+    pglGetBufferSubData (target, offset, size, data);
+}
+PFNGLGETBUFFERPARAMETERIVPROC pglGetBufferParameteriv {};
+void glGetBufferParameteriv(GLenum target, GLenum value, GLint * data)
+{
+    pglGetBufferParameteriv (target, value, data);
+}
+/*PFNGLENABLEVERTEXATTRIBARRAYPROC pglEnableVertexAttribArray {};
+void glEnableVertexAttribArray(GLuint index)
+{
+    pglEnableVertexAttribArray (index);
+}*/
 /*GLuint (*pglCreateShader)(GLenum){};
  GLuint glCreateShader(GLenum a) {return pglCreateShader (a);}
 void (*pglDeleteShader)(GLuint){};
@@ -108,8 +134,6 @@ void (*pglCompressedTexImage2D)(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint,
     {pglCompressedTexImage2D (a, b, c, d, e, f, g, h);}*/
 }
 
-#include <windows.h>
-
 namespace {
 template <typename T> struct NoRef final {typedef T type;};
 template <typename T> struct NoRef<T&> final {typedef T type;};
@@ -145,6 +169,8 @@ struct fun2 final
 
 bool H3rGL_Init()
 {
+// define it so the procs will be initialized at main() line 1
+#ifdef H3R_GL_DUMMY_CONTEXT
     // what follows is scary; and required so wglGetProcAddress works
 
     // nice shortcut being responded to with ERROR_INVALID_PIXEL_FORMAT
@@ -178,6 +204,7 @@ bool H3rGL_Init()
     if (! wglMakeCurrent (hdc, gldc))
         return printf ("wglMakeCurrent failed\r\n"), false;
     fun2 __ {gldc, w, hdc};
+#endif
 
     //TODO codegen continues here
     return
@@ -188,7 +215,10 @@ bool H3rGL_Init()
         && Init_GL_proc ("glMultiDrawArrays", pglMultiDrawArrays)
         && Init_GL_proc ("glBufferSubData", pglBufferSubData)
         && Init_GL_proc ("glGetBufferSubData", pglGetBufferSubData)
-        /*&& Init_GL_proc ("glCreateShader", pglCreateShader)
+        && Init_GL_proc ("glGetBufferParameteriv", pglGetBufferParameteriv)
+        /*&& Init_GL_proc ("glEnableVertexAttribArray",
+            pglEnableVertexAttribArray)
+        && Init_GL_proc ("glCreateShader", pglCreateShader)
         && Init_GL_proc ("glDeleteShader", pglDeleteShader)
         && Init_GL_proc ("glShaderSource", pglShaderSource)
         && Init_GL_proc ("glCompileShader", pglCompileShader)

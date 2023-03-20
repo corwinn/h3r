@@ -120,14 +120,23 @@ void RenderEngine::Render()
     glLoadIdentity ();
 
     // stage1: big sprite VBO
-    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
-    VBOClientState ();
-    for (int i = 0; i < _tex2_list.Count (); i++ ) {
-        glBindTexture (GL_TEXTURE_2D, _tex2_list[i].Texture);
-        glMultiDrawArrays (GL_TRIANGLE_STRIP,
-            _tex2_list[i]._index.begin (), _tex2_list[i]._count.begin (),
-            _tex2_list[i]._index.Count ());
-    }
+    glDisable (GL_COLOR_ARRAY); // mandatory on "windows"
+        glBindBuffer (GL_ARRAY_BUFFER, _vbo);
+        VBOClientState ();
+        for (int i = 0; i < _tex2_list.Count (); i++ ) {
+            glBindTexture (GL_TEXTURE_2D, _tex2_list[i].Texture);
+            /*for (int j = 0; j < _tex2_list[i]._index.Count (); j++) {
+                printf ("count [%d][%d]: %d\n", i, j, _tex2_list[i]._count[j]);
+                printf ("index [%d][%d]: %d\n", i, j, _tex2_list[i]._index[j]);
+            }
+            for (int j = 0; j < _tex2_list[i]._index.Count (); j++)
+                glDrawArrays (GL_TRIANGLE_STRIP, _tex2_list[i]._index[j],
+                    _tex2_list[i]._count[j]);*/
+            glMultiDrawArrays (GL_TRIANGLE_STRIP,
+                _tex2_list[i]._index.begin (), _tex2_list[i]._count.begin (),
+                _tex2_list[i]._index.Count ());
+        }
+    glEnable (GL_COLOR_ARRAY);
 
     // stage2: window
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
