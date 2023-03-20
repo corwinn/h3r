@@ -285,8 +285,10 @@ void SDLWindow::HandleKeyboardEvent(EventArgs & e)
         case SDL_SCANCODE_DOWN:
             { e.Key = H3R_KEY_ARROW_DN; OnKeyUp (e); e.Key = H3R_NO_KEY; }
         break;
+        case SDL_SCANCODE_KP_9:
         case SDL_SCANCODE_PAGEUP:
             { e.Key = H3R_KEY_PGUP; OnKeyUp (e); e.Key = H3R_NO_KEY; } break;
+        case SDL_SCANCODE_KP_3:
         case SDL_SCANCODE_PAGEDOWN:
             { e.Key = H3R_KEY_PGDN; OnKeyUp (e); e.Key = H3R_NO_KEY; } break;
         default: break;
@@ -308,8 +310,10 @@ void SDLWindow::HandleKeyboardEventDown(EventArgs & e)
         case SDL_SCANCODE_DOWN:
             { e.Key = H3R_KEY_ARROW_DN; OnKeyDown (e); e.Key = H3R_NO_KEY; }
         break;
+        case SDL_SCANCODE_KP_9:
         case SDL_SCANCODE_PAGEUP:
             { e.Key = H3R_KEY_PGUP; OnKeyDown (e); e.Key = H3R_NO_KEY; } break;
+        case SDL_SCANCODE_KP_3:
         case SDL_SCANCODE_PAGEDOWN:
             { e.Key = H3R_KEY_PGDN; OnKeyDown (e); e.Key = H3R_NO_KEY; } break;
         default: break;
