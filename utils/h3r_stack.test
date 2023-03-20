@@ -117,6 +117,27 @@ H3R_TEST_(size)
     H3R_TEST_ARE_EQUAL(e, s0.Size ())
 H3R_TEST_END
 
+H3R_TEST_(pipe)
+    H3R_NS::Stack<int> s0;
+    int c {};
+    for (auto foo : s0) { (void)foo; c++; }
+    H3R_TEST_ARE_EQUAL(0, c)
+    s0.Push (10);
+    for (auto foo : s0) {
+        H3R_TEST_ARE_EQUAL(10, foo)
+        c++;
+    }
+    H3R_TEST_ARE_EQUAL(1, c)
+    int n {}; c = 0;
+    s0.Push (20);
+    for (auto foo : s0) {
+        n += foo;
+        c++;
+    }
+    H3R_TEST_ARE_EQUAL(30, n)
+    H3R_TEST_ARE_EQUAL(2, c)
+H3R_TEST_END
+
 NAMESPACE_H3R
 
 int main()

@@ -63,7 +63,7 @@ template <typename T> class Stack final
 
     // Act as a pipe
     public const T * begin() const { return _b.begin (); }
-    public const T * end  () const { return _b.end (); }
+    public const T * end  () const { return _b.begin () + _sp+1; }
 };
 
 NAMESPACE_H3R
