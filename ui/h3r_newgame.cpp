@@ -421,7 +421,7 @@ void NewGameDialog::OnRender()
         _tab_avail_scen_vs->SetHidden (true);
         return;
     }
-
+    if (_tab_avail_scen->Hidden ()) return;
     __pointless_verbosity::CriticalSection_Acquire_finally_release
         ___ {_map_gate};
     /*printf ("Min: %d, Max: %d, cnt: %d\n", (int)_tab_avail_scen_vs->Min,
