@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _H3R_OS_H_
 #define _H3R_OS_H_
 
-#if _WIN32
+#ifdef _WIN32
 #undef public
 #include "windows.h"
 #define public public:
@@ -62,14 +62,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //TODO EOL for mac
 #ifndef EOL
-# if _WIN32
+# ifdef _WIN32
 #  define EOL "\r\n"
 # else
 #  define EOL "\n"
 # endif
 #endif
 
-#if _WIN32
+#ifdef _WIN32
 # define H3R_PATH_SEPARATOR '\\'
 #else
 # define H3R_PATH_SEPARATOR '/'
@@ -178,12 +178,19 @@ template <typename T> void Malloc(T *& p, size_t n = 1)
     byte r = 1; // "number of retries" = "number of bits" - 1
                 // Infinite loop protection.
     do
+        // p = reinterpret_cast<T *>(aligned_alloc (128, n * sizeof(T)));
+        // p = reinterpret_cast<T *>(_aligned_malloc (n * sizeof(T), 16));
         p = reinterpret_cast<T *>(calloc (n, sizeof(T)));
     while (! p && Error::Memory.Handled () && (r = r << 1));
     if (! p)
         Exit (EXIT_OUT_OF_MEMORY);
+    // memset ((void *)p, 0, n * sizeof(T));
 }
-template <typename T> void Mfree(T * & p) { if (p) free (p), p = nullptr; }
+template <typename T> void Mfree(T * & p)
+{
+    if (p) // _aligned_free (p), p = nullptr;
+       free (p), p = nullptr;
+}
 
 #ifdef H3R_MM
 # include "h3r_mm_templates.h"
