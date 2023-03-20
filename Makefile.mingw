@@ -46,7 +46,7 @@ CXX = ccache x86_64-w64-mingw32-clang++
 CC_SYSROOT = $(P)
 H3R_TEST ?=
 _W  = -Wall -Wextra -Wshadow
-_O  = -O0 -g -DH3R_DEBUG -DH3R_MM -fno-exceptions -fno-threadsafe-statics \
+_O  = -O0 -g -DH3R_DEBUG -UH3R_MM -fno-exceptions -fno-threadsafe-statics \
  $(H3R_TEST) -DGL_GLEXT_PROTOTYPES -DSDL_MAIN_HANDLED -Umain -Dmain=WinMain \
  $(LOG) -U_USE_32BIT_TIME_T
 _F  = -fvisibility=hidden
