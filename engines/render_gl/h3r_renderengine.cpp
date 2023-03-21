@@ -307,9 +307,38 @@ void RenderEngine::UpdateLocation(int key, GLint dx, GLint dy)
         ofs_in_bytes, buf_in_bytes);*/
     glGetBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
     H3RGL_Debug
-    // z is each 3rd: {x,y,z,u,v}
+    // {x,y,z,u,v}
     for (int i = 0; i < buf_data.Length (); i += H3R_VERTEX_COMPONENTS)
         buf_data[i] += dx, buf_data[i+1] += dy;
+    glBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
+    H3RGL_Debug
+}
+void RenderEngine::SetLocation(int key, GLint x, GLint y)
+{
+    glBindBuffer (GL_ARRAY_BUFFER, _vbo);
+    H3R_ENSURE(key >= 0 && key < (int)_entries.Count (), "Bug: wrong key")
+    RenderEngine::Entry & e = _entries[key];
+    // all sprite frames
+    size_t ofs_in_bytes = e.Base * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);
+        /*(e.Base + e.Frames * H3R_SPRITE_VERTICES)
+        * H3R_VERTEX_COMPONENTS * sizeof(H3Rfloat);*/
+    size_t buf_in_bytes = e.Frames * H3R_SPRITE_FLOATS * sizeof(H3Rfloat);
+    Array<H3Rfloat> buf_data {static_cast<int>(H3R_SPRITE_FLOATS) * e.Frames};
+    H3Rfloat * buf = buf_data;
+    /*printf ("key: %d, ofs_in_bytes: %ld, buf_in_bytes: %ld\n", key,
+        ofs_in_bytes, buf_in_bytes);*/
+    glGetBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
+    H3RGL_Debug
+    // {x,y,z,u,v}
+    for (int i = 0; i < buf_data.Length ();
+        i += H3R_VERTEX_COMPONENTS*H3R_SPRITE_VERTICES) {
+        H3Rfloat dx = x-buf_data[i], dy = y-buf_data[i+1]; // [0]{x,y}
+        for (int v = 0; v < H3R_SPRITE_VERTICES; v++)
+            buf[v*H3R_VERTEX_COMPONENTS
+                +i*H3R_VERTEX_COMPONENTS*H3R_SPRITE_VERTICES] += dx,
+            buf[v*H3R_VERTEX_COMPONENTS
+                +i*H3R_VERTEX_COMPONENTS*H3R_SPRITE_VERTICES+1] += dy;
+    }
     glBufferSubData (GL_ARRAY_BUFFER, ofs_in_bytes, buf_in_bytes, buf);
     H3RGL_Debug
 }

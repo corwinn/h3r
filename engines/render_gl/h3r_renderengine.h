@@ -270,6 +270,7 @@ class RenderEngine final
 
     // Move (all frames)
     public void UpdateLocation(int key, GLint dx, GLint dy);
+    public void SetLocation(int key, GLint x, GLint y);
 
     public static void Init();
 
