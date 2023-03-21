@@ -93,6 +93,7 @@ class Map final
         String PHName {};     // What if its not customized - a copy?
         struct CustomizedHero final { byte Id; String Name; };
         List <CustomizedHero> CustomizedHeroes {};
+        inline bool CanPlay() const { return Human || Computer; }
     };
     private List<Player> _players {};
     private int _players_can_play {};
@@ -109,7 +110,7 @@ class Map final
     private byte _lcon {}; // "lcdesc.txt" - line 0 has the "default"
     private short _lcon_quantity {};
     private Location _lcon_loc {};
-    //
+    // a set of hash keys - the hash table: "PlColors.txt"
     private List<byte> _teams {};
 
     public Map(const String &, bool = true);
@@ -155,6 +156,13 @@ class Map final
     public inline bool VConDefaultToo() const { return _vcon_default_too; }
     public inline int LCon() const { return _lcon; }
     public const String & LConText() const;
+    public inline const List<byte> & Teams() const { return _teams; }
+    public inline int FirstHumanPlayer() const
+    {
+        for (int i = 0; i < _players.Count (); i++)
+            if (_players[i].Human) return i;
+        return -1;
+    }
 };// Map
 
 NAMESPACE_H3R
