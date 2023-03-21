@@ -98,7 +98,8 @@ Thread::~Thread()
 }
 
 /*static*/ void Thread::SleepForAWhile()
-{
+{//TODO this doesn't seem to be working; I got ~100% CPU with it; test with
+ //     CreateWaitableTimer()
     struct timespec foo {0, 100000}; // [nsec]
     nanosleep (&foo, nullptr);
 }
@@ -118,7 +119,8 @@ void Thread::Join()
 
 void Thread::Stop(bool signal_only)
 {
-    H3R_ENSURE(false == _p.stop, "Thread already stopped")
+    //TODO re-enact this check (canceled by ~TaskThread + WaitObj)
+    // H3R_ENSURE(false == _p.stop, "Thread already stopped")
     _p.stop = true; if (signal_only) return;
     Join ();
 }

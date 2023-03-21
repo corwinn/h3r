@@ -116,7 +116,8 @@ void Thread::Join()
 
 void Thread::Stop()
 {
-    H3R_ENSURE(false == _p.stop, "Thread already stopped")
+    //TODO re-enact this check (canceled by ~TaskThread + WaitObj)
+    // H3R_ENSURE(false == _p.stop, "Thread already stopped")
     _p.stop = true;
     Join ();
 }

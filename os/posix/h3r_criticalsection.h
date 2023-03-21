@@ -61,6 +61,8 @@ class CriticalSection final
     // denying their right to return said codes.
 
     private pthread_mutex_t _m {};
+    // required by the WaitObj
+    public inline pthread_mutex_t & Mutex_T() { return _m; }
 
     public CriticalSection();
 

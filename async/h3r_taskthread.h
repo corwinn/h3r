@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_thread.h"
 #include "h3r_criticalsection.h"
 #include "h3r_iasynctask.h"
+#include "h3r_wait.h"
 
 H3R_NAMESPACE
 
@@ -60,7 +61,15 @@ class TaskThread final
     H3R_CANT_MOVE(TaskThread)
 
     public TaskThread() : _tproc {*this}, _thr {_tproc}, Task {*this} {}
-    public ~TaskThread() { _thr.Stop (); };
+    public ~TaskThread()
+    {
+        while (! _running)
+            ;
+        _tproc.stop = true;
+        _nothing_to_do.GoGoGo ();
+        // printf ("<%p> GoGoGo\n", this);
+        _thr.Stop ();
+    }
 
 #undef public
     private struct Proc final : public OS::Thread::Proc
@@ -121,18 +130,51 @@ class TaskThread final
         // without the pointless verbosity above:
         //  try { _tproc.Do (); } finally { _tproc._dirty = ! _tproc._dirty; }
     }
+    OS::WaitObj _nothing_to_do {};
+    private bool _running {};
     private inline Proc * Run() // the thread
     {
+#ifdef _WIN32
+        __pointless_verbosity::Mutex_Acquire_finally_release
+            ____ {_nothing_to_do.Lock ()};
+#else
+        __pointless_verbosity::CriticalSection_Acquire_finally_release
+            ____ {_nothing_to_do.Lock ()};
+#endif
+        _running = true;
         while (! _tproc.stop) {
+            // _nothing_to_do.Lock () is unlocked while the thread waits, only
+            _nothing_to_do.Wait ();
             // OS::Log_stdout ("p:%p, _tproc.dirty:%d" EOL,
             //    &_tproc, (_tproc._dirty ? 1 : 0));
             if (_tproc._dirty) Do (); // laundry
-            else OS::Thread::SleepForAWhile ();
+            // This can't continue - I'll have to change the CC. Because when
+            // a rendering requests 60 distinct resources, this here introduces
+            // significant delay - render-wise. If I lower the poll interval it
+            // loads the CPU for no reason.
+            // Now that I'm looking at the complexity the new solution
+            // introduces - a task queue begins to look quite an alluring idea:
+            // the thread won't sleep until the task queue isn't empty - and
+            // there will be no sleep() between consequent tasks.
+            // Then again the smooth performance the WaitObj provides is hard to
+            // resist.
+            // else OS::Thread::Sleep (1);
         }
         return &_tproc;
     }
 
-    private inline IAsyncTask & Do(IAsyncTask * it) { return _tproc.Do (it); }
+    private inline IAsyncTask & Do(IAsyncTask * it)
+    {
+        // printf ("<%p> Do(it)\n", this);
+        auto & result = _tproc.Do (it);
+        // Because the task thread might fail to actually reach the line where
+        // this state is set, prior the task issuer steps in here.
+        while (! _running)
+            ;
+        _nothing_to_do.GoGoGo ();
+        // printf ("<%p> GoGoGo\n", this);
+        return result;
+    }
 
     public class TaskProperty final // IAsyncTask foo { set {} }
     {
