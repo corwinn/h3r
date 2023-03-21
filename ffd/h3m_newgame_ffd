@@ -193,6 +193,17 @@ format h3m
     //
     WinCondition   SpecialWCon
     LooseCondition SpecialLCon
-    //
-    byte           HasTeams
-    byte           Team[MAP_PLAYERS] (HasTeams)
+    // Editor picture:
+    //  Number: 2 3 *4 5 6 7
+    //  Assignments: 1 2 3 4 5 6 7
+    //    1 (red)    *
+    //    2 (blue)   *
+    //    3 (tan)      *
+    //    4 (green)    *
+    //    5 (orange)     *
+    //    6 (purple)     *
+    //    7 (teal)         *
+    //    8 (pink)         *
+    // Next 2 contents: 4, [00 00 01 01 02 02 03 03]
+    byte           NumTeams
+    byte           Team[MAP_PLAYERS] (NumTeams)

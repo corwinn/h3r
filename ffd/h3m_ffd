@@ -542,8 +542,8 @@ format h3m
     WinCondition   SpecialWCon
     LooseCondition SpecialLCon
     //
-    byte           HasTeams
-    byte           Team[MAP_PLAYERS] (HasTeams)
+    byte           NumTeams
+    byte           Team[MAP_PLAYERS] (NumTeams)
     //
     byte           AllowedHeroes[16] (Version == ROE)
     byte           AllowedHeroes[20] (Version != ROE)
