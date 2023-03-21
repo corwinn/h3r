@@ -495,8 +495,14 @@ void NewGameDialog::LidSetFlags(Map * map) //TODO StackedSpritesControl
     // advanced options is not done yet so
      //TODO param at adv_opt; "PlColors.txt"-0-based
     int selected_player = map->FirstHumanPlayer ();
-    H3R_ENSURE(selected_player >= 0 && selected_player < 8,
-        "Can't handle AI-only maps yet")
+    if (selected_player < 0 || selected_player >= 8) {
+        printf ("Warning: can't handle AI-only maps yet" EOL);
+        for (int i = 0; i < 8; i++) {
+            Window::UI->ChangeVisibility (_lid_allies_base_key+i, false);
+            Window::UI->ChangeVisibility (_lid_enemies_base_key+i, false);
+        }
+        return;
+    }
     int tk = map->Teams ().Count () <= 0 ? -1 : map->Teams ()[selected_player];
     int sprite_w = 15, y = 405, ax = 460, ex = 640;
     auto my_team = [&](int i) { return tk != -1 && map->Teams ()[i] == tk; };
