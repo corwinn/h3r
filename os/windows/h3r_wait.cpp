@@ -94,8 +94,8 @@ void WaitObj::Wait()
     // H3R_ENSURE_W(WAIT_OBJECT_0 == r, "WaitForSingleObject")
     // POSIX:
     auto r = SignalObjectAndWait (_gate.Handle (), _e, INFINITE, false);
-    _gate.Acquire ();
     H3R_ENSURE_W(WAIT_OBJECT_0 == r, "SignalObjectAndWait")
+    _gate.Acquire ();
 }
 
 void WaitObj::GoGoGo()
