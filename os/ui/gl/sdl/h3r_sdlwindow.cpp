@@ -130,7 +130,7 @@ SDLWindow::SDLWindow(int, char **, Point && size)
     SDL_GL_SetAttribute (SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute (SDL_GL_ALPHA_SIZE, 8);
 
-    _window = SDL_CreateWindow ("h3r",
+    _window = SDL_CreateWindow ("h3r v0.2-alpha",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _w, _h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN /*| SDL_WINDOW_RESIZABLE*/);
     if (! _window) {
