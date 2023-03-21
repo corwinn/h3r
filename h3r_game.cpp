@@ -106,6 +106,10 @@ void Game::SilentLog(bool v)
 /*static*/ void Game::ProcessThings()
 {
     if (Game::MainWindow) Game::MainWindow->ProcessMessages ();
+    // A tight loop makes ResManagerInit above infinite ?!
+    // The pointless sync at the BoolProperty at the TaskThread resolves it,
+    // but I'm adding this here just in case, until I understand whats going on.
+    else OS::Thread::Sleep (1);//TODO understand the odd deadlock
 }
 
 /*static*/ Stream * Game::GetResource(const String & name)

@@ -63,11 +63,11 @@ class TaskThread final
     public TaskThread() : _tproc {*this}, _thr {_tproc}, Task {*this} {}
     public ~TaskThread()
     {
-        while (! _running)
+        while (! _running) //DL_HUNTER printf ("<%p> ~ waiting\n", this);
             ;
         _tproc.stop = true;
         _nothing_to_do.GoGoGo ();
-        // printf ("<%p> GoGoGo\n", this);
+        //DL_HUNTER printf ("<%p> ~ GoGoGo\n", this);
         _thr.Stop ();
     }
 
@@ -92,8 +92,18 @@ class TaskThread final
                     ____ {_p._d_lock};
                 return _v = v;
             }
-            public operator bool() const { return _v; }
-            public bool operator !() const { return !_v; }
+            public operator bool() const
+            {
+                __pointless_verbosity::CriticalSection_Acquire_finally_release
+                    ____ {_p._d_lock};
+                return _v;
+            }
+            public bool operator !() const
+            {
+                __pointless_verbosity::CriticalSection_Acquire_finally_release
+                    ____ {_p._d_lock};
+                return !_v;
+            }
         } _dirty;
         // setup part
         inline IAsyncTask & Do(IAsyncTask * p)
@@ -144,10 +154,14 @@ class TaskThread final
         _running = true;
         while (! _tproc.stop) {
             // _nothing_to_do.Lock () is unlocked while the thread waits, only
+            //DL_HUNTER printf ("<%p> wait\n", this);
             _nothing_to_do.Wait ();
+            //DL_HUNTER printf ("<%p> work\n", this);
             // OS::Log_stdout ("p:%p, _tproc.dirty:%d" EOL,
             //    &_tproc, (_tproc._dirty ? 1 : 0));
             if (_tproc._dirty) Do (); // laundry
+            //DL_HUNTER printf ("<%p> work done: dirty: %d\n", this,
+            //    (bool)_tproc._dirty);
             // This can't continue - I'll have to change the CC. Because when
             // a rendering requests 60 distinct resources, this here introduces
             // significant delay - render-wise. If I lower the poll interval it
@@ -165,14 +179,14 @@ class TaskThread final
 
     private inline IAsyncTask & Do(IAsyncTask * it)
     {
-        // printf ("<%p> Do(it)\n", this);
+        //DL_HUNTER printf ("<%p> Do(it)\n", this);
         auto & result = _tproc.Do (it);
         // Because the task thread might fail to actually reach the line where
         // this state is set, prior the task issuer steps in here.
-        while (! _running)
+        while (! _running) //DL_HUNTER printf ("<%p> Set waiting\n", this);
             ;
         _nothing_to_do.GoGoGo ();
-        // printf ("<%p> GoGoGo\n", this);
+        //DL_HUNTER printf ("<%p> Set GoGoGo\n", this);
         return result;
     }
 
