@@ -470,6 +470,7 @@ void NewGameDialog::ListItem::SetMap(class Map * map, bool selected)
     if (this->Map == map) return;
     this->Map = map;
 
+    SetHidden (false); // SpiteControl denies changes when hidden, so
     Players->SetText (
         String::Format ("%d/%d", map->PlayerNum (), map->HumanPlayers ()));
     Size->SetText (map->SizeName ());
@@ -480,8 +481,6 @@ void NewGameDialog::ListItem::SetMap(class Map * map, bool selected)
     Loss->Show (map->LCon ());
     VConText = map->VConText ();
     LConText = map->LConText ();
-
-    SetHidden (false);
 }// NewGameDialog::ListItem::SetMap()
 
 void NewGameDialog::LidSetFlags(Map * map) //TODO StackedSpritesControl
