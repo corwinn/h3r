@@ -199,7 +199,9 @@ FILE * Fopen(const char * path, const char * mode)
         else if (ENFILE == e) Log_stderr ("OS file limit overflow" EOL);
 
         else if (ENOENT == e || ENOTDIR == e)
-            Log_stderr ("File not found?! : \"%s\"" EOL, path);
+            //TODO prints gibberish on "windows" ?!
+            // Log_stderr ("File not found?! : \"%s\"" EOL, path);
+            Log_stdout ("File not found?! : \"%s\"" EOL, path);
         else if (EROFS == e) Log_stderr ("RO file system" EOL);
         else if (EINVAL == e) Log_stderr ("Unknown \"mode\": \"\"" EOL, mode);
 

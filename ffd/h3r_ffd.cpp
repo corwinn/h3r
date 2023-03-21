@@ -556,6 +556,7 @@ static void resolve_all_types(FFD::SNode * n)
 FFD::FFD(const String & d)
 {
     OS::FileStream fh {d, H3R_NS::OS::FileStream::Mode::ReadOnly};
+    H3R_ENSUREF(fh.operator bool(), "FFD load failed: %s", d.AsZStr ())
     MemoryStream br {&fh, static_cast<int>(fh.Size ())};
     const byte * buf = br.Buffer ();
     int len = static_cast<int>(br.Size ());
