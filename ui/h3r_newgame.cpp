@@ -163,29 +163,38 @@ NewGameDialog::NewGameDialog(Window * base_window)
     //TODO R&D there is "Allies", but no "Allies:" at "GENRLTXT.TXT"
     H3R_CREATE_OBJECT(lbl, Label) {"Allies:", "smalfont.fnt",
         Point {420, 406}, this, H3R_TEXT_COLOR_WHITE};
-    //TODO Property
     // mini-static-flags: itgflags.def (w:  15, h:  20); 460, 405
-    //  name[ 0]: "iTG0LtBl.pcx"
-    //  name[ 1]: "iTG1Gren.pcx"
-    //  name[ 2]: "iTG2Red.pcx"
-    //  name[ 3]: "iTG3DkBl.pcx"
-    //  name[ 4]: "iTG4Brwn.pcx"
-    //  name[ 5]: "iTG5Prpl.pcx"
-    //  name[ 6]: "iTG6Whit.pcx"
-    //  name[ 7]: "iTG7Blak.pcx"
+    // The names are misleading. The order matches the editor one matches
+    // "PlColors.txt"; as usual the egg dilemma stands.
+    //  name[ 0]: "iTG0LtBl.pcx" - red
+    //  name[ 1]: "iTG1Gren.pcx" - blue
+    //  name[ 2]: "iTG2Red.pcx"  - tan
+    //  name[ 3]: "iTG3DkBl.pcx" - green
+    //  name[ 4]: "iTG4Brwn.pcx" - orange
+    //  name[ 5]: "iTG5Prpl.pcx" - purple
+    //  name[ 6]: "iTG6Whit.pcx" - teal
+    //  name[ 7]: "iTG7Blak.pcx" - pink
     Def spritef {Game::GetResource ("itgflags.def")};
-    for (int i = 0; i < spritef.SpriteNum (0); i++) // render all flags
-        UploadFrame (RE->GenKey (), 460 + i*spritef.Width (), 405, spritef,
+    for (int i = 0; i < spritef.SpriteNum (0); i++) { // render all flags
+        UploadFrame (
+            //TODO this becomes an issue if the RE can't guarantee sequence
+            (0 == i ? _lid_allies_base_key = RE->GenKey () : RE->GenKey ()),
+            460 + i*spritef.Width (), 405, spritef,
             "itgflags.def", spritef.Query (0, i)->FrameName (), Depth ());
+        RE->ChangeVisibility (_lid_allies_base_key+i, false);
+    }
 
     // "Enemies:": smalfont.fnt, White, 586,409 ; same q as with "Allies:"
     H3R_CREATE_OBJECT(lbl, Label) {"Enemies:", "smalfont.fnt",
         Point {586, 406}, this, H3R_TEXT_COLOR_WHITE};
-    //TODO Property
-    //     7 max - the eight one is drawn over the border
-    for (int i = 0; i < spritef.SpriteNum (0); i++) // render all flags
-        UploadFrame (RE->GenKey (), 640 + i*spritef.Width (), 405, spritef,
+    // 7 max - the eight one is drawn over the border
+    for (int i = 0; i < spritef.SpriteNum (0); i++) { // render all flags
+        UploadFrame (
+            (0 == i ? _lid_enemies_base_key = RE->GenKey () : RE->GenKey ()),
+            640 + i*spritef.Width (), 405, spritef,
             "itgflags.def", spritef.Query (0, i)->FrameName (), Depth ());
+        RE->ChangeVisibility (_lid_enemies_base_key+i, false);
+    }
 
     // "Map Diff:": smalfont.fnt, Gold, 429,439
     // Map Diff: the text is centered at top=473,x=416;500
@@ -475,6 +484,43 @@ void NewGameDialog::ListItem::SetMap(class Map * map, bool selected)
     SetHidden (false);
 }// NewGameDialog::ListItem::SetMap()
 
+void NewGameDialog::LidSetFlags(Map * map) //TODO StackedSpritesControl
+{
+    if (nullptr == map) {
+        for (int i = 0; i < 8; i++) {//TODO 8 is "PlColors.txt" - based
+            Window::UI->ChangeVisibility (_lid_allies_base_key+i, false);
+            Window::UI->ChangeVisibility (_lid_enemies_base_key+i, false);
+        }
+        return;
+    }
+    // advanced options is not done yet so
+     //TODO param at adv_opt; "PlColors.txt"-0-based
+    int selected_player = map->FirstHumanPlayer ();
+    H3R_ENSURE(selected_player >= 0 && selected_player < 8,
+        "Can't handle AI-only maps yet")
+    int tk = map->Teams ().Count () <= 0 ? -1 : map->Teams ()[selected_player];
+    int sprite_w = 15, y = 405, ax = 460, ex = 640;
+    auto my_team = [&](int i) { return tk != -1 && map->Teams ()[i] == tk; };
+    for (int i = 0, a=0, e=0; i < 8; i++) // 8 - h3m_ffd and "PlColors.txt"
+        if (! map->PlayerAt (i).CanPlay ()) {
+            Window::UI->ChangeVisibility (_lid_allies_base_key+i, false);
+            Window::UI->ChangeVisibility (_lid_enemies_base_key+i, false);
+        }
+        else if (i == selected_player
+            || (i != selected_player && my_team (i))) {
+            Window::UI->SetLocation (
+                _lid_allies_base_key+i, ax+(a++)*sprite_w, y);
+            Window::UI->ChangeVisibility (_lid_allies_base_key+i, true);
+            Window::UI->ChangeVisibility (_lid_enemies_base_key+i, false);
+        }
+        else {
+            Window::UI->SetLocation (
+                _lid_enemies_base_key+i, ex+(e++)*sprite_w, y);
+            Window::UI->ChangeVisibility (_lid_enemies_base_key+i, true);
+            Window::UI->ChangeVisibility (_lid_allies_base_key+i, false);
+        }
+}// NewGameDialog::LidSetFlags()
+
 void NewGameDialog::SetListItem(ListItem * itm)
 {
     if (nullptr != itm) {//TODO these just scream: Property<T>
@@ -493,6 +539,7 @@ void NewGameDialog::SetListItem(ListItem * itm)
         _lid_diff_lbl->SetText ("-");  //       vs ""
         _btn_grp[1]->Checked = true;   // 100%  vs ""
         _lid_rating_lbl->SetText ("100%");//    vs ""
+        LidSetFlags (nullptr);
     }
     else {
         _lid_sname_lbl->SetText  (itm->Map->Name ());
@@ -503,6 +550,7 @@ void NewGameDialog::SetListItem(ListItem * itm)
         _lid_lcon_sc->Show       (itm->Map->LCon ());
         _lid_lcon_lbl->SetText   (itm->LConText);
         _lid_diff_lbl->SetText   (itm->Map->DifficultyName ());
+        LidSetFlags (itm->Map);
     }
 }// NewGameDialog::SetListItem()
 
@@ -521,6 +569,7 @@ void NewGameDialog::SetListItem(Map * map)
         _lid_lcon_sc->Show       (map->LCon ());
         _lid_lcon_lbl->SetText   (map->LConText ());
         _lid_diff_lbl->SetText   (map->DifficultyName ());
+        LidSetFlags (map);
     }
 }// NewGameDialog::SetListItem()
 

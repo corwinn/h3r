@@ -124,6 +124,8 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     private Label         * _lid_vcon_lbl    {};
     private SpriteControl * _lid_lcon_sc     {};
     private Label         * _lid_lcon_lbl    {};
+    private int           _lid_allies_base_key  {}; // flags sprite
+    private int           _lid_enemies_base_key {}; // flags sprite
     private Label         * _lid_diff_lbl    {};
     private Label         * _lid_rating_lbl  {};
     private class Map     * _lid_map         {}; // selected map
@@ -434,6 +436,8 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
 
     // model: _maps; view: _map_items, _lid_.*
     private void Model2View();
+
+    private void LidSetFlags(Map *);
 };// NewGameDialog
 
 NAMESPACE_H3R
