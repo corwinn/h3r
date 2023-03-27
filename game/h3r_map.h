@@ -54,6 +54,10 @@ byte const H3R_DEFAULT_BYTE {255};
 #define H3R_VERSION_SOD 0x1c
 #define H3R_VERSION_WOG 0x33
 
+// There something odd going on:
+// https://github.com/orgs/community/discussions/51047#discussioncomment-5437811
+// no more commits today.
+
 //TODO "Memento" (1 - save/load; 2 - network); nothing new here: MapStream
 class Map final
 {
