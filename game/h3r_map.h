@@ -54,8 +54,12 @@ byte const H3R_DEFAULT_BYTE {255};
 #define H3R_VERSION_SOD 0x1c
 #define H3R_VERSION_WOG 0x33
 
+//TODO "Memento" (1 - save/load; 2 - network); nothing new here: MapStream
 class Map final
 {
+    H3R_CANT_COPY(Map)
+    H3R_CANT_MOVE(Map)
+
     // Not the best solution, but should do for the time being.
     private static FFD * _ffd_h;
     private static FFD * _ffd;
