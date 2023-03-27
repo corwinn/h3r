@@ -87,6 +87,7 @@ Map::~Map()
 }
 
 Map::Map(const String & h3m, bool header_only)
+    : _file_name {h3m}
 {
     H3R_ENSURE (_map_cnt >= 0 && _map_cnt < H3R_MAX_OPEN_MAP_COUNT, "No no")
     H3R_ENSURE (_map_cnt < 0x4ffffffe, "No no no no")

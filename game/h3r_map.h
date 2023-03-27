@@ -69,7 +69,8 @@ class Map final
     private bool _has_players {}; //TODO an "enigma"
     private int _nxy {}; // 36, 72, 108, 144
     private int _nz {}; // 1 or 2
-    private String _name {};
+    private String _name {};      // h3m.Name
+    private String _file_name {}; // disambiguate
     private String _description {};
     private byte _difficulty {};
     private String _diff_name {};
@@ -163,6 +164,12 @@ class Map final
             if (_players[i].Human) return i;
         return -1;
     }
+    // Use-case:
+    //   Map m {foo, header_only = true}
+    //   ...
+    //   Map game {m.FileName (), header_only = false}
+    // Way more simple than "game Map {m}"
+    protected const String & FileName() const { return _file_name; }
 };// Map
 
 NAMESPACE_H3R
