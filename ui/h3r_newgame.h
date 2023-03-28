@@ -101,12 +101,6 @@ H3R_NAMESPACE
 //    [] sort by Map Name column header button: SCBUTT3.DEF
 //    [] sort by Victory Con column header button: SCBUTT4.DEF
 //    [] sort by Loss Con column header button: SCBUTT5.DEF
-//
-//   I can't find the tool-tip windows yet.
-//
-//  - quad arrows on brown background: "ComSlide.def" ?!
-//  - load progress bars: loadprog.def
-//  - load background: loadbar.pcx
 #undef public
 class NewGameDialog final : public DialogWindow, public IHandleEvents
 #define public public:
