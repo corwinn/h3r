@@ -112,8 +112,6 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
 #define public public:
 {
     // private List<int> _re_keys {};
-    private bool _has_dr {};
-    private DialogResult _dr {};
     private int _t {}, _l {}; // top, left - of the persistent (right) part
 
     // List item: details
@@ -137,7 +135,6 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
 
     public NewGameDialog(Window * base_window);
     public ~NewGameDialog() override;
-    public DialogResult ShowDialog();//TODO virtual at dialogwindow
 
     protected void OnKeyUp(const EventArgs &) override;
 

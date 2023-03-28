@@ -215,16 +215,6 @@ MessageBox::~MessageBox()
     return msgbox.ShowDialog ();
 }
 
-DialogResult MessageBox::ShowDialog()
-{
-    _dr = DialogResult::Cancel;
-    while (! _has_dr && ! Closed ())
-        Window::ActiveWindow->ProcessMessages ();
-    bool allow_close = true;
-    OnClose (this, allow_close);
-    return _dr;
-}
-
 void MessageBox::OnKeyUp(const EventArgs & e)
 {
     if (H3R_KEY_ESC == e.Key) {

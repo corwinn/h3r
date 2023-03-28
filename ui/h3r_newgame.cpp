@@ -278,16 +278,6 @@ NewGameDialog::~NewGameDialog()
             ListItem)
 }
 
-DialogResult NewGameDialog::ShowDialog()
-{
-    _dr = DialogResult::Cancel;
-    while (! _has_dr && ! Closed ())
-        Window::ActiveWindow->ProcessMessages ();
-    bool allow_close = true;
-    OnClose (this, allow_close);
-    return _dr;
-}
-
 void NewGameDialog::OnKeyUp(const EventArgs & e)
 {
     if (H3R_KEY_ESC == e.Key) {

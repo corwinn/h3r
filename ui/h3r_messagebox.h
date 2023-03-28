@@ -72,8 +72,6 @@ H3R_NAMESPACE
 class MessageBox : public DialogWindow, public IHandleEvents
 #define public public:
 {
-    private bool _has_dr {};
-    private DialogResult _dr {};
     private int _t {}, _l {};
 
     public enum class Buttons {OKCancel};
@@ -85,7 +83,6 @@ class MessageBox : public DialogWindow, public IHandleEvents
     public static DialogResult Show(
         const String & msg, const String & fnt, MessageBox::Buttons btn);
 
-    public DialogResult ShowDialog();
     protected void OnKeyUp(const EventArgs &) override;
 
     private void HandleOKClick(EventArgs *);

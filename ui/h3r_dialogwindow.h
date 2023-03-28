@@ -109,7 +109,20 @@ class DialogWindow : public Window
         Window::GetOSWindow ()->SetEventHandler (_w);
         Window::OnClose (s, allow);
     }
-};
+    // No need to repeat this everywhere.
+    //LATER Property<DialogResult>
+    protected bool _has_dr {};
+    protected DialogResult _dr {};
+    public inline virtual DialogResult ShowDialog()
+    {
+        _dr = DialogResult::Cancel;
+        while (! _has_dr && ! Closed ())
+            Window::ActiveWindow->ProcessMessages ();
+        bool allow_close = true;
+        OnClose (this, allow_close);
+        return _dr;
+    }
+};// DialogWindow
 
 NAMESPACE_H3R
 
