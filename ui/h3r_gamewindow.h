@@ -45,6 +45,52 @@ H3R_NAMESPACE
 //
 // A dialog:
 //  - when you go to the main menu, there is no "back"
+//
+// Transition? - showing kingdom overview seems to be using cross-fading
+//TODO option: fade in/out window vfx
+//
+// Resources:
+//   - background: AdvMap.pcx
+//   - status bar: AResBar.pcx, HEROQVBK.PCX, TResBar.pcx
+//   - "Help.txt" - hints
+//   - mouse cursors: CRADVNTR.def (adv map), CRCOMBAT.def (battle),
+//                  crdeflt.def (mouse ptr, wait ptr)
+//   - map frame: EDG.def
+//   - Game::CurrentPlayerColor
+//     - next hero: iam000.def
+//     - end turn: iam001.def
+//     - kingdom overview: iam002.def
+//     - surface view: iam003.def
+//     - quest log: iam004.def
+//     - sleep: iam005.def
+//     - move: iam006.def
+//     - spell: iam007.def
+//     - adv. options: iam008.def
+//     - sys. options: iam009.def
+//     - underworld view: iam010.def
+//     - wake: iam011.def
+//     - hero list: up iam012.def
+//     - hero list: down iam013.def
+//     - town list: up iam014.def
+//     - town list: down iam015.def
+//     - status bar resources: TSRESOUR.DEF? - see above
+//   - map scroll: RADAR.def
+//   - fog of war: Tshrc.def
+//   - fog of war edges: Tshre.def
+//Is there any reason for these 2 to be not gnerated on the fly? - there isn't.
+//TODO shader
+//   - mana bar L of hero portrait: imana.def
+//   - movement points R of hero portrait: imobil.def
+//   - towns: ITPA.def
+//     - hint: town: itpt.def
+//  - hero details view
+//     - background: AdStatHr.pcx, HEROQVBK.PCX
+//     - morale: IMRL22.def
+//     - luck: ILCK22.def
+//  - map
+//    - terrain tiles: Lavatl.def, Watrtl.def, Snowtl.def, Swmptl.def,
+//      sandtl.def, GRASTL.def, Subbtl.def, ROUGTL.def, rocktl.def, DIRTTL.def
+//
 #undef public
 class GameWindow final : public DialogWindow, public IHandleEvents
 #define public public:
