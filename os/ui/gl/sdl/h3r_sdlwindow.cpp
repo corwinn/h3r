@@ -139,6 +139,10 @@ SDLWindow::SDLWindow(int, char **, Point && size)
         return;
     }
 
+    // Set mouse cursor - something has to provide the bitmap data:
+    //   SDL_CreateRGBSurfaceFrom
+    //   SDL_CreateColorCursor
+
     _gc = SDL_GL_CreateContext (_window);
     if (! _gc) {
         H3R_NS::Log::Err (H3R_NS::String::Format (
