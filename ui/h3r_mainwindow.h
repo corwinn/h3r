@@ -66,6 +66,11 @@ class MainWindow final : public Window, public IHandleEvents
 
     private int _mm_a, _mm_b; // main menu buttons [a;b] (at Controls ())
     private int _ng_a, _ng_b; // new game buttons [a;b] (at Controls ())
+
+    //TODO load and map mouse cursor bitmaps:
+    //     - CRADVNTR.def (adv map), CRCOMBAT.def (battle),
+    //       crdeflt.def (mouse ptr, wait ptr)
+    //     - where to define the mapping?
 };
 
 NAMESPACE_H3R
