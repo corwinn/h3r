@@ -96,6 +96,8 @@ struct IWindow
         a->SetEventHandler (b);
         return b;
     }
+
+    //TODO SetMouseCursor()
 };// IWindow
 
 // Handles the UI portion of the program. Implemented by the chosen "window"
