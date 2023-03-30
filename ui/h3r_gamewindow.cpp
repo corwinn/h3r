@@ -33,16 +33,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **** END LICENCE BLOCK ****/
 
 #include "h3r_gamewindow.h"
+#include "h3r_renderengine.h"
+#include "h3r_textrenderingengine.h"
+#include "h3r_game.h"
+#include "h3r_def.h"
+#include "h3r_pcx.h"
+#include "h3r_label.h"
+#include "h3r_button.h"
+#include "h3r_gc.h"
+#include "h3r_dbg.h"
 
 H3R_NAMESPACE
 
-// _map {map->FileName (), header_only = false}
-GameWindow::GameWindow(Window * base_window, Map * map)
+// _map {map_name, header_only = false}
+GameWindow::GameWindow(Window * base_window, const String & map_name)
     : DialogWindow {base_window, Point {800, 600}},
-    _map {map->FileName (), false}
+    _map {map_name, false}
 {
+    auto RE = Window::UI;
+    Pcx dlg_main {Game::GetResource ("AdvMap.pcx")};
+    UploadFrame (RE->GenKey (), 0, 0, dlg_main, "AdvMap.pcx", Depth ());
+
+    Dbg << "Game: " << _map.Name () << EOL;
 }
 
+void GameWindow::OnKeyUp(const EventArgs & e)
+{
+    //TODO behaviour repeats; think about a way
+    if (H3R_KEY_ESC == e.Key) {
+        _dr = DialogResult::Cancel;
+        _has_dr = true;
+    }
+}
 
 GameWindow::~GameWindow() {}
 

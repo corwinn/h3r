@@ -97,8 +97,10 @@ class GameWindow final : public DialogWindow, public IHandleEvents
 #define public public:
 {
     private Map _map;
-    public GameWindow(Window * base_window, Map * map);
+    public GameWindow(Window * base_window, const String & map_name);
     public ~GameWindow() override;
+
+    protected void OnKeyUp(const EventArgs &) override;
 };// GameWindow
 
 NAMESPACE_H3R
