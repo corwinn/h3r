@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_timing.h"
 #include "h3r_messagebox.h"
 #include "h3r_newgame.h"
+#include "h3r_gamewindow.h"
 
 H3R_NAMESPACE
 
@@ -229,7 +230,11 @@ void MainWindow::NewGameBack(EventArgs *)
 void MainWindow::NewGameSignleScenario(EventArgs *)
 {
     NewGameDialog ngd {this};
-    ngd.ShowDialog ();
+    if ( DialogResult::OK == ngd.ShowDialog ()) {
+        GameWindow game {this, ngd.SelectedMap ()};
+        game.ShowDialog ();
+        // returning to main menu shall release the NewGameDialog
+    }
 }
 
 NAMESPACE_H3R
