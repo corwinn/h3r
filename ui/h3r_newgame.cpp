@@ -385,6 +385,8 @@ void NewGameDialog::ToggleAdvOpt(EventArgs *)
 
 void NewGameDialog::Begin(EventArgs *)
 {
+    _dr = DialogResult::OK;
+    _has_dr = true;
 }
 
 void NewGameDialog::Back(EventArgs *)

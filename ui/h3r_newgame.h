@@ -429,6 +429,9 @@ class NewGameDialog final : public DialogWindow, public IHandleEvents
     private void Model2View();
 
     private void LidSetFlags(Map *);
+
+    // This is valid as long as "this".
+    public inline class Map * SelectedMap() { return _lid_map; }
 };// NewGameDialog
 
 NAMESPACE_H3R
