@@ -177,7 +177,7 @@ class Map final
     //   ...
     //   Map game {m.FileName (), header_only = false}
     // Way more simple than "game Map {m}"
-    protected const String & FileName() const { return _file_name; }
+    public const String & FileName() const { return _file_name; }
 };// Map
 
 NAMESPACE_H3R
