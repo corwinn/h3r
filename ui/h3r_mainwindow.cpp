@@ -229,11 +229,17 @@ void MainWindow::NewGameBack(EventArgs *)
 
 void MainWindow::NewGameSignleScenario(EventArgs *)
 {
-    NewGameDialog ngd {this};
-    if ( DialogResult::OK == ngd.ShowDialog ()) {
-        GameWindow game {this, ngd.SelectedMap ()};
+    String selected_map {};
+    {
+        NewGameDialog ngd {this};
+        if (DialogResult::OK == ngd.ShowDialog ())
+            selected_map = ngd.SelectedMap ()->FileName ();
+        //TODO DialogWindow.Close - the ~ shouldn't be the only way
+    }
+    if (! selected_map.Empty ()) {
+        //TODO progress
+        GameWindow game {this, selected_map};
         game.ShowDialog ();
-        // returning to main menu shall release the NewGameDialog
     }
 }
 
