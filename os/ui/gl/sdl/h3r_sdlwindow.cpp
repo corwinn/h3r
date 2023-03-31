@@ -192,10 +192,7 @@ SDLWindow::SDLWindow(int, char **, Point && size)
 SDLWindow::~SDLWindow()
 {
     if (_music) Mix_FreeMusic (_music);
-    if (nullptr != _mouse_cursor) {
-        SDL_FreeCursor (_mouse_cursor);
-        _mouse_cursor = nullptr;
-    }
+    ClearMouseCursor ();
     SDL_Quit ();
 }
 
@@ -377,6 +374,14 @@ struct try_finally_sdl_surface
     }
 };}
 
+void SDLWindow::ClearMouseCursor()
+{
+    if (nullptr != _mouse_cursor) {
+        SDL_FreeCursor (_mouse_cursor);// will the program break at this point?
+        _mouse_cursor = nullptr;
+    }
+}
+
 void SDLWindow::SetMouseCursor(IWindow::MousePtrInfo & info)
 {
     int bpp = h3rBitmapFormat::RGB == info.BitmapFormat ? 24 : 32;
@@ -389,10 +394,7 @@ void SDLWindow::SetMouseCursor(IWindow::MousePtrInfo & info)
         return;
     }
     __pointless_verbosity::try_finally_sdl_surface ____ {s};
-    if (nullptr != _mouse_cursor) {
-        SDL_FreeCursor (_mouse_cursor); // will the program break at this point?
-        _mouse_cursor = nullptr;
-    }
+    ClearMouseCursor ();
     auto cursor = SDL_CreateColorCursor (s, 0, 0);
     if (nullptr == cursor) {
         H3R_NS::Log::Err (H3R_NS::String::Format (

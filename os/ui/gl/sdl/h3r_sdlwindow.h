@@ -83,6 +83,7 @@ class SDLWindow : public OSWindow
     public ~SDLWindow();
 
     private SDL_Cursor * _mouse_cursor {};
+    private void ClearMouseCursor();
     private void SetMouseCursor(IWindow::MousePtrInfo &) override;
 };// SDLWindow
 
