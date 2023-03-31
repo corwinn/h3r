@@ -97,7 +97,17 @@ struct IWindow
         return b;
     }
 
-    //TODO SetMouseCursor()
+    //TODO what am I; a service?!
+    struct MousePtrInfo final // allow extending w/o issues
+    {
+        // Good enough for SDL2, but one never knows what other fields could
+        // be needed.
+        byte * Bitmap {};
+        int Width {};
+        int Height {};
+        h3rBitmapFormat BitmapFormat {};
+    };
+    virtual void SetMouseCursor(MousePtrInfo &) {H3R_NOT_IMPLEMENTED_EXC}
 };// IWindow
 
 // Handles the UI portion of the program. Implemented by the chosen "window"

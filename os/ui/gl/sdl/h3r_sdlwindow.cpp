@@ -359,4 +359,8 @@ void SDLWindow::HandleMouseButtonEvent(EventArgs & e)
     e.X = e.Y = 0;
 }
 
+void SDLWindow::SetMouseCursor(IWindow::MousePtrInfo &)
+{
+}
+
 NAMESPACE_H3R

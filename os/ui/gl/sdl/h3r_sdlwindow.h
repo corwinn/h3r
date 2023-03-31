@@ -81,7 +81,9 @@ class SDLWindow : public OSWindow
     public void ProcessMessages() override;
     public SDLWindow(int, char **, Point &&);
     public ~SDLWindow();
-};
+
+    private void SetMouseCursor(IWindow::MousePtrInfo &) override;
+};// SDLWindow
 
 NAMESPACE_H3R
 

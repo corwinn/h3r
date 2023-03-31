@@ -147,6 +147,7 @@ class Window : public IWindow
     IW protected virtual void OnRender() override;
     // Forget to call this one, and you shall see nothing or a mess.
     IW protected virtual void OnResize(int, int) override;
+    IW protected virtual void SetMouseCursor(IWindow::MousePtrInfo &) override;
 #undef IW
 
     // resource names:          CursrD00, CursrD01, CursrD02,

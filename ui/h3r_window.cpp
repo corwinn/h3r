@@ -271,4 +271,9 @@ void Window::OnClose(IWindow * sender, bool &)
 void Window::OnRender() { Window::UI->Render (); }
 void Window::OnResize(int w, int h) { Window::UI->Resize (w, h); }
 
+void Window::SetMouseCursor(IWindow::MousePtrInfo & info)
+{
+    _win->SetMouseCursor (info);
+}
+
 NAMESPACE_H3R

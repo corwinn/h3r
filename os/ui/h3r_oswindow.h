@@ -51,6 +51,7 @@ class OSWindow : public IWindow
     public virtual void ProcessMessages() override {}
     public virtual bool Idle() override { return true; }
     public virtual void Render() override {}
+    public virtual void SetMouseCursor(IWindow::MousePtrInfo &) override {}
 
     public OSWindow(int, char **) {}
     public virtual ~OSWindow() {}
