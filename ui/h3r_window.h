@@ -150,6 +150,7 @@ class Window : public IWindow
     IW protected virtual void SetMouseCursor(IWindow::MousePtrInfo &) override;
 #undef IW
 
+    //TODO map Window::MousePtr to the game resources
     // resource names:          CursrD00, CursrD01, CursrD02,
     public enum class MousePtr {Default , Default2, Wait     };
 };// Window

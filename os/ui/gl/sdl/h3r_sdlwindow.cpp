@@ -395,6 +395,7 @@ void SDLWindow::SetMouseCursor(IWindow::MousePtrInfo & info)
     }
     __pointless_verbosity::try_finally_sdl_surface ____ {s};
     ClearMouseCursor ();
+    //TODO parametrize mouse hotspot
     auto cursor = SDL_CreateColorCursor (s, 0, 0);
     if (nullptr == cursor) {
         H3R_NS::Log::Err (H3R_NS::String::Format (
