@@ -42,9 +42,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 H3R_NAMESPACE
 
-//                   CursrD00, CursrD01, CursrD02,
-enum class MousePtr {Default , Default2, Wait     };
-
 // Abstract window.
 // A contract between the windowing bridge: abstraction and implementation:
 // Helps avoiding syntax errors and missing overrides.

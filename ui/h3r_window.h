@@ -147,8 +147,10 @@ class Window : public IWindow
     IW protected virtual void OnRender() override;
     // Forget to call this one, and you shall see nothing or a mess.
     IW protected virtual void OnResize(int, int) override;
-
 #undef IW
+
+    // resource names:          CursrD00, CursrD01, CursrD02,
+    public enum class MousePtr {Default , Default2, Wait     };
 };// Window
 
 NAMESPACE_H3R
