@@ -179,6 +179,14 @@ void MainWindow::OnKeyUp(const EventArgs & e)
 
 void MainWindow::OnShow()
 {
+    Def sprite {Game::GetResource ("crdeflt.def")};
+    H3R_ENSURE(sprite.Query ("CursrD00.pcx"), "Sprite not found")
+    IWindow::MousePtrInfo mp {};
+    mp.Bitmap = sprite.ToRGBA ()->operator byte * ();
+    mp.Width = sprite.Width ();
+    mp.Height = sprite.Height ();
+    mp.BitmapFormat = h3rBitmapFormat::RGBA;
+    SetMouseCursor (mp);
 }
 
 void MainWindow::OnRender()

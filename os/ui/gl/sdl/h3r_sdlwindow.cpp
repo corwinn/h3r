@@ -192,6 +192,10 @@ SDLWindow::SDLWindow(int, char **, Point && size)
 SDLWindow::~SDLWindow()
 {
     if (_music) Mix_FreeMusic (_music);
+    if (nullptr != _mouse_cursor) {
+        SDL_FreeCursor (_mouse_cursor);
+        _mouse_cursor = nullptr;
+    }
     SDL_Quit ();
 }
 
@@ -359,8 +363,43 @@ void SDLWindow::HandleMouseButtonEvent(EventArgs & e)
     e.X = e.Y = 0;
 }
 
-void SDLWindow::SetMouseCursor(IWindow::MousePtrInfo &)
+namespace __pointless_verbosity {
+struct try_finally_sdl_surface
 {
+    SDL_Surface *& state;
+    try_finally_sdl_surface(SDL_Surface *& s) : state{s} {}
+    ~try_finally_sdl_surface()
+    {
+        if (nullptr != state) {
+            SDL_FreeSurface (state);
+            state = nullptr;
+        }
+    }
+};}
+
+void SDLWindow::SetMouseCursor(IWindow::MousePtrInfo & info)
+{
+    int bpp = h3rBitmapFormat::RGB == info.BitmapFormat ? 24 : 32;
+    auto s = SDL_CreateRGBSurfaceFrom (info.Bitmap, info.Width, info.Height,
+        bpp, (bpp>>3)*info.Width, 0x000000ffu, 0x0000ff00u, 0x00ff0000u,
+        0xff000000u);
+    if (nullptr == s) {
+        H3R_NS::Log::Err (H3R_NS::String::Format (
+            "SDL_CreateRGBSurfaceFrom error: %s" EOL, SDL_GetError ()));
+        return;
+    }
+    __pointless_verbosity::try_finally_sdl_surface ____ {s};
+    if (nullptr != _mouse_cursor) {
+        SDL_FreeCursor (_mouse_cursor); // will the program break at this point?
+        _mouse_cursor = nullptr;
+    }
+    auto cursor = SDL_CreateColorCursor (s, 0, 0);
+    if (nullptr == cursor) {
+        H3R_NS::Log::Err (H3R_NS::String::Format (
+            "SDL_CreateColorCursor error: %s" EOL, SDL_GetError ()));
+        return;
+    }
+    SDL_SetCursor (cursor);
 }
 
 NAMESPACE_H3R
