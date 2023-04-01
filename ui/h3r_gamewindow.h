@@ -76,7 +76,7 @@ H3R_NAMESPACE
 //   - map scroll: RADAR.def
 //   - fog of war: Tshrc.def
 //   - fog of war edges: Tshre.def
-//Is there any reason for these 2 to be not gnerated on the fly? - there isn't.
+//Is there any reason for these 2 to be not generated on the fly? - there isn't.
 //TODO shader
 //   - mana bar L of hero portrait: imana.def
 //   - movement points R of hero portrait: imobil.def
