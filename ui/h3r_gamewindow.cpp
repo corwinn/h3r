@@ -60,6 +60,32 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
     sbar_back.SetPlayerColor (Game::CurrentPlayerColor, pp);
     UploadFrame (RE->GenKey (), 3, 575, sbar_back, "AResBar.pcx", Depth ());
 
+    Label * lbl {}; // TODO properties
+    // int x1 = 40, dx = 84;
+    // "RESTYPES.TXT": Wood, Mercury, Ore, Sulfur, Crystal, Gems, Gold
+    H3R_CREATE_OBJECT(lbl, Label) {"29",
+        "smalfont.fnt", Point {40, 578}, this, H3R_TEXT_COLOR_WHITE};
+    H3R_CREATE_OBJECT(lbl, Label) {"9",
+        "smalfont.fnt", Point {124, 578}, this, H3R_TEXT_COLOR_WHITE};
+    H3R_CREATE_OBJECT(lbl, Label) {"3",
+        "smalfont.fnt", Point {208, 578}, this, H3R_TEXT_COLOR_WHITE};
+    H3R_CREATE_OBJECT(lbl, Label) {"12",
+        "smalfont.fnt", Point {292, 578}, this, H3R_TEXT_COLOR_WHITE};
+    H3R_CREATE_OBJECT(lbl, Label) {"17",
+        "smalfont.fnt", Point {376, 578}, this, H3R_TEXT_COLOR_WHITE};
+    H3R_CREATE_OBJECT(lbl, Label) {"9",
+        "smalfont.fnt", Point {460, 578}, this, H3R_TEXT_COLOR_WHITE};
+    H3R_CREATE_OBJECT(lbl, Label) {"15920",
+        "smalfont.fnt", Point {544, 578}, this, H3R_TEXT_COLOR_WHITE};
+
+    // Date
+    H3R_CREATE_OBJECT(lbl, Label) {"Month: 1, Week: 1, Day: 4",
+        "smalfont.fnt", Point {622, 578}, this, H3R_TEXT_COLOR_WHITE};
+
+    H3R_CREATE_OBJECT(lbl, Label) {"Status Window",
+        "smalfont.fnt", Point {7, 555}, this, H3R_TEXT_COLOR_MSGB,
+        false, Point {601-7, 573-555}};
+
     Dbg << "Game: " << _map.Name () << EOL;
 }
 
