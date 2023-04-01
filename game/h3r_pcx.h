@@ -161,6 +161,7 @@ class Pcx final : public ResDecoder
         return &buf;
     }// Decode
 
+    //TODO virtual at base?
     public inline void SetPlayerColor(h3rPlayerColor pc, const Pal & pal)
     {
         if (_palette.Empty ()) _palette.Resize (32*3);
