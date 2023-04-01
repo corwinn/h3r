@@ -56,6 +56,10 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
     dlg_main.SetPlayerColor (Game::CurrentPlayerColor, pp);
     UploadFrame (RE->GenKey (), 0, 0, dlg_main, "AdvMap.pcx", Depth ());
 
+    Pcx sbar_back {Game::GetResource ("AResBar.pcx")};
+    sbar_back.SetPlayerColor (Game::CurrentPlayerColor, pp);
+    UploadFrame (RE->GenKey (), 3, 575, sbar_back, "AResBar.pcx", Depth ());
+
     Dbg << "Game: " << _map.Name () << EOL;
 }
 

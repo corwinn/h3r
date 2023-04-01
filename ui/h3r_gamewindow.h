@@ -52,7 +52,7 @@ H3R_NAMESPACE
 //
 // Resources:
 //   [] background: AdvMap.pcx
-//   - status bar: AResBar.pcx, HEROQVBK.PCX, TResBar.pcx
+//   [] status bar: AResBar.pcx, HEROQVBK.PCX, TResBar.pcx
 //   - "Help.txt" - hints
 //   - mouse cursors: CRADVNTR.def (adv map), CRCOMBAT.def (battle),
 //                  crdeflt.def (mouse ptr, wait ptr)
