@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_log.h"
 #include "h3r_stream.h"
 #include "h3r_string.h"
+#include "h3r_pal.h"
 
 H3R_NAMESPACE
 
@@ -52,6 +53,7 @@ class Pcx final : public ResDecoder
     private Stream * _s;
     private Array<byte> _rgba {};
     private Array<byte> _rgb {};
+    private Array<byte> _palette {}; // h3rPlayerColor one
     private int _w {};
     private int _h {};
     private off_t _bitmap_ofs {}; // 0-based
@@ -138,6 +140,8 @@ class Pcx final : public ResDecoder
             byte * p = pal;
             Stream::Read (*_s, src, _w*_h);
             Stream::Read (*_s, p, pal.Length ());
+            if (! _palette.Empty ()) // use player color
+                OS::Memcpy (p+(256-32)*3, _palette.operator byte * (), 32*3);
             while (b != e) {
                 byte i = *src++;
                 *b++ = *(p+3*i), *b++ = *(p+3*i+1), *b++ = *(p+3*i+2);
@@ -156,6 +160,15 @@ class Pcx final : public ResDecoder
             }
         return &buf;
     }// Decode
+
+    public inline void SetPlayerColor(h3rPlayerColor pc, const Pal & pal)
+    {
+        if (_palette.Empty ()) _palette.Resize (32*3);
+        H3R_ENSURE(H3R_VALID_PLAYER_COLOR(pc), "pc shall be [0;7]")
+        // "dialgbox.def" is using the last 32 for PlayerColor - I hope they all
+        // are using the same offset and number.
+        pal.Replace (static_cast<byte *>(_palette), 0, 32, pc << 5);
+    }
 };// Pcx
 
 NAMESPACE_H3R
