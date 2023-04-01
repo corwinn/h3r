@@ -273,6 +273,8 @@ void RenderEngine::ChangeOffset(int key, GLint value)
     lists._index[_entries[key].Key] = _entries[key].Base + _entries[key].Offset;
 }
 
+int RenderEngine::OffsetDistance() const { return H3R_SPRITE_VERTICES; }
+
 void RenderEngine::UpdateRenderOrder(int key, h3rDepthOrder order)
 {
     glBindBuffer (GL_ARRAY_BUFFER, _vbo);

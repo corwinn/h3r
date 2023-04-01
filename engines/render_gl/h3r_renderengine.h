@@ -254,6 +254,10 @@ class RenderEngine final
     //       time but render sprites and music, so it could be thought about.
     public void ChangeOffset(int key, GLint offset);
 
+    // Offset2-Offset1
+    public int OffsetDistance() const;
+    inline int Offset0() const { return 0; }
+
     // Do not use very often.
     // Reason:
     //  A button needs to get its texture generated so it can auto-size to it,

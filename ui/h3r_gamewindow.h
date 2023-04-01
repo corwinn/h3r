@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "h3r_dialogwindow.h"
 #include "h3r_event.h"
 #include "h3r_map.h"
+#include "h3r_list.h"
 
 H3R_NAMESPACE
 
@@ -95,11 +96,16 @@ class GameWindow final : public DialogWindow, public IHandleEvents
 #define public public:
 {
     private Map _map;
+    int _sprite_key {}, _sprite2_key {}, _sprite3_key {}, _sprite4_key {};
+    int _frame_count {};
+    int _frame_id {};
     public GameWindow(Window * base_window, const String & map_name);
     public ~GameWindow() override;
 
+    private void OnRender() override;
     protected void OnKeyUp(const EventArgs &) override;
 };// GameWindow
+
 
 NAMESPACE_H3R
 

@@ -86,6 +86,32 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
         "smalfont.fnt", Point {7, 555}, this, H3R_TEXT_COLOR_MSGB,
         false, Point {601-7, 573-555}};
 
+    Def sprite {Game::GetResource ("Watrtl.def")};
+    _sprite_key = RE->GenKey ();
+    _frame_id = Window::UI->Offset0 ();
+    _frame_count = 0;
+    // sprite.SpriteNum (0)
+    for (int i = 20; i < 23; i++) { // upload all frames
+        _frame_count++;
+        UploadFrame (_sprite_key, 100, 100, sprite,
+            "Watrtl.def", sprite.Query (0, i)->FrameName (), Depth ());
+    }
+    _sprite2_key = RE->GenKey ();
+    for (int i = 20; i < 23; i++) { // upload all frames
+        UploadFrame (_sprite2_key, 100, 132, sprite,
+            "Watrtl.def", sprite.Query (0, i)->FrameName (), Depth ());
+    }
+    _sprite3_key = RE->GenKey ();
+    for (int i = 20; i < 23; i++) { // upload all frames
+        UploadFrame (_sprite3_key, 132, 100, sprite,
+            "Watrtl.def", sprite.Query (0, i)->FrameName (), Depth ());
+    }
+    _sprite4_key = RE->GenKey ();
+    for (int i = 20; i < 23; i++) { // upload all frames
+        UploadFrame (_sprite4_key, 132, 132, sprite,
+            "Watrtl.def", sprite.Query (0, i)->FrameName (), Depth ());
+    }
+
     Dbg << "Game: " << _map.Name () << EOL;
 }
 
@@ -99,5 +125,19 @@ void GameWindow::OnKeyUp(const EventArgs & e)
 }
 
 GameWindow::~GameWindow() {}
+
+void GameWindow::OnRender()
+{
+    // static int slow_down {4};
+    Window::OnRender ();
+    // if (slow_down--) return; else slow_down = 3;
+    Window::UI->ChangeOffset (_sprite_key, _frame_id);
+    Window::UI->ChangeOffset (_sprite2_key, _frame_id);
+    Window::UI->ChangeOffset (_sprite3_key, _frame_id);
+    Window::UI->ChangeOffset (_sprite4_key, _frame_id);
+    _frame_id += Window::UI->OffsetDistance ();
+    if (_frame_id / Window::UI->OffsetDistance () >= _frame_count)
+        _frame_id = Window::UI->Offset0 ();
+}
 
 NAMESPACE_H3R
