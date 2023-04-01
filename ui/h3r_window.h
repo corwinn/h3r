@@ -152,6 +152,8 @@ class Window : public IWindow
 
     //TODO map Window::MousePtr to the game resources
     // resource names:          CursrD00, CursrD01, CursrD02,
+    //   - mouse cursors: CRADVNTR.def (adv map), CRCOMBAT.def (battle),
+    //                  crdeflt.def (mouse ptr, wait ptr)
     public enum class MousePtr {Default , Default2, Wait     };
 };// Window
 

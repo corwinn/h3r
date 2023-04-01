@@ -54,8 +54,6 @@ H3R_NAMESPACE
 //   [] background: AdvMap.pcx
 //   [] status bar: AResBar.pcx, HEROQVBK.PCX, TResBar.pcx
 //   - "Help.txt" - hints
-//   - mouse cursors: CRADVNTR.def (adv map), CRCOMBAT.def (battle),
-//                  crdeflt.def (mouse ptr, wait ptr)
 //   - map frame: EDG.def
 //   - Game::CurrentPlayerColor
 //     - next hero: iam000.def
