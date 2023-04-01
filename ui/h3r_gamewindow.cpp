@@ -51,7 +51,9 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
     _map {map_name, false}
 {
     auto RE = Window::UI;
+    Pal pp {Game::GetResource ("PLAYERS.PAL")};
     Pcx dlg_main {Game::GetResource ("AdvMap.pcx")};
+    dlg_main.SetPlayerColor (Game::CurrentPlayerColor, pp);
     UploadFrame (RE->GenKey (), 0, 0, dlg_main, "AdvMap.pcx", Depth ());
 
     Dbg << "Game: " << _map.Name () << EOL;
