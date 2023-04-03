@@ -86,6 +86,7 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
         "smalfont.fnt", Point {7, 555}, this, H3R_TEXT_COLOR_MSGB,
         false, Point {601-7, 573-555}};
 
+    //TODO capture sequential frames; try figuring out the sprite order
     Def sprite {Game::GetResource ("Watrtl.def")};
     _frame_count = 4;
     _frame_id = Window::UI->Offset0 ();
