@@ -87,17 +87,22 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
         false, Point {601-7, 573-555}};
 
     //TODO capture sequential frames; try figuring out the sprite order
+    // Ok, no combo of coastal tile frames makes sense; The more I look, the
+    // more I have the feeling this is palette animation; TODO <- verify-me
+    // I hope I'm wrong, for the RE has to be remade if this is the case.
     Def sprite {Game::GetResource ("Watrtl.def")};
-    _frame_count = 4;
+    _frame_count = 2;
     _frame_id = Window::UI->Offset0 ();
     for (int y = 20; y < 20+32*10; y+=32)
         for (int x = 20; x < 20+32*10; x+=32) {
             auto k = _keys.Add (RE->GenKey ());
             // no amount of shifting, and _frame_count showed correct
             // water animation; there is something odd here
-            for (int i = 8; i < 8+_frame_count; i++) // upload some frames
+            //for (int i = 8; i < 8+_frame_count; i+=2) // upload some frames
                 UploadFrame (k, x, y, sprite,
-                    "Watrtl.def", sprite.Query (0, i)->FrameName (), Depth ());
+                    "Watrtl.def", sprite.Query (0, 8)->FrameName (), Depth ());
+                UploadFrame (k, x, y, sprite,
+                    "Watrtl.def", sprite.Query (0, 11)->FrameName (), Depth ());
         }
 
     Dbg << "Game: " << _map.Name () << EOL;
