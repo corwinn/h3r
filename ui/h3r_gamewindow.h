@@ -97,7 +97,6 @@ class GameWindow final : public DialogWindow, public IHandleEvents
 {
     private Map _map;
     private List<int> _keys {};
-    // int _sprite_key {}, _sprite2_key {}, _sprite3_key {}, _sprite4_key {};
     int _frame_count {};
     int _frame_id {};
     public GameWindow(Window * base_window, const String & map_name);
