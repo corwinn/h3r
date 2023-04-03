@@ -87,7 +87,16 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
         false, Point {601-7, 573-555}};
 
     Def sprite {Game::GetResource ("Watrtl.def")};
-    _sprite_key = RE->GenKey ();
+    _frame_count = 4;
+    _frame_id = Window::UI->Offset0 ();
+    for (int y = 20; y < 20+32*10; y+=32)
+        for (int x = 20; x < 20+32*10; x+=32) {
+            auto k = _keys.Add (RE->GenKey ());
+            for (int i = 28; i < 28+_frame_count; i++) // upload some frames
+                UploadFrame (k, x, y, sprite,
+                    "Watrtl.def", sprite.Query (0, i)->FrameName (), Depth ());
+        }
+    /*_sprite_key = RE->GenKey ();
     _frame_id = Window::UI->Offset0 ();
     _frame_count = 0;
     // sprite.SpriteNum (0)
@@ -110,7 +119,7 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
     for (int i = 20; i < 23; i++) { // upload all frames
         UploadFrame (_sprite4_key, 132, 132, sprite,
             "Watrtl.def", sprite.Query (0, i)->FrameName (), Depth ());
-    }
+    }*/
 
     Dbg << "Game: " << _map.Name () << EOL;
 }
@@ -131,10 +140,11 @@ void GameWindow::OnRender()
     // static int slow_down {4};
     Window::OnRender ();
     // if (slow_down--) return; else slow_down = 3;
-    Window::UI->ChangeOffset (_sprite_key, _frame_id);
-    Window::UI->ChangeOffset (_sprite2_key, _frame_id);
+    for (auto sa : _keys)
+        Window::UI->ChangeOffset (sa, _frame_id);
+    /*Window::UI->ChangeOffset (_sprite2_key, _frame_id);
     Window::UI->ChangeOffset (_sprite3_key, _frame_id);
-    Window::UI->ChangeOffset (_sprite4_key, _frame_id);
+    Window::UI->ChangeOffset (_sprite4_key, _frame_id);*/
     _frame_id += Window::UI->OffsetDistance ();
     if (_frame_id / Window::UI->OffsetDistance () >= _frame_count)
         _frame_id = Window::UI->Offset0 ();
