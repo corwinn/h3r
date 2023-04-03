@@ -95,7 +95,7 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
             auto k = _keys.Add (RE->GenKey ());
             // no amount of shifting, and _frame_count showed correct
             // water animation; there is something odd here
-            for (int i = 28; i < 28+_frame_count; i++) // upload some frames
+            for (int i = 8; i < 8+_frame_count; i++) // upload some frames
                 UploadFrame (k, x, y, sprite,
                     "Watrtl.def", sprite.Query (0, i)->FrameName (), Depth ());
         }
