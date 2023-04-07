@@ -86,10 +86,8 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
         "smalfont.fnt", Point {7, 555}, this, H3R_TEXT_COLOR_MSGB,
         false, Point {601-7, 573-555}};
 
-    //TODO capture sequential frames; try figuring out the sprite order
-    // Ok, no combo of coastal tile frames makes sense; The more I look, the
-    // more I have the feeling this is palette animation; TODO <- verify-me
-    // I hope I'm wrong, for the RE has to be remade if this is the case.
+    // Ok, no combo of coastal tile frames makes sense.
+    // Water tiles are using palette animation.
     Def sprite {Game::GetResource ("Watrtl.def")};
     _frame_count = 2;
     _frame_id = Window::UI->Offset0 ();
