@@ -89,9 +89,20 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
     // Ok, no combo of coastal tile frames makes sense.
     // Water tiles are using palette animation.
     Def sprite {Game::GetResource ("Watrtl.def")};
-    _frame_count = 2;
+    _frame_count = 12;
     _frame_id = Window::UI->Offset0 ();
-
+    for (int y = 20; y < 20+32*10; y+=32)
+        for (int x = 20; x < 20+32*10; x+=32) {
+            auto k = _keys.Add (RE->GenKey ());
+            for (int i = 0; i < _frame_count; i++) { // upload some frames
+                UploadFrame (k, x, y, sprite,
+                    String::Format ("%dWatrtl.def", i),
+                    sprite.Query (0, 20)->FrameName (), Depth ());
+                sprite.PaletteAnimation (229, 12);
+                sprite.PaletteAnimation (242, 14);
+            }
+        }
+    Dbg << "Keys: " << _keys.Count () << EOL;
     Dbg << "Game: " << _map.Name () << EOL;
 }
 
