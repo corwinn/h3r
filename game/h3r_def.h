@@ -239,7 +239,8 @@ class Def final : public ResDecoder
         auto & b = _sprites[block];
         H3R_ENSURE(sub_sprite >= 0 && sub_sprite < b.Entries.Length (),
             "No such sprite")
-        SetRequest (&(b.Entries[sub_sprite]));
+        //TODO generate distinct _request_id: f(block, sub_sprite)
+        SetRequest (&(b.Entries[_request_id = sub_sprite]));
         return this;
     }
     public inline int BlockNum() const { return _sprites.Length (); }
