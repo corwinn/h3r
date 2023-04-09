@@ -283,12 +283,12 @@ class Def final : public ResDecoder
     }
 
     // Roll colors at the palette. State: to get the new bitmap, call ToRGB(A).
-    public inline void PaletteAnimation(int index, int count)
+    public inline void PaletteAnimationL(int index, int count)
     {
         H3R_ENSURE(count > 1, "\"animation\" requires 2, for starters")
         H3R_ENSURE((index + count) <= (_palette.Length () / 3), "out of range")
-        // roll left
         auto p = _palette.operator byte * () + 3*index;
+        // roll left
         int i = 0, j = 1, c = count-1;
         byte r = *p, g = *(p+1), b = *(p+2);
         while (c--) {
@@ -304,7 +304,30 @@ class Def final : public ResDecoder
         *(p+3*i+2) = b;
         _rgba.Resize (0);
         _rgb.Resize (0);
-    }
+    }// PaletteAnimationL()
+
+    public inline void PaletteAnimationR(int index, int count)
+    {
+        H3R_ENSURE(count > 1, "\"animation\" requires 2, for starters")
+        H3R_ENSURE((index + count) <= (_palette.Length () / 3), "out of range")
+        auto p = _palette.operator byte * () + 3*index;
+        // roll right
+        int i = count-2, j = count-1, c = count-1;
+        byte r = *(p+3*c), g = *(p+3*c+1), b = *(p+3*c+2);
+        while (c--) {
+            *(p+3*j+0) = *(p+3*i+0);
+            *(p+3*j+1) = *(p+3*i+1);
+            *(p+3*j+2) = *(p+3*i+2);
+            j--;
+            i--;
+        }
+        H3R_ENSURE(0 == j, "you have a bug")
+        *p = r;
+        *(p+1) = g;
+        *(p+2) = b;
+        _rgba.Resize (0);
+        _rgb.Resize (0);
+    }// PaletteAnimationR()
 };// Def
 
 NAMESPACE_H3R
