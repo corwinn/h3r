@@ -89,6 +89,7 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
     // Ok, no combo of coastal tile frames makes sense.
     // Water tiles are using palette animation.
     Def sprite {Game::GetResource ("Watrtl.def")};
+    int show_them_all = 0;
     _frame_count = 12;
     _frame_id = Window::UI->Offset0 ();
     for (int y = 20; y < 20+32*10; y+=32)
@@ -97,10 +98,22 @@ GameWindow::GameWindow(Window * base_window, const String & map_name)
             for (int i = 0; i < _frame_count; i++) { // upload some frames
                 UploadFrame (k, x, y, sprite,
                     String::Format ("%dWatrtl.def", i),
-                    sprite.Query (0, 20)->FrameName (), Depth ());
-                sprite.PaletteAnimation (229, 12);
-                sprite.PaletteAnimation (242, 14);
+                    sprite.Query (0, show_them_all)->FrameName (), Depth ());
+                // Sea. So says the "gimp" (Colors->Map->Rearrange). 241 and 255
+                // are w&b.
+                // With the help of "kmag": 228 is stationary (not part of the
+                // anim).
+                // There is direction specified by the editor I suppose (via
+                // frame id at the sprite). The direction shall be verified
+                // later by comparing both renderings (original vs remake) under
+                // "kmag".
+                // Some very high-precision craftsmanship here. Well done.
+                sprite.PaletteAnimationL (229, 12);
+                // Sea-shore. Assume 242 is stationary too.
+                sprite.PaletteAnimationR (243, 12);
             }
+            show_them_all++;
+            show_them_all %= 33;
         }
     Dbg << "Keys: " << _keys.Count () << EOL;
     Dbg << "Game: " << _map.Name () << EOL;
@@ -119,9 +132,9 @@ GameWindow::~GameWindow() {}
 
 void GameWindow::OnRender()
 {
-    // static int slow_down {4};
+    static int slow_down {4}; // implicit (TARGET_FPS=32)/4
     Window::OnRender ();
-    // if (slow_down--) return; else slow_down = 3;
+    if (slow_down--) return; else slow_down = 4;
     for (auto sa : _keys)
         Window::UI->ChangeOffset (sa, _frame_id);
     _frame_id += Window::UI->OffsetDistance ();
