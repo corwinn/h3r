@@ -206,7 +206,7 @@ void Window::ProcessMessages()//TODO static
         OS::GetCurrentTime (frame_b);
 
         // auto const TARGET_FPS {32};
-        auto const TARGET_FPS {16};
+        auto const TARGET_FPS {32};
         long const F_ALLOWED {1000000000/TARGET_FPS}; // [nsec/frame]
         adjustment = F_ALLOWED - OS::TimeSpecDiff (frame_a, frame_b);
     }
