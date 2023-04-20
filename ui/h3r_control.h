@@ -73,6 +73,7 @@ class Control
     // The difference: _enabled represents whether a control is "grayed out";
     // _hidden controls whether a control is rendered at all.
 
+    // Composition
     protected Control * _base {};
     protected Window * _window;
     protected h3rDepthOrder _depth;
