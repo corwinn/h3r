@@ -118,7 +118,7 @@ struct ObjRef
                          look for array of MapObj at the global space; Map.Obj
                          for example */
     byte Unk1[5]
-    ... Obj.EdId // the next field(s) depend on Obj.EdId
+    ... Obj.EdId // the next field(s) do depend on Obj.EdId
 
 struct MapCreatures
     byte  Id (Version == ROE)
