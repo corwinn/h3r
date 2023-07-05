@@ -114,7 +114,7 @@ struct Location
 // They're on the map, in the order you put them on it, at the editor.
 struct ObjRef
     Location Pos // it refers the lower right corner of the x-inverted masks
-    int<>MapObj[] Obj /* implicit "int id": MapObj & Obj = MapObj[id] -
+    int->MapObj[] Obj /* implicit "int id": MapObj & Obj = MapObj[id] -
                          look for array of MapObj at the global space; Map.Obj
                          for example */
     byte Unk1[5]
