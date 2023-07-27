@@ -281,6 +281,7 @@ template <typename T> bool EnumFiles(T & c, const char * dn,
         // dn + H3R_PATH_SEPARATOR + d_name
         int stat_clen = stat_dlen + 1 + len + 1; // +1 -> PS, +1; -> '\0'
         if (stat_clen > stat_name_max_size)
+            //TODO memory leak here; de-memory-leak it :)
             Malloc (stat_name, stat_name_max_size = stat_clen);
         Memmove (stat_name, dn, stat_dlen);
         stat_name[stat_dlen] = H3R_PATH_SEPARATOR;
