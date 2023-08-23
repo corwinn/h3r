@@ -1,0 +1,169 @@
+Due to a ridiculous e-mail from "github" today (23.08.2023) - I'm moving my projects elsewhere.
+
+
+I'm posting their e-mail at all my repos here, for anyone willing to read it:
+__the_email_that_made_me_stop_using_github_services.
+-m "Moved elsewhere."
+
+
+The e-mail:
+
+"
+
+Hey corwinn!
+
+We're reaching out to let you know that as announced last year
+<https://github.blog/2022-05-04-software-security-starts-with-the-developer-securing-developer-accounts-with-2fa/>,
+we will officially begin
+<https://github.blog/2023-03-09-raising-the-bar-for-software-security-github-2fa-begins-march-13>
+requiring users who contribute code on GitHub.com to have one or more forms of
+two-factor authentication (2FA) enabled. You are receiving this notification
+because your account meets this criteria and will be required to enroll in 2FA
+by October 6th, 2023 at 00:00 (UTC).
+
+We believe that securing the software supply chain starts with the developer. As
+GitHub is central to the software supply chain, our 2FA initiative is part of a
+platform-wide effort to secure the software ecosystem through improving account
+security. Developer accounts are frequent targets for social engineering and
+account takeover (ATO). Protecting developers and consumers of the open source
+ecosystem, including large enterprises, from these types of attacks is the first
+and most critical step toward securing the supply chain.
+<https://github.blog/2022-03-28-how-to-secure-your-end-to-end-supply-chain-on-github/>
+
+
+This email marks the beginning of your 45-day 2FA enrollment period. You'll
+receive additional reminders via email and the platform throughout the 45 days.
+*After this 45 day window, your access to GitHub.com will be limited until you
+enroll in 2FA.* A few things we think you should know:
+
+  * *2FA enrollment is required*, and if you have not enrolled by October 6th,
+    2023 at 00:00 (UTC), you will have limited ability to access GitHub.com
+    until you finish the enrollment process. Once you're enrolled, you will not
+    have the ability to disable 2FA in the future.
+  * *Enrolling in 2FA is easy, and we accept several options* including TOTP
+    mobile apps, text messages (SMS), security keys, and GitHub Mobile. Click
+    here to get started!
+    <https://github.com/settings/two_factor_authentication/setup/intro>
+  * *Already enrolled in 2FA?* Thank you! No action is required on your part at
+    this time.
+
+To learn more about what to expect from the experience, please see the
+information below.
+
+Making the software supply chain more secure is a team effort, and we can't do
+it without you. Your enrollment in 2FA is an impactful step in keeping the
+world's software secure.
+
+
+    What you need to know about the required 2FA initiative
+
+We are enrolling GitHub users who manage or author code on GitHub. More
+information about our efforts to make 2FA adoption easy and safe can be found in
+this blog post.
+<https://github.blog/2023-03-09-raising-the-bar-for-software-security-github-2fa-begins-march-13>
+This is a GitHub.com program, and unrelated to any organization or enterprise
+membership your account may have.
+
+
+      How will this affect my account?
+
+On October 6th, 2023 at 00:00 (UTC) your account will be required to have 2FA
+for authentication. If you have not yet enrolled by that date, your ability to
+access GitHub.com will be limited until you finish the enrollment process.
+
+
+      How do I enroll in 2FA?
+
+Click here to get started!
+<https://github.com/settings/two_factor_authentication/setup/intro> Prior to
+October 6th, 2023 at 00:00 (UTC) you can follow the instructions in our
+documentation
+<https://docs.github.com/articles/configuring-two-factor-authentication> to set
+up 2FA for your account. If you have not yet enrolled in 2FA by October 6th,
+2023 at 00:00 (UTC), you will automatically be taken to the 2FA enrollment form
+the next time you access GitHub.com.
+
+
+      What forms of 2FA can I use?
+
+We want you to have the most seamless experience with 2FA possible, so you can
+choose one or more of the following options:
+
+  * Security key
+  * GitHub Mobile
+  * Authenticator application (TOTP)
+  * Text messages (SMS)
+
+You should set up at least two of these options, to ensure you always have
+access to your account. Head to https://github.com/settings/security
+<https://github.com/settings/security> to enroll more 2FA methods.
+
+
+      I already have 2FA enabled, do I need to do anything?
+
+No, if you already have 2FA enabled before October 6th, 2023 at 00:00 (UTC), you
+don't need to take any additional actions. After October 6th, 2023 at 00:00
+(UTC), you will no longer be able to unenroll from 2FA from your account, but
+you will be able to change the option you use for authenticating with 2FA.
+Additionally, you won't see any more banners on GitHub.com, and we won't email
+you about this anymore.
+
+
+      What happens to my PATs and SSH keys at the deadline?
+
+Your PATs, SSH keys, and applications will all keep working after the deadline,
+regardless of your 2FA enrollment. PATs in particular are used extensively in
+important automation, and interruption there can cause outages in critical
+systems. However, when it is time to sign in to GitHub.com to create a new PAT
+or manage your account, you'll be required to enable 2FA before you can proceed.
+
+
+      What do I do if I lose my 2FA device?
+
+GitHub strongly encourages the use of multiple second factor options. If you
+lose all of your second factors, recovery codes are the only way to access your
+account again. By saving your recovery codes, you'll be able to regain access.
+
+Be sure to enable cloud backup for your authenticator app and save your recovery
+codes. Many phones and computers can be security keys as well - registering them
+with GitHub.com gives you additional, highly-secure 2FA methods.
+
+For security reasons, GitHub Support may not be able to restore access to
+accounts with 2FA enabled if you lose your 2FA credentials and lose access to
+your account recovery methods.
+
+More information about recovery codes can be found on GitHub Help at
+https://docs.github.com/articles/recovering-your-account-if-you-lose-your-2fa-credentials
+<https://docs.github.com/articles/recovering-your-account-if-you-lose-your-2fa-credentials>
+
+
+
+      Why is GitHub requiring 2FA?
+
+Ensuring account security is a shared responsibility GitHub takes seriously.
+Strong authentication and the use of 2FA have been recognized as best practice
+for many years. We feel that GitHub has a duty to lead this push toward strong
+authentication as part of protecting the software supply chain.
+
+To see this and other security events for your account, visit your account
+security audit log. <https://github.com/settings/security-log>
+
+If you run into problems, please contact support by visiting the GitHub support
+page. <https://github.com/contact>
+
+Thanks,
+The GitHub Team
+
+"
+
+
+My answer:
+
+Hey \"github\"!
+
+So everybody is acceptable except, those w/o smartphones, and w/o cameras and or fingerprint readers. - one can't program w/o those - "got it".
+
+Mind your own business.
+
+Regards,
+Corwin.
